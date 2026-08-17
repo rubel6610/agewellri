@@ -9,8 +9,8 @@ const almarai = Almarai({
 });
 
 export const metadata: Metadata = {
-  title: "AgeWellRI Member Portal | Authentication",
-  description: "Stay home. Age well. Secure login and registration portal for AgeWellRI members, families, and caregivers.",
+  title: "AgeWellRI",
+  description: "",
 };
 
 export default function RootLayout({

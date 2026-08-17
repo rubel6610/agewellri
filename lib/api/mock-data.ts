@@ -1,0 +1,195 @@
+import {
+  UserProfile,
+  ServicePlan,
+  Appointment,
+  Report,
+  Agreement,
+  BillingInfo,
+  NotificationItem,
+} from "../types/dashboard";
+
+export const MOCK_USER: UserProfile = {
+  id: "usr_101",
+  firstName: "John",
+  lastName: "Miller",
+  email: "john.miller@example.com",
+  phone: "(401) 555-0199",
+  address: {
+    street: "142 Wayland Avenue",
+    city: "Providence",
+    state: "RI",
+    zip: "02906",
+  },
+  emergencyContact: {
+    name: "Sarah Miller (Daughter)",
+    relationship: "Daughter & Primary Care Coordinator",
+    phone: "(401) 555-0842",
+    email: "sarah.m@example.com",
+  },
+  preferredContactMethod: "phone",
+  accountStatus: "active",
+};
+
+export const MOCK_PLAN: ServicePlan = {
+  id: "plan_gplus",
+  name: "Guardian Plus",
+  status: "active",
+  currentPeriod: "June 1, 2026 – August 31, 2026",
+  renewalDate: "September 1, 2026",
+  totalVisits: 12,
+  completedVisits: 8,
+  remainingVisits: 4,
+  cleaningVisitsTotal: 6,
+  cleaningVisitsCompleted: 4,
+  safetyVisitsTotal: 6,
+  safetyVisitsCompleted: 4,
+  autoRenew: true,
+  pricePerQuarter: "$495.00",
+};
+
+export const MOCK_APPOINTMENTS: Appointment[] = [
+  {
+    id: "appt_101",
+    serviceType: "Safety Oversight",
+    date: "2026-09-15",
+    timeSlot: "10:00 AM – 12:00 PM",
+    status: "scheduled",
+    technicianName: "Marcus Vance",
+    technicianTitle: "Certified Home Safety Specialist",
+    bookedBy: "AgeWellRI Team",
+    notes: "Quarterly fall prevention and grab-bar integrity check.",
+  },
+  {
+    id: "appt_102",
+    serviceType: "Cleaning",
+    date: "2026-09-28",
+    timeSlot: "01:30 PM – 03:30 PM",
+    status: "scheduled",
+    technicianName: "Elena Rostova",
+    technicianTitle: "Senior Home Support Caregiver",
+    bookedBy: "Client",
+    notes: "Deep cleaning for bathroom and main living area.",
+  },
+  {
+    id: "appt_090",
+    serviceType: "Cleaning",
+    date: "2026-08-12",
+    timeSlot: "10:00 AM – 12:00 PM",
+    status: "completed",
+    technicianName: "Elena Rostova",
+    technicianTitle: "Senior Home Support Caregiver",
+    bookedBy: "Client",
+    reportId: "rep_201",
+    reportTitle: "Home Care & Cleaning Summary",
+    notes: "Standard cleaning and walkway clutter inspection completed cleanly.",
+  },
+  {
+    id: "appt_089",
+    serviceType: "Safety Oversight",
+    date: "2026-07-28",
+    timeSlot: "09:00 AM – 11:00 AM",
+    status: "completed",
+    technicianName: "Marcus Vance",
+    technicianTitle: "Certified Home Safety Specialist",
+    bookedBy: "AgeWellRI Team",
+    reportId: "rep_202",
+    reportTitle: "Age Safe® Home Score™ Assessment",
+    notes: "Comprehensive home safety assessment completed.",
+  },
+];
+
+export const MOCK_REPORTS: Report[] = [
+  {
+    id: "rep_202",
+    title: "Age Safe® Home Score™ Assessment",
+    visitDate: "July 28, 2026",
+    score: 92,
+    status: "available",
+    pdfUrl: "#",
+    summary: "Overall home safety is excellent. Minor lighting recommendation for hallway stairs.",
+    recommendationsCount: 2,
+  },
+  {
+    id: "rep_201",
+    title: "Home Care & Cleaning Summary",
+    visitDate: "August 12, 2026",
+    score: 98,
+    status: "available",
+    pdfUrl: "#",
+    summary: "Completed deep cleaning of high-traffic zones. No physical hazards identified.",
+    recommendationsCount: 0,
+  },
+];
+
+export const MOCK_AGREEMENT: Agreement = {
+  id: "agr_501",
+  title: "AgeWellRI Member Service Agreement",
+  status: "executed",
+  signedDate: "August 17, 2026",
+  lastUpdated: "August 17, 2026",
+  pdfUrl: "#",
+  version: "v2.4 - Guardian Plus",
+};
+
+export const MOCK_BILLING: BillingInfo = {
+  currentPlanName: "Guardian Plus",
+  billingFrequency: "Quarterly",
+  paymentMethod: {
+    brand: "Visa",
+    last4: "4242",
+    expiry: "08/28",
+  },
+  nextPaymentDate: "September 1, 2026",
+  nextPaymentAmount: "$495.00",
+  autoPayEnabled: true,
+  invoices: [
+    {
+      id: "inv_301",
+      invoiceNumber: "INV-2026-0601",
+      date: "June 1, 2026",
+      description: "Guardian Plus - Q3 2026 Membership",
+      amount: "$495.00",
+      status: "paid",
+      pdfUrl: "#",
+    },
+    {
+      id: "inv_300",
+      invoiceNumber: "INV-2026-0301",
+      date: "March 1, 2026",
+      description: "Guardian Plus - Q2 2026 Membership",
+      amount: "$495.00",
+      status: "paid",
+      pdfUrl: "#",
+    },
+  ],
+};
+
+export const MOCK_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: "notif_1",
+    title: "Upcoming Visit Scheduled",
+    message: "Your Safety Oversight visit is scheduled for Sept 15 at 10:00 AM.",
+    timestamp: "2 hours ago",
+    read: false,
+    type: "visit",
+    link: "/dashboard/appointments/appt_101",
+  },
+  {
+    id: "notif_2",
+    title: "Home Safety Report Ready",
+    message: "Your Age Safe® Home Score™ assessment report is now available.",
+    timestamp: "Yesterday",
+    read: false,
+    type: "report",
+    link: "/dashboard/reports",
+  },
+  {
+    id: "notif_3",
+    title: "Agreement Successfully Signed",
+    message: "Your AgeWellRI Service Agreement has been executed.",
+    timestamp: "3 days ago",
+    read: true,
+    type: "agreement",
+    link: "/dashboard/agreements",
+  },
+];
