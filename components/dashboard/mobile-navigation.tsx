@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   X,
   LayoutDashboard,
@@ -16,6 +16,8 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { logout } from "@/lib/redux/features/auth/authSlice";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -25,8 +27,16 @@ interface MobileNavigationProps {
 
 export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: MobileNavigationProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
   if (!isOpen) return null;
+
+  const handleSignOut = () => {
+    onClose();
+    dispatch(logout());
+    router.push("/login");
+  };
 
   const navItems = [
     { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -120,13 +130,13 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
             <span>Help & Support</span>
           </Link>
 
-          <Link
-            href="/login"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50"
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 cursor-pointer text-left"
           >
             <LogOut className="w-5 h-5" />
             <span>Sign Out</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>

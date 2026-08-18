@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -14,9 +14,18 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { logout } from "@/lib/redux/features/auth/authSlice";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleSignOut = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
 
   const navItems = [
     {
@@ -112,13 +121,13 @@ export function DashboardSidebar() {
           <span>Help & Support</span>
         </Link>
 
-        <Link
-          href="/login"
-          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 transition-colors"
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 transition-colors cursor-pointer text-left"
         >
           <LogOut className="w-5 h-5" />
           <span>Sign Out</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

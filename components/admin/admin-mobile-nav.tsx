@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   X,
   LayoutDashboard,
@@ -20,6 +20,8 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { logout } from "@/lib/redux/features/auth/authSlice";
 
 interface AdminMobileNavProps {
   isOpen: boolean;
@@ -35,8 +37,16 @@ export function AdminMobileNav({
   onOpenScheduleModal,
 }: AdminMobileNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
   if (!isOpen) return null;
+
+  const handleSignOut = () => {
+    onClose();
+    dispatch(logout());
+    router.push("/login");
+  };
 
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -86,7 +96,7 @@ export function AdminMobileNav({
                 onClose();
                 onOpenAddClientModal();
               }}
-              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1 border border-[#5E8FB2]/30"
+              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1 border border-[#5E8FB2]/30 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Client</span>
@@ -96,7 +106,7 @@ export function AdminMobileNav({
                 onClose();
                 onOpenScheduleModal();
               }}
-              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-xs"
+              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Schedule</span>
@@ -138,13 +148,13 @@ export function AdminMobileNav({
         </div>
 
         <div className="pt-4 border-t border-[#D9E4EC]">
-          <Link
-            href="/login"
-            className="flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-sm text-[#C95C5C] hover:bg-red-50"
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-sm text-[#C95C5C] hover:bg-red-50 cursor-pointer text-left"
           >
             <LogOut className="w-4 h-4" />
             <span>Sign Out</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>

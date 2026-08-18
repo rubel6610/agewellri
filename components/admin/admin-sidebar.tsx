@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -18,9 +18,18 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { useAppDispatch } from "@/lib/redux/hooks";
+import { logout } from "@/lib/redux/features/auth/authSlice";
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleSignOut = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
 
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
@@ -45,10 +54,10 @@ export function AdminSidebar() {
             <Image
               src="/logo.png"
               alt="AgeWellRI Admin Control"
-              width={160}
+              width={400}
               height={40}
               priority
-              className="h-auto w-auto max-h-10 object-contain"
+              className="h-auto w-full max-h-10 object-cover"
             />
           </Link>
           <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#294B68] text-white rounded-md tracking-wider">
@@ -98,13 +107,13 @@ export function AdminSidebar() {
 
       {/* Sign Out */}
       <div className="p-3 border-t border-[#D9E4EC]">
-        <Link
-          href="/login"
-          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 transition-colors"
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 transition-colors cursor-pointer text-left"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

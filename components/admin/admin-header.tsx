@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, Bell, Plus, Menu, UserCheck } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
 import { MOCK_NOTIFICATIONS } from "@/lib/api/mock-data";
+import { useAppSelector } from "@/lib/redux/hooks";
 
 interface AdminHeaderProps {
   onOpenMobileMenu: () => void;
@@ -18,6 +19,11 @@ export function AdminHeader({
   onOpenScheduleModal,
 }: AdminHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const authUser = useAppSelector((state) => state.auth.user);
+
+  const firstName = authUser?.firstName || "Sarah";
+  const lastName = authUser?.lastName || "Jenkins";
+  const roleLabel = authUser?.role === "ADMIN" ? "System Administrator" : "Operations Manager";
 
   return (
     <header className="h-20 bg-white border-b border-[#D9E4EC] px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 shadow-xs">
@@ -70,11 +76,12 @@ export function AdminHeader({
         {/* Admin Profile */}
         <div className="flex items-center gap-2 pl-2 border-l border-[#D9E4EC]">
           <div className="w-9 h-9 rounded-xl bg-[#294B68] text-white font-bold text-xs flex items-center justify-center shrink-0">
-            SJ
+            {firstName[0]}
+            {lastName[0]}
           </div>
           <div className="hidden xl:block text-left text-xs">
-            <span className="font-bold text-[#243746] block">Sarah Jenkins</span>
-            <span className="text-[#64748B] text-[11px]">Operations Manager</span>
+            <span className="font-bold text-[#243746] block">{firstName} {lastName}</span>
+            <span className="text-[#64748B] text-[11px]">{roleLabel}</span>
           </div>
         </div>
       </div>
