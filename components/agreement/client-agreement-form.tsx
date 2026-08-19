@@ -7,17 +7,11 @@ import { useRouter } from "next/navigation";
 import {
   Heart,
   Shield,
-  Check,
   AlertTriangle,
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Sparkles,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  User,
+ 
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
 import { useSubmitAgreementMutation } from "@/redux/features/auth/authApi";

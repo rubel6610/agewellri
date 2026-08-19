@@ -134,6 +134,38 @@ export interface SubmitAgreementRequest {
   agreedToTerms: boolean;
 }
 
+export interface AgreementDocument {
+  id: string;
+  templateVersion: string;
+  status: string;
+  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  planPrice: number;
+  hasCleaningAddon: boolean;
+  clientFullName: string;
+  clientPrintedName: string;
+  authorizedRepName?: string | null;
+  relationshipToClient?: string | null;
+  clientSignature?: string | null;
+  agreementDate: string;
+  signedAt?: string | null;
+  executedAt?: string | null;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  phone: string;
+  dob?: string;
+  email: string;
+  primaryContactName?: string | null;
+  primaryContactPhone?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactRelation?: string | null;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation?: string | null;
+  clientNumber: string;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;
@@ -142,3 +174,4 @@ export interface AuthState {
   isInitialized: boolean;
   error: string | null;
 }
+

@@ -8,6 +8,7 @@ import {
   RegisterRequest,
   UpdateProfileRequest,
   SubmitAgreementRequest,
+  AgreementDocument,
 } from "./authTypes";
 import { setCredentials, setUser } from "./authSlice";
 
@@ -120,6 +121,14 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    getMyAgreement: builder.query<ApiResponse<AgreementDocument>, void>({
+      query: () => ({
+        url: "/auth/my-agreement",
+        method: "GET",
+      }),
+      providesTags: ["Agreement", "User"],
+    }),
+
     changePassword: builder.mutation<
       ApiResponse<{ message: string }>,
       ChangePasswordRequest
@@ -141,7 +150,9 @@ export const {
   useLazyGetMeQuery,
   useUpdateProfileMutation,
   useSubmitAgreementMutation,
+  useGetMyAgreementQuery,
   useChangePasswordMutation,
 } = authApi;
+
 
 
