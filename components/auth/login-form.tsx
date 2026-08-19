@@ -185,11 +185,7 @@ export function LoginForm() {
           {/* Forgot password */}
           <div className="flex justify-end pt-1">
             <Link
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                alert("Password reset functionality will connect to backend API.");
-              }}
+              href="/forgot-password"
               className="text-sm font-semibold text-[#5E8FB2] hover:text-[#294B68] hover:underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
             >
               Forgot password?

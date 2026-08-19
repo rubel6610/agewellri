@@ -9,6 +9,9 @@ import {
   UpdateProfileRequest,
   SubmitAgreementRequest,
   AgreementDocument,
+  ForgotPasswordRequest,
+  VerifyOtpRequest,
+  ResetPasswordRequest,
 } from "./authTypes";
 import { setCredentials, setUser } from "./authSlice";
 
@@ -129,6 +132,30 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ["Agreement", "User"],
     }),
 
+    forgotPassword: builder.mutation<ApiResponse<{ email: string }>, ForgotPasswordRequest>({
+      query: (body) => ({
+        url: "/auth/forgot-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    verifyOtp: builder.mutation<ApiResponse<{ success: boolean; email: string }>, VerifyOtpRequest>({
+      query: (body) => ({
+        url: "/auth/verify-otp",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    resetPassword: builder.mutation<ApiResponse<{ success: boolean; message: string }>, ResetPasswordRequest>({
+      query: (body) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        body,
+      }),
+    }),
+
     changePassword: builder.mutation<
       ApiResponse<{ message: string }>,
       ChangePasswordRequest
@@ -151,8 +178,12 @@ export const {
   useUpdateProfileMutation,
   useSubmitAgreementMutation,
   useGetMyAgreementQuery,
+  useForgotPasswordMutation,
+  useVerifyOtpMutation,
+  useResetPasswordMutation,
   useChangePasswordMutation,
 } = authApi;
+
 
 
 
