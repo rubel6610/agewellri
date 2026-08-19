@@ -14,8 +14,8 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { logout } from "@/lib/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -64,15 +64,18 @@ export function DashboardSidebar() {
     <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen sticky top-0 shrink-0">
       {/* Top Logo */}
       <div>
-        <div className="p-6 border-b border-[#D9E4EC]/60">
-          <Link href="/dashboard" className="inline-block focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg">
+        <div className="px-5 py-5 border-b border-[#D9E4EC]/60">
+          <Link
+            href="/dashboard"
+            className="block focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg transition-transform hover:scale-[1.02]"
+          >
             <Image
               src="/logo.png"
               alt="AgeWellRI Portal"
-              width={180}
-              height={100}
+              width={260}
+              height={80}
               priority
-              className="h-auto w-auto max-h-11 object-cover"
+              className="w-full max-w-[215px] h-auto max-h-14 object-contain"
             />
           </Link>
         </div>
@@ -93,11 +96,10 @@ export function DashboardSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
-                  isActive
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${isActive
                     ? "bg-[#294B68] text-white shadow-sm"
                     : "text-[#243746] hover:bg-[#EAF3F8] hover:text-[#294B68]"
-                }`}
+                  }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />
                 <span>{item.label}</span>

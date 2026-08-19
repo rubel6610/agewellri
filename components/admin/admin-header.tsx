@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Search, Bell, Plus, Menu, UserCheck } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
 import { MOCK_NOTIFICATIONS } from "@/lib/api/mock-data";
-import { useAppSelector } from "@/lib/redux/hooks";
+import { useAppSelector } from "@/redux/hooks";
 
 interface AdminHeaderProps {
   onOpenMobileMenu: () => void;

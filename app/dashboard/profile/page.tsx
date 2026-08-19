@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGetMeQuery } from "@/lib/redux/features/auth/authApi";
-import { useAppSelector } from "@/lib/redux/hooks";
+import { useGetMeQuery } from "@/redux/features/auth/authApi";
+import { useAppSelector } from "@/redux/hooks";
 import {
   User,
   Phone,
@@ -15,9 +15,12 @@ import {
   Calendar,
 } from "lucide-react";
 import { ChangePasswordModal } from "@/components/auth/change-password-modal";
+import { EditProfileModal } from "@/components/auth/edit-profile-modal";
+import { Edit3 } from "lucide-react";
 
 export default function ProfilePage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   const authUser = useAppSelector((state) => state.auth.user);
   const { data: meResponse, isLoading } = useGetMeQuery();
@@ -59,6 +62,14 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsEditProfileModalOpen(true)}
+            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Edit3 className="w-4 h-4" />
+            <span>Edit Profile</span>
+          </button>
+
           <button
             onClick={() => setIsPasswordModalOpen(true)}
             className="px-4 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-sm rounded-xl transition-all border border-[#5E8FB2]/30 flex items-center gap-2 shrink-0 cursor-pointer"
@@ -147,6 +158,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        user={user}
+      />
 
       {/* Change Password Modal */}
       <ChangePasswordModal

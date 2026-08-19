@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Menu, Plus, User } from "lucide-react";
 import { NotificationMenu } from "./notification-menu";
 import { NotificationItem, UserProfile } from "@/lib/types/dashboard";
-import { useAppSelector } from "@/lib/redux/hooks";
+import { useAppSelector } from "@/redux/hooks";
 
 interface DashboardHeaderProps {
   user: UserProfile;

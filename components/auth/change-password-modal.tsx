@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { X, KeyRound, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { PasswordInput } from "./password-input";
-import { useChangePasswordMutation } from "@/lib/redux/features/auth/authApi";
+import { useChangePasswordMutation } from "@/redux/features/auth/authApi";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;

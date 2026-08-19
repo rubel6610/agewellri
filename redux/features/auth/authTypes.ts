@@ -93,6 +93,19 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  phone?: string | null;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactRelation?: string | null;
+}
+
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;

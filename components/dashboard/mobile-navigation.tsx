@@ -16,8 +16,8 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { logout } from "@/lib/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -58,19 +58,19 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
       {/* Drawer */}
       <div className="relative w-4/5 max-w-sm bg-white h-full shadow-2xl flex flex-col justify-between p-6 z-10 animate-in slide-in-from-left duration-250">
         <div>
-          <div className="flex items-center justify-between pb-6 border-b border-[#D9E4EC]">
+          <div className="flex items-center justify-between pb-5 border-b border-[#D9E4EC]">
             <Image
               src="/logo.png"
               alt="AgeWellRI Logo"
-              width={160}
-              height={38}
+              width={220}
+              height={60}
               priority
-              className="h-auto w-auto max-h-10 object-contain"
+              className="w-auto max-w-[190px] h-auto max-h-12 object-contain"
             />
             <button
               onClick={onClose}
               aria-label="Close menu"
-              className="p-2 text-[#64748B] hover:text-[#243746] rounded-lg border border-[#D9E4EC]"
+              className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -103,11 +103,10 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-base transition-colors ${
-                    isActive
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-base transition-colors ${isActive
                       ? "bg-[#294B68] text-white"
                       : "text-[#243746] hover:bg-[#EAF3F8]"
-                  }`}
+                    }`}
                 >
                   <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />
                   <span>{item.label}</span>

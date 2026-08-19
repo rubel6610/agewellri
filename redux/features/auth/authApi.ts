@@ -6,6 +6,7 @@ import {
   ChangePasswordRequest,
   LoginRequest,
   RegisterRequest,
+  UpdateProfileRequest,
 } from "./authTypes";
 import { setCredentials, setUser } from "./authSlice";
 
@@ -77,6 +78,25 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    updateProfile: builder.mutation<ApiResponse<AuthUser>, UpdateProfileRequest>({
+      query: (body) => ({
+        url: "/auth/profile",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["User", "Profile"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success && data?.data) {
+            dispatch(setUser(data.data));
+          }
+        } catch {
+          // Handled in component
+        }
+      },
+    }),
+
     changePassword: builder.mutation<
       ApiResponse<{ message: string }>,
       ChangePasswordRequest
@@ -88,7 +108,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
 export const {
@@ -96,5 +116,7 @@ export const {
   useRegisterMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
+  useUpdateProfileMutation,
   useChangePasswordMutation,
 } = authApi;
+

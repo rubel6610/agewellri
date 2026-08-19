@@ -7,7 +7,7 @@ import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle } from "lucide-re
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
-import { useRegisterMutation } from "@/lib/redux/features/auth/authApi";
+import { useRegisterMutation } from "@/redux/features/auth/authApi";
 
 interface FormErrors {
   firstName?: string;

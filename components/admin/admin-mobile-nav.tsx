@@ -20,8 +20,8 @@ import {
   LogOut,
   Plus,
 } from "lucide-react";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { logout } from "@/lib/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 
 interface AdminMobileNavProps {
   isOpen: boolean;
@@ -77,14 +77,14 @@ export function AdminMobileNav({
             <Image
               src="/logo.png"
               alt="AgeWellRI Admin"
-              width={150}
-              height={36}
+              width={220}
+              height={60}
               priority
-              className="h-auto w-auto max-h-9 object-contain"
+              className="w-auto max-w-[180px] h-auto max-h-12 object-contain"
             />
             <button
               onClick={onClose}
-              className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]"
+              className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -126,11 +126,10 @@ export function AdminMobileNav({
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl font-bold text-sm transition-colors ${
-                    isActive
+                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl font-bold text-sm transition-colors ${isActive
                       ? "bg-[#294B68] text-white"
                       : "text-[#243746] hover:bg-[#EAF3F8]"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />

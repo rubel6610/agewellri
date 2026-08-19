@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Almarai } from "next/font/google";
 import "./globals.css";
-import StoreProvider from "@/lib/redux/provider";
-import AuthInitializer from "@/lib/redux/auth-initializer";
+import StoreProvider from "@/redux/provider";
+import AuthInitializer from "@/redux/auth-initializer";
 
 const almarai = Almarai({
   subsets: ["arabic"],

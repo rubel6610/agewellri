@@ -7,7 +7,7 @@ import { Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
-import { useLoginMutation } from "@/lib/redux/features/auth/authApi";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
 
 interface FormErrors {
   email?: string;
@@ -94,7 +94,7 @@ export function LoginForm() {
     <AuthCard>
       {/* Header / Branding */}
       <div className="flex flex-col items-center text-center space-y-4 mb-8">
-        
+
         <div className="space-y-1 pt-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#243746] tracking-tight">
             Welcome back

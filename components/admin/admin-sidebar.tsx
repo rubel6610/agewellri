@@ -18,8 +18,8 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
-import { useAppDispatch } from "@/lib/redux/hooks";
-import { logout } from "@/lib/redux/features/auth/authSlice";
+import { useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -49,18 +49,21 @@ export function AdminSidebar() {
     <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen sticky top-0 shrink-0 z-30">
       {/* Top Header Logo & Badge */}
       <div>
-        <div className="p-5 border-b border-[#D9E4EC]/60 flex items-center justify-between">
-          <Link href="/admin" className="inline-block focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg">
+        <div className="px-5 py-4 border-b border-[#D9E4EC]/60 flex items-center justify-between gap-2">
+          <Link
+            href="/admin"
+            className="block flex-1 focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg transition-transform hover:scale-[1.02]"
+          >
             <Image
               src="/logo.png"
               alt="AgeWellRI Admin Control"
-              width={400}
-              height={40}
+              width={260}
+              height={70}
               priority
-              className="h-auto w-full max-h-10 object-cover"
+              className="w-full max-w-[170px] h-auto max-h-12 object-contain"
             />
           </Link>
-          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#294B68] text-white rounded-md tracking-wider">
+          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#294B68] text-white rounded-md tracking-wider shrink-0 shadow-xs">
             ADMIN
           </span>
         </div>
@@ -78,11 +81,10 @@ export function AdminSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                  isActive
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl font-bold text-sm transition-all ${isActive
                     ? "bg-[#294B68] text-white shadow-xs"
                     : "text-[#243746] hover:bg-[#EAF3F8] hover:text-[#294B68]"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3">
                   <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />
@@ -90,11 +92,10 @@ export function AdminSidebar() {
                 </div>
                 {item.badge && (
                   <span
-                    className={`px-2 py-0.5 text-xs font-extrabold rounded-full ${
-                      isActive
+                    className={`px-2 py-0.5 text-xs font-extrabold rounded-full ${isActive
                         ? "bg-white text-[#294B68]"
                         : "bg-[#EAF3F8] text-[#294B68]"
-                    }`}
+                      }`}
                   >
                     {item.badge}
                   </span>
