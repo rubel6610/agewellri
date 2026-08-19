@@ -7,6 +7,7 @@ import {
   LoginRequest,
   RegisterRequest,
   UpdateProfileRequest,
+  SubmitAgreementRequest,
 } from "./authTypes";
 import { setCredentials, setUser } from "./authSlice";
 
@@ -97,6 +98,28 @@ export const authApi = baseApi.injectEndpoints({
       },
     }),
 
+    submitAgreement: builder.mutation<
+      ApiResponse<{ agreement: any; user: AuthUser }>,
+      SubmitAgreementRequest
+    >({
+      query: (body) => ({
+        url: "/auth/agreement",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Auth", "User", "Profile", "Agreement"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success && data?.data?.user) {
+            dispatch(setUser(data.data.user));
+          }
+        } catch {
+          // Handled in component
+        }
+      },
+    }),
+
     changePassword: builder.mutation<
       ApiResponse<{ message: string }>,
       ChangePasswordRequest
@@ -117,6 +140,8 @@ export const {
   useGetMeQuery,
   useLazyGetMeQuery,
   useUpdateProfileMutation,
+  useSubmitAgreementMutation,
   useChangePasswordMutation,
 } = authApi;
+
 

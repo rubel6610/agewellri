@@ -117,12 +117,20 @@ export function RegisterForm() {
       }).unwrap();
 
       if (response.success && response.data) {
+        const user = response.data.user;
+        const targetRoute =
+          user.role === "ADMIN"
+            ? "/admin"
+            : user.role === "TECHNICIAN"
+            ? "/technician"
+            : "/agreement";
+
         setRegisterSuccessMessage(
-          `Account created for ${response.data.user.firstName}! Directing you to your portal...`
+          `Welcome to AgeWellRI, ${user.firstName || "Member"}! Directing you to your Service Agreement...`
         );
 
         setTimeout(() => {
-          router.push("/dashboard");
+          router.push(targetRoute);
         }, 800);
       } else {
         setErrors({

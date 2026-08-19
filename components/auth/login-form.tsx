@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
@@ -17,6 +17,9 @@ interface FormErrors {
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -62,7 +65,22 @@ export function LoginForm() {
         const user = response.data.user;
         setLoginSuccessMessage(`Welcome back, ${user.firstName || "Member"}! Redirecting...`);
 
-        const targetRoute = user.role === "ADMIN" ? "/admin" : "/dashboard";
+        // Compute destination route based on role and agreement status
+        let targetRoute = "/dashboard";
+        if (user.role === "ADMIN") {
+          targetRoute = redirectUrl && redirectUrl.startsWith("/admin") ? redirectUrl : "/admin";
+        } else if (user.role === "TECHNICIAN") {
+          targetRoute =
+            redirectUrl && redirectUrl.startsWith("/technician") ? redirectUrl : "/technician";
+        } else if (user.role === "CLIENT") {
+          if (user.requiresAgreement || !user.hasCompletedAgreement) {
+            targetRoute = "/agreement";
+          } else {
+            targetRoute =
+              redirectUrl && redirectUrl.startsWith("/dashboard") ? redirectUrl : "/dashboard";
+          }
+        }
+
         setTimeout(() => {
           router.push(targetRoute);
         }, 700);

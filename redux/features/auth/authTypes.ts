@@ -48,6 +48,8 @@ export interface AuthUser {
   phone?: string | null;
   role: UserRole;
   status: UserStatus;
+  hasCompletedAgreement?: boolean;
+  requiresAgreement?: boolean;
   emailVerifiedAt?: string | null;
   lastLoginAt?: string | null;
   createdAt?: string;
@@ -104,6 +106,32 @@ export interface UpdateProfileRequest {
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   emergencyContactRelation?: string | null;
+}
+
+export interface SubmitAgreementRequest {
+  clientFullName: string;
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  phone: string;
+  dob: string;
+  email?: string;
+  primaryContactName?: string | null;
+  primaryContactPhone?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactRelation?: string | null;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
+  emergencyContactRelation?: string | null;
+  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  hasCleaningAddon: boolean;
+  clientPrintedName: string;
+  authorizedRepName?: string | null;
+  relationshipToClient?: string | null;
+  agreementDate: string;
+  clientSignature: string;
+  agreedToTerms: boolean;
 }
 
 export interface AuthState {
