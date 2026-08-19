@@ -12,6 +12,7 @@ import {
   ForgotPasswordRequest,
   VerifyOtpRequest,
   ResetPasswordRequest,
+  RefreshTokenRequest,
 } from "./authTypes";
 import { setCredentials, setUser } from "./authSlice";
 
@@ -32,6 +33,7 @@ export const authApi = baseApi.injectEndpoints({
               setCredentials({
                 user: data.data.user,
                 token: data.data.token,
+                refreshToken: data.data.refreshToken,
               })
             );
           }
@@ -56,6 +58,7 @@ export const authApi = baseApi.injectEndpoints({
               setCredentials({
                 user: data.data.user,
                 token: data.data.token,
+                refreshToken: data.data.refreshToken,
               })
             );
           }
@@ -156,6 +159,31 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
 
+    refreshToken: builder.mutation<ApiResponse<AuthResponseData>, RefreshTokenRequest>({
+      query: (body) => ({
+        url: "/auth/refresh-token",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["User", "Profile"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success && data?.data) {
+            dispatch(
+              setCredentials({
+                user: data.data.user,
+                token: data.data.token,
+                refreshToken: data.data.refreshToken,
+              })
+            );
+          }
+        } catch {
+          // Handled gracefully
+        }
+      },
+    }),
+
     changePassword: builder.mutation<
       ApiResponse<{ message: string }>,
       ChangePasswordRequest
@@ -181,8 +209,10 @@ export const {
   useForgotPasswordMutation,
   useVerifyOtpMutation,
   useResetPasswordMutation,
+  useRefreshTokenMutation,
   useChangePasswordMutation,
 } = authApi;
+
 
 
 

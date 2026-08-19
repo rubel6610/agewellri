@@ -30,9 +30,13 @@ export default function AuthInitializer({
               dispatch(logout());
             }
           });
+      } else {
+        // Explicitly clear local storage & cookies if not logged in
+        dispatch(logout());
       }
     }
   }, [isInitialized, token, triggerGetMe, dispatch]);
 
   return <>{children}</>;
 }
+

@@ -68,6 +68,7 @@ export interface ApiResponse<T> {
 
 export interface AuthResponseData {
   token: string;
+  refreshToken?: string;
   user: AuthUser;
   client?: ClientProfile | null;
 }
@@ -88,6 +89,10 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface ChangePasswordRequest {
@@ -184,10 +189,12 @@ export interface ResetPasswordRequest {
 export interface AuthState {
   user: AuthUser | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isInitialized: boolean;
   error: string | null;
 }
+
 
 

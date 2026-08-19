@@ -1,16 +1,18 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { AuthState, AuthUser } from "./authTypes";
 import {
-  setAuthToken,
+  setAuthTokens,
   setStoredUser,
   clearAuthSession,
   getAuthToken,
+  getRefreshToken,
   getStoredUser,
 } from "@/lib/auth/token";
 
 const initialState: AuthState = {
   user: null,
   token: null,
+  refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
   isInitialized: false,
@@ -23,17 +25,32 @@ export const authSlice = createSlice({
   reducers: {
     setCredentials: (
       state,
-      action: PayloadAction<{ user: AuthUser; token: string }>
+      action: PayloadAction<{ user: AuthUser; token: string; refreshToken?: string }>
     ) => {
-      const { user, token } = action.payload;
+      const { user, token, refreshToken } = action.payload;
       state.user = user;
       state.token = token;
+      if (refreshToken) {
+        state.refreshToken = refreshToken;
+      }
       state.isAuthenticated = true;
       state.error = null;
       state.isInitialized = true;
 
-      setAuthToken(token);
+      setAuthTokens(token, refreshToken);
       setStoredUser(user);
+    },
+    setTokens: (
+      state,
+      action: PayloadAction<{ token: string; refreshToken?: string }>
+    ) => {
+      const { token, refreshToken } = action.payload;
+      state.token = token;
+      if (refreshToken) {
+        state.refreshToken = refreshToken;
+      }
+      state.isAuthenticated = !!token;
+      setAuthTokens(token, refreshToken);
     },
     setUser: (state, action: PayloadAction<AuthUser>) => {
       state.user = action.payload;
@@ -42,7 +59,7 @@ export const authSlice = createSlice({
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
       state.isAuthenticated = !!action.payload;
-      setAuthToken(action.payload);
+      setAuthTokens(action.payload);
     },
     setAuthLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
@@ -52,24 +69,27 @@ export const authSlice = createSlice({
     },
     hydrateAuth: (state) => {
       const token = getAuthToken();
+      const refreshToken = getRefreshToken();
       const user = getStoredUser<AuthUser>();
 
-      if (token) {
+      if (token && user) {
         state.token = token;
+        state.refreshToken = refreshToken || null;
+        state.user = user;
         state.isAuthenticated = true;
-        if (user) {
-          state.user = user;
-        }
       } else {
         state.token = null;
+        state.refreshToken = null;
         state.user = null;
         state.isAuthenticated = false;
+        clearAuthSession();
       }
       state.isInitialized = true;
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
       state.isInitialized = true;
@@ -81,6 +101,7 @@ export const authSlice = createSlice({
 
 export const {
   setCredentials,
+  setTokens,
   setUser,
   setToken,
   setAuthLoading,
@@ -90,3 +111,4 @@ export const {
 } = authSlice.actions;
 
 export default authSlice.reducer;
+
