@@ -131,6 +131,8 @@ export interface SubmitAgreementRequest {
   emergencyContactRelation?: string | null;
   selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
   hasCleaningAddon: boolean;
+  paymentMethodId?: string | null;
+  setupIntentId?: string | null;
   clientPrintedName: string;
   authorizedRepName?: string | null;
   relationshipToClient?: string | null;

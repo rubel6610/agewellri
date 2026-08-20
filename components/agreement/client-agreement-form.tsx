@@ -11,15 +11,22 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
- 
+  FileText,
+  CreditCard,
+  ArrowRight,
+  Lock,
 } from "lucide-react";
 import { useAppSelector } from "@/redux/hooks";
 import { useSubmitAgreementMutation } from "@/redux/features/auth/authApi";
+import { PaymentStepCard } from "../payment/payment-step-card";
 
 export function ClientAgreementForm() {
   const router = useRouter();
   const authUser = useAppSelector((state) => state.auth.user);
-  const [submitAgreement, { isLoading }] = useSubmitAgreementMutation();
+  const [submitAgreement, { isLoading: isSubmittingAgreement }] =
+    useSubmitAgreementMutation();
+
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   const [formData, setFormData] = useState({
     clientFullName: "",
@@ -48,6 +55,7 @@ export function ClientAgreementForm() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSuccess, setIsSuccess] = useState(false);
+  const [savedSignatureData, setSavedSignatureData] = useState<string>("");
 
   // Canvas Signature Pad State
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -60,13 +68,13 @@ export function ClientAgreementForm() {
       setFormData((prev) => ({
         ...prev,
         clientFullName: prev.clientFullName || fullName,
-        clientPrintedName: prev.clientPrintedName || fullName,
-        email: authUser.email || "",
+        email: prev.email || authUser.email || "",
         phone: prev.phone || authUser.phone || "",
+        clientPrintedName: prev.clientPrintedName || fullName,
         address: prev.address || authUser.client?.address || "",
-        city: prev.city || authUser.client?.city || "Providence",
+        city: prev.city || authUser.client?.city || "",
         state: prev.state || authUser.client?.state || "RI",
-        postalCode: prev.postalCode || authUser.client?.postalCode || "02906",
+        postalCode: prev.postalCode || authUser.client?.postalCode || "",
         emergencyContactName:
           prev.emergencyContactName || authUser.client?.emergencyContactName || "",
         emergencyContactPhone:
@@ -74,59 +82,49 @@ export function ClientAgreementForm() {
         emergencyContactRelation:
           prev.emergencyContactRelation ||
           authUser.client?.emergencyContactRelation ||
-          "Daughter",
+          "",
       }));
     }
   }, [authUser]);
 
-  // Handle Input Changes
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
+  // Set up canvas resolution
+  useEffect(() => {
+    if (currentStep === 1) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+      const rect = canvas.getBoundingClientRect();
+      const scale = window.devicePixelRatio || 1;
+      canvas.width = rect.width * scale;
+      canvas.height = rect.height * scale;
+      ctx.scale(scale, scale);
 
-    if (errors[name]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
+      ctx.strokeStyle = "#1A365D";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
     }
-  };
+  }, [currentStep]);
 
-  // Canvas Drawing Handlers
-  const startDrawing = (
-    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
-  ) => {
+  // Signature Drawing Handlers
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x =
-      "touches" in e
-        ? e.touches[0].clientX - rect.left
-        : (e as React.MouseEvent).clientX - rect.left;
-    const y =
-      "touches" in e
-        ? e.touches[0].clientY - rect.top
-        : (e as React.MouseEvent).clientY - rect.top;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    setIsDrawing(true);
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
   };
 
-  const draw = (
-    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
-  ) => {
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -134,22 +132,13 @@ export function ClientAgreementForm() {
     if (!ctx) return;
 
     const rect = canvas.getBoundingClientRect();
-    const x =
-      "touches" in e
-        ? e.touches[0].clientX - rect.left
-        : (e as React.MouseEvent).clientX - rect.left;
-    const y =
-      "touches" in e
-        ? e.touches[0].clientY - rect.top
-        : (e as React.MouseEvent).clientY - rect.top;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
 
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#1E374D";
-    ctx.lineTo(x, y);
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
     ctx.stroke();
     setHasSignature(true);
+    setErrors((prev) => ({ ...prev, signature: "" }));
   };
 
   const stopDrawing = () => {
@@ -161,45 +150,77 @@ export function ClientAgreementForm() {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     setHasSignature(false);
+    setSavedSignatureData("");
   };
 
-  const validate = () => {
-    const err: Record<string, string> = {};
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
 
-    if (!formData.clientFullName.trim()) err.clientFullName = "Full name is required.";
-    if (!formData.address.trim()) err.address = "Street address is required.";
-    if (!formData.city.trim()) err.city = "City is required.";
-    if (!formData.postalCode.trim()) err.postalCode = "ZIP code is required.";
-    if (!formData.phone.trim()) err.phone = "Phone number is required.";
-    if (!formData.dob.trim()) err.dob = "Date of birth is required.";
-    if (!formData.emergencyContactName.trim())
-      err.emergencyContactName = "Emergency contact name is required.";
-    if (!formData.emergencyContactPhone.trim())
-      err.emergencyContactPhone = "Emergency contact phone is required.";
-    if (!formData.clientPrintedName.trim())
-      err.clientPrintedName = "Client printed name is required.";
-    if (!formData.agreementDate.trim()) err.agreementDate = "Date is required.";
-    if (!formData.agreedToTerms)
-      err.agreedToTerms = "You must check the box to confirm agreement.";
-    if (!hasSignature)
-      err.signature = "Please sign your signature in the signature area.";
-
-    setErrors(err);
-    return Object.keys(err).length === 0;
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Step 1 Validation -> Proceed to Payment Step
+  const handleProceedToPayment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.clientFullName.trim()) newErrors.clientFullName = "Client name is required.";
+    if (!formData.address.trim()) newErrors.address = "Address is required.";
+    if (!formData.city.trim()) newErrors.city = "City is required.";
+    if (!formData.postalCode.trim()) newErrors.postalCode = "ZIP/Postal code is required.";
+    if (!formData.phone.trim()) newErrors.phone = "Phone number is required.";
+    if (!formData.dob.trim()) newErrors.dob = "Date of birth is required.";
+    if (!formData.emergencyContactName.trim())
+      newErrors.emergencyContactName = "Emergency contact name is required.";
+    if (!formData.emergencyContactPhone.trim())
+      newErrors.emergencyContactPhone = "Emergency contact phone is required.";
+    if (!formData.clientPrintedName.trim())
+      newErrors.clientPrintedName = "Printed name is required.";
+    if (!formData.agreedToTerms)
+      newErrors.agreedToTerms = "You must agree to the terms to proceed.";
+    if (!hasSignature && !savedSignatureData)
+      newErrors.signature = "Please sign in the digital signature box.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
+    // Capture Signature Data URL
     const canvas = canvasRef.current;
-    const signatureData = canvas ? canvas.toDataURL("image/png") : "data:image/png;base64,signed";
+    const signatureData = canvas
+      ? canvas.toDataURL("image/png")
+      : savedSignatureData || "data:image/png;base64,signed";
+    setSavedSignatureData(signatureData);
 
+    setErrors({});
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Final Submission on Step 2 after Stripe Payment Confirmation
+  const handleFinalPaymentSuccess = async (
+    setupIntentId: string,
+    paymentMethodId: string
+  ) => {
     try {
       const response = await submitAgreement({
         clientFullName: formData.clientFullName.trim(),
@@ -223,15 +244,17 @@ export function ClientAgreementForm() {
         authorizedRepName: formData.authorizedRepName.trim() || null,
         relationshipToClient: formData.relationshipToClient.trim() || null,
         agreementDate: formData.agreementDate.trim(),
-        clientSignature: signatureData,
+        clientSignature: savedSignatureData || "data:image/png;base64,signed",
         agreedToTerms: true,
+        paymentMethodId: paymentMethodId || null,
+        setupIntentId: setupIntentId || null,
       }).unwrap();
 
       if (response.success) {
         setIsSuccess(true);
         setTimeout(() => {
           router.replace("/dashboard");
-        }, 1200);
+        }, 1500);
       } else {
         setErrors({ general: response.message || "Failed to submit agreement." });
       }
@@ -257,7 +280,7 @@ export function ClientAgreementForm() {
           general:
             errorData?.message ||
             (err as { message?: string })?.message ||
-            "Unable to submit agreement. Please try again.",
+            "Unable to complete agreement and payment. Please try again.",
         });
       }
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -266,7 +289,7 @@ export function ClientAgreementForm() {
 
   return (
     <div className="min-h-screen bg-[#F0F5F9] text-[#243746]">
-      {/* Top Simple Navigation */}
+      {/* Top Header */}
       <header className="bg-white border-b border-[#D9E4EC] py-3.5 px-6 sticky top-0 z-30 shadow-xs">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -279,502 +302,450 @@ export function ClientAgreementForm() {
               className="h-auto w-auto max-h-11 object-contain"
             />
           </div>
-          <span className="text-xs font-extrabold uppercase tracking-wider text-[#294B68] bg-[#EAF3F8] px-3 py-1 rounded-full border border-[#5E8FB2]/20">
-            Client Onboarding Step 1 of 1
-          </span>
+
+          {/* Stepper Pill Indicator */}
+          <div className="flex items-center gap-2 bg-[#F0F5F9] p-1 rounded-full border border-[#D9E4EC]">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                currentStep === 1
+                  ? "bg-[#294B68] text-white shadow-xs"
+                  : "text-[#64748B] hover:text-[#243746]"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>1. Agreement</span>
+            </button>
+            <div
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                currentStep === 2
+                  ? "bg-[#294B68] text-white shadow-xs"
+                  : "text-[#64748B]"
+              }`}
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>2. Payment</span>
+            </div>
+          </div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto py-8 sm:py-12 px-4 sm:px-6">
-        {/* White Agreement Document Card */}
+        {/* Document Card Container */}
         <div className="bg-white rounded-3xl shadow-xl border border-[#D9E4EC] p-6 sm:p-10 space-y-8">
-          {/* Document Header */}
-          <div className="text-center space-y-2 pb-6 border-b border-[#D9E4EC]">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
-              AgeWellRI
-            </h1>
-            <p className="text-base sm:text-lg font-bold text-[#5E8FB2]">
-              Client Service Agreement
-            </p>
-            <p className="text-xs sm:text-sm text-[#64748B] max-w-xl mx-auto pt-1">
-              Please review and complete the service agreement below to activate your AgeWellRI safety oversight and care plan.
-            </p>
-          </div>
-
           {isSuccess ? (
             <div className="p-10 bg-[#EAF3F8] border border-[#3F8F6B]/30 rounded-3xl text-center space-y-4 animate-in fade-in duration-300">
               <div className="w-16 h-16 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-md">
                 <CheckCircle2 className="w-9 h-9" />
               </div>
               <h2 className="text-2xl font-extrabold text-[#243746]">
-                Agreement Signed &amp; Accepted!
+                Agreement Executed &amp; Membership Activated!
               </h2>
-              <p className="text-sm sm:text-base text-[#64748B] max-w-md mx-auto">
-                Thank you! Your client service agreement has been executed. Redirecting you to your member dashboard...
+              <p className="text-sm text-[#64748B] max-w-md mx-auto">
+                Thank you for joining AgeWellRI, <strong>{formData.clientFullName}</strong>. Your safety oversight plan is now fully active. Redirecting you to your Member Dashboard...
               </p>
-              <div className="flex items-center justify-center gap-2 text-sm font-bold text-[#294B68] pt-2">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Entering Member Portal...</span>
+              <div className="pt-2 flex justify-center">
+                <Loader2 className="w-6 h-6 animate-spin text-[#294B68]" />
               </div>
             </div>
+          ) : currentStep === 2 ? (
+            /* STEP 2: STRIPE PAYMENT & ACTIVATION */
+            <PaymentStepCard
+              selectedPlan={formData.selectedPlan}
+              hasCleaningAddon={formData.hasCleaningAddon}
+              clientFullName={formData.clientFullName}
+              clientEmail={formData.email}
+              clientPostalCode={formData.postalCode}
+              onBackToAgreement={() => {
+                setCurrentStep(1);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onPaymentConfirmed={handleFinalPaymentSuccess}
+              isSubmittingOverall={isSubmittingAgreement}
+            />
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-8">
+            /* STEP 1: SERVICE AGREEMENT REVIEW & SIGNATURE */
+            <form onSubmit={handleProceedToPayment} className="space-y-8">
+              {/* Document Header */}
+              <div className="text-center space-y-2 pb-6 border-b border-[#D9E4EC]">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
+                  AgeWellRI
+                </h1>
+                <p className="text-base sm:text-lg font-bold text-[#5E8FB2]">
+                  Client Service Agreement
+                </p>
+                <p className="text-xs sm:text-sm text-[#64748B] max-w-xl mx-auto pt-1">
+                  Please review and complete the service agreement below to set up your AgeWellRI safety oversight and care plan.
+                </p>
+              </div>
+
               {errors.general && (
-                <div className="p-4 bg-red-50 border border-[#C95C5C]/30 rounded-2xl text-sm font-medium text-[#C95C5C] flex items-start gap-3">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-sm text-red-700">
                   <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <span>{errors.general}</span>
+                  <div className="font-semibold">{errors.general}</div>
                 </div>
               )}
 
-              {/* 1. Client Information */}
-              <div className="space-y-5">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
+              {/* SECTION 1: Client Information */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#243746] pb-2 border-b border-[#D9E4EC]">
                   <span>1. Client Information</span>
                 </div>
 
-                <div className="space-y-4 px-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Client full name (person receiving services) *
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Client Full Name *
                     </label>
                     <input
                       type="text"
                       name="clientFullName"
                       value={formData.clientFullName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Eleanor Vance"
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                      onChange={handleChange}
+                      placeholder="e.g. Jane Doe"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.clientFullName ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
                     />
                     {errors.clientFullName && (
                       <p className="text-xs text-red-500 mt-1">{errors.clientFullName}</p>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                        Client home address (street address) *
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Date of Birth *
+                    </label>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={formData.dob}
+                      onChange={handleChange}
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.dob ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.dob && (
+                      <p className="text-xs text-red-500 mt-1">{errors.dob}</p>
+                    )}
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Home Street Address *
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      placeholder="e.g. 148 Hope Street"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.address ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.address && (
+                      <p className="text-xs text-red-500 mt-1">{errors.address}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      City *
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      placeholder="e.g. Providence"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.city ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.city && (
+                      <p className="text-xs text-red-500 mt-1">{errors.city}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                        State *
                       </label>
                       <input
                         type="text"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        placeholder="148 Hope Street"
-                        className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        className="w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                       />
-                      {errors.address && (
-                        <p className="text-xs text-red-500 mt-1">{errors.address}</p>
-                      )}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                        City, State, ZIP *
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          name="city"
-                          value={formData.city}
-                          onChange={handleInputChange}
-                          placeholder="City"
-                          className="w-1/2 h-11 px-3 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                        />
-                        <input
-                          type="text"
-                          name="postalCode"
-                          value={formData.postalCode}
-                          onChange={handleInputChange}
-                          placeholder="ZIP"
-                          className="w-1/2 h-11 px-3 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                        Client phone number *
+                      <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                        ZIP Code *
                       </label>
                       <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="(401) 555-0199"
-                        className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                        type="text"
+                        name="postalCode"
+                        value={formData.postalCode}
+                        onChange={handleChange}
+                        placeholder="02906"
+                        className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                          errors.postalCode ? "border-red-400" : "border-[#D9E4EC]"
+                        }`}
                       />
-                      {errors.phone && (
-                        <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                        Client date of birth *
-                      </label>
-                      <input
-                        type="date"
-                        name="dob"
-                        value={formData.dob}
-                        onChange={handleInputChange}
-                        className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                      />
-                      {errors.dob && (
-                        <p className="text-xs text-red-500 mt-1">{errors.dob}</p>
+                      {errors.postalCode && (
+                        <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>
                       )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Client email address (read-only)
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="(401) 555-0199"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.phone ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.phone && (
+                      <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Email Address
                     </label>
                     <input
                       type="email"
+                      name="email"
                       value={formData.email}
-                      disabled
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#64748B] bg-[#F1F5F9] border border-[#D9E4EC] rounded-xl cursor-not-allowed select-none opacity-80"
+                      onChange={handleChange}
+                      placeholder="jane@example.com"
+                      className="w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     />
                   </div>
+                </div>
 
-                  {/* Primary Contact */}
-                  <div className="pt-2">
-                    <p className="text-xs font-black text-[#5E8FB2] uppercase tracking-wider mb-2">
-                      PRIMARY CONTACT / AUTHORIZED REPRESENTATIVE
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        name="primaryContactName"
-                        value={formData.primaryContactName}
-                        onChange={handleInputChange}
-                        placeholder="Primary contact full name (relationship to client)"
-                        className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                      />
-                      <input
-                        type="text"
-                        name="primaryContactPhone"
-                        value={formData.primaryContactPhone}
-                        onChange={handleInputChange}
-                        placeholder="Primary contact phone | email"
-                        className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                      />
-                    </div>
+                {/* Emergency Contact */}
+                <div className="pt-4 border-t border-[#D9E4EC]/60 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Emergency Contact Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="emergencyContactName"
+                      value={formData.emergencyContactName}
+                      onChange={handleChange}
+                      placeholder="e.g. Sarah Jenkins"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.emergencyContactName ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.emergencyContactName && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.emergencyContactName}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Emergency Contact */}
-                  <div className="pt-2">
-                    <p className="text-xs font-black text-[#5E8FB2] uppercase tracking-wider mb-2">
-                      EMERGENCY CONTACT
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          type="text"
-                          name="emergencyContactName"
-                          value={formData.emergencyContactName}
-                          onChange={handleInputChange}
-                          placeholder="Emergency contact name *"
-                          className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                        />
-                        {errors.emergencyContactName && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.emergencyContactName}
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          name="emergencyContactPhone"
-                          value={formData.emergencyContactPhone}
-                          onChange={handleInputChange}
-                          placeholder="Emergency contact phone | relationship *"
-                          className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                        />
-                        {errors.emergencyContactPhone && (
-                          <p className="text-xs text-red-500 mt-1">
-                            {errors.emergencyContactPhone}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Emergency Phone *
+                    </label>
+                    <input
+                      type="tel"
+                      name="emergencyContactPhone"
+                      value={formData.emergencyContactPhone}
+                      onChange={handleChange}
+                      placeholder="(401) 555-0182"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all ${
+                        errors.emergencyContactPhone ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.emergencyContactPhone && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.emergencyContactPhone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Relationship
+                    </label>
+                    <input
+                      type="text"
+                      name="emergencyContactRelation"
+                      value={formData.emergencyContactRelation}
+                      onChange={handleChange}
+                      placeholder="e.g. Daughter"
+                      className="w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* 2. Selected Service Plan */}
-              <div className="space-y-5">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
+              {/* SECTION 2: Selected Service Plan */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#243746] pb-2 border-b border-[#D9E4EC]">
                   <span>2. Selected Service Plan</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
-                  {/* Plan 1: Essential Guard */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Essential Guard */}
                   <label
-                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between space-y-4 ${
+                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                       formData.selectedPlan === "ESSENTIAL_GUARD"
-                        ? "border-[#294B68] bg-[#EAF3F8]/60 shadow-sm"
-                        : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]"
+                        ? "border-[#294B68] bg-[#EAF3F8]/40 shadow-xs"
+                        : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]/50"
                     }`}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-5 h-5 text-[#294B68]" />
-                          <h3 className="font-extrabold text-base text-[#243746]">
-                            Essential Guard
-                          </h3>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[#294B68] text-white flex items-center justify-center">
+                          <Heart className="w-5 h-5" />
                         </div>
-                        <p className="text-xs text-[#64748B]">
-                          Standard quarterly home safety &amp; oversight visits.
-                        </p>
+                        <div>
+                          <h4 className="font-extrabold text-[#243746] text-base">
+                            Essential Guard
+                          </h4>
+                          <span className="text-xs text-[#64748B]">
+                            4 Visits / Quarter
+                          </span>
+                        </div>
                       </div>
                       <input
                         type="radio"
                         name="selectedPlan"
                         value="ESSENTIAL_GUARD"
                         checked={formData.selectedPlan === "ESSENTIAL_GUARD"}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         className="w-4 h-4 text-[#294B68] accent-[#294B68] mt-1"
                       />
                     </div>
-                    <div className="pt-2 border-t border-[#D9E4EC]">
-                      <span className="text-lg font-black text-[#294B68]">
-                        $99/quarter
+                    <div className="mt-4 pt-3 border-t border-[#D9E4EC] flex items-baseline justify-between">
+                      <span className="text-xl font-black text-[#243746]">
+                        $99.00
                       </span>
-                      <span className="text-xs text-[#64748B] block font-semibold">
-                        4 visits / quarter
-                      </span>
+                      <span className="text-xs text-[#64748B]">Billed Quarterly</span>
                     </div>
                   </label>
 
-                  {/* Plan 2: Guardian Plus */}
+                  {/* Guardian Plus */}
                   <label
-                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between space-y-4 ${
+                    className={`relative p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
                       formData.selectedPlan === "GUARDIAN_PLUS"
-                        ? "border-[#294B68] bg-[#EAF3F8]/60 shadow-sm"
-                        : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]"
+                        ? "border-[#294B68] bg-[#EAF3F8]/40 shadow-xs"
+                        : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]/50"
                     }`}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-5 h-5 text-[#294B68]" />
-                          <h3 className="font-extrabold text-base text-[#243746]">
-                            Guardian Plus
-                          </h3>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[#3F8F6B] text-white flex items-center justify-center">
+                          <Shield className="w-5 h-5" />
                         </div>
-                        <p className="text-xs text-[#64748B]">
-                          Intensive bi-weekly safety audits &amp; ongoing care check-ins.
-                        </p>
+                        <div>
+                          <h4 className="font-extrabold text-[#243746] text-base">
+                            Guardian Plus
+                          </h4>
+                          <span className="text-xs text-[#64748B]">
+                            8 Visits / Quarter
+                          </span>
+                        </div>
                       </div>
                       <input
                         type="radio"
                         name="selectedPlan"
                         value="GUARDIAN_PLUS"
                         checked={formData.selectedPlan === "GUARDIAN_PLUS"}
-                        onChange={handleInputChange}
+                        onChange={handleChange}
                         className="w-4 h-4 text-[#294B68] accent-[#294B68] mt-1"
                       />
                     </div>
-                    <div className="pt-2 border-t border-[#D9E4EC]">
-                      <span className="text-lg font-black text-[#294B68]">
-                        $1,800/quarter
+                    <div className="mt-4 pt-3 border-t border-[#D9E4EC] flex items-baseline justify-between">
+                      <span className="text-xl font-black text-[#243746]">
+                        $1,800.00
                       </span>
-                      <span className="text-xs text-[#64748B] block font-semibold">
-                        8 visits / quarter
-                      </span>
+                      <span className="text-xs text-[#64748B]">Billed Quarterly</span>
                     </div>
                   </label>
                 </div>
 
-                {/* Addon Checkbox */}
-                <div className="px-1 pt-2">
-                  <label className="flex items-center gap-3 p-4 bg-[#F7FAFC] rounded-xl border border-[#D9E4EC] cursor-pointer hover:bg-[#EAF3F8]/50 transition-colors">
+                {/* Add-on */}
+                <label className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] flex items-center justify-between cursor-pointer hover:bg-[#F0F5F9] transition-all">
+                  <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
                       name="hasCleaningAddon"
                       checked={formData.hasCleaningAddon}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 text-[#294B68] rounded border-[#D9E4EC] accent-[#294B68]"
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded text-[#294B68] accent-[#294B68]"
                     />
-                    <span className="text-sm font-bold text-[#243746]">
-                      Cleaning Add-On — <span className="text-[#5E8FB2]">$50/quarter</span>
-                    </span>
+                    <div>
+                      <span className="text-sm font-bold text-[#243746]">
+                        Add Quarterly Deep Cleaning (+ $50.00 / Quarter)
+                      </span>
+                      <p className="text-xs text-[#64748B]">
+                        Includes 2 specialized home sanitation visits each quarter.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[#294B68] bg-[#EAF3F8] px-2.5 py-1 rounded-full border border-[#5E8FB2]/30">
+                    +$50.00
+                  </span>
+                </label>
+              </div>
+
+              {/* SECTION 3: Scope of Services & Disclaimer */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#243746] pb-2 border-b border-[#D9E4EC]">
+                  <span>3. Scope of Services &amp; Medical Disclaimer</span>
+                </div>
+                <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-xs text-[#475569] leading-relaxed space-y-2">
+                  <p>
+                    <strong>Non-Medical Safety Oversight:</strong> AgeWellRI provides non-medical home safety assessments, hazard mitigation, fall prevention checks, and senior wellness check-ins.
+                  </p>
+                  <p className="text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                    <strong>Medical Emergency Notice:</strong> AgeWellRI is NOT an emergency response service or healthcare provider. In the event of a medical emergency, call 911 immediately.
+                  </p>
+                </div>
+              </div>
+
+              {/* SECTION 4: Digital Signature Pad */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-sm font-bold uppercase tracking-wider text-[#243746] pb-2 border-b border-[#D9E4EC]">
+                  <span>4. Digital Signature &amp; Acknowledgment</span>
+                  <button
+                    type="button"
+                    onClick={clearSignature}
+                    className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] cursor-pointer"
+                  >
+                    Clear Signature Pad
+                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#64748B] uppercase">
+                    Draw Signature with Mouse or Finger *
                   </label>
-                </div>
-              </div>
-
-              {/* 3. Scope of Services */}
-              <div className="space-y-3">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
-                  <span>3. Scope of Services</span>
-                </div>
-
-                <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl max-h-48 overflow-y-auto text-xs text-[#475569] space-y-2.5 leading-relaxed">
-                  <p className="font-bold text-[#243746]">
-                    Includes everything in the Selected Plan plus complete safety auditing, organization and specialized coaching across all rooms of the household:
-                  </p>
-                  <p>
-                    <strong>Bedrooms &amp; Living Areas:</strong> Walk pathways, clear indoor electrical cords, ensure bedside lighting and emergency call devices are easily reachable, secure throw rugs with non-skid backing, and perform HEPA vacuuming and dusting to reduce respiratory allergens.
-                  </p>
-                  <p>
-                    <strong>Life Safety Systems:</strong> Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert systems; checks water heater temperature to prevent accidental scalding, and reviews emergency exit pathways.
-                  </p>
-                  <p>
-                    <strong>Kitchen &amp; Laundry:</strong> Reorganizes heavy or daily items to lower-level shelves for easy, safe reach; inspects appliances for potential hazards, clears dryer lint pathways, and audits moisture/mold concerns.
-                  </p>
-                </div>
-              </div>
-
-              {/* 4. Billing, Payment & Cancellation */}
-              <div className="space-y-3">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
-                  <span>4. Billing, Payment &amp; Cancellation</span>
-                </div>
-
-                <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl max-h-40 overflow-y-auto text-xs text-[#475569] space-y-2 leading-relaxed">
-                  <p>
-                    <strong>Billing and Payment:</strong> Billed quarterly or monthly via check, ACH, or credit/debit card. Invoices are generated at the commencement of each cycle. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
-                  </p>
-                  <p>
-                    <strong>Cancellation by Client:</strong> Cancel at any time with 30 days written notice. Cancellation takes effect at the end of the current billing quarter. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
-                  </p>
-                </div>
-              </div>
-
-              {/* 5. Liability, Privacy & Dispute Resolution */}
-              <div className="space-y-3">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
-                  <span>5. Liability, Privacy &amp; Dispute Resolution</span>
-                </div>
-
-                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>Please read carefully. This section defines the limits of AgeWellRI&apos;s legal responsibility.</span>
-                </div>
-
-                <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl max-h-44 overflow-y-auto text-xs text-[#475569] space-y-2 leading-relaxed">
-                  <p>
-                    <strong>Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the quarter a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
-                  </p>
-                  <p>
-                    <strong>Privacy and Confidentiality:</strong> Client safety data, contact info, and home assessment results are collected solely to deliver and coordinate services. Reports are confidential and accessible only to the client and designated authorized representatives.
-                  </p>
-                </div>
-              </div>
-
-              {/* 6. Acknowledgment and Signatures */}
-              <div className="space-y-5">
-                <div className="bg-[#243746] text-white px-5 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-xs">
-                  <span>6. Acknowledgment and Signatures</span>
-                </div>
-
-                {/* Consent Checkbox */}
-                <div className="px-1">
-                  <label className="flex items-start gap-3 p-4 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      name="agreedToTerms"
-                      checked={formData.agreedToTerms}
-                      onChange={handleInputChange}
-                      className="w-5 h-5 mt-0.5 rounded border-[#D9E4EC] text-[#294B68] accent-[#294B68] shrink-0"
-                    />
-                    <span className="text-xs sm:text-sm font-medium text-[#243746] leading-relaxed">
-                      By checking this box, the client and authorized representative confirm they have read, understood, and agreed to all terms of this Client Service Agreement. If the client cannot sign due to cognitive or physical limitations, the authorized representative may sign on their behalf. *
-                    </span>
-                  </label>
-                  {errors.agreedToTerms && (
-                    <p className="text-xs text-red-500 mt-1">{errors.agreedToTerms}</p>
-                  )}
-                </div>
-
-                {/* Signature Names and Date */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-1">
-                  <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Client printed name *
-                    </label>
-                    <input
-                      type="text"
-                      name="clientPrintedName"
-                      value={formData.clientPrintedName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Eleanor Vance"
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                    />
-                    {errors.clientPrintedName && (
-                      <p className="text-xs text-red-500 mt-1">{errors.clientPrintedName}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Authorized representative printed name (if applicable)
-                    </label>
-                    <input
-                      type="text"
-                      name="authorizedRepName"
-                      value={formData.authorizedRepName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Sarah Jenkins (Optional)"
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Agreement Date *
-                    </label>
-                    <input
-                      type="date"
-                      name="agreementDate"
-                      value={formData.agreementDate}
-                      onChange={handleInputChange}
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                    />
-                    {errors.agreementDate && (
-                      <p className="text-xs text-red-500 mt-1">{errors.agreementDate}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider mb-1">
-                      Relationship to client (if signed by representative)
-                    </label>
-                    <input
-                      type="text"
-                      name="relationshipToClient"
-                      value={formData.relationshipToClient}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Daughter / Power of Attorney"
-                      className="w-full h-11 px-4 text-sm font-semibold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                    />
-                  </div>
-                </div>
-
-                {/* Digital Signature Canvas */}
-                <div className="space-y-2 px-1 pt-2">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                      Client signature (draw with mouse or finger) *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={clearSignature}
-                      className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] underline cursor-pointer"
-                    >
-                      Clear signature
-                    </button>
-                  </div>
-
-                  <div className="border-2 border-dashed border-[#D9E4EC] hover:border-[#5E8FB2] rounded-2xl bg-[#FCFDFF] p-2 transition-colors">
+                  <div
+                    className={`h-40 bg-[#F8FAFC] border-2 rounded-2xl relative overflow-hidden transition-all ${
+                      errors.signature ? "border-red-400 bg-red-50/20" : "border-[#D9E4EC]"
+                    }`}
+                  >
                     <canvas
                       ref={canvasRef}
-                      width={600}
-                      height={160}
                       onMouseDown={startDrawing}
                       onMouseMove={draw}
                       onMouseUp={stopDrawing}
@@ -782,33 +753,79 @@ export function ClientAgreementForm() {
                       onTouchStart={startDrawing}
                       onTouchMove={draw}
                       onTouchEnd={stopDrawing}
-                      className="w-full h-36 bg-white rounded-xl cursor-crosshair touch-none border border-[#E2E8F0]"
+                      className="w-full h-full cursor-crosshair touch-none"
                     />
+                    {!hasSignature && !savedSignatureData && (
+                      <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs font-semibold text-[#94A3B8]">
+                        Sign in this box using your mouse or finger
+                      </div>
+                    )}
                   </div>
                   {errors.signature && (
-                    <p className="text-xs text-red-500">{errors.signature}</p>
+                    <p className="text-xs text-red-500 font-medium">{errors.signature}</p>
                   )}
-                  <p className="text-[11px] text-[#94A3B8]">
-                    Signing digitally certifies your legal agreement to the terms above.
-                  </p>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Printed Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="clientPrintedName"
+                      value={formData.clientPrintedName}
+                      onChange={handleChange}
+                      placeholder="Jane Doe"
+                      className={`w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] ${
+                        errors.clientPrintedName ? "border-red-400" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                    {errors.clientPrintedName && (
+                      <p className="text-xs text-red-500 mt-1">{errors.clientPrintedName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#64748B] uppercase mb-1">
+                      Agreement Date *
+                    </label>
+                    <input
+                      type="date"
+                      name="agreementDate"
+                      value={formData.agreementDate}
+                      onChange={handleChange}
+                      className="w-full h-11 px-3.5 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
+                  </div>
+                </div>
+
+                {/* Terms checkbox */}
+                <label className="flex items-start gap-3 p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] cursor-pointer hover:bg-[#F0F5F9] transition-all">
+                  <input
+                    type="checkbox"
+                    name="agreedToTerms"
+                    checked={formData.agreedToTerms}
+                    onChange={handleChange}
+                    className="w-4 h-4 rounded text-[#294B68] accent-[#294B68] mt-0.5"
+                  />
+                  <span className="text-xs text-[#475569] leading-relaxed">
+                    I have read, understood, and agree to the AgeWellRI Client Service Agreement, scope of non-medical services, and automatic quarterly billing policies.
+                  </span>
+                </label>
+                {errors.agreedToTerms && (
+                  <p className="text-xs text-red-500 font-medium">{errors.agreedToTerms}</p>
+                )}
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-6 border-t border-[#D9E4EC] flex justify-center">
+              {/* Proceed Button */}
+              <div className="pt-4 border-t border-[#D9E4EC] flex justify-end">
                 <button
                   type="submit"
-                  disabled={isLoading}
-                  className="w-full sm:w-80 h-13 bg-[#243746] hover:bg-[#1A2834] text-white font-extrabold text-base rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  className="w-full sm:w-auto px-8 h-13 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-sm sm:text-base rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 cursor-pointer"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Submitting Agreement...</span>
-                    </>
-                  ) : (
-                    <span>Submit agreement</span>
-                  )}
+                  <span>Continue to Secure Payment</span>
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
             </form>
@@ -855,7 +872,7 @@ export function ClientAgreementForm() {
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 text-[11px] text-slate-400 leading-relaxed text-center">
-            AgeWellRI is a home safety oversight service and is not a medical provider, healthcare agency, or emergency response service. Our services do not constitute medical care, medical advice, diagnosis, or treatment of any kind. AgeWellRI technicians are not licensed medical professionals, home health aides, or certified caregivers. In the event of a medical emergency, always call 911. If you have concerns about your health or the health of a loved one, please consult a licensed physician or qualified healthcare provider.
+            AgeWellRI is a home safety oversight service and is not a medical provider, healthcare agency, or emergency response service. Our services do not constitute medical care, medical advice, diagnosis, or treatment of any kind.
           </div>
 
           <div className="text-center text-[11px] text-slate-500">

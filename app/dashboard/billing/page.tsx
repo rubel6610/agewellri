@@ -5,18 +5,35 @@ import { getBillingDetails } from "@/lib/api/dashboard";
 import { BillingInfo } from "@/lib/types/dashboard";
 import { BillingCard } from "@/components/dashboard/billing-card";
 import { InvoiceTable } from "@/components/dashboard/invoice-table";
+import { useGetBillingOverviewQuery } from "@/redux/features/payment/paymentApi";
+import { Loader2 } from "lucide-react";
 
 export default function BillingPage() {
-  const [billing, setBilling] = useState<BillingInfo | null>(null);
+  const { data: liveData, isLoading: isLoadingLive, error } = useGetBillingOverviewQuery();
+  const [fallbackBilling, setFallbackBilling] = useState<BillingInfo | null>(null);
 
   useEffect(() => {
-    getBillingDetails().then(setBilling);
-  }, []);
+    if (error) {
+      getBillingDetails().then(setFallbackBilling);
+    }
+  }, [error]);
+
+  const billing: BillingInfo | null =
+    (liveData?.data as unknown as BillingInfo) || fallbackBilling;
+
+  if (isLoadingLive && !billing) {
+    return (
+      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#294B68] mx-auto" />
+        <p className="text-sm font-bold text-[#243746]">Loading billing details...</p>
+      </div>
+    );
+  }
 
   if (!billing) {
     return (
       <div className="p-12 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC]">
-        Loading billing details...
+        No active billing information found.
       </div>
     );
   }
@@ -34,7 +51,7 @@ export default function BillingPage() {
       </div>
 
       <BillingCard billing={billing} />
-      <InvoiceTable invoices={billing.invoices} />
+      <InvoiceTable invoices={billing.invoices || []} />
     </div>
   );
 }
