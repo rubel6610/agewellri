@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, Loader2, Check } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthCard } from "./auth-card";
-
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
 
 interface FormErrors {
   email?: string;
@@ -15,11 +16,16 @@ interface FormErrors {
 }
 
 export function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
+
+  const [login, { isLoading }] = useLoginMutation();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -47,21 +53,58 @@ export function LoginForm() {
       return;
     }
 
-    setIsLoading(true);
     setErrors({});
 
     try {
-      // Simulate API connection delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
-      // For demonstration of UI state
-      setLoginSuccess(true);
-    } catch {
-      setErrors({
-        general: "Unable to sign in. Please check your credentials and try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      const response = await login({
+        email: email.trim().toLowerCase(),
+        password,
+      }).unwrap();
+
+      if (response.success && response.data) {
+        const user = response.data.user;
+        setLoginSuccessMessage(`Welcome back, ${user.firstName || "Member"}! Redirecting...`);
+
+        // Compute destination route based on role and agreement status
+        let targetRoute = "/dashboard";
+        if (user.role === "ADMIN") {
+          targetRoute = redirectUrl && redirectUrl.startsWith("/admin") ? redirectUrl : "/admin";
+        } else if (user.role === "TECHNICIAN") {
+          targetRoute =
+            redirectUrl && redirectUrl.startsWith("/technician") ? redirectUrl : "/technician";
+        } else if (user.role === "CLIENT") {
+          if (user.requiresAgreement || !user.hasCompletedAgreement) {
+            targetRoute = "/agreement";
+          } else {
+            targetRoute =
+              redirectUrl && redirectUrl.startsWith("/dashboard") ? redirectUrl : "/dashboard";
+          }
+        }
+
+        setTimeout(() => {
+          router.push(targetRoute);
+        }, 700);
+      } else {
+        setErrors({
+          general: response.message || "Unable to sign in. Please try again.",
+        });
+      }
+    } catch (err: unknown) {
+      const errorData = (err as { data?: { message?: string; errors?: Record<string, string[]> } })?.data;
+      if (errorData?.errors && typeof errorData.errors === "object") {
+        const fieldErrors: FormErrors = {};
+        if (errorData.errors.email?.[0]) fieldErrors.email = errorData.errors.email[0];
+        if (errorData.errors.password?.[0]) fieldErrors.password = errorData.errors.password[0];
+        fieldErrors.general = errorData.message || "Please correct the highlighted fields.";
+        setErrors(fieldErrors);
+      } else {
+        setErrors({
+          general:
+            errorData?.message ||
+            (err as { message?: string })?.message ||
+            "Unable to sign in. Please check your credentials and try again.",
+        });
+      }
     }
   };
 
@@ -69,7 +112,7 @@ export function LoginForm() {
     <AuthCard>
       {/* Header / Branding */}
       <div className="flex flex-col items-center text-center space-y-4 mb-8">
-        
+
         <div className="space-y-1 pt-2">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#243746] tracking-tight">
             Welcome back
@@ -80,29 +123,28 @@ export function LoginForm() {
         </div>
       </div>
 
-      {loginSuccess ? (
+      {loginSuccessMessage ? (
         <div className="p-6 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-2xl text-center space-y-4 animate-in fade-in duration-300">
-          <div className="w-12 h-12 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto">
-            <Check className="w-6 h-6" />
+          <div className="w-12 h-12 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#243746]">Validation Successful</h3>
+            <h3 className="text-lg font-bold text-[#243746]">Signed In Successfully</h3>
             <p className="text-sm text-[#64748B] mt-1">
-              You are ready to connect to your authentication API.
+              {loginSuccessMessage}
             </p>
           </div>
-          <button
-            onClick={() => setLoginSuccess(false)}
-            className="text-sm font-semibold text-[#294B68] underline hover:text-[#5E8FB2]"
-          >
-            Back to Sign In form
-          </button>
+          <div className="flex items-center justify-center gap-2 text-sm text-[#294B68] font-semibold">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Redirecting to your portal...</span>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
           {errors.general && (
-            <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C]">
-              {errors.general}
+            <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C] flex items-start gap-2.5">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{errors.general}</span>
             </div>
           )}
 
@@ -143,11 +185,7 @@ export function LoginForm() {
           {/* Forgot password */}
           <div className="flex justify-end pt-1">
             <Link
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                alert("Password reset functionality will connect to backend API.");
-              }}
+              href="/forgot-password"
               className="text-sm font-semibold text-[#5E8FB2] hover:text-[#294B68] hover:underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
             >
               Forgot password?

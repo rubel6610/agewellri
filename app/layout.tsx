@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Almarai } from "next/font/google";
 import "./globals.css";
+import StoreProvider from "@/redux/provider";
+import AuthInitializer from "@/redux/auth-initializer";
 
 const almarai = Almarai({
   subsets: ["arabic"],
@@ -9,8 +11,8 @@ const almarai = Almarai({
 });
 
 export const metadata: Metadata = {
-  title: "AgeWellRI Member Portal | Authentication",
-  description: "Stay home. Age well. Secure login and registration portal for AgeWellRI members, families, and caregivers.",
+  title: "AgeWellRI",
+  description: "AgeWellRI Member and Administrator Portal",
 };
 
 export default function RootLayout({
@@ -20,8 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={almarai.variable}>
-      <body suppressHydrationWarning className="min-h-screen bg-[#F7FAFC] text-[#243746] antialiased selection:bg-[#EAF3F8] selection:text-[#294B68]">
-        {children}
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-[#F7FAFC] text-[#243746] antialiased selection:bg-[#EAF3F8] selection:text-[#294B68]"
+      >
+        <StoreProvider>
+          <AuthInitializer>{children}</AuthInitializer>
+        </StoreProvider>
       </body>
     </html>
   );

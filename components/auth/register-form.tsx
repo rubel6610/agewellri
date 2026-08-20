@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, User, Phone, Loader2, Check } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
+import { useRegisterMutation } from "@/redux/features/auth/authApi";
 
 interface FormErrors {
   firstName?: string;
@@ -19,6 +21,7 @@ interface FormErrors {
 }
 
 export function RegisterForm() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -30,8 +33,9 @@ export function RegisterForm() {
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [registerSuccessMessage, setRegisterSuccessMessage] = useState<string | null>(null);
+
+  const [registerUser, { isLoading }] = useRegisterMutation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -68,15 +72,13 @@ export function RegisterForm() {
     // Phone Number
     if (!formData.phone.trim()) {
       newErrors.phone = "Please enter your phone number.";
-    } else if (!/^[0-9()\-\s+.]{7,20}$/.test(formData.phone.trim())) {
-      newErrors.phone = "Please enter a valid phone number.";
     }
 
     // Password
     if (!formData.password) {
       newErrors.password = "Please create a password.";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters.";
     }
 
     // Confirm Password
@@ -102,20 +104,66 @@ export function RegisterForm() {
       return;
     }
 
-    setIsLoading(true);
     setErrors({});
 
     try {
-      // Simulate API connection delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await registerUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        phone: formData.phone.trim(),
+        password: formData.password,
+        role: "CLIENT",
+      }).unwrap();
 
-      setRegisterSuccess(true);
-    } catch {
-      setErrors({
-        general: "Registration failed. Please check your information and try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      if (response.success && response.data) {
+        const user = response.data.user;
+        const targetRoute =
+          user.role === "ADMIN"
+            ? "/admin"
+            : user.role === "TECHNICIAN"
+            ? "/technician"
+            : "/agreement";
+
+        setRegisterSuccessMessage(
+          `Welcome to AgeWellRI, ${user.firstName || "Member"}! Directing you to your Service Agreement...`
+        );
+
+        setTimeout(() => {
+          router.push(targetRoute);
+        }, 800);
+      } else {
+        setErrors({
+          general: response.message || "Registration failed. Please try again.",
+        });
+      }
+    } catch (err: unknown) {
+      const errorData = (
+        err as {
+          data?: {
+            message?: string;
+            errors?: Record<string, string[]>;
+          };
+        }
+      )?.data;
+
+      if (errorData?.errors && typeof errorData.errors === "object") {
+        const fieldErrors: FormErrors = {};
+        if (errorData.errors.firstName?.[0]) fieldErrors.firstName = errorData.errors.firstName[0];
+        if (errorData.errors.lastName?.[0]) fieldErrors.lastName = errorData.errors.lastName[0];
+        if (errorData.errors.email?.[0]) fieldErrors.email = errorData.errors.email[0];
+        if (errorData.errors.phone?.[0]) fieldErrors.phone = errorData.errors.phone[0];
+        if (errorData.errors.password?.[0]) fieldErrors.password = errorData.errors.password[0];
+        fieldErrors.general = errorData.message || "Please check highlighted fields.";
+        setErrors(fieldErrors);
+      } else {
+        setErrors({
+          general:
+            errorData?.message ||
+            (err as { message?: string })?.message ||
+            "Registration failed. Please verify your information and try again.",
+        });
+      }
     }
   };
 
@@ -123,7 +171,6 @@ export function RegisterForm() {
     <AuthCard>
       {/* Header / Branding */}
       <div className="flex flex-col items-center text-center space-y-4 mb-6">
-
         <div className="space-y-1 pt-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#243746] tracking-tight">
             Welcome to AgeWellRI
@@ -134,29 +181,28 @@ export function RegisterForm() {
         </div>
       </div>
 
-      {registerSuccess ? (
+      {registerSuccessMessage ? (
         <div className="p-6 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-2xl text-center space-y-4 animate-in fade-in duration-300">
-          <div className="w-12 h-12 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto">
-            <Check className="w-6 h-6" />
+          <div className="w-12 h-12 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#243746]">Account Prepared Successfully!</h3>
+            <h3 className="text-lg font-bold text-[#243746]">Account Created Successfully!</h3>
             <p className="text-sm text-[#64748B] mt-1">
-              Validation passed. Your registration form is ready for authentication backend integration.
+              {registerSuccessMessage}
             </p>
           </div>
-          <button
-            onClick={() => setRegisterSuccess(false)}
-            className="text-sm font-semibold text-[#294B68] underline hover:text-[#5E8FB2]"
-          >
-            Modify details
-          </button>
+          <div className="flex items-center justify-center gap-2 text-sm text-[#294B68] font-semibold">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Redirecting to your dashboard...</span>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {errors.general && (
-            <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C]">
-              {errors.general}
+            <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C] flex items-start gap-2.5">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <span>{errors.general}</span>
             </div>
           )}
 
