@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, Loader2 } from "lucide-react";
 import { ServicePlan, VisitType } from "@/lib/types/dashboard";
 import { scheduleAppointment } from "@/lib/api/dashboard";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface ScheduleVisitModalProps {
   isOpen: boolean;
@@ -50,6 +55,15 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   ];
 
   const handleConfirm = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: `Confirm ${selectedService} Visit?`,
+      text: `Book appointment for ${selectedDate} at ${selectedTimeSlot}?`,
+      confirmButtonText: "Yes, Schedule Appointment",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     setIsSubmitting(true);
     try {
       await scheduleAppointment({
@@ -58,9 +72,13 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         timeSlot: selectedTimeSlot,
         notes,
       });
-      setStep(5); // Confirmation step
+      setStep(5);
+      await showSuccessAlert(
+        "Appointment Booked",
+        `Your ${selectedService} visit has been scheduled for ${selectedDate} (${selectedTimeSlot}).`
+      );
     } catch {
-      alert("Unable to schedule appointment right now. Please try again.");
+      showErrorAlert("Scheduling Failed", "Unable to schedule appointment right now. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +110,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
           <button
             onClick={resetAndClose}
             aria-label="Close modal"
-            className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]"
+            className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>

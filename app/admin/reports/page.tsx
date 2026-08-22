@@ -6,6 +6,7 @@ import { getAdminReports } from "@/lib/api/admin-api";
 import { AdminReport } from "@/lib/types/admin";
 import { FileCheck2, FileUp, Download, CheckCircle2, Clock } from "lucide-react";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
+import { showToast } from "@/lib/alerts/sweetalert";
 
 export default function ReportsAdminPage() {
   const [reports, setReports] = useState<AdminReport[]>([]);
@@ -89,7 +90,7 @@ export default function ReportsAdminPage() {
                   <td className="py-4 px-4 text-right">
                     {rep.status === "uploaded" ? (
                       <button
-                        onClick={() => alert(`Downloading PDF for ${rep.title}`)}
+                        onClick={() => showToast(`Downloading PDF for ${rep.title}...`)}
                         className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
                         title="Download PDF"
                       >

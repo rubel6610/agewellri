@@ -6,11 +6,17 @@ import { getAdminAppointments } from "@/lib/api/admin-api";
 import { AdminAppointment } from "@/lib/types/admin";
 import { CalendarCheck, Clock, UserCheck, Plus, Search } from "lucide-react";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function AppointmentsAdminPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     getAdminAppointments().then((data) => {
@@ -18,6 +24,20 @@ export default function AppointmentsAdminPage() {
       setLoading(false);
     });
   }, []);
+
+  const handleModifyAppointment = async (appt: AdminAppointment) => {
+    const confirmed = await confirmCriticalAction({
+      title: `Modify Appointment for ${appt.clientName}?`,
+      text: `Update the scheduled ${appt.serviceType} visit on ${appt.date} (${appt.timeSlot}) assigned to ${appt.technicianName}?`,
+      confirmButtonText: "Open Reschedule Form",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
+    setSelectedClientId(appt.clientId);
+    setScheduleModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -41,7 +61,10 @@ export default function AppointmentsAdminPage() {
         </div>
 
         <button
-          onClick={() => setScheduleModalOpen(true)}
+          onClick={() => {
+            setSelectedClientId(undefined);
+            setScheduleModalOpen(true);
+          }}
           className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -87,8 +110,8 @@ export default function AppointmentsAdminPage() {
                   </td>
                   <td className="py-4 px-4 text-right">
                     <button
-                      onClick={() => alert(`Reschedule action for ${appt.clientName}`)}
-                      className="text-xs font-bold text-[#5E8FB2] hover:underline"
+                      onClick={() => handleModifyAppointment(appt)}
+                      className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] hover:underline cursor-pointer"
                     >
                       Modify
                     </button>
@@ -100,7 +123,11 @@ export default function AppointmentsAdminPage() {
         </div>
       </div>
 
-      <AdminScheduleModal isOpen={scheduleModalOpen} onClose={() => setScheduleModalOpen(false)} />
+      <AdminScheduleModal
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+        defaultClientId={selectedClientId}
+      />
     </div>
   );
 }

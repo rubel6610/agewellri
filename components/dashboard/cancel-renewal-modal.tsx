@@ -3,6 +3,11 @@
 import React, { useState } from "react";
 import { useCancelSubscriptionRenewalMutation } from "@/redux/features/payment/paymentApi";
 import { AlertTriangle, X, Loader2, Calendar } from "lucide-react";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface CancelRenewalModalProps {
   isOpen: boolean;
@@ -25,16 +30,34 @@ export function CancelRenewalModal({
 
   const handleConfirm = async () => {
     setErrorMsg(null);
+
+    const confirmed = await confirmCriticalAction({
+      title: "Confirm Cancellation of Renewal?",
+      text: `Your coverage and scheduled safety visits will remain active through ${nextRenewalDate}. You will not be charged again.`,
+      confirmButtonText: "Yes, Cancel Renewal",
+      isDestructive: true,
+    });
+
+    if (!confirmed) return;
+
     try {
       const res = await cancelRenewal({ reason: reason.trim() || undefined }).unwrap();
       if (res.success) {
         onSuccess();
         onClose();
+        await showSuccessAlert(
+          "Auto-Renewal Cancelled",
+          `Your active membership coverage continues until ${nextRenewalDate}.`
+        );
       } else {
-        setErrorMsg(res.message || "Failed to cancel renewal.");
+        const msg = res.message || "Failed to cancel renewal.";
+        setErrorMsg(msg);
+        showErrorAlert("Cancellation Error", msg);
       }
     } catch (err: any) {
-      setErrorMsg(err.data?.message || err.message || "Error cancelling renewal.");
+      const msg = err.data?.message || err.message || "Error cancelling renewal.";
+      setErrorMsg(msg);
+      showErrorAlert("Cancellation Failed", msg);
     }
   };
 

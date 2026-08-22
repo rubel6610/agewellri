@@ -16,15 +16,33 @@ import {
 } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
+import { confirmCriticalAction, showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Sign Out of AgeWellRI?",
+      text: "Are you sure you want to end your current session?",
+      confirmButtonText: "Yes, Sign Out",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     dispatch(logout());
     router.push("/login");
+  };
+
+  const handleHelp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    showSuccessAlert(
+      "AgeWellRI Member Concierge",
+      "24/7 Care Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: care@agewellri.com\nDedicated Rhode Island Staff"
+    );
   };
 
   const navItems = [
@@ -111,19 +129,17 @@ export function DashboardSidebar() {
 
       {/* Bottom Actions */}
       <div className="p-4 border-t border-[#D9E4EC] space-y-1">
-        <Link
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            alert("Help & Support line: (401) 555-AGEWELL (available 24/7)");
-          }}
-          className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#EAF3F8] hover:text-[#294B68] transition-colors"
+        <button
+          type="button"
+          onClick={handleHelp}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#EAF3F8] hover:text-[#294B68] transition-colors cursor-pointer text-left"
         >
           <HelpCircle className="w-5 h-5 text-[#5E8FB2]" />
           <span>Help & Support</span>
-        </Link>
+        </button>
 
         <button
+          type="button"
           onClick={handleSignOut}
           className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 transition-colors cursor-pointer text-left"
         >

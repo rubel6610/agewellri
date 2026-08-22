@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { Search, Bell, Plus, Menu, UserCheck } from "lucide-react";
+import { Bell, Plus, Menu, UserCheck, Shield } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
 import { MOCK_NOTIFICATIONS } from "@/lib/api/mock-data";
 import { useAppSelector } from "@/redux/hooks";
@@ -18,7 +18,6 @@ export function AdminHeader({
   onOpenAddClientModal,
   onOpenScheduleModal,
 }: AdminHeaderProps) {
-  const [searchQuery, setSearchQuery] = useState("");
   const authUser = useAppSelector((state) => state.auth.user);
 
   const firstName = authUser?.firstName || "Sarah";
@@ -37,18 +36,13 @@ export function AdminHeader({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Global Admin Search Bar */}
-        <div className="relative hidden sm:block w-72 md:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search clients, ID, appointments..."
-            className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] focus:bg-white placeholder:text-[#94A3B8]"
-          />
+        <div>
+          <h2 className="text-lg sm:text-xl font-bold text-[#243746]">
+            AgeWellRI Administration
+          </h2>
+          <p className="text-xs text-[#64748B] hidden sm:block">
+            Member Lifecycle, Dispatch &amp; Plan Management
+          </p>
         </div>
       </div>
 

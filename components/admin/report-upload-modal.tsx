@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import { X, FileUp, Loader2, CheckCircle2 } from "lucide-react";
 import { uploadVisitReport } from "@/lib/api/admin-api";
 import { MOCK_ADMIN_CLIENTS } from "@/lib/api/admin-mock-data";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface ReportUploadModalProps {
   isOpen: boolean;
@@ -31,6 +36,16 @@ export function ReportUploadModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const confirmed = await confirmCriticalAction({
+      title: "Publish Assessment Report?",
+      text: `Publish this Age Safe® Home Score™ report (${score}/100) to the client's member portal?`,
+      confirmButtonText: "Yes, Publish Report",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     setIsSubmitting(true);
     try {
       await uploadVisitReport({
@@ -41,8 +56,12 @@ export function ReportUploadModal({
         pdfFileName: fileName,
       });
       setSuccess(true);
+      await showSuccessAlert(
+        "Report Published",
+        `Age Safe® Home Score™ of ${score}/100 has been uploaded to the member portal.`
+      );
     } catch {
-      alert("Failed to upload report.");
+      showErrorAlert("Upload Failed", "Failed to upload report.");
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +82,7 @@ export function ReportUploadModal({
             <FileUp className="w-5 h-5 text-[#294B68]" />
             <h3 className="text-xl font-bold text-[#243746]">Upload Home Safety Report</h3>
           </div>
-          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]">
+          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>

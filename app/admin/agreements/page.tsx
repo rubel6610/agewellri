@@ -5,6 +5,11 @@ import Link from "next/link";
 import { getAdminAgreements } from "@/lib/api/admin-api";
 import { AdminAgreement } from "@/lib/types/admin";
 import { FileText, ShieldCheck, AlertCircle, Send, Download } from "lucide-react";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function AgreementsAdminPage() {
   const [agreements, setAgreements] = useState<AdminAgreement[]>([]);
@@ -16,6 +21,26 @@ export default function AgreementsAdminPage() {
       setLoading(false);
     });
   }, []);
+
+  const handleSendReminder = async (agr: AdminAgreement) => {
+    const confirmed = await confirmCriticalAction({
+      title: `Send Signature Reminder?`,
+      text: `Send an automated email reminder to ${agr.clientName} with an e-signature link for ${agr.title}?`,
+      confirmButtonText: "Yes, Send Reminder",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
+    await showSuccessAlert(
+      "Reminder Dispatched",
+      `An agreement signature reminder has been sent to ${agr.clientName}.`
+    );
+  };
+
+  const handleDownload = (agr: AdminAgreement) => {
+    showToast(`Downloading agreement document for ${agr.clientName}...`);
+  };
 
   if (loading) {
     return (
@@ -80,7 +105,7 @@ export default function AgreementsAdminPage() {
                     <td className="py-4 px-4 text-right">
                       {isExecuted ? (
                         <button
-                          onClick={() => alert(`Downloading agreement for ${agr.clientName}`)}
+                          onClick={() => handleDownload(agr)}
                           className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
                           title="Download Agreement PDF"
                         >
@@ -88,7 +113,7 @@ export default function AgreementsAdminPage() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => alert(`Signature reminder sent to ${agr.clientName}`)}
+                          onClick={() => handleSendReminder(agr)}
                           className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
                         >
                           <Send className="w-3.5 h-3.5" /> Send Reminder

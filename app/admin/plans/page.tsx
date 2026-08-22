@@ -20,6 +20,13 @@ import {
   useGetAdminPlansQuery,
   useChangePlanStatusMutation,
 } from "@/redux/features/plan/planApi";
+import {
+  confirmDelete,
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function AdminPlansPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -47,28 +54,48 @@ export default function AdminPlansPage() {
   const activePlansCount = plans.filter((p) => p.isActive && !p.isArchived).length;
 
   const handleToggleStatus = async (plan: any) => {
+    const nextStatus = plan.isActive ? "INACTIVE" : "ACTIVE";
+    const actionLabel = plan.isActive ? "Deactivate" : "Activate";
+
+    const confirmed = await confirmCriticalAction({
+      title: `${actionLabel} Service Plan?`,
+      text: plan.isActive
+        ? `Deactivating "${plan.name}" will hide it from new customer registrations. Existing subscribers will retain their coverage.`
+        : `Activating "${plan.name}" will make it immediately available for new client sign-ups and plan upgrades.`,
+      confirmButtonText: `Yes, ${actionLabel} Plan`,
+      isDestructive: plan.isActive,
+    });
+
+    if (!confirmed) return;
+
     try {
-      const nextStatus = plan.isActive ? "INACTIVE" : "ACTIVE";
       await changePlanStatus({
         id: plan.id,
         body: { status: nextStatus },
       }).unwrap();
-    } catch (err) {
-      console.error("Failed to update status:", err);
+      showToast(`Plan successfully ${plan.isActive ? "deactivated" : "activated"}.`, "success");
+    } catch (err: any) {
+      showErrorAlert("Status Update Failed", err?.data?.message || "Failed to update plan status.");
     }
   };
 
-  const handleArchive = async (planId: string) => {
-    if (!confirm("Are you sure you want to archive this plan? Historical subscribers will retain their pricing terms, but new clients will not be able to choose it.")) {
-      return;
-    }
+  const handleArchive = async (plan: any) => {
+    const confirmed = await confirmDelete({
+      title: `Archive "${plan.name}"?`,
+      text: "Are you sure you want to archive this plan? Historical subscribers will retain their contracted terms, but new clients will not be able to choose it.",
+      confirmButtonText: "Yes, Archive Plan",
+    });
+
+    if (!confirmed) return;
+
     try {
       await changePlanStatus({
-        id: planId,
+        id: plan.id,
         body: { status: "ARCHIVED" },
       }).unwrap();
-    } catch (err) {
-      console.error("Failed to archive plan:", err);
+      showSuccessAlert("Plan Archived", `"${plan.name}" has been permanently archived.`);
+    } catch (err: any) {
+      showErrorAlert("Archive Failed", err?.data?.message || "Failed to archive plan.");
     }
   };
 
@@ -264,7 +291,7 @@ export default function AdminPlansPage() {
                         )}
                         {!plan.isArchived && plan.activeSubscribersCount === 0 && (
                           <button
-                            onClick={() => handleArchive(plan.id)}
+                            onClick={() => handleArchive(plan)}
                             className="p-1.5 text-[#C95C5C] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             title="Archive Plan"
                           >

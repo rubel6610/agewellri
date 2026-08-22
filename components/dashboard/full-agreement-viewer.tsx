@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import jsPDF from "jspdf";
+import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
 interface FullAgreementViewerProps {
   agreement: AgreementDocument;
@@ -424,9 +425,13 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       const clientNameSafe = (agreement.clientFullName || "Client")
         .replace(/[^a-zA-Z0-9]/g, "_");
       doc.save(`AgeWellRI_Service_Agreement_${clientNameSafe}.pdf`);
+      showToast("Agreement PDF downloaded successfully");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert("Unable to generate PDF. You can also use the Print button to Save as PDF.");
+      showErrorAlert(
+        "PDF Generation Error",
+        "Unable to generate PDF directly. You can also use the Print button to Save as PDF."
+      );
     } finally {
       setIsGeneratingPdf(false);
     }

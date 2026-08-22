@@ -19,13 +19,21 @@ import {
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
+import { confirmCriticalAction, showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 export default function TechnicianPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Sign Out of Technician Portal?",
+      text: "End your current field inspection shift?",
+      confirmButtonText: "Yes, Sign Out",
+      isDestructive: false,
+    });
+    if (!confirmed) return;
     dispatch(logout());
     router.push("/login");
   };
@@ -225,7 +233,12 @@ export default function TechnicianPage() {
 
                 <div className="flex items-center gap-2 shrink-0">
                   <button
-                    onClick={() => alert(`Starting inspection for ${visit.clientName}`)}
+                    onClick={() =>
+                      showSuccessAlert(
+                        "Visit Checklist Opened",
+                        `Starting Age Safe® inspection for ${visit.clientName} at ${visit.address}.`
+                      )
+                    }
                     className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-colors"
                   >
                     Open Checklist

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
+import { confirmCriticalAction, showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -32,10 +33,27 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
 
   if (!isOpen) return null;
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Sign Out of AgeWellRI?",
+      text: "Are you sure you want to end your current session?",
+      confirmButtonText: "Yes, Sign Out",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     onClose();
     dispatch(logout());
     router.push("/login");
+  };
+
+  const handleHelp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    showSuccessAlert(
+      "AgeWellRI Member Concierge",
+      "24/7 Care Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: care@agewellri.com\nDedicated Rhode Island Staff"
+    );
   };
 
   const navItems = [
@@ -83,7 +101,7 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
                 onClose();
                 onOpenScheduleModal();
               }}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-[#294B68] text-white font-bold rounded-xl shadow-xs text-sm"
+              className="w-full flex items-center justify-center gap-2 py-3 bg-[#294B68] text-white font-bold rounded-xl shadow-xs text-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Schedule a Visit</span>
@@ -117,19 +135,17 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
         </div>
 
         <div className="pt-6 border-t border-[#D9E4EC] space-y-2">
-          <Link
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              alert("24/7 Member Helpline: (401) 555-AGEWELL");
-            }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#EAF3F8]"
+          <button
+            type="button"
+            onClick={handleHelp}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#64748B] hover:bg-[#EAF3F8] cursor-pointer text-left"
           >
             <HelpCircle className="w-5 h-5 text-[#5E8FB2]" />
             <span>Help & Support</span>
-          </Link>
+          </button>
 
           <button
+            type="button"
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-[#C95C5C] hover:bg-red-50 cursor-pointer text-left"
           >

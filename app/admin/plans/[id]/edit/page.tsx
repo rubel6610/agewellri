@@ -22,6 +22,13 @@ import {
   useUpdatePlanMutation,
   useGetAllServicesQuery,
 } from "@/redux/features/plan/planApi";
+import {
+  confirmEdit,
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function EditPlanPage() {
   const params = useParams();
@@ -54,7 +61,6 @@ export default function EditPlanPage() {
     { serviceTypeId: string; allocatedVisits: number; unit: string }[]
   >([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (plan) {
@@ -92,11 +98,20 @@ export default function EditPlanPage() {
     if (newFeature.trim()) {
       setFeatures([...features, newFeature.trim()]);
       setNewFeature("");
+      showToast("Bullet point added");
     }
   };
 
-  const handleRemoveFeature = (index: number) => {
-    setFeatures(features.filter((_, i) => i !== index));
+  const handleRemoveFeature = async (index: number) => {
+    const confirmed = await confirmDelete({
+      title: "Remove Bullet Point?",
+      text: `Remove "${features[index]}" from marketing features?`,
+      confirmButtonText: "Remove",
+    });
+    if (confirmed) {
+      setFeatures(features.filter((_, i) => i !== index));
+      showToast("Feature removed", "info");
+    }
   };
 
   const handleAddServiceAllocation = () => {
@@ -105,6 +120,7 @@ export default function EditPlanPage() {
         ...serviceAllocations,
         { serviceTypeId: servicesList[0].id, allocatedVisits: 6, unit: "visits" },
       ]);
+      showToast("Service allocation added");
     }
   };
 
@@ -118,14 +134,31 @@ export default function EditPlanPage() {
     setServiceAllocations(updated);
   };
 
-  const handleRemoveServiceAllocation = (index: number) => {
-    setServiceAllocations(serviceAllocations.filter((_, i) => i !== index));
+  const handleRemoveServiceAllocation = async (index: number) => {
+    const confirmed = await confirmDelete({
+      title: "Remove Service Allocation?",
+      text: "Remove this visit quota from the plan version?",
+      confirmButtonText: "Remove Allocation",
+    });
+    if (confirmed) {
+      setServiceAllocations(serviceAllocations.filter((_, i) => i !== index));
+      showToast("Service quota removed", "info");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    setSuccessMsg(null);
+
+    const confirmed = await confirmEdit({
+      title: "Save Plan Changes?",
+      text: isPriceChanged
+        ? `Updating the price to $${form.price} will automatically create a new version (v${(latestVersion?.versionNumber || 1) + 1}.0) for new subscribers while protecting existing contracted terms.`
+        : "Are you sure you want to save these plan updates?",
+      confirmButtonText: "Yes, Save Plan",
+    });
+
+    if (!confirmed) return;
 
     try {
       await updatePlan({
@@ -137,10 +170,16 @@ export default function EditPlanPage() {
         },
       }).unwrap();
 
-      setSuccessMsg("Service plan updated successfully!");
+      await showSuccessAlert(
+        "Plan Updated Successfully",
+        `Changes to "${form.name}" have been applied.`
+      );
       refetch();
+      router.push("/admin/plans");
     } catch (err: any) {
-      setErrorMsg(err.data?.message || err.message || "Failed to update plan.");
+      const msg = err.data?.message || err.message || "Failed to update plan.";
+      setErrorMsg(msg);
+      showErrorAlert("Save Failed", msg);
     }
   };
 
@@ -207,13 +246,6 @@ export default function EditPlanPage() {
         <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-semibold flex items-center gap-2">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span>{errorMsg}</span>
-        </div>
-      )}
-
-      {successMsg && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-semibold flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <span>{successMsg}</span>
         </div>
       )}
 

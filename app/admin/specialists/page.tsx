@@ -20,9 +20,17 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  Shield,
-  Sparkles,
+  LayoutList,
+  LayoutGrid,
+  CalendarCheck,
 } from "lucide-react";
+import {
+  confirmDelete,
+  confirmEdit,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 const PRESET_SPECIALTIES = [
   "Home Safety Audits",
@@ -50,6 +58,8 @@ export default function SpecialistsPage() {
   const [deleteSpecialist, { isLoading: isDeleting }] = useDeleteSpecialistMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSpecialist, setEditingSpecialist] = useState<SpecialistItem | null>(null);
 
@@ -67,7 +77,6 @@ export default function SpecialistsPage() {
   });
 
   const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const openCreateModal = () => {
     setEditingSpecialist(null);
@@ -122,6 +131,16 @@ export default function SpecialistsPage() {
       return;
     }
 
+    const confirmed = await confirmEdit({
+      title: editingSpecialist ? `Update "${formData.name}"?` : `Add "${formData.name}"?`,
+      text: editingSpecialist
+        ? "Save changes to this specialist's directory profile?"
+        : "Add this specialist to your internal team directory?",
+      confirmButtonText: editingSpecialist ? "Yes, Update" : "Yes, Add Specialist",
+    });
+
+    if (!confirmed) return;
+
     try {
       setFormError(null);
       if (editingSpecialist) {
@@ -139,7 +158,7 @@ export default function SpecialistsPage() {
             displayOrder: Number(formData.displayOrder),
           },
         }).unwrap();
-        setSuccessMessage("Specialist updated successfully.");
+        await showSuccessAlert("Specialist Updated", `"${formData.name}" profile has been updated.`);
       } else {
         await createSpecialist({
           name: formData.name.trim(),
@@ -152,202 +171,364 @@ export default function SpecialistsPage() {
           notes: formData.notes.trim() || null,
           displayOrder: Number(formData.displayOrder),
         }).unwrap();
-        setSuccessMessage("Specialist created successfully.");
+        await showSuccessAlert("Specialist Added", `"${formData.name}" has been added to the specialist roster.`);
       }
 
       setIsModalOpen(false);
       refetch();
-      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err: any) {
-      setFormError(err?.data?.message || err?.message || "Failed to save specialist.");
+      const msg = err?.data?.message || err?.message || "Failed to save specialist.";
+      setFormError(msg);
+      showErrorAlert("Save Failed", msg);
     }
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to remove specialist "${name}"?`)) return;
+    const confirmed = await confirmDelete({
+      title: `Remove Specialist "${name}"?`,
+      text: "Are you sure you want to remove this specialist? Any historical appointments assigned to them will preserve their record.",
+      confirmButtonText: "Yes, Remove Specialist",
+    });
+
+    if (!confirmed) return;
+
     try {
       await deleteSpecialist(id).unwrap();
+      await showSuccessAlert("Specialist Removed", `"${name}" has been removed from the active directory.`);
       refetch();
     } catch (err: any) {
-      alert(err?.data?.message || "Failed to delete specialist.");
+      showErrorAlert("Deletion Failed", err?.data?.message || "Failed to delete specialist.");
     }
   };
 
   const filteredSpecialists = specialists.filter((s) => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       s.name.toLowerCase().includes(term) ||
       s.title.toLowerCase().includes(term) ||
       (s.phone && s.phone.includes(term)) ||
-      (s.email && s.email.toLowerCase().includes(term))
-    );
+      (s.email && s.email.toLowerCase().includes(term)) ||
+      s.specialties.some((spec) => spec.toLowerCase().includes(term));
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && s.status === "ACTIVE") ||
+      (statusFilter === "inactive" && s.status === "INACTIVE");
+
+    return matchesSearch && matchesStatus;
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <UserCheck className="w-7 h-7 text-[#294B68]" />
-            <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
               Safety Specialists &amp; Technicians
             </h1>
           </div>
-          <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Manage your internal in-home safety and cleaning specialists. Assign them directly to member appointments and visits.
+          <p className="text-sm text-[#64748B] mt-1">
+            Manage your internal in-home safety specialists, qualifications, active assignments, and dispatch availability.
           </p>
         </div>
 
         <button
           onClick={openCreateModal}
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer shrink-0"
+          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Specialist</span>
         </button>
       </div>
 
-      {/* Success Banner */}
-      {successMessage && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-sm font-bold flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-          <span>{successMessage}</span>
-        </div>
-      )}
+      {/* Main Table Card */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
+        {/* Search, Filter & View Controls */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+            <input
+              type="search"
+              placeholder="Search specialists by name, specialty, role, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] placeholder:text-[#94A3B8]"
+            />
+          </div>
 
-      {/* Search & Stats Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-          <input
-            type="text"
-            placeholder="Search specialists by name, role, phone..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-          />
-        </div>
-
-        <div className="text-xs font-bold text-[#64748B] self-start sm:self-auto">
-          Showing <span className="text-[#243746] font-black">{filteredSpecialists.length}</span> active specialists
-        </div>
-      </div>
-
-      {/* Specialists Cards Grid */}
-      {isLoading ? (
-        <div className="py-20 text-center text-[#5E8FB2] space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#294B68]" />
-          <p className="text-sm font-bold">Loading specialist roster...</p>
-        </div>
-      ) : filteredSpecialists.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-3xl border border-[#D9E4EC] space-y-3">
-          <UserCheck className="w-12 h-12 text-[#5E8FB2] mx-auto opacity-50" />
-          <h3 className="text-base font-bold text-[#243746]">No specialists found</h3>
-          <p className="text-xs text-[#64748B]">Click &quot;Add New Specialist&quot; to create your first safety specialist.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredSpecialists.map((specialist) => (
-            <div
-              key={specialist.id}
-              className="bg-white rounded-3xl border border-[#D9E4EC] p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-[#5E8FB2] transition-colors"
+          <div className="flex items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             >
-              <div className="space-y-3">
-                {/* Top badge and action */}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-xs"
-                      style={{ backgroundColor: specialist.color || "#294B68" }}
+              <option value="all">All Statuses</option>
+              <option value="active">Active Only</option>
+              <option value="inactive">Inactive</option>
+            </select>
+
+            <div className="flex items-center p-1 bg-[#F7FAFC] rounded-xl border border-[#D9E4EC]">
+              <button
+                type="button"
+                onClick={() => setViewMode("table")}
+                className={`p-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  viewMode === "table"
+                    ? "bg-white text-[#294B68] shadow-xs"
+                    : "text-[#64748B] hover:text-[#243746]"
+                }`}
+                title="Table View"
+              >
+                <LayoutList className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  viewMode === "grid"
+                    ? "bg-white text-[#294B68] shadow-xs"
+                    : "text-[#64748B] hover:text-[#243746]"
+                }`}
+                title="Grid Cards View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Area */}
+        {isLoading ? (
+          <div className="py-20 text-center text-[#5E8FB2] space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#294B68]" />
+            <p className="text-sm font-bold">Loading specialist roster...</p>
+          </div>
+        ) : filteredSpecialists.length === 0 ? (
+          <div className="p-12 text-center bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] space-y-3">
+            <UserCheck className="w-12 h-12 text-[#5E8FB2] mx-auto opacity-50" />
+            <h3 className="text-base font-bold text-[#243746]">No specialists found</h3>
+            <p className="text-xs text-[#64748B]">Try adjusting your search query or status filter.</p>
+          </div>
+        ) : viewMode === "table" ? (
+          /* Table View */
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                  <th className="py-3.5 px-4">Specialist</th>
+                  <th className="py-3.5 px-4">Contact Info</th>
+                  <th className="py-3.5 px-4">Specialties &amp; Capabilities</th>
+                  <th className="py-3.5 px-4">Assignments</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+                {filteredSpecialists.map((specialist) => (
+                  <tr key={specialist.id} className="hover:bg-[#F7FAFC] transition-colors">
+                    {/* Specialist Name & Avatar */}
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs"
+                          style={{ backgroundColor: specialist.color || "#294B68" }}
+                        >
+                          {specialist.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-[#243746] block text-sm">
+                            {specialist.name}
+                          </span>
+                          <span className="text-xs text-[#5E8FB2] font-semibold block">
+                            {specialist.title}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Contact Details */}
+                    <td className="py-4 px-4 text-xs space-y-1">
+                      {specialist.phone && (
+                        <div className="flex items-center gap-1.5 text-[#243746] font-semibold">
+                          <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                          <span>{specialist.phone}</span>
+                        </div>
+                      )}
+                      {specialist.email && (
+                        <div className="flex items-center gap-1.5 text-[#64748B]">
+                          <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                          <span>{specialist.email}</span>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Specialties Pill Badges */}
+                    <td className="py-4 px-4 max-w-xs">
+                      <div className="flex flex-wrap gap-1.5">
+                        {specialist.specialties.slice(0, 3).map((spec, sidx) => (
+                          <span
+                            key={sidx}
+                            className="px-2 py-0.5 bg-[#F0F5F9] text-[#294B68] rounded-md text-[11px] font-bold border border-[#D9E4EC]/70"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                        {specialist.specialties.length > 3 && (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[11px] font-bold">
+                            +{specialist.specialties.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Assigned Visits Count */}
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
+                        <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                        <span>{specialist.activeAssignmentsCount} visits</span>
+                      </span>
+                    </td>
+
+                    {/* Status Badge */}
+                    <td className="py-4 px-4">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                          specialist.status === "ACTIVE"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}
+                      >
+                        {specialist.status}
+                      </span>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEditModal(specialist)}
+                          className="p-2 rounded-xl text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer"
+                          title="Edit Specialist"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(specialist.id, specialist.name)}
+                          className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Archive Specialist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredSpecialists.map((specialist) => (
+              <div
+                key={specialist.id}
+                className="bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] p-5 shadow-2xs flex flex-col justify-between space-y-4 hover:border-[#5E8FB2] transition-colors"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-sm shadow-xs"
+                        style={{ backgroundColor: specialist.color || "#294B68" }}
+                      >
+                        {specialist.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </div>
+                      <div>
+                        <h3 className="font-extrabold text-sm text-[#243746]">
+                          {specialist.name}
+                        </h3>
+                        <p className="text-xs text-[#5E8FB2] font-semibold">{specialist.title}</p>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                        specialist.status === "ACTIVE"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-slate-100 text-slate-600 border border-slate-200"
+                      }`}
                     >
-                      {specialist.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </div>
-                    <div>
-                      <h3 className="font-extrabold text-sm text-[#243746]">
-                        {specialist.name}
-                      </h3>
-                      <p className="text-xs text-[#5E8FB2] font-semibold">{specialist.title}</p>
-                    </div>
+                      {specialist.status}
+                    </span>
                   </div>
 
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                      specialist.status === "ACTIVE"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                        : "bg-slate-100 text-slate-600 border border-slate-200"
-                    }`}
-                  >
-                    {specialist.status}
+                  <div className="space-y-1.5 pt-1 text-xs text-[#64748B]">
+                    {specialist.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                        <span className="font-medium text-[#243746]">{specialist.phone}</span>
+                      </div>
+                    )}
+                    {specialist.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                        <span className="font-medium">{specialist.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pt-2">
+                    {specialist.specialties.map((spec, sidx) => (
+                      <span
+                        key={sidx}
+                        className="px-2 py-0.5 bg-white text-[#294B68] rounded-md text-[11px] font-bold border border-[#D9E4EC]/70"
+                      >
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
+
+                  {specialist.notes && (
+                    <p className="text-[11px] text-[#64748B] italic pt-1 line-clamp-2">
+                      &ldquo;{specialist.notes}&rdquo;
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-[#D9E4EC]/60 text-xs">
+                  <span className="text-[11px] font-bold text-[#64748B]">
+                    {specialist.activeAssignmentsCount} assigned visits
                   </span>
-                </div>
 
-                {/* Contact info */}
-                <div className="space-y-1.5 pt-1 text-xs text-[#64748B]">
-                  {specialist.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                      <span className="font-medium text-[#243746]">{specialist.phone}</span>
-                    </div>
-                  )}
-                  {specialist.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                      <span className="font-medium">{specialist.email}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Specialties tags */}
-                <div className="flex flex-wrap gap-1.5 pt-2">
-                  {specialist.specialties.map((spec, sidx) => (
-                    <span
-                      key={sidx}
-                      className="px-2 py-0.5 bg-[#F0F5F9] text-[#294B68] rounded-md text-[11px] font-bold border border-[#D9E4EC]/70"
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditModal(specialist)}
+                      className="p-2 rounded-xl text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer"
+                      title="Edit Specialist"
                     >
-                      {spec}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Notes */}
-                {specialist.notes && (
-                  <p className="text-[11px] text-[#64748B] italic pt-1 line-clamp-2">
-                    &ldquo;{specialist.notes}&rdquo;
-                  </p>
-                )}
-              </div>
-
-              {/* Bottom Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-[#D9E4EC]/60 text-xs">
-                <span className="text-[11px] font-bold text-[#64748B]">
-                  {specialist.activeAssignmentsCount} assigned visits
-                </span>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => openEditModal(specialist)}
-                    className="p-2 rounded-xl text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer"
-                    title="Edit Specialist"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(specialist.id, specialist.name)}
-                    className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Archive Specialist"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(specialist.id, specialist.name)}
+                      className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                      title="Archive Specialist"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Create / Edit Modal */}
       {isModalOpen && (

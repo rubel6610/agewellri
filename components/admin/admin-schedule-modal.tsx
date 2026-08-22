@@ -5,6 +5,11 @@ import { X, Calendar, Clock, Loader2, CheckCircle2, UserCheck } from "lucide-rea
 import { adminBookAppointment } from "@/lib/api/admin-api";
 import { MOCK_ADMIN_CLIENTS } from "@/lib/api/admin-mock-data";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface AdminScheduleModalProps {
   isOpen: boolean;
@@ -32,6 +37,16 @@ export function AdminScheduleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const confirmed = await confirmCriticalAction({
+      title: "Dispatch Specialist Visit?",
+      text: `Schedule a ${serviceType} visit for ${date} (${timeSlot}) assigned to ${technicianName}?`,
+      confirmButtonText: "Yes, Schedule Visit",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     setIsSubmitting(true);
     try {
       await adminBookAppointment({
@@ -43,8 +58,12 @@ export function AdminScheduleModal({
         notes,
       });
       setSuccess(true);
+      await showSuccessAlert(
+        "Visit Dispatched Successfully",
+        `${serviceType} visit has been scheduled for ${date} with ${technicianName}.`
+      );
     } catch {
-      alert("Failed to schedule appointment.");
+      showErrorAlert("Scheduling Failed", "Failed to schedule appointment.");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,19 +180,19 @@ export function AdminScheduleModal({
                 >
                   <option value="09:00 AM – 11:00 AM">09:00 AM – 11:00 AM</option>
                   <option value="10:00 AM – 12:00 PM">10:00 AM – 12:00 PM</option>
-                  <option value="01:30 PM – 03:30 PM">01:30 PM – 03:30 PM</option>
-                  <option value="03:30 PM – 05:30 PM">03:30 PM – 05:30 PM</option>
+                  <option value="01:00 PM – 03:00 PM">01:00 PM – 03:00 PM</option>
+                  <option value="03:00 PM – 05:00 PM">03:00 PM – 05:00 PM</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Dispatcher Notes</label>
+              <label className="block text-xs font-bold text-[#243746] mb-1">Dispatch Notes (Optional)</label>
               <textarea
-                rows={2}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Internal technician instructions..."
+                rows={2}
+                placeholder="Gate codes, pet warnings, specific rooms to inspect..."
                 className="w-full p-3 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
               />
             </div>
@@ -182,15 +201,15 @@ export function AdminScheduleModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-12 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-base rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                className="w-full py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Booking Visit...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Dispatching Specialist...</span>
                   </>
                 ) : (
-                  <span>Book Visit for Client</span>
+                  <span>Confirm &amp; Schedule Visit</span>
                 )}
               </button>
             </div>

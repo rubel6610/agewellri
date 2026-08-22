@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import { BillingOverviewData } from "@/redux/features/payment/paymentTypes";
 import { useReactivateSubscriptionRenewalMutation } from "@/redux/features/payment/paymentApi";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 import { UpdatePaymentMethodModal } from "./update-payment-method-modal";
 import { CancelRenewalModal } from "./cancel-renewal-modal";
 
@@ -29,11 +35,24 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
     useReactivateSubscriptionRenewalMutation();
 
   const handleReactivate = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Reactivate Automatic Renewal?",
+      text: `Your membership will automatically renew on ${billing.nextPaymentDate} at your contracted rate of ${billing.nextPaymentAmount}.`,
+      confirmButtonText: "Yes, Reactivate Membership",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     try {
       await reactivateRenewal().unwrap();
+      await showSuccessAlert(
+        "Auto-Renewal Reactivated",
+        `Your membership coverage will continue renewing uninterrupted on ${billing.nextPaymentDate}.`
+      );
       if (onRefresh) onRefresh();
-    } catch (err) {
-      console.error("Failed to reactivate renewal:", err);
+    } catch (err: any) {
+      showErrorAlert("Reactivation Failed", err?.data?.message || "Failed to reactivate automatic renewal.");
     }
   };
 

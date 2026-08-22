@@ -18,6 +18,12 @@ import {
   useCreateServiceMutation,
   useUpdateServiceMutation,
 } from "@/redux/features/plan/planApi";
+import {
+  confirmEdit,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function AdminServicesPage() {
   const { data: services = [], isLoading, refetch, isFetching } = useGetAllServicesQuery();
@@ -71,27 +77,44 @@ export default function AdminServicesPage() {
 
   const handleSaveCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const confirmed = await confirmEdit({
+      title: `Create Service "${formData.name}"?`,
+      text: "Add this service component to the catalog?",
+      confirmButtonText: "Yes, Create",
+    });
+    if (!confirmed) return;
+
     try {
       await createService(formData).unwrap();
       setIsCreateModalOpen(false);
+      await showSuccessAlert("Service Created", `"${formData.name}" is now available in the catalog.`);
       refetch();
-    } catch (err) {
-      console.error("Failed to create service:", err);
+    } catch (err: any) {
+      showErrorAlert("Creation Failed", err?.data?.message || "Failed to create service.");
     }
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingService) return;
+
+    const confirmed = await confirmEdit({
+      title: `Update Service "${formData.name}"?`,
+      text: "Save updates to this service definition?",
+      confirmButtonText: "Yes, Save",
+    });
+    if (!confirmed) return;
+
     try {
       await updateService({
         id: editingService.id,
         body: formData,
       }).unwrap();
       setEditingService(null);
+      await showSuccessAlert("Service Updated", `"${formData.name}" updates have been saved.`);
       refetch();
-    } catch (err) {
-      console.error("Failed to update service:", err);
+    } catch (err: any) {
+      showErrorAlert("Update Failed", err?.data?.message || "Failed to update service.");
     }
   };
 
@@ -113,6 +136,7 @@ export default function AdminServicesPage() {
             onClick={() => refetch()}
             disabled={isFetching}
             className="p-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-sm font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            title="Refresh services catalog"
           >
             <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin text-[#294B68]" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
@@ -279,14 +303,14 @@ export default function AdminServicesPage() {
                     setIsCreateModalOpen(false);
                     setEditingService(null);
                   }}
-                  className="px-4 py-2 bg-white border border-[#D9E4EC] text-[#243746] rounded-xl text-xs font-bold hover:bg-[#F0F5F9]"
+                  className="px-4 py-2 bg-white border border-[#D9E4EC] text-[#243746] rounded-xl text-xs font-bold hover:bg-[#F0F5F9] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isCreating || isUpdating}
-                  className="px-5 py-2 bg-[#294B68] text-white rounded-xl text-xs font-bold hover:bg-[#1E364B]"
+                  className="px-5 py-2 bg-[#294B68] text-white rounded-xl text-xs font-bold hover:bg-[#1E364B] cursor-pointer disabled:opacity-50"
                 >
                   {editingService ? "Save Service" : "Create Service"}
                 </button>

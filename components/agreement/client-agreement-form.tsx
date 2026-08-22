@@ -38,6 +38,13 @@ import {
   OWNER_SIGNATURE_SVG_DATA_URI,
   AGEWELL_OWNER_DETAILS,
 } from "@/lib/agreement/owner-signature";
+import {
+  confirmDelete,
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 interface Point {
   x: number;
@@ -286,7 +293,16 @@ export function ClientAgreementForm() {
     }
   };
 
-  const clearSignature = () => {
+  const clearSignature = async () => {
+    if (hasSignature || savedSignatureData) {
+      const confirmed = await confirmDelete({
+        title: "Clear Signature?",
+        text: "Do you want to reset your signature pad and sign again?",
+        confirmButtonText: "Yes, Clear",
+      });
+      if (!confirmed) return;
+    }
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -296,6 +312,7 @@ export function ClientAgreementForm() {
     setHasSignature(false);
     setSavedSignatureData("");
     pointsRef.current = [];
+    showToast("Signature cleared", "info");
   };
 
   const handleChange = (
@@ -415,14 +432,16 @@ export function ClientAgreementForm() {
 
       if (response.success) {
         setIsSuccess(true);
-        setTimeout(() => {
-          router.push("/dashboard/calendar");
-        }, 1200);
+        await showSuccessAlert(
+          "Agreement Executed Successfully!",
+          "Your service agreement has been executed and membership activated. Welcome to AgeWellRI!"
+        );
+        router.push("/dashboard/calendar");
       }
     } catch (err: any) {
-      setErrors({
-        payment: err?.data?.message || err?.message || "Failed to finalize membership activation.",
-      });
+      const msg = err?.data?.message || err?.message || "Failed to finalize membership activation.";
+      setErrors({ payment: msg });
+      showErrorAlert("Activation Failed", msg);
     }
   };
 
@@ -466,14 +485,18 @@ export function ClientAgreementForm() {
 
       if (response.success) {
         setIsSuccess(true);
-        setTimeout(() => {
-          router.push("/dashboard/billing");
-        }, 1200);
+        await showSuccessAlert(
+          "Agreement Executed Successfully!",
+          "Your service agreement has been executed. Your invoice statement is ready in your billing portal."
+        );
+        router.push("/dashboard/billing");
       }
     } catch (err: any) {
+      const msg = err?.data?.message || err?.message || "Failed to submit agreement.";
       setErrors({
-        payment: err?.data?.message || err?.message || "Failed to generate billing invoice.",
+        submit: msg,
       });
+      showErrorAlert("Submission Failed", msg);
     }
   };
 

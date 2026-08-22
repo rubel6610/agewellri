@@ -3,6 +3,11 @@
 import React, { useState } from "react";
 import { X, UserPlus, Loader2, CheckCircle2 } from "lucide-react";
 import { createClientAccount } from "@/lib/api/admin-api";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface AddClientModalProps {
   isOpen: boolean;
@@ -29,12 +34,26 @@ export function AddClientModal({ isOpen, onClose }: AddClientModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const confirmed = await confirmCriticalAction({
+      title: `Create Account for ${formData.firstName} ${formData.lastName}?`,
+      text: `Set up a member account under ${formData.planName} and send the digital agreement onboarding link to ${formData.email}?`,
+      confirmButtonText: "Yes, Create Account",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     setIsSubmitting(true);
     try {
       await createClientAccount(formData);
       setSuccess(true);
+      await showSuccessAlert(
+        "Client Account Created",
+        `Member profile created for ${formData.firstName} ${formData.lastName}. Digital agreement link sent to ${formData.email}.`
+      );
     } catch {
-      alert("Failed to create client account.");
+      showErrorAlert("Creation Failed", "Failed to create client account.");
     } finally {
       setIsSubmitting(false);
     }
@@ -66,7 +85,7 @@ export function AddClientModal({ isOpen, onClose }: AddClientModalProps) {
             <UserPlus className="w-5 h-5 text-[#294B68]" />
             <h3 className="text-xl font-bold text-[#243746]">Add New Client</h3>
           </div>
-          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]">
+          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>

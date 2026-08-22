@@ -8,6 +8,7 @@ import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
+import { showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 interface FormErrors {
   firstName?: string;
@@ -309,7 +310,10 @@ export function RegisterForm() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("AgeWellRI Terms of Service details");
+                    showSuccessAlert(
+                      "AgeWellRI Terms of Service",
+                      "By registering for AgeWellRI, you agree to our comprehensive care terms, privacy provisions, and home visit standards governed under the laws of the State of Rhode Island."
+                    );
                   }}
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
                 >
@@ -320,7 +324,10 @@ export function RegisterForm() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("AgeWellRI Privacy Policy details");
+                    showSuccessAlert(
+                      "AgeWellRI Privacy Policy",
+                      "Your personal health details, home access codes, and caregiver contact information are strictly protected and never shared with unauthorized third parties."
+                    );
                   }}
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
                 >

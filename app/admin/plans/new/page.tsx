@@ -18,6 +18,13 @@ import {
   useCreatePlanMutation,
   useGetAllServicesQuery,
 } from "@/redux/features/plan/planApi";
+import {
+  confirmEdit,
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function CreatePlanPage() {
   const router = useRouter();
@@ -56,11 +63,13 @@ export default function CreatePlanPage() {
     if (newFeature.trim()) {
       setFeatures([...features, newFeature.trim()]);
       setNewFeature("");
+      showToast("Bullet point added");
     }
   };
 
-  const handleRemoveFeature = (index: number) => {
+  const handleRemoveFeature = async (index: number) => {
     setFeatures(features.filter((_, i) => i !== index));
+    showToast("Feature removed", "info");
   };
 
   const handleAddServiceAllocation = () => {
@@ -69,6 +78,7 @@ export default function CreatePlanPage() {
         ...serviceAllocations,
         { serviceTypeId: servicesList[0].id, allocatedVisits: 6, unit: "visits" },
       ]);
+      showToast("Service quota added");
     }
   };
 
@@ -82,8 +92,9 @@ export default function CreatePlanPage() {
     setServiceAllocations(updated);
   };
 
-  const handleRemoveServiceAllocation = (index: number) => {
+  const handleRemoveServiceAllocation = async (index: number) => {
     setServiceAllocations(serviceAllocations.filter((_, i) => i !== index));
+    showToast("Service allocation removed", "info");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,8 +103,17 @@ export default function CreatePlanPage() {
 
     if (!form.name || !form.code || form.price <= 0) {
       setErrorMsg("Please fill in the required plan name, unique code, and valid price.");
+      showErrorAlert("Incomplete Information", "Please fill in the plan name, code, and price.");
       return;
     }
+
+    const confirmed = await confirmEdit({
+      title: `Publish "${form.name}"?`,
+      text: `Are you sure you want to create and publish this plan tier at $${form.price}/${form.billingInterval.toLowerCase()}?`,
+      confirmButtonText: "Yes, Publish Plan",
+    });
+
+    if (!confirmed) return;
 
     try {
       await createPlan({
@@ -102,9 +122,15 @@ export default function CreatePlanPage() {
         services: serviceAllocations,
       }).unwrap();
 
+      await showSuccessAlert(
+        "Plan Created",
+        `"${form.name}" has been successfully added to the catalog.`
+      );
       router.push("/admin/plans");
     } catch (err: any) {
-      setErrorMsg(err.data?.message || err.message || "Failed to create plan.");
+      const msg = err.data?.message || err.message || "Failed to create plan.";
+      setErrorMsg(msg);
+      showErrorAlert("Creation Failed", msg);
     }
   };
 

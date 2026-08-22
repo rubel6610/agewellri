@@ -3,6 +3,7 @@
 import React from "react";
 import { FileText, Download, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
 import { Report } from "@/lib/types/dashboard";
+import { showSuccessAlert, showToast } from "@/lib/alerts/sweetalert";
 
 interface ReportCardProps {
   report: Report;
@@ -10,6 +11,17 @@ interface ReportCardProps {
 
 export function ReportCard({ report }: ReportCardProps) {
   const isAvailable = report.status === "available";
+
+  const handleViewReport = () => {
+    showSuccessAlert(
+      report.title,
+      `Assessment score: ${report.score ?? "N/A"}/100\n\n${report.summary}`
+    );
+  };
+
+  const handleDownloadReport = () => {
+    showToast(`Downloading ${report.title} PDF...`);
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 shadow-xs flex flex-col justify-between space-y-4 hover:border-[#5E8FB2] transition-all">
@@ -69,14 +81,16 @@ export function ReportCard({ report }: ReportCardProps) {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => alert(`Opening ${report.title} online view`)}
+            type="button"
+            onClick={handleViewReport}
             disabled={!isAvailable}
             className="px-3.5 py-2 text-xs font-bold text-[#294B68] bg-[#EAF3F8] hover:bg-[#D9E4EC] rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
           >
             View Report
           </button>
           <button
-            onClick={() => alert(`Downloading PDF for ${report.title}`)}
+            type="button"
+            onClick={handleDownloadReport}
             disabled={!isAvailable}
             aria-label={`Download PDF for ${report.title}`}
             className="p-2 text-xs font-bold text-white bg-[#294B68] hover:bg-[#1E374D] rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
