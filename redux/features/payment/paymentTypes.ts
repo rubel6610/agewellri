@@ -70,37 +70,161 @@ export interface InvoiceItem {
   date: string;
   description: string;
   amount: string;
-  status: "paid" | "pending" | "failed";
+  status: "paid" | "open" | "overdue" | "draft" | "void" | string;
   pdfUrl: string;
 }
 
+export interface PaymentHistoryItem {
+  id: string;
+  date: string;
+  amount: string;
+  status: string;
+  receiptUrl: string;
+  paymentMethod: string;
+}
+
 export interface BillingOverviewData {
-  currentPlanName: "Essential Guard" | "Guardian Plus" | string;
-  billingFrequency: "Quarterly" | "Monthly" | "Annual";
+  currentPlanName: string;
+  selectedPlanCode: string;
+  hasCleaningAddon: boolean;
+  billingFrequency: string;
+  billingMethod: "AUTOMATIC" | "INVOICE";
+  subscriptionStatus: string;
+  autoPayEnabled: boolean;
+  cancelAtPeriodEnd: boolean;
+  cancellationEffectiveAt?: string | null;
+  currentPeriod: string;
+  nextPaymentDate: string;
+  nextPaymentAmount: string;
   paymentMethod: {
     brand: string;
     last4: string;
     expiry: string;
   };
-  nextPaymentDate: string;
-  nextPaymentAmount: string;
-  autoPayEnabled: boolean;
   invoices: InvoiceItem[];
+  payments: PaymentHistoryItem[];
 }
 
 export interface ProcessAgreementPaymentRequest {
   agreementId?: string;
   paymentMethodId?: string;
   setupIntentId?: string;
-  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  billingMethod?: "AUTOMATIC" | "INVOICE";
+  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS" | "STANDALONE_CLEANING";
   hasCleaningAddon: boolean;
 }
 
 export interface ProcessAgreementPaymentData {
   success: boolean;
   message: string;
-  client: any;
-  subscription: any;
-  invoice: any;
-  payment: any;
+  subscriptionId?: string;
+  invoiceNumber?: string;
+  invoiceId?: string;
+  totalPrice?: number;
+  billingMethod?: string;
+  status?: string;
+}
+
+export interface CreateInvoicePaymentRequest {
+  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS" | "STANDALONE_CLEANING";
+  hasCleaningAddon: boolean;
+}
+
+export interface CancelRenewalRequest {
+  reason?: string;
+}
+
+export interface CancelRenewalData {
+  success: boolean;
+  message: string;
+  cancellationEffectiveAt: string;
+  autoRenew: boolean;
+  cancelAtPeriodEnd: boolean;
+}
+
+export interface ReactivateRenewalData {
+  success: boolean;
+  message: string;
+  autoRenew: boolean;
+  cancelAtPeriodEnd: boolean;
+}
+
+export interface AdminOverviewData {
+  activeSubscriptions: number;
+  paidThisMonth: string;
+  pendingCharges: string;
+  failedCharges: string;
+  failedPaymentsCount: number;
+  upcomingRenewalsNext30Days: number;
+  recentTransactions: Array<{
+    id: string;
+    clientName: string;
+    clientId: string;
+    planName: string;
+    amount: string;
+    status: string;
+    date: string;
+  }>;
+}
+
+export interface AdminInvoiceItem {
+  id: string;
+  invoiceNumber: string;
+  clientId: string;
+  clientName: string;
+  clientNumber: string;
+  planName: string;
+  billingFrequency: string;
+  amount: string;
+  paymentMethod: string;
+  status: string;
+  dueDate: string;
+  paidAt?: string | null;
+  pdfUrl: string;
+}
+
+export interface AdminInvoicesResponse {
+  invoices: AdminInvoiceItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminSubscriptionItem {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientNumber: string;
+  planName: string;
+  planPrice: string;
+  status: string;
+  billingMethod: string;
+  autoRenew: boolean;
+  cancelAtPeriodEnd: boolean;
+  cancellationEffectiveAt?: string | null;
+  currentPeriod: string;
+  nextRenewalDate: string;
+}
+
+export interface AdminSubscriptionsResponse {
+  subscriptions: AdminSubscriptionItem[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminRetryChargeRequest {
+  invoiceId?: string;
+  paymentId?: string;
+}
+
+export interface AdminRetryChargeData {
+  success: boolean;
+  message: string;
 }

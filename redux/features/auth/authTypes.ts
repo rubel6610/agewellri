@@ -11,6 +11,19 @@ export type OnboardingStatus =
   | "PAYMENT_COMPLETED"
   | "ACTIVE";
 
+export type SignerRole =
+  | "RESIDENT"
+  | "FAMILY_MEMBER"
+  | "CAREGIVER"
+  | "POWER_OF_ATTORNEY"
+  | "AUTHORIZED_REPRESENTATIVE";
+
+export type HomeAccessType =
+  | "LOCKBOX"
+  | "RESIDENT_ANSWERS"
+  | "DIGITAL_CODE"
+  | "OTHER";
+
 export interface ClientProfile {
   id: string;
   userId: string;
@@ -20,9 +33,18 @@ export interface ClientProfile {
   state: string;
   postalCode: string;
   country?: string;
+  dateOfBirth?: string;
+  signerRole?: SignerRole;
+  legalAuthority?: string | null;
+  primaryContactName?: string | null;
+  primaryContactPhone?: string | null;
+  primaryContactEmail?: string | null;
+  primaryContactRelation?: string | null;
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   emergencyContactRelation?: string | null;
+  homeAccessType?: HomeAccessType;
+  homeAccessInstructions?: string | null;
   onboardingStatus?: OnboardingStatus;
   isArchived?: boolean;
   createdAt?: string;
@@ -48,6 +70,7 @@ export interface AuthUser {
   phone?: string | null;
   role: UserRole;
   status: UserStatus;
+  permissions?: string[];
   hasCompletedAgreement?: boolean;
   requiresAgreement?: boolean;
   emailVerifiedAt?: string | null;
@@ -91,6 +114,15 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface RequestSmsOtpRequest {
+  phone: string;
+}
+
+export interface VerifySmsOtpRequest {
+  phone: string;
+  otp: string;
+}
+
 export interface RefreshTokenRequest {
   refreshToken: string;
 }
@@ -111,6 +143,8 @@ export interface UpdateProfileRequest {
   emergencyContactName?: string | null;
   emergencyContactPhone?: string | null;
   emergencyContactRelation?: string | null;
+  homeAccessType?: HomeAccessType;
+  homeAccessInstructions?: string | null;
 }
 
 export interface SubmitAgreementRequest {
@@ -122,6 +156,10 @@ export interface SubmitAgreementRequest {
   phone: string;
   dob: string;
   email?: string;
+  signerRole?: SignerRole;
+  signerName?: string | null;
+  legalAuthority?: string | null;
+  primaryBillingContact?: string | null;
   primaryContactName?: string | null;
   primaryContactPhone?: string | null;
   primaryContactEmail?: string | null;
@@ -129,8 +167,14 @@ export interface SubmitAgreementRequest {
   emergencyContactName: string;
   emergencyContactPhone: string;
   emergencyContactRelation?: string | null;
-  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  homeAccessType?: HomeAccessType;
+  homeAccessInstructions?: string | null;
+  homeAccessCode?: string | null;
+  planId?: string | null;
+  planVersionId?: string | null;
+  selectedPlan: string;
   hasCleaningAddon: boolean;
+  billingMethod?: "AUTOMATIC" | "INVOICE";
   paymentMethodId?: string | null;
   setupIntentId?: string | null;
   clientPrintedName: string;
@@ -144,10 +188,18 @@ export interface SubmitAgreementRequest {
 export interface AgreementDocument {
   id: string;
   templateVersion: string;
+  state?: string;
   status: string;
-  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  selectedPlan: string;
   planPrice: number;
   hasCleaningAddon: boolean;
+  signerRole?: SignerRole;
+  signerName?: string | null;
+  legalAuthority?: string | null;
+  primaryBillingContact?: string | null;
+  cancellationDeadline?: string | null;
+  cancellationDeadlineRule?: string | null;
+  planSnapshot?: any;
   clientFullName: string;
   clientPrintedName: string;
   authorizedRepName?: string | null;
@@ -158,7 +210,7 @@ export interface AgreementDocument {
   executedAt?: string | null;
   address: string;
   city: string;
-  state: string;
+  stateAddress?: string;
   postalCode: string;
   phone: string;
   dob?: string;
@@ -197,6 +249,3 @@ export interface AuthState {
   isInitialized: boolean;
   error: string | null;
 }
-
-
-

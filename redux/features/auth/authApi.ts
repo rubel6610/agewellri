@@ -5,6 +5,8 @@ import {
   AuthUser,
   ChangePasswordRequest,
   LoginRequest,
+  RequestSmsOtpRequest,
+  VerifySmsOtpRequest,
   RegisterRequest,
   UpdateProfileRequest,
   SubmitAgreementRequest,
@@ -39,6 +41,42 @@ export const authApi = baseApi.injectEndpoints({
           }
         } catch {
           // Errors handled in component UI
+        }
+      },
+    }),
+
+    requestSmsOtp: builder.mutation<
+      ApiResponse<{ message: string; phoneMasked: string }>,
+      RequestSmsOtpRequest
+    >({
+      query: (body) => ({
+        url: "/auth/sms-otp/request",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    verifySmsOtp: builder.mutation<ApiResponse<AuthResponseData>, VerifySmsOtpRequest>({
+      query: (body) => ({
+        url: "/auth/sms-otp/verify",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Auth", "User", "Profile"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success && data?.data) {
+            dispatch(
+              setCredentials({
+                user: data.data.user,
+                token: data.data.token,
+                refreshToken: data.data.refreshToken,
+              })
+            );
+          }
+        } catch {
+          // Handled in component
         }
       },
     }),
@@ -200,6 +238,8 @@ export const authApi = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
+  useRequestSmsOtpMutation,
+  useVerifySmsOtpMutation,
   useRegisterMutation,
   useGetMeQuery,
   useLazyGetMeQuery,
@@ -212,8 +252,3 @@ export const {
   useRefreshTokenMutation,
   useChangePasswordMutation,
 } = authApi;
-
-
-
-
-

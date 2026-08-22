@@ -125,6 +125,9 @@ export const baseApi = createApi({
     "Billing",
     "Subscription",
     "Notification",
+    "Plan",
+    "Service",
+    "Specialist",
   ],
   endpoints: () => ({}),
 });

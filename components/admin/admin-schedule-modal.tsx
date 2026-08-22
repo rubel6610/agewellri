@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, Calendar, Clock, Loader2, CheckCircle2, UserCheck } from "lucide-react";
 import { adminBookAppointment } from "@/lib/api/admin-api";
 import { MOCK_ADMIN_CLIENTS } from "@/lib/api/admin-mock-data";
+import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
 
 interface AdminScheduleModalProps {
   isOpen: boolean;
@@ -16,11 +17,13 @@ export function AdminScheduleModal({
   onClose,
   defaultClientId,
 }: AdminScheduleModalProps) {
+  const { data: specialists = [] } = useGetAllSpecialistsQuery();
+
   const [selectedClientId, setSelectedClientId] = useState(defaultClientId || MOCK_ADMIN_CLIENTS[0].id);
   const [serviceType, setServiceType] = useState<"Safety Oversight" | "Cleaning">("Safety Oversight");
   const [date, setDate] = useState("2026-09-25");
   const [timeSlot, setTimeSlot] = useState("10:00 AM – 12:00 PM");
-  const [technicianName, setTechnicianName] = useState("Marcus Vance");
+  const [technicianName, setTechnicianName] = useState(specialists[0]?.name || "Mark Johnson");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -62,7 +65,7 @@ export function AdminScheduleModal({
             <Calendar className="w-5 h-5 text-[#294B68]" />
             <h3 className="text-xl font-bold text-[#243746]">Admin Visit Dispatcher</h3>
           </div>
-          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]">
+          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -122,8 +125,18 @@ export function AdminScheduleModal({
                   onChange={(e) => setTechnicianName(e.target.value)}
                   className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl"
                 >
-                  <option value="Marcus Vance">Marcus Vance (Safety Lead)</option>
-                  <option value="Elena Rostova">Elena Rostova (Senior Support)</option>
+                  {specialists.length > 0 ? (
+                    specialists.map((s) => (
+                      <option key={s.id} value={s.name}>
+                        {s.name} ({s.title})
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="Mark Johnson">Mark Johnson (Safety Lead)</option>
+                      <option value="Sarah Miller">Sarah Miller (Cleaning Specialist)</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>

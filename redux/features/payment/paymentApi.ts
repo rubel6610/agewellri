@@ -11,6 +11,15 @@ import {
   BillingOverviewData,
   ProcessAgreementPaymentRequest,
   ProcessAgreementPaymentData,
+  CreateInvoicePaymentRequest,
+  CancelRenewalRequest,
+  CancelRenewalData,
+  ReactivateRenewalData,
+  AdminOverviewData,
+  AdminInvoicesResponse,
+  AdminSubscriptionsResponse,
+  AdminRetryChargeRequest,
+  AdminRetryChargeData,
 } from "./paymentTypes";
 
 export const paymentApi = baseApi.injectEndpoints({
@@ -83,6 +92,85 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Auth", "User", "Profile", "Agreement", "Billing", "Subscription"],
     }),
+
+    createInvoicePayment: builder.mutation<
+      ApiResponse<ProcessAgreementPaymentData>,
+      CreateInvoicePaymentRequest
+    >({
+      query: (body) => ({
+        url: "/payments/create-invoice-payment",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Billing", "Subscription", "Agreement"],
+    }),
+
+    cancelSubscriptionRenewal: builder.mutation<
+      ApiResponse<CancelRenewalData>,
+      CancelRenewalRequest | void
+    >({
+      query: (body) => ({
+        url: "/payments/subscription/cancel-renewal",
+        method: "POST",
+        body: body || {},
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
+
+    reactivateSubscriptionRenewal: builder.mutation<
+      ApiResponse<ReactivateRenewalData>,
+      void
+    >({
+      query: () => ({
+        url: "/payments/subscription/reactivate-renewal",
+        method: "POST",
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
+
+    getAdminBillingOverview: builder.query<ApiResponse<AdminOverviewData>, void>({
+      query: () => ({
+        url: "/payments/admin/overview",
+        method: "GET",
+      }),
+      providesTags: ["Billing"],
+    }),
+
+    getAdminInvoices: builder.query<
+      ApiResponse<AdminInvoicesResponse>,
+      { status?: string; billingMethod?: string; plan?: string; search?: string; page?: number; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/payments/admin/invoices",
+        method: "GET",
+        params: params || {},
+      }),
+      providesTags: ["Billing"],
+    }),
+
+    getAdminSubscriptions: builder.query<
+      ApiResponse<AdminSubscriptionsResponse>,
+      { status?: string; plan?: string; search?: string; page?: number; limit?: number } | void
+    >({
+      query: (params) => ({
+        url: "/payments/admin/subscriptions",
+        method: "GET",
+        params: params || {},
+      }),
+      providesTags: ["Subscription", "Billing"],
+    }),
+
+    adminRetryCharge: builder.mutation<
+      ApiResponse<AdminRetryChargeData>,
+      AdminRetryChargeRequest
+    >({
+      query: (body) => ({
+        url: "/payments/admin/retry-charge",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -95,4 +183,11 @@ export const {
   useGetPaymentMethodsQuery,
   useGetBillingOverviewQuery,
   useProcessAgreementPaymentMutation,
+  useCreateInvoicePaymentMutation,
+  useCancelSubscriptionRenewalMutation,
+  useReactivateSubscriptionRenewalMutation,
+  useGetAdminBillingOverviewQuery,
+  useGetAdminInvoicesQuery,
+  useGetAdminSubscriptionsQuery,
+  useAdminRetryChargeMutation,
 } = paymentApi;
