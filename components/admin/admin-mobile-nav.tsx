@@ -77,14 +77,14 @@ export function AdminMobileNav({
             <Image
               src="/logo.png"
               alt="AgeWellRI Admin"
-              width={220}
-              height={60}
+              width={150}
+              height={36}
               priority
-              className="w-auto max-w-[180px] h-auto max-h-12 object-contain"
+              className="h-auto w-auto max-h-9 object-contain"
             />
             <button
               onClick={onClose}
-              className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer"
+              className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -126,13 +126,16 @@ export function AdminMobileNav({
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl font-bold text-sm transition-colors ${isActive
+                  className={`flex items-center justify-between px-3.5 py-3 rounded-xl font-bold text-sm transition-colors ${
+                    isActive
                       ? "bg-[#294B68] text-white"
                       : "text-[#243746] hover:bg-[#EAF3F8]"
-                    }`}
+                  }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />
+                    <Icon
+                      className={`w-4 h-4 ${isActive ? "text-white" : "text-[#5E8FB2]"}`}
+                    />
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
