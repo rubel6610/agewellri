@@ -32,8 +32,8 @@ import { useAppSelector } from "@/redux/hooks";
 import { useSubmitAgreementMutation } from "@/redux/features/auth/authApi";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { PaymentStepCard } from "../payment/payment-step-card";
-import { HelpSchedulingWidget } from "../support/help-scheduling-widget";
 import { TrustBadges } from "../support/trust-badges";
+
 import {
   OWNER_SIGNATURE_SVG_DATA_URI,
   AGEWELL_OWNER_DETAILS,
@@ -501,50 +501,64 @@ export function ClientAgreementForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      {/* Top Header Logo & Welcome */}
-      <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs text-center space-y-3">
-        <div className="flex justify-center">
-          <Image
-            src="/logo.png"
-            alt="AgeWellRI Logo"
-            width={280}
-            height={85}
-            priority
-            className="w-full max-w-[240px] sm:max-w-[280px] h-auto object-contain"
-          />
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-[#243746] tracking-tight">
-          Client Service Agreement
-        </h1>
-        <p className="text-xs sm:text-sm text-[#5E8FB2] max-w-2xl mx-auto font-medium leading-relaxed">
-          Please review the service terms, choose your plan, and electronically sign below to complete onboarding and unlock scheduling access.
-        </p>
+    <div className="min-h-screen bg-[#F7FAFC] text-[#243746]">
+      {/* Horizontal Top Header Bar */}
+      <header className="bg-white border-b border-[#D9E4EC] py-3.5 px-4 sm:px-8 sticky top-0 z-30 shadow-xs mb-6 sm:mb-8">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="AgeWellRI Logo"
+              width={165}
+              height={44}
+              priority
+              className="h-auto w-auto max-h-10 object-contain"
+            />
+            <div className="hidden sm:block border-l border-[#D9E4EC] pl-3.5 py-0.5">
+              <h1 className="text-sm font-extrabold text-[#243746] tracking-tight leading-tight">
+                Client Service Agreement
+              </h1>
+              <p className="text-[11px] text-[#5E8FB2] font-medium">
+                Review &amp; Digital Activation
+              </p>
+            </div>
+          </div>
 
-        {/* Progress Step Pill */}
-        <div className="flex items-center justify-center gap-3 pt-3">
-          <div
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black tracking-wide ${
-              currentStep === 1
-                ? "bg-[#294B68] text-white"
-                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-            }`}
-          >
-            {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : "1"}
-            <span>1. Review & Sign Agreement</span>
-          </div>
-          <div className="w-8 h-0.5 bg-[#D9E4EC]" />
-          <div
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-black tracking-wide ${
-              currentStep === 2
-                ? "bg-[#294B68] text-white"
-                : "bg-[#F0F5F9] text-[#64748B]"
-            }`}
-          >
-            <span>2. Membership & Billing</span>
+          {/* Stepper Pill Indicator */}
+          <div className="flex items-center gap-2 bg-[#F0F5F9] p-1.5 rounded-full border border-[#D9E4EC] self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
+                currentStep === 1
+                  ? "bg-[#294B68] text-white shadow-xs"
+                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+              }`}
+            >
+              {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : "1."}
+              <span>Review &amp; Sign</span>
+            </button>
+            <div className="w-4 h-0.5 bg-[#D9E4EC]" />
+            <button
+              type="button"
+              disabled={currentStep === 1 && (!hasSignature || !formData.agreedToTerms)}
+              onClick={() => {
+                if (hasSignature && formData.agreedToTerms) setCurrentStep(2);
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
+                currentStep === 2
+                  ? "bg-[#294B68] text-white shadow-xs"
+                  : "text-[#64748B]"
+              }`}
+            >
+              <span>2. Membership &amp; Billing</span>
+            </button>
           </div>
         </div>
-      </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 pb-20">
+
 
       {/* STEP 1: Agreement Review & Signature */}
       {currentStep === 1 && (
@@ -1279,9 +1293,10 @@ export function ClientAgreementForm() {
         </div>
       )}
 
-      {/* Trust & Support Footer */}
+      {/* Trust Badges Footer */}
       <TrustBadges className="mt-8" />
-      <HelpSchedulingWidget className="mt-4" />
-    </div>
+    </main>
+  </div>
   );
 }
+

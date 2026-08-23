@@ -18,9 +18,12 @@ import {
   AdminOverviewData,
   AdminInvoicesResponse,
   AdminSubscriptionsResponse,
+  AdminUpcomingRenewalsResponse,
+  AdminTriggerRemindersResponse,
   AdminRetryChargeRequest,
   AdminRetryChargeData,
 } from "./paymentTypes";
+
 
 export const paymentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -160,6 +163,29 @@ export const paymentApi = baseApi.injectEndpoints({
       providesTags: ["Subscription", "Billing"],
     }),
 
+    getAdminUpcomingRenewals: builder.query<
+      ApiResponse<AdminUpcomingRenewalsResponse>,
+      { interval?: string; billingMethod?: string; daysRange?: number } | void
+    >({
+      query: (params) => ({
+        url: "/payments/admin/renewals",
+        method: "GET",
+        params: params || {},
+      }),
+      providesTags: ["Subscription", "Billing"],
+    }),
+
+    adminTriggerReminders: builder.mutation<
+      ApiResponse<AdminTriggerRemindersResponse>,
+      void
+    >({
+      query: () => ({
+        url: "/payments/admin/trigger-reminders",
+        method: "POST",
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
+
     adminRetryCharge: builder.mutation<
       ApiResponse<AdminRetryChargeData>,
       AdminRetryChargeRequest
@@ -189,5 +215,8 @@ export const {
   useGetAdminBillingOverviewQuery,
   useGetAdminInvoicesQuery,
   useGetAdminSubscriptionsQuery,
+  useGetAdminUpcomingRenewalsQuery,
+  useAdminTriggerRemindersMutation,
   useAdminRetryChargeMutation,
 } = paymentApi;
+

@@ -228,3 +228,35 @@ export interface AdminRetryChargeData {
   success: boolean;
   message: string;
 }
+
+export interface AdminUpcomingRenewalItem {
+  subscriptionId: string;
+  clientId: string;
+  clientNumber: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  representativeEmail?: string | null;
+  planName: string;
+  contractedPrice: number;
+  billingInterval: string;
+  billingMethod: string;
+  autoRenew: boolean;
+  cancelAtPeriodEnd: boolean;
+  scheduledRenewalDate: string;
+  daysRemaining: number;
+  cardBrand: string;
+  cardLast4: string;
+}
+
+export interface AdminUpcomingRenewalsResponse {
+  renewals: AdminUpcomingRenewalItem[];
+}
+
+export interface AdminTriggerRemindersResponse {
+  success: boolean;
+  remindersSent: number;
+  duplicateSkipped: number;
+  checkedAt: string;
+}
+
