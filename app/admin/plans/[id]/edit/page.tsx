@@ -76,14 +76,20 @@ export default function EditPlanPage() {
         supportsAutomaticBilling: plan.supportsAutomaticBilling ?? true,
         supportsInvoiceBilling: plan.supportsInvoiceBilling ?? true,
         autoRenewDefault: plan.autoRenewDefault ?? true,
-        isActive: plan.isActive,
+        isActive: plan.isActive ?? true,
       });
 
-      setFeatures(latestVer?.features || []);
+      const planFeats = (plan as any).features || latestVer?.features || [];
+      setFeatures(planFeats);
 
-      const services = (latestVer?.planServices || []).map((ps) => ({
+      const rawServices =
+        latestVer?.planServices && latestVer.planServices.length > 0
+          ? latestVer.planServices
+          : (plan as any).planServices || (plan as any).services || [];
+
+      const services = rawServices.map((ps: any) => ({
         serviceTypeId: ps.serviceTypeId,
-        allocatedVisits: ps.allocatedVisits,
+        allocatedVisits: ps.allocatedVisits || 6,
         unit: ps.unit || "visits",
       }));
       setServiceAllocations(services);

@@ -15,11 +15,15 @@ import {
   DollarSign,
   ShieldCheck,
   RefreshCw,
+  Eye,
+  History,
 } from "lucide-react";
 import {
   useGetAdminPlansQuery,
   useChangePlanStatusMutation,
 } from "@/redux/features/plan/planApi";
+import { AdminPlan } from "@/redux/features/plan/planTypes";
+import { PlanVersionsModal } from "@/components/admin/plan-versions-modal";
 import {
   confirmDelete,
   confirmCriticalAction,
@@ -31,6 +35,7 @@ import {
 export default function AdminPlansPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [selectedPlanForDetails, setSelectedPlanForDetails] = useState<AdminPlan | null>(null);
 
   const { data: plans = [], isLoading, refetch, isFetching } = useGetAdminPlansQuery();
   const [changePlanStatus, { isLoading: isStatusChanging }] = useChangePlanStatusMutation();
@@ -53,7 +58,7 @@ export default function AdminPlansPage() {
   const totalSubscribers = plans.reduce((sum, p) => sum + (p.activeSubscribersCount || 0), 0);
   const activePlansCount = plans.filter((p) => p.isActive && !p.isArchived).length;
 
-  const handleToggleStatus = async (plan: any) => {
+  const handleToggleStatus = async (plan: AdminPlan) => {
     const nextStatus = plan.isActive ? "INACTIVE" : "ACTIVE";
     const actionLabel = plan.isActive ? "Deactivate" : "Activate";
 
@@ -79,7 +84,7 @@ export default function AdminPlansPage() {
     }
   };
 
-  const handleArchive = async (plan: any) => {
+  const handleArchive = async (plan: AdminPlan) => {
     const confirmed = await confirmDelete({
       title: `Archive "${plan.name}"?`,
       text: "Are you sure you want to archive this plan? Historical subscribers will retain their contracted terms, but new clients will not be able to choose it.",
@@ -109,7 +114,7 @@ export default function AdminPlansPage() {
             Dynamic Service Plans
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Configure service tiers, interval pricing, visit quotas, and versioning rules.
+            Configure service tiers, interval pricing, visit quotas, and commercial versioning rules.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -215,11 +220,11 @@ export default function AdminPlansPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Plan Name & Code</th>
-                  <th className="py-3.5 px-4">Price & Frequency</th>
+                  <th className="py-3.5 px-4">Plan Name &amp; Code</th>
+                  <th className="py-3.5 px-4">Price &amp; Frequency</th>
                   <th className="py-3.5 px-4">Included Visits</th>
                   <th className="py-3.5 px-4">Subscribers</th>
-                  <th className="py-3.5 px-4">Version</th>
+                  <th className="py-3.5 px-4">Version History</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
@@ -228,7 +233,14 @@ export default function AdminPlansPage() {
                 {filteredPlans.map((plan) => (
                   <tr key={plan.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
                     <td className="py-4 px-4">
-                      <div className="font-extrabold text-[#243746]">{plan.name}</div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlanForDetails(plan)}
+                        className="font-extrabold text-[#243746] hover:text-[#294B68] hover:underline text-left cursor-pointer flex items-center gap-1.5"
+                      >
+                        <span>{plan.name}</span>
+                        <Eye className="w-3.5 h-3.5 text-[#5E8FB2] opacity-70" />
+                      </button>
                       <div className="text-xs font-mono font-bold text-[#5E8FB2]">{plan.code}</div>
                     </td>
                     <td className="py-4 px-4">
@@ -246,15 +258,29 @@ export default function AdminPlansPage() {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68]">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlanForDetails(plan)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] hover:bg-[#D9E4EC] cursor-pointer transition-colors"
+                        title="View subscribed members"
+                      >
                         <Users className="w-3.5 h-3.5" />
                         {plan.activeSubscribersCount} active
-                      </span>
+                      </button>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-slate-100 text-slate-700 border border-slate-200">
-                        v{plan.latestVersionNumber}.0
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPlanForDetails(plan)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-100 hover:bg-[#EAF3F8] text-slate-700 hover:text-[#294B68] border border-slate-200 cursor-pointer transition-colors"
+                        title="Inspect versioning details"
+                      >
+                        <History className="w-3 h-3 text-[#5E8FB2]" />
+                        <span>v{plan.latestVersionNumber}.0</span>
+                        <span className="text-[10px] text-[#64748B] font-normal">
+                          ({plan.totalVersionsCount || 1} ver)
+                        </span>
+                      </button>
                     </td>
                     <td className="py-4 px-4">
                       {plan.isArchived ? (
@@ -272,7 +298,15 @@ export default function AdminPlansPage() {
                       )}
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPlanForDetails(plan)}
+                          className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
+                          title="View Versioning & Plan Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
                         <Link
                           href={`/admin/plans/${plan.id}/edit`}
                           className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors"
@@ -307,6 +341,13 @@ export default function AdminPlansPage() {
           </div>
         )}
       </div>
+
+      {/* Plan Details & Versioning Modal */}
+      <PlanVersionsModal
+        isOpen={Boolean(selectedPlanForDetails)}
+        onClose={() => setSelectedPlanForDetails(null)}
+        plan={selectedPlanForDetails}
+      />
     </div>
   );
 }

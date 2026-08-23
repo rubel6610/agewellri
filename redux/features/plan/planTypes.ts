@@ -35,6 +35,7 @@ export interface AdminPlan {
   shortDescription?: string;
   fullDescription?: string;
   currentPrice: number;
+  price?: number;
   currency: string;
   billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
   displayOrder: number;
@@ -42,6 +43,7 @@ export interface AdminPlan {
   isArchived: boolean;
   supportsAutomaticBilling: boolean;
   supportsInvoiceBilling: boolean;
+  autoRenewDefault?: boolean;
   activeSubscribersCount: number;
   totalVersionsCount: number;
   latestVersionNumber: number;
@@ -49,6 +51,7 @@ export interface AdminPlan {
   features: string[];
   services: PlanServiceAllocation[];
   totalVisits: number;
+  versions?: PlanVersionDetail[];
   effectiveFrom: string;
   lastUpdated: string;
 }
@@ -84,6 +87,7 @@ export interface AdminPlanDetail {
   shortDescription?: string;
   fullDescription?: string;
   price: number;
+  currentPrice?: number;
   billingInterval: string;
   displayOrder: number;
   isActive: boolean;
@@ -91,19 +95,33 @@ export interface AdminPlanDetail {
   supportsAutomaticBilling: boolean;
   supportsInvoiceBilling: boolean;
   autoRenewDefault: boolean;
+  activeSubscribersCount?: number;
+  totalVisits?: number;
+  features?: string[];
+  services?: PlanServiceAllocation[];
   stripeProductId?: string;
   versions: PlanVersionDetail[];
   subscriptions: {
     id: string;
     status: string;
+    contractedPrice?: number;
+    billingInterval?: string;
+    currentPeriodStart?: string;
+    currentPeriodEnd?: string;
+    planVersionId?: string;
     client: {
       id: string;
       clientNumber: string;
-      user: {
+      user?: {
         firstName: string;
         lastName: string;
         email: string;
+        phone?: string;
       };
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      phone?: string;
     };
   }[];
 }
