@@ -61,12 +61,13 @@ export function ClientAgreementForm() {
 
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
-  // Form state
+    // Form state
   const [formData, setFormData] = useState({
     clientFullName: "",
     address: "",
     city: "",
     state: "RI",
+    customState: "",
     postalCode: "",
     phone: "",
     dob: "",
@@ -143,16 +144,20 @@ export function ClientAgreementForm() {
       };
 
       const rawAddress = clean(authUser.client?.address);
+      const rawState = clean(authUser.client?.state);
+      const standardStates = ["RI", "CT", "MA", "NY", "FL"];
+      const isCustomState = rawState && !standardStates.includes(rawState.toUpperCase());
 
       setFormData((prev) => ({
         ...prev,
         clientFullName: prev.clientFullName || fullName,
-        email: prev.email || authUser.email || "",
+        email: authUser.email || prev.email || "",
         phone: prev.phone || clean(authUser.phone) || "",
         clientPrintedName: prev.clientPrintedName || fullName,
         address: prev.address || rawAddress,
         city: prev.city || clean(authUser.client?.city),
-        state: prev.state || (rawAddress ? clean(authUser.client?.state) : "RI"),
+        state: prev.state || (isCustomState ? "OTHER" : (rawState || "RI")),
+        customState: prev.customState || (isCustomState ? rawState : ""),
         postalCode: prev.postalCode || clean(authUser.client?.postalCode),
         emergencyContactName:
           prev.emergencyContactName || clean(authUser.client?.emergencyContactName),
@@ -178,6 +183,14 @@ export function ClientAgreementForm() {
   const basePrice = selectedPlanObj ? selectedPlanObj.price : 1892;
   const addonPrice = formData.hasCleaningAddon ? 60 : 0;
   const totalPrice = basePrice + addonPrice;
+
+  // Resolve effective state code for submission and disclosure
+  const effectiveState = useMemo(() => {
+    if (formData.state === "OTHER") {
+      return formData.customState.trim().toUpperCase() || "OTHER";
+    }
+    return formData.state || "RI";
+  }, [formData.state, formData.customState]);
 
   // Compute 3-Business-Day Cancellation Date preview
   const cancellationDeadlineFormatted = useMemo(() => {
@@ -322,6 +335,13 @@ export function ClientAgreementForm() {
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else if (name === "postalCode") {
+      // ZIP postal code takes only numbers (up to 5 digits)
+      const numericValue = value.replace(/\D/g, "").slice(0, 5);
+      setFormData((prev) => ({ ...prev, postalCode: numericValue }));
+    } else if (name === "email") {
+      // Agreement email is fixed to authUser account and cannot be modified
+      return;
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -343,8 +363,14 @@ export function ClientAgreementForm() {
     if (!formData.clientFullName.trim()) newErrors.clientFullName = "Resident full name is required.";
     if (!formData.address.trim()) newErrors.address = "Home street address is required.";
     if (!formData.city.trim()) newErrors.city = "City is required.";
-    if (!formData.state.trim()) newErrors.state = "State is required.";
-    if (!formData.postalCode.trim()) newErrors.postalCode = "ZIP code is required.";
+    if (!formData.state.trim() || (formData.state === "OTHER" && !formData.customState.trim())) {
+      newErrors.state = "State is required.";
+    }
+    if (!formData.postalCode.trim()) {
+      newErrors.postalCode = "ZIP code is required.";
+    } else if (formData.postalCode.trim().length < 5) {
+      newErrors.postalCode = "ZIP code must be 5 digits.";
+    }
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required.";
     if (!formData.dob.trim()) newErrors.dob = "Date of birth is required.";
 
@@ -396,11 +422,11 @@ export function ClientAgreementForm() {
         clientFullName: formData.clientFullName.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
-        state: formData.state.trim(),
+        state: effectiveState,
         postalCode: formData.postalCode.trim(),
         phone: formData.phone.trim(),
         dob: formData.dob.trim(),
-        email: formData.email.trim(),
+        email: (authUser?.email || formData.email).trim(),
         signerRole: formData.signerRole,
         signerName: formData.signerRole !== "RESIDENT" ? formData.signerName.trim() : formData.clientPrintedName.trim(),
         legalAuthority: formData.signerRole !== "RESIDENT" ? formData.legalAuthority.trim() : null,
@@ -451,11 +477,11 @@ export function ClientAgreementForm() {
         clientFullName: formData.clientFullName.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
-        state: formData.state.trim(),
+        state: effectiveState,
         postalCode: formData.postalCode.trim(),
         phone: formData.phone.trim(),
         dob: formData.dob.trim(),
-        email: formData.email.trim(),
+        email: (authUser?.email || formData.email).trim(),
         signerRole: formData.signerRole,
         signerName: formData.signerRole !== "RESIDENT" ? formData.signerName.trim() : formData.clientPrintedName.trim(),
         legalAuthority: formData.signerRole !== "RESIDENT" ? formData.legalAuthority.trim() : null,
@@ -760,23 +786,47 @@ export function ClientAgreementForm() {
                   <option value="RI">Rhode Island (RI)</option>
                   <option value="CT">Connecticut (CT)</option>
                   <option value="MA">Massachusetts (MA)</option>
+                  <option value="NY">New York (NY)</option>
+                  <option value="FL">Florida (FL)</option>
+                  <option value="OTHER">Other State / Territory (Specify Below)</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  ZIP / Postal Code <span className="text-red-500">*</span>
+                  ZIP Code (Numeric) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={5}
                   name="postalCode"
-                  placeholder="e.g. 02891"
+                  placeholder="02891"
                   value={formData.postalCode}
                   onChange={handleChange}
                   className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
                 {errors.postalCode && <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>}
               </div>
+
+              {/* Custom State Input when 'OTHER' is chosen */}
+              {formData.state === "OTHER" && (
+                <div className="sm:col-span-3 p-3.5 bg-[#EAF3F8] rounded-xl border border-[#294B68]/20 animate-in fade-in duration-200">
+                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                    Specify Custom State / Territory Name or Code <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="customState"
+                    placeholder="e.g. NH, ME, VT, NJ, TX, California"
+                    value={formData.customState}
+                    onChange={handleChange}
+                    className="w-full px-3.5 py-2.5 bg-white border border-[#294B68]/30 rounded-xl text-sm font-bold text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                  />
+                  {errors.state && <p className="text-xs text-red-500 mt-1 font-semibold">{errors.state}</p>}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -796,17 +846,25 @@ export function ClientAgreementForm() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  Email Address
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-[#5E8FB2] bg-[#F0F5F9] px-2 py-0.5 rounded-md border border-[#D9E4EC]">
+                    <Lock className="w-3 h-3 text-[#5E8FB2]" /> Account Email (Fixed)
+                  </span>
+                </div>
                 <input
                   type="email"
                   name="email"
-                  placeholder="name@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                  readOnly
+                  disabled
+                  value={authUser?.email || formData.email}
+                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-[#D9E4EC] rounded-xl text-sm font-bold text-slate-600 cursor-not-allowed select-none shadow-inner"
                 />
+                <p className="text-[11px] text-[#64748B] mt-1 font-medium">
+                  Synced with your login account. All agreement receipts and care reports are routed here.
+                </p>
               </div>
             </div>
           </div>
@@ -984,23 +1042,36 @@ export function ClientAgreementForm() {
           </div>
 
           {/* Section 4: Dynamic Service Plan Selection */}
-          <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-            <h2 className="text-base font-black text-[#243746] flex items-center gap-2 border-b border-[#D9E4EC]/60 pb-3">
-              <Sparkles className="w-5 h-5 text-[#294B68]" />
-              Select Your Service Plan
-            </h2>
+          <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 sm:p-7 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D9E4EC]/60 pb-4">
+              <div>
+                <h2 className="text-lg font-black text-[#243746] flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-[#294B68]" />
+                  Select Your Service Plan
+                </h2>
+                <p className="text-xs text-[#5E8FB2] mt-0.5 font-medium">
+                  Choose your desired safety oversight and home wellness care tier.
+                </p>
+              </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#EAF3F8] text-[#294B68] rounded-full text-xs font-black border border-[#D9E4EC] self-start sm:self-auto">
+                <Shield className="w-3.5 h-3.5 text-[#294B68]" /> Guaranteed Rate Lock
+              </div>
+            </div>
 
             {isPlansLoading ? (
-              <div className="py-12 text-center text-[#5E8FB2] flex items-center justify-center gap-2 font-bold">
-                <Loader2 className="w-5 h-5 animate-spin text-[#294B68]" />
-                Loading service plans...
+              <div className="py-16 text-center text-[#5E8FB2] flex flex-col items-center justify-center gap-3 font-bold bg-[#F8FAFC] rounded-2xl border border-dashed border-[#D9E4EC]">
+                <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
+                <span>Loading certified service plans...</span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {dynamicPlans.map((plan) => {
                   const isSelected =
                     formData.selectedPlanId === plan.id ||
                     formData.selectedPlanCode === plan.code;
+
+                  const isGuardianPlus = plan.code === "GUARDIAN_PLUS";
+                  const isEssential = plan.code === "ESSENTIAL_GUARD";
 
                   return (
                     <div
@@ -1012,46 +1083,106 @@ export function ClientAgreementForm() {
                           selectedPlanCode: plan.code,
                         })
                       }
-                      className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group ${
                         isSelected
-                          ? "border-[#294B68] bg-[#EAF3F8] shadow-md ring-2 ring-[#294B68]/10"
-                          : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]"
+                          ? "border-[#294B68] bg-linear-to-b from-[#F0F7FD] via-white to-white shadow-xl ring-2 ring-[#294B68]/15 transform -translate-y-1"
+                          : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2] hover:shadow-md hover:-translate-y-0.5"
                       }`}
                     >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-black uppercase tracking-wider text-[#294B68] bg-white px-2.5 py-1 rounded-md border border-[#D9E4EC]">
-                            {plan.code.replace("_", " ")}
-                          </span>
-                          {isSelected && (
-                            <span className="w-6 h-6 rounded-full bg-[#294B68] text-white flex items-center justify-center shadow-xs">
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      {/* Top highlight bar */}
+                      {isSelected && (
+                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#294B68] rounded-t-2xl" />
+                      )}
+
+                      <div className="space-y-4">
+                        {/* Header row: Badge + Selection radio */}
+                        <div className="flex items-center justify-between gap-2">
+                          {isGuardianPlus ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
+                              <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Most Popular · Dual Care
+                            </span>
+                          ) : isEssential ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 shadow-xs">
+                              <Shield className="w-3.5 h-3.5 text-[#294B68]" /> Essential Safety
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Deep Sanitization
                             </span>
                           )}
+
+                          {/* Checkbox indicator */}
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                              isSelected
+                                ? "bg-[#294B68] text-white shadow-sm ring-2 ring-[#294B68]/20"
+                                : "border-2 border-[#CBD5E1] bg-white group-hover:border-[#5E8FB2]"
+                            }`}
+                          >
+                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                          </div>
                         </div>
 
+                        {/* Title & Description */}
                         <div>
-                          <div className="text-xl font-black text-[#243746]">{plan.name}</div>
-                          <div className="text-xs text-[#5E8FB2] mt-0.5 leading-relaxed font-medium">
+                          <div className="text-2xl font-black text-[#243746] tracking-tight group-hover:text-[#294B68] transition-colors">
+                            {plan.name}
+                          </div>
+                          <div className="text-xs text-[#5E8FB2] mt-1 leading-relaxed font-medium">
                             {plan.shortDescription}
                           </div>
                         </div>
 
-                        <div className="flex items-baseline gap-1 pt-1">
-                          <span className="text-3xl font-black text-[#243746]">${plan.price}</span>
-                          <span className="text-xs font-bold text-[#5E8FB2] capitalize">
-                            / {plan.billingInterval.toLowerCase()} · {plan.totalVisits} visits
-                          </span>
+                        {/* Price Hero & Visit Counter */}
+                        <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] space-y-2">
+                          <div className="flex items-baseline justify-between">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-3xl sm:text-4xl font-black text-[#243746] tracking-tight">
+                                ${plan.price}
+                              </span>
+                              <span className="text-xs font-bold text-[#64748B] capitalize">
+                                / {plan.billingInterval.toLowerCase()}
+                              </span>
+                            </div>
+                            <span className="text-[11px] font-extrabold text-[#294B68] bg-white px-2.5 py-1 rounded-md border border-[#D9E4EC] shadow-2xs">
+                              {plan.billingInterval === "ONE_TIME" ? "One-Time Charge" : "Contracted Rate"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#243746]">
+                            <Calendar className="w-3.5 h-3.5 text-[#294B68]" />
+                            <span>{plan.totalVisits} Total Care Visits / Cycle</span>
+                          </div>
                         </div>
 
-                        <ul className="space-y-2 pt-2 border-t border-[#D9E4EC]/60 text-xs font-semibold text-[#243746]">
-                          {plan.features.map((feat, fidx) => (
-                            <li key={fidx} className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                              <span>{feat}</span>
-                            </li>
-                          ))}
-                        </ul>
+                        {/* Included Services Breakdown Badges */}
+                        {plan.services && plan.services.length > 0 && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {plan.services.map((srv, sidx) => (
+                              <span
+                                key={sidx}
+                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white border border-[#D9E4EC] text-[#243746] shadow-2xs"
+                              >
+                                {srv.category === "CLEANING" ? "✨" : "🛡️"} {srv.allocatedVisits} {srv.serviceName}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Key Inclusions Bullet List */}
+                        <div className="pt-2 border-t border-[#D9E4EC]/70 space-y-2">
+                          <div className="text-[11px] font-black text-[#64748B] uppercase tracking-wider">
+                            Included in this plan:
+                          </div>
+                          <ul className="space-y-2 text-xs font-semibold text-[#243746]">
+                            {plan.features.map((feat, fidx) => (
+                              <li key={fidx} className="flex items-start gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                <span className="leading-snug">{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1060,25 +1191,72 @@ export function ClientAgreementForm() {
             )}
 
             {/* Cleaning Add-On ($60/quarter) */}
-            <div className="p-4 rounded-xl border border-[#D9E4EC] bg-[#F0F5F9]/60 flex items-center justify-between gap-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="hasCleaningAddon"
-                  checked={formData.hasCleaningAddon}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-[#294B68] rounded cursor-pointer"
-                />
+            <div
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  hasCleaningAddon: !prev.hasCleaningAddon,
+                }))
+              }
+              className={`p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                formData.hasCleaningAddon
+                  ? "border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/10 shadow-sm"
+                  : "border-[#D9E4EC] bg-[#F8FAFC] hover:border-[#5E8FB2]"
+              }`}
+            >
+              <div className="flex items-start gap-3.5">
+                <div
+                  className={`w-6 h-6 rounded-lg mt-0.5 flex items-center justify-center transition-all shrink-0 ${
+                    formData.hasCleaningAddon
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "border-2 border-[#CBD5E1] bg-white"
+                  }`}
+                >
+                  {formData.hasCleaningAddon && <Check className="w-4 h-4 stroke-[3]" />}
+                </div>
                 <div>
-                  <div className="font-extrabold text-sm text-[#243746]">
-                    Add Cleaning Add-On (+$60 / quarter)
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-extrabold text-sm text-[#243746]">
+                      Add Specialized Cleaning Add-On
+                    </span>
+                    <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      +6 Additional Visits
+                    </span>
                   </div>
-                  <div className="text-xs text-[#5E8FB2] font-medium">
-                    6 HEPA allergen deep cleanings & pathway sanitizations added to your quarterly cycle.
+                  <div className="text-xs text-[#5E8FB2] font-medium mt-0.5 leading-relaxed">
+                    Adds 6 HEPA allergen deep cleanings, pathway clearing &amp; bathroom sanitizations per quarter.
                   </div>
                 </div>
-              </label>
-              <span className="text-sm font-black text-[#243746] shrink-0">+$60</span>
+              </div>
+              <div className="sm:text-right shrink-0">
+                <div className="text-base font-black text-[#243746]">+$60.00</div>
+                <div className="text-[11px] font-bold text-[#64748B]">per quarter</div>
+              </div>
+            </div>
+
+            {/* Live Total Pricing Summary Ribbon */}
+            <div className="p-4 bg-linear-to-r from-[#294B68] to-[#1E374D] text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+              <div>
+                <div className="text-[11px] uppercase tracking-wider text-slate-300 font-extrabold">
+                  Selected Membership Summary
+                </div>
+                <div className="text-base font-black flex items-center gap-2 mt-0.5">
+                  <span>{selectedPlanObj?.name || "Service Plan"}</span>
+                  {formData.hasCleaningAddon && (
+                    <span className="text-xs font-bold text-emerald-300 bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-400/30">
+                      + Cleaning Add-On
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="sm:text-right">
+                <div className="text-2xl font-black text-white leading-tight">
+                  ${totalPrice.toFixed(2)}
+                </div>
+                <div className="text-[11px] text-slate-300 font-medium">
+                  Billed {selectedPlanObj?.billingInterval.toLowerCase() || "quarterly"} · Cancel anytime
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1086,13 +1264,13 @@ export function ClientAgreementForm() {
           <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 shadow-xs space-y-4 text-xs leading-relaxed text-[#243746]">
             <h2 className="text-base font-black text-[#243746] flex items-center gap-2 border-b border-[#D9E4EC]/60 pb-3">
               <Shield className="w-5 h-5 text-[#294B68]" />
-              State Statutory Cancellation Notice & Legal Disclosures
+              State Statutory Cancellation Notice &amp; Legal Disclosures
             </h2>
 
             <div className="p-4 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-[#243746]">
               <div className="font-black text-amber-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                 <AlertTriangle className="w-4 h-4 text-amber-700" />
-                NOTICE OF CANCELLATION ({formData.state} Law)
+                NOTICE OF CANCELLATION ({effectiveState} Law)
               </div>
               <p>
                 <strong>YOU MAY CANCEL THIS TRANSACTION WITHOUT PENALTY OR OBLIGATION</strong> within three (3) business days from the date below.
