@@ -27,8 +27,11 @@ import {
   HelpCircle,
   Printer,
   Download,
+  ArrowLeft,
+  LogOut,
 } from "lucide-react";
-import { useAppSelector } from "@/redux/hooks";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 import { useSubmitAgreementMutation } from "@/redux/features/auth/authApi";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { PaymentStepCard } from "../payment/payment-step-card";
@@ -53,6 +56,7 @@ interface Point {
 
 export function ClientAgreementForm() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
   const [submitAgreement, { isLoading: isSubmittingAgreement }] =
     useSubmitAgreementMutation();
@@ -60,6 +64,21 @@ export function ClientAgreementForm() {
   const { data: dynamicPlans = [], isLoading: isPlansLoading } = useGetActivePlansQuery();
 
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+
+  const handleGoBackToLogin = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Return to Login?",
+      text: "You can sign back in at any time to resume and complete your Client Service Agreement.",
+      confirmButtonText: "Yes, Return to Login",
+      cancelButtonText: "Stay on Agreement",
+      isDestructive: false,
+    });
+
+    if (confirmed) {
+      dispatch(logout());
+      router.push("/login");
+    }
+  };
 
     // Form state
   const [formData, setFormData] = useState({
@@ -120,8 +139,17 @@ export function ClientAgreementForm() {
   // Default plan selection when plans load
   useEffect(() => {
     if (dynamicPlans.length > 0 && !formData.selectedPlanId) {
+      const invitedPlan = authUser?.client?.selectedPlan?.toLowerCase() || "";
       const defaultPlan =
-        dynamicPlans.find((p) => p.code === "GUARDIAN_PLUS") || dynamicPlans[0];
+        dynamicPlans.find(
+          (p) =>
+            invitedPlan &&
+            (p.name.toLowerCase().includes(invitedPlan) ||
+              p.code.toLowerCase() === invitedPlan.replace(/\s+/g, "_"))
+        ) ||
+        dynamicPlans.find((p) => p.code === "GUARDIAN_PLUS") ||
+        dynamicPlans[0];
+
       if (defaultPlan) {
         setFormData((prev) => ({
           ...prev,
@@ -130,7 +158,7 @@ export function ClientAgreementForm() {
         }));
       }
     }
-  }, [dynamicPlans, formData.selectedPlanId]);
+  }, [dynamicPlans, formData.selectedPlanId, authUser]);
 
   // Sync auth registration info
   useEffect(() => {
@@ -550,35 +578,49 @@ export function ClientAgreementForm() {
             </div>
           </div>
 
-          {/* Stepper Pill Indicator */}
-          <div className="flex items-center gap-2 bg-[#F0F5F9] p-1.5 rounded-full border border-[#D9E4EC] self-start sm:self-auto">
+          {/* Actions & Stepper Container */}
+          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+            {/* Go Back / Return to Login */}
             <button
               type="button"
-              onClick={() => setCurrentStep(1)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
-                currentStep === 1
-                  ? "bg-[#294B68] text-white shadow-xs"
-                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              }`}
+              onClick={handleGoBackToLogin}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              title="Exit agreement and return to login screen"
             >
-              {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : "1."}
-              <span>Review &amp; Sign</span>
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Login</span>
             </button>
-            <div className="w-4 h-0.5 bg-[#D9E4EC]" />
-            <button
-              type="button"
-              disabled={currentStep === 1 && (!hasSignature || !formData.agreedToTerms)}
-              onClick={() => {
-                if (hasSignature && formData.agreedToTerms) setCurrentStep(2);
-              }}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
-                currentStep === 2
-                  ? "bg-[#294B68] text-white shadow-xs"
-                  : "text-[#64748B]"
-              }`}
-            >
-              <span>2. Membership &amp; Billing</span>
-            </button>
+
+            {/* Stepper Pill Indicator */}
+            <div className="flex items-center gap-2 bg-[#F0F5F9] p-1.5 rounded-full border border-[#D9E4EC]">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
+                  currentStep === 1
+                    ? "bg-[#294B68] text-white shadow-xs"
+                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                }`}
+              >
+                {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : "1."}
+                <span>Review &amp; Sign</span>
+              </button>
+              <div className="w-4 h-0.5 bg-[#D9E4EC]" />
+              <button
+                type="button"
+                disabled={currentStep === 1 && (!hasSignature || !formData.agreedToTerms)}
+                onClick={() => {
+                  if (hasSignature && formData.agreedToTerms) setCurrentStep(2);
+                }}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
+                  currentStep === 2
+                    ? "bg-[#294B68] text-white shadow-xs"
+                    : "text-[#64748B]"
+                }`}
+              >
+                <span>2. Membership &amp; Billing</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -1401,11 +1443,20 @@ export function ClientAgreementForm() {
             </div>
           </div>
 
-          {/* Proceed Button */}
-          <div className="flex justify-end pt-4">
+          {/* Proceed & Back Actions */}
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 pt-4">
+            <button
+              type="button"
+              onClick={handleGoBackToLogin}
+              className="w-full sm:w-auto px-5 py-3.5 border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] font-bold text-sm rounded-2xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Login</span>
+            </button>
+
             <button
               type="submit"
-              className="px-8 py-3.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-base rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-base rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Continue to Membership & Billing</span>
               <ArrowRight className="w-5 h-5" />
@@ -1429,12 +1480,23 @@ export function ClientAgreementForm() {
                 ${totalPrice} billed {selectedPlanObj?.billingInterval.toLowerCase()} · {selectedPlanObj?.totalVisits || 6} visits
               </div>
             </div>
-            <button
-              onClick={() => setCurrentStep(1)}
-              className="px-3.5 py-1.5 rounded-lg border border-[#D9E4EC] text-[#294B68] font-bold text-xs hover:bg-[#F0F5F9] cursor-pointer"
-            >
-              Edit Agreement
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleGoBackToLogin}
+                className="px-3.5 py-1.5 rounded-lg border border-[#D9E4EC] text-[#64748B] hover:text-[#243746] font-bold text-xs hover:bg-[#F0F5F9] cursor-pointer flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Login</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="px-3.5 py-1.5 rounded-lg border border-[#D9E4EC] text-[#294B68] font-bold text-xs hover:bg-[#F0F5F9] cursor-pointer"
+              >
+                Edit Agreement
+              </button>
+            </div>
           </div>
 
           {errors.payment && (

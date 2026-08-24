@@ -45,6 +45,9 @@ export interface ClientProfile {
   emergencyContactRelation?: string | null;
   homeAccessType?: HomeAccessType;
   homeAccessInstructions?: string | null;
+  selectedPlan?: string | null;
+  hasCleaningAddon?: boolean;
+  hasCompletedAgreement?: boolean;
   onboardingStatus?: OnboardingStatus;
   isArchived?: boolean;
   createdAt?: string;

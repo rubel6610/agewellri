@@ -1,5 +1,6 @@
 import { baseApi } from "../../api/baseApi";
 import { ApiResponse, AuthResponseData, AgreementDocument } from "../auth/authTypes";
+import { setCredentials } from "../auth/authSlice";
 
 export interface VerifyInvitationResponse {
   valid: boolean;
@@ -117,6 +118,22 @@ export const onboardingApi = baseApi.injectEndpoints({
         body,
       }),
       invalidatesTags: ["Auth", "User", "Profile", "Client"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data?.success && data?.data) {
+            dispatch(
+              setCredentials({
+                user: data.data.user,
+                token: data.data.token,
+                refreshToken: data.data.refreshToken,
+              })
+            );
+          }
+        } catch {
+          // Handled in component
+        }
+      },
     }),
 
     getOnboardingState: builder.query<ApiResponse<OnboardingStateResponse>, void>({
