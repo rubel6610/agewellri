@@ -21,6 +21,7 @@ import {
   useRequestSmsOtpMutation,
   useVerifySmsOtpMutation,
 } from "@/redux/features/auth/authApi";
+import { useAppSelector } from "@/redux/hooks";
 
 interface FormErrors {
   email?: string;
@@ -34,6 +35,10 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
+
+  const { isAuthenticated, isInitialized, user: currentAuthUser } = useAppSelector(
+    (state) => state.auth
+  );
 
   const [authMode, setAuthMode] = useState<"password" | "sms">("password");
 
@@ -54,6 +59,42 @@ export function LoginForm() {
   const [requestSmsOtp, { isLoading: isSmsSending }] = useRequestSmsOtpMutation();
   const [verifySmsOtp, { isLoading: isSmsVerifying }] = useVerifySmsOtpMutation();
 
+  const handleRedirect = (user: any) => {
+    const safeRedirect =
+      redirectUrl &&
+      redirectUrl.startsWith("/") &&
+      !redirectUrl.startsWith("/login") &&
+      !redirectUrl.startsWith("/register")
+        ? redirectUrl
+        : null;
+
+    let targetRoute = "/dashboard";
+    if (user.role === "ADMIN") {
+      targetRoute = safeRedirect && safeRedirect.startsWith("/admin") ? safeRedirect : "/admin";
+    } else if (user.role === "TECHNICIAN") {
+      targetRoute =
+        safeRedirect && safeRedirect.startsWith("/technician") ? safeRedirect : "/technician";
+    } else if (user.role === "CLIENT") {
+      if (user.requiresAgreement || !user.hasCompletedAgreement) {
+        targetRoute = "/agreement";
+      } else {
+        targetRoute =
+          safeRedirect && safeRedirect.startsWith("/dashboard") ? safeRedirect : "/dashboard";
+      }
+    }
+
+    setTimeout(() => {
+      router.replace(targetRoute);
+    }, 300);
+  };
+
+  // If already authenticated when visiting /login -> auto redirect
+  useEffect(() => {
+    if (isInitialized && isAuthenticated && currentAuthUser) {
+      handleRedirect(currentAuthUser);
+    }
+  }, [isInitialized, isAuthenticated, currentAuthUser]);
+
   // Cooldown countdown timer
   useEffect(() => {
     let timer: any = null;
@@ -66,27 +107,6 @@ export function LoginForm() {
       if (timer) clearTimeout(timer);
     };
   }, [resendCooldown]);
-
-  const handleRedirect = (user: any) => {
-    let targetRoute = "/dashboard";
-    if (user.role === "ADMIN") {
-      targetRoute = redirectUrl && redirectUrl.startsWith("/admin") ? redirectUrl : "/admin";
-    } else if (user.role === "TECHNICIAN") {
-      targetRoute =
-        redirectUrl && redirectUrl.startsWith("/technician") ? redirectUrl : "/technician";
-    } else if (user.role === "CLIENT") {
-      if (user.requiresAgreement || !user.hasCompletedAgreement) {
-        targetRoute = "/agreement";
-      } else {
-        targetRoute =
-          redirectUrl && redirectUrl.startsWith("/dashboard") ? redirectUrl : "/dashboard";
-      }
-    }
-
-    setTimeout(() => {
-      router.push(targetRoute);
-    }, 700);
-  };
 
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

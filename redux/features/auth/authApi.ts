@@ -111,6 +111,7 @@ export const authApi = baseApi.injectEndpoints({
         url: "/auth/me",
         method: "GET",
       }),
+      keepUnusedDataFor: 600,
       providesTags: ["User", "Profile"],
       async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
         try {
@@ -170,6 +171,7 @@ export const authApi = baseApi.injectEndpoints({
         url: "/auth/my-agreement",
         method: "GET",
       }),
+      keepUnusedDataFor: 600,
       providesTags: ["Agreement", "User"],
     }),
 

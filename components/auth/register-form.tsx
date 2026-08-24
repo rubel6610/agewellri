@@ -131,8 +131,8 @@ export function RegisterForm() {
         );
 
         setTimeout(() => {
-          router.push(targetRoute);
-        }, 800);
+          router.replace(targetRoute);
+        }, 300);
       } else {
         setErrors({
           general: response.message || "Registration failed. Please try again.",

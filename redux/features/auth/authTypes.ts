@@ -158,7 +158,10 @@ export interface SubmitAgreementRequest {
   email?: string;
   signerRole?: SignerRole;
   signerName?: string | null;
+  signerEmail?: string | null;
+  signerPhone?: string | null;
   legalAuthority?: string | null;
+  legalAuthorityOther?: string | null;
   primaryBillingContact?: string | null;
   primaryContactName?: string | null;
   primaryContactPhone?: string | null;
@@ -166,6 +169,7 @@ export interface SubmitAgreementRequest {
   primaryContactRelation?: string | null;
   emergencyContactName: string;
   emergencyContactPhone: string;
+  emergencyContactEmail?: string | null;
   emergencyContactRelation?: string | null;
   homeAccessType?: HomeAccessType;
   homeAccessInstructions?: string | null;

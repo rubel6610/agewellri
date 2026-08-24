@@ -1,35 +1,30 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { getAdminClients } from "@/lib/api/admin-api";
-import { MasterClientRecord } from "@/lib/types/admin";
+import React, { useState } from "react";
+import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { ClientTable } from "@/components/admin/client-table";
 import { AddClientModal } from "@/components/admin/add-client-modal";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
+import { Loader2, UserPlus, Users } from "lucide-react";
 
 export default function ClientsDirectoryPage() {
-  const [clients, setClients] = useState<MasterClientRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clientsRes, isLoading, refetch } = useGetAdminClientsQuery();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    getAdminClients().then((data) => {
-      setClients(data);
-      setLoading(false);
-    });
-  }, []);
+  const clients = (clientsRes?.data || []) as any[];
 
   const handleOpenScheduleModal = (clientId?: string) => {
     setSelectedClientId(clientId);
     setScheduleModalOpen(true);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="p-12 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC]">
-        Loading client directory...
+      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
+        <p className="font-bold text-sm text-[#243746]">Loading client directory from database...</p>
       </div>
     );
   }
@@ -43,8 +38,18 @@ export default function ClientsDirectoryPage() {
             Master Client Directory
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage AgeWellRI client accounts, onboarding progress, agreements, and active subscriptions.
+            Manage AgeWellRI client accounts, onboarding progress, state-specific legal agreements, and active subscriptions.
           </p>
+        </div>
+
+        <div>
+          <button
+            onClick={() => setAddModalOpen(true)}
+            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Send Welcome Link</span>
+          </button>
         </div>
       </div>
 
@@ -54,7 +59,12 @@ export default function ClientsDirectoryPage() {
         onOpenScheduleModal={handleOpenScheduleModal}
       />
 
-      <AddClientModal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} />
+      <AddClientModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
       <AdminScheduleModal
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}

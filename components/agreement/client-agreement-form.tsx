@@ -145,7 +145,7 @@ export function ClientAgreementForm() {
 
       const rawAddress = clean(authUser.client?.address);
       const rawState = clean(authUser.client?.state);
-      const standardStates = ["RI", "CT", "MA", "NY", "FL"];
+      const standardStates = ["RI", "CT", "MA"];
       const isCustomState = rawState && !standardStates.includes(rawState.toUpperCase());
 
       setFormData((prev) => ({
@@ -786,9 +786,7 @@ export function ClientAgreementForm() {
                   <option value="RI">Rhode Island (RI)</option>
                   <option value="CT">Connecticut (CT)</option>
                   <option value="MA">Massachusetts (MA)</option>
-                  <option value="NY">New York (NY)</option>
-                  <option value="FL">Florida (FL)</option>
-                  <option value="OTHER">Other State / Territory (Specify Below)</option>
+                  <option value="OTHER">Other State  (Enter below)</option>
                 </select>
               </div>
 
@@ -814,7 +812,7 @@ export function ClientAgreementForm() {
               {formData.state === "OTHER" && (
                 <div className="sm:col-span-3 p-3.5 bg-[#EAF3F8] rounded-xl border border-[#294B68]/20 animate-in fade-in duration-200">
                   <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                    Specify Custom State / Territory Name or Code <span className="text-red-500">*</span>
+                    Territory Name or Code <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"

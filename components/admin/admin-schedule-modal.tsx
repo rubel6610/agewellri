@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, Calendar, Clock, Loader2, CheckCircle2, UserCheck } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Calendar, Loader2, CheckCircle2, UserCheck } from "lucide-react";
 import { adminBookAppointment } from "@/lib/api/admin-api";
-import { MOCK_ADMIN_CLIENTS } from "@/lib/api/admin-mock-data";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
+import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import {
   confirmCriticalAction,
   showSuccessAlert,
@@ -15,32 +15,60 @@ interface AdminScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultClientId?: string;
+  clientName?: string;
+  hideClientSelect?: boolean;
 }
 
 export function AdminScheduleModal({
   isOpen,
   onClose,
   defaultClientId,
+  clientName,
+  hideClientSelect = false,
 }: AdminScheduleModalProps) {
   const { data: specialists = [] } = useGetAllSpecialistsQuery();
+  const { data: clientsRes } = useGetAdminClientsQuery(undefined, { skip: !isOpen });
+  const clientsList = clientsRes?.data || [];
 
-  const [selectedClientId, setSelectedClientId] = useState(defaultClientId || MOCK_ADMIN_CLIENTS[0].id);
+  const [selectedClientId, setSelectedClientId] = useState(defaultClientId || "");
   const [serviceType, setServiceType] = useState<"Safety Oversight" | "Cleaning">("Safety Oversight");
-  const [date, setDate] = useState("2026-09-25");
+  const [date, setDate] = useState(() => {
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    return nextWeek.toISOString().split("T")[0];
+  });
   const [timeSlot, setTimeSlot] = useState("10:00 AM – 12:00 PM");
   const [technicianName, setTechnicianName] = useState(specialists[0]?.name || "Mark Johnson");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    if (defaultClientId) {
+      setSelectedClientId(defaultClientId);
+    } else if (clientsList.length > 0 && !selectedClientId) {
+      setSelectedClientId(clientsList[0].id);
+    }
+  }, [defaultClientId, clientsList, isOpen]);
+
+  useEffect(() => {
+    if (specialists.length > 0 && !technicianName) {
+      setTechnicianName(specialists[0].name);
+    }
+  }, [specialists]);
+
   if (!isOpen) return null;
+
+  const isLockedClient = Boolean(hideClientSelect || defaultClientId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const targetClientId = isLockedClient ? (defaultClientId || selectedClientId) : selectedClientId;
+    const targetDisplayName = clientName || targetClientId || "Client";
+
     const confirmed = await confirmCriticalAction({
       title: "Dispatch Specialist Visit?",
-      text: `Schedule a ${serviceType} visit for ${date} (${timeSlot}) assigned to ${technicianName}?`,
+      text: `Schedule a ${serviceType} visit for ${targetDisplayName} on ${date} (${timeSlot}) assigned to ${technicianName}?`,
       confirmButtonText: "Yes, Schedule Visit",
       isDestructive: false,
     });
@@ -50,7 +78,7 @@ export function AdminScheduleModal({
     setIsSubmitting(true);
     try {
       await adminBookAppointment({
-        clientId: selectedClientId,
+        clientId: targetClientId,
         serviceType,
         date,
         timeSlot,
@@ -104,25 +132,50 @@ export function AdminScheduleModal({
               onClick={handleReset}
               className="w-full py-3 bg-[#294B68] text-white font-bold rounded-xl cursor-pointer"
             >
-              Done &amp; Return to Dashboard
+              Done &amp; Close
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Select Client *</label>
-              <select
-                value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              >
-                {MOCK_ADMIN_CLIENTS.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.firstName} {c.lastName} ({c.id}) — {c.planName}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* Target Client Display or Selection */}
+            {isLockedClient ? (
+              <div>
+                <label className="block text-xs font-bold text-[#243746] mb-1.5">Target Client</label>
+                <div className="p-3 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-[#294B68] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                      <UserCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold text-[#243746] block">
+                        {clientName || defaultClientId}
+                      </span>
+                      <span className="text-xs font-mono font-semibold text-[#5E8FB2]">
+                        ID: {defaultClientId}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-extrabold text-[#294B68] bg-white px-2.5 py-1 rounded-md border border-[#D9E4EC] shadow-2xs">
+                    Client Selected
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-[#243746] mb-1">Select Client *</label>
+                <select
+                  value={selectedClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                >
+                  {clientsList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.firstName} {c.lastName} ({c.id}) — {c.planName || "Active Plan"}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>

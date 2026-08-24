@@ -13,6 +13,7 @@ export const specialistApi = baseApi.injectEndpoints({
         url: "/specialists",
         method: "GET",
       }),
+      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: SpecialistItem[] }) =>
         response.data || [],
       providesTags: ["Specialist"],
@@ -23,6 +24,7 @@ export const specialistApi = baseApi.injectEndpoints({
         url: `/specialists/${id}`,
         method: "GET",
       }),
+      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: SpecialistItem }) =>
         response.data,
       providesTags: (_result, _error, id) => [{ type: "Specialist", id }],

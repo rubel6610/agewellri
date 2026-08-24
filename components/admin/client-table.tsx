@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Eye, Calendar, Plus } from "lucide-react";
-import { MasterClientRecord } from "@/lib/types/admin";
+import { Search, ArrowRight, Eye, Calendar, Plus, ShieldCheck, AlertCircle, Clock, UserCheck } from "lucide-react";
+import { MasterClientRecord } from "@/redux/features/client/clientApi";
 import { ClientStatusBadge } from "./client-status-badge";
 
 interface ClientTableProps {
@@ -18,30 +18,34 @@ export function ClientTable({
   onOpenScheduleModal,
 }: ClientTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [stateFilter, setStateFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const filteredClients = clients.filter((client) => {
+    const term = searchTerm.toLowerCase();
     const matchesSearch =
-      client.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.id.toLowerCase().includes(searchTerm.toLowerCase());
+      client.firstName.toLowerCase().includes(term) ||
+      client.lastName.toLowerCase().includes(term) ||
+      client.email.toLowerCase().includes(term) ||
+      client.id.toLowerCase().includes(term) ||
+      (client.state && client.state.toLowerCase().includes(term));
+
+    const matchesState = stateFilter === "ALL" || client.state === stateFilter;
 
     const matchesStatus =
-      statusFilter === "all" ||
+      statusFilter === "ALL" ||
       client.status === statusFilter ||
-      (statusFilter === "onboarding" &&
-        (client.status === "agreement_pending" ||
-          client.status === "payment_pending" ||
-          client.status === "invited"));
+      (statusFilter === "agreement_pending" && client.agreementStatus !== "EXECUTED") ||
+      (statusFilter === "agreement_executed" && client.agreementStatus === "EXECUTED") ||
+      (statusFilter === "payment_pending" && client.paymentStatus !== "PAID");
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesState && matchesStatus;
   });
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
       {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
             <Search className="w-4 h-4" />
@@ -50,23 +54,32 @@ export function ClientTable({
             type="search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by client name, email, or AW-ID..."
+            placeholder="Search by client name, email, state, or AW-ID..."
             className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] placeholder:text-[#94A3B8]"
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={stateFilter}
+            onChange={(e) => setStateFilter(e.target.value)}
+            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+          >
+            <option value="ALL">All States (RI, CT, MA)</option>
+            <option value="RI">Rhode Island (RI)</option>
+            <option value="CT">Connecticut (CT)</option>
+            <option value="MA">Massachusetts (MA)</option>
+          </select>
+
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
           >
-            <option value="all">All Client Statuses</option>
-            <option value="active">Active</option>
-            <option value="onboarding">Need Attention / Onboarding</option>
-            <option value="agreement_pending">Agreement Pending</option>
-            <option value="payment_failed">Payment Failed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="ALL">All Agreement Statuses</option>
+            <option value="agreement_executed">Agreement Executed</option>
+            <option value="agreement_pending">Pending Signature</option>
+            <option value="payment_pending">Payment Pending</option>
           </select>
 
           <button
@@ -84,67 +97,99 @@ export function ClientTable({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-              <th className="py-3.5 px-4">Client ID</th>
-              <th className="py-3.5 px-4">Client Name</th>
-              <th className="py-3.5 px-4">Plan</th>
-              <th className="py-3.5 px-4">Status</th>
-              <th className="py-3.5 px-4">Next Visit</th>
-              <th className="py-3.5 px-4">Renewal</th>
+              <th className="py-3.5 px-4">Client</th>
+              <th className="py-3.5 px-4">State</th>
+              <th className="py-3.5 px-4">Signer Role</th>
+              <th className="py-3.5 px-4">Agreement Status</th>
+              <th className="py-3.5 px-4">Billing &amp; Plan</th>
+              <th className="py-3.5 px-4">Created</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
             {filteredClients.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-[#64748B]">
+                <td colSpan={7} className="py-12 text-center text-[#64748B]">
                   No clients match your filter criteria.
                 </td>
               </tr>
             ) : (
-              filteredClients.map((c) => (
-                <tr key={c.id} className="hover:bg-[#F7FAFC] transition-colors">
-                  <td className="py-4 px-4 font-mono text-xs font-bold text-[#294B68]">
-                    {c.id}
-                  </td>
-                  <td className="py-4 px-4">
-                    <Link
-                      href={`/admin/clients/${c.id}`}
-                      className="font-bold text-[#243746] hover:text-[#294B68] hover:underline"
-                    >
-                      {c.firstName} {c.lastName}
-                    </Link>
-                    <span className="block text-xs text-[#64748B] font-normal">{c.phone}</span>
-                  </td>
-                  <td className="py-4 px-4 font-semibold text-[#243746]">{c.planName}</td>
-                  <td className="py-4 px-4">
-                    <ClientStatusBadge status={c.status} />
-                  </td>
-                  <td className="py-4 px-4 text-xs font-medium text-[#64748B]">
-                    {c.nextVisitDate || "Not Scheduled"}
-                  </td>
-                  <td className="py-4 px-4 text-xs font-medium text-[#64748B]">
-                    {c.renewalDate}
-                  </td>
-                  <td className="py-4 px-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => onOpenScheduleModal(c.id)}
-                        className="p-2 text-[#5E8FB2] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
-                        title="Schedule Visit for Client"
-                      >
-                        <Calendar className="w-4 h-4" />
-                      </button>
+              filteredClients.map((c) => {
+                const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+
+                return (
+                  <tr key={c.id} className="hover:bg-[#F7FAFC] transition-colors">
+                    <td className="py-4 px-4">
                       <Link
                         href={`/admin/clients/${c.id}`}
-                        className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors"
-                        title="View Client Details"
+                        className="font-bold text-[#243746] hover:text-[#294B68] hover:underline block"
                       >
-                        <Eye className="w-4 h-4" />
+                        {c.firstName} {c.lastName}
                       </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                      <span className="block text-xs text-[#64748B] font-mono">
+                        {c.id} • {c.email}
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-extrabold bg-[#EAF3F8] text-[#294B68]">
+                        {c.state || "RI"}
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-4 text-xs">
+                      <span className="font-semibold text-[#243746] block capitalize">
+                        {c.signerRole.replace(/_/g, " ").toLowerCase()}
+                      </span>
+                      {c.legalAuthority && (
+                        <span className="text-[11px] text-[#64748B] block">
+                          {c.legalAuthority.replace(/_/g, " ")}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-4 px-4">
+                      {isExecuted ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#EBF8F2] text-[#166534]">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Executed
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-[#C28A3A]">
+                          <AlertCircle className="w-3.5 h-3.5" /> Pending Signature
+                        </span>
+                      )}
+                      {c.agreementSignedDate && (
+                        <span className="block text-[11px] text-[#64748B] mt-0.5">
+                          {c.agreementSignedDate}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-4 px-4 text-xs">
+                      <strong className="text-[#243746] block">{c.planName}</strong>
+                      <span className="text-[#64748B] capitalize">
+                        {c.paymentStatus.replace(/_/g, " ").toLowerCase()}
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-4 text-xs text-[#64748B]">
+                      {c.createdAt}
+                    </td>
+
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/clients/${c.id}`}
+                          className="px-3 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-lg transition-colors inline-flex items-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -158,7 +203,9 @@ export function ClientTable({
             className="p-4 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-[#294B68]">{c.id}</span>
+              <span className="font-mono text-xs font-bold text-[#294B68]">
+                {c.id} ({c.state})
+              </span>
               <ClientStatusBadge status={c.status} />
             </div>
 
@@ -169,11 +216,13 @@ export function ClientTable({
               >
                 {c.firstName} {c.lastName}
               </Link>
-              <p className="text-xs text-[#64748B] mt-0.5">{c.planName} • {c.phone}</p>
+              <p className="text-xs text-[#64748B] mt-0.5">{c.planName} • {c.email}</p>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
-              <span className="text-[#64748B]">Next Visit: <strong>{c.nextVisitDate || "None"}</strong></span>
+              <span className="text-[#64748B]">
+                Agreement: <strong>{c.agreementStatus}</strong>
+              </span>
               <Link
                 href={`/admin/clients/${c.id}`}
                 className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"

@@ -19,6 +19,7 @@ export const planApi = baseApi.injectEndpoints({
         url: "/plans/active",
         method: "GET",
       }),
+      keepUnusedDataFor: 3600,
       transformResponse: (response: { success: boolean; data: ActivePlan[] }) =>
         response.data || [],
       providesTags: (result) =>
@@ -36,6 +37,7 @@ export const planApi = baseApi.injectEndpoints({
         url: "/plans/admin/all",
         method: "GET",
       }),
+      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: AdminPlan[] }) =>
         response.data || [],
       providesTags: (result) =>
@@ -53,6 +55,7 @@ export const planApi = baseApi.injectEndpoints({
         url: `/plans/admin/${id}`,
         method: "GET",
       }),
+      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: AdminPlanDetail }) =>
         response.data,
       providesTags: (_result, _error, id) => [{ type: "Plan", id }],
@@ -108,6 +111,7 @@ export const planApi = baseApi.injectEndpoints({
         url: "/plans/services/all",
         method: "GET",
       }),
+      keepUnusedDataFor: 3600,
       transformResponse: (response: { success: boolean; data: ServiceItem[] }) =>
         response.data || [],
       providesTags: (result) =>
