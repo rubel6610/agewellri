@@ -4,7 +4,6 @@ import React from "react";
 import { useGetBillingOverviewQuery } from "@/redux/features/payment/paymentApi";
 import { BillingCard } from "@/components/dashboard/billing-card";
 import { InvoiceTable } from "@/components/dashboard/invoice-table";
-import { HelpSchedulingWidget } from "@/components/support/help-scheduling-widget";
 import { TrustBadges } from "@/components/support/trust-badges";
 import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
 
@@ -75,9 +74,8 @@ export default function BillingPage() {
       {/* Invoices & Statements Table */}
       <InvoiceTable invoices={billing.invoices || []} />
 
-      {/* Trust Badges & Help Widget */}
+      {/* Trust Badges */}
       <TrustBadges />
-      <HelpSchedulingWidget />
     </div>
   );
 }

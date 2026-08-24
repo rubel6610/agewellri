@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   X,
   LayoutDashboard,
+  CalendarDays,
   CalendarCheck,
   FileCheck2,
   FileText,
@@ -58,6 +59,7 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
 
   const navItems = [
     { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Care Calendar", href: "/dashboard/calendar", icon: CalendarDays },
     { label: "My Visits", href: "/dashboard/appointments", icon: CalendarCheck },
     { label: "My Reports", href: "/dashboard/reports", icon: FileCheck2 },
     { label: "My Agreement", href: "/dashboard/agreements", icon: FileText },

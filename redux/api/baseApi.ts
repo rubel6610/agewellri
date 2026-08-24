@@ -9,7 +9,7 @@ import { getAuthToken, getRefreshToken } from "@/lib/auth/token";
 import { setCredentials, logout } from "../features/auth/authSlice";
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL,
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "https://arfanrubel5173.ilmifygroup.com/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as { auth?: { token?: string | null } };
     const token = state.auth?.token || getAuthToken();

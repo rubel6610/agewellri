@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  CalendarDays,
   CalendarCheck,
   FileCheck2,
   FileText,
@@ -50,6 +51,11 @@ export function DashboardSidebar() {
       label: "Overview",
       href: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      label: "Care Calendar",
+      href: "/dashboard/calendar",
+      icon: CalendarDays,
     },
     {
       label: "My Visits",

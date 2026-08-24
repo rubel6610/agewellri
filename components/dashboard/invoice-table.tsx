@@ -1,14 +1,18 @@
 "use client";
 
-import React from "react";
-import { Download, FileText, CheckCircle2, Clock, AlertTriangle, ExternalLink } from "lucide-react";
+import React, { useState } from "react";
+import { Download, FileText, CheckCircle2, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { InvoiceItem } from "@/redux/features/payment/paymentTypes";
+import jsPDF from "jspdf";
+import { showToast } from "@/lib/alerts/sweetalert";
 
 interface InvoiceTableProps {
   invoices: InvoiceItem[];
 }
 
 export function InvoiceTable({ invoices }: InvoiceTableProps) {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
   const getStatusBadge = (status: string) => {
     const s = status.toLowerCase();
     if (s === "paid") {
@@ -42,58 +46,260 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
     );
   };
 
-  const handleOpenPdf = (inv: InvoiceItem) => {
-    if (inv.pdfUrl && inv.pdfUrl !== "#") {
-      window.open(inv.pdfUrl, "_blank");
-    } else {
-      // Print/view invoice window
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>AgeWellRI Invoice ${inv.invoiceNumber}</title>
-              <style>
-                body { font-family: Inter, sans-serif; padding: 40px; color: #243746; }
-                .header { border-bottom: 2px solid #294B68; padding-bottom: 20px; }
-                .title { font-size: 24px; font-weight: bold; color: #294B68; }
-                .meta { margin-top: 20px; font-size: 14px; line-height: 1.6; }
-                .table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-                .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #D9E4EC; }
-                .table th { background: #F8FAFC; font-weight: bold; }
-                .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 20px; color: #294B68; }
-              </style>
-            </head>
-            <body>
-              <div class="header">
-                <div class="title">AgeWellRI — Invoice Receipt</div>
-                <div>Westerly, Rhode Island • (401) 712-3012</div>
-              </div>
-              <div class="meta">
-                <div><strong>Invoice Number:</strong> ${inv.invoiceNumber}</div>
-                <div><strong>Issue Date:</strong> ${inv.date}</div>
-                <div><strong>Status:</strong> ${inv.status.toUpperCase()}</div>
-              </div>
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Description</th>
-                    <th style="text-align: right;">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>${inv.description}</td>
-                    <td style="text-align: right;">${inv.amount}</td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="total">Total Paid: ${inv.amount}</div>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
+  const handleDownloadPdf = async (inv: InvoiceItem) => {
+    setDownloadingId(inv.id);
+
+    try {
+      // 1. Create crisp vector-based A4 PDF (210mm x 297mm)
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = 210;
+      const margin = 14;
+      const contentWidth = pageWidth - margin * 2;
+      let y = 14;
+
+      // Color Palette constants
+      const navy: [number, number, number] = [36, 55, 70]; // #243746
+      const darkNavy: [number, number, number] = [41, 75, 104]; // #294B68
+      const paleBg: [number, number, number] = [247, 250, 252]; // #F7FAFC
+      const borderColor: [number, number, number] = [217, 228, 236]; // #D9E4EC
+      const greenText: [number, number, number] = [63, 143, 107]; // #3F8F6B
+
+      // ==========================================
+      // DOCUMENT HEADER BANNER
+      // ==========================================
+      doc.setFillColor(...navy);
+      doc.roundedRect(margin, y, contentWidth, 22, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(255, 255, 255);
+      doc.text("AgeWellRI", margin + 6, y + 9);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(190, 220, 240);
+      doc.text("In-Home Senior Safety & Wellness Services", margin + 6, y + 16);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text("INVOICE RECEIPT", pageWidth - margin - 6, y + 10, { align: "right" });
+
+      doc.setFontSize(8.5);
+      doc.setTextColor(190, 220, 240);
+      doc.text(`Statement #${inv.invoiceNumber}`, pageWidth - margin - 6, y + 16, { align: "right" });
+
+      y += 28;
+
+      // ==========================================
+      // TWO-COLUMN META: PROVIDER & INVOICE INFO
+      // ==========================================
+      const colWidth = (contentWidth - 6) / 2;
+
+      // Left Column: Provider Info Box
+      doc.setFillColor(...paleBg);
+      doc.setDrawColor(...borderColor);
+      doc.roundedRect(margin, y, colWidth, 34, 2, 2, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...darkNavy);
+      doc.text("SERVICE PROVIDER", margin + 4, y + 6);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...navy);
+      doc.text("AgeWellRI LLC", margin + 4, y + 12);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text("84 High Street, Westerly, RI 02891", margin + 4, y + 17);
+      doc.text("Phone: (401) 712-3012", margin + 4, y + 22);
+      doc.text("Email: billing@agewellri.com", margin + 4, y + 27);
+      doc.text("Web: www.agewellri.com", margin + 4, y + 31);
+
+      // Right Column: Invoice Details Box
+      doc.setFillColor(...paleBg);
+      doc.setDrawColor(...borderColor);
+      doc.roundedRect(margin + colWidth + 6, y, colWidth, 34, 2, 2, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(...darkNavy);
+      doc.text("INVOICE DETAILS", margin + colWidth + 10, y + 6);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Invoice Number:", margin + colWidth + 10, y + 12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...navy);
+      doc.text(inv.invoiceNumber, margin + colWidth + 40, y + 12);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("Issue Date:", margin + colWidth + 10, y + 17);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...navy);
+      doc.text(inv.date, margin + colWidth + 40, y + 17);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      const isPaid = inv.status.toLowerCase() === "paid";
+      doc.setFont("helvetica", "bold");
+      if (isPaid) {
+        doc.setTextColor(greenText[0], greenText[1], greenText[2]);
+      } else {
+        doc.setTextColor(194, 138, 58);
       }
+      doc.text(inv.status.toUpperCase(), margin + colWidth + 40, y + 22);
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("Billing Interval:", margin + colWidth + 10, y + 27);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...navy);
+      doc.text("Quarterly Membership", margin + colWidth + 40, y + 27);
+
+      y += 40;
+
+      // ==========================================
+      // LINE ITEMS TABLE
+      // ==========================================
+      doc.setFillColor(...darkNavy);
+      doc.roundedRect(margin, y, contentWidth, 8, 1, 1, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(255, 255, 255);
+      doc.text("ITEM & SERVICE DESCRIPTION", margin + 4, y + 5.5);
+      doc.text("CYCLE", margin + 120, y + 5.5);
+      doc.text("AMOUNT", pageWidth - margin - 4, y + 5.5, { align: "right" });
+
+      y += 8;
+
+      // Table Row
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(...borderColor);
+      doc.rect(margin, y, contentWidth, 18, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...navy);
+      doc.text(inv.description || "AgeWellRI Senior Safety & Wellness Membership", margin + 4, y + 6);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(
+        "Includes scheduled safety oversight audits, hazard mitigation check-ins & digital wellness reports",
+        margin + 4,
+        y + 12
+      );
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...navy);
+      doc.text("Quarterly", margin + 120, y + 8);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...navy);
+      doc.text(inv.amount, pageWidth - margin - 4, y + 8, { align: "right" });
+
+      y += 24;
+
+      // ==========================================
+      // FINANCIAL SUMMARY BOX
+      // ==========================================
+      const summaryWidth = 80;
+      const summaryX = pageWidth - margin - summaryWidth;
+
+      doc.setFillColor(...paleBg);
+      doc.setDrawColor(...borderColor);
+      doc.roundedRect(summaryX, y, summaryWidth, 28, 2, 2, "FD");
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text("Subtotal:", summaryX + 4, y + 7);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...navy);
+      doc.text(inv.amount, pageWidth - margin - 4, y + 7, { align: "right" });
+
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 116, 139);
+      doc.text("Taxes & Surcharges:", summaryX + 4, y + 14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...navy);
+      doc.text("$0.00", pageWidth - margin - 4, y + 14, { align: "right" });
+
+      doc.setDrawColor(...borderColor);
+      doc.line(summaryX + 4, y + 18, pageWidth - margin - 4, y + 18);
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...darkNavy);
+      doc.text(isPaid ? "Total Paid:" : "Total Due:", summaryX + 4, y + 24);
+      doc.text(inv.amount, pageWidth - margin - 4, y + 24, { align: "right" });
+
+      y += 36;
+
+      // ==========================================
+      // STATUTORY & LEGAL DISCLOSURES
+      // ==========================================
+      doc.setFillColor(...paleBg);
+      doc.setDrawColor(...borderColor);
+      doc.roundedRect(margin, y, contentWidth, 24, 2, 2, "FD");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...navy);
+      doc.text("TERMS & NON-MEDICAL SAFETY NOTICE", margin + 4, y + 5.5);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(
+        "AgeWellRI provides certified non-medical in-home safety oversight, hazard checks, and pathway sanitizations.",
+        margin + 4,
+        y + 11
+      );
+      doc.text(
+        "AgeWellRI is NOT a licensed healthcare agency, skilled nursing facility, or emergency response service.",
+        margin + 4,
+        y + 16
+      );
+      doc.text(
+        "For billing questions, contact billing@agewellri.com or call our local concierge at (401) 712-3012.",
+        margin + 4,
+        y + 21
+      );
+
+      // Document Footer
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(140, 155, 170);
+      doc.text("Official electronic statement generated by AgeWellRI Billing System", pageWidth / 2, 285, {
+        align: "center",
+      });
+
+      // Save PDF file directly to client's download folder
+      const fileName = `AgeWellRI-Invoice-${inv.invoiceNumber}.pdf`;
+      doc.save(fileName);
+
+      showToast(`Invoice ${inv.invoiceNumber} downloaded successfully`, "success");
+    } catch (err) {
+      console.error("Failed to generate invoice PDF:", err);
+      showToast("Could not generate PDF receipt", "error");
+    } finally {
+      setDownloadingId(null);
     }
   };
 
@@ -144,12 +350,17 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                     <td className="py-4 px-4 text-right">
                       <button
                         type="button"
-                        onClick={() => handleOpenPdf(inv)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#D9E4EC] text-xs font-bold text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer"
-                        title="Download Invoice PDF"
+                        onClick={() => handleDownloadPdf(inv)}
+                        disabled={downloadingId === inv.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D9E4EC] text-xs font-bold text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                        title="Download Official Invoice PDF"
                       >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>PDF</span>
+                        {downloadingId === inv.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Download className="w-3.5 h-3.5" />
+                        )}
+                        <span>{downloadingId === inv.id ? "Saving..." : "Download PDF"}</span>
                       </button>
                     </td>
                   </tr>
@@ -177,10 +388,16 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
                   {getStatusBadge(inv.status)}
                   <button
                     type="button"
-                    onClick={() => handleOpenPdf(inv)}
-                    className="text-xs font-bold text-[#294B68] flex items-center gap-1.5 cursor-pointer"
+                    onClick={() => handleDownloadPdf(inv)}
+                    disabled={downloadingId === inv.id}
+                    className="text-xs font-bold text-[#294B68] flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
-                    <Download className="w-3.5 h-3.5" /> Download PDF
+                    {downloadingId === inv.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>{downloadingId === inv.id ? "Generating PDF..." : "Download PDF"}</span>
                   </button>
                 </div>
               </div>
