@@ -499,61 +499,6 @@ export function ClientAgreementForm() {
     }
   };
 
-  const handleInvoiceBillingSuccess = async () => {
-    try {
-      const response = await submitAgreement({
-        clientFullName: formData.clientFullName.trim(),
-        address: formData.address.trim(),
-        city: formData.city.trim(),
-        state: effectiveState,
-        postalCode: formData.postalCode.trim(),
-        phone: formData.phone.trim(),
-        dob: formData.dob.trim(),
-        email: (authUser?.email || formData.email).trim(),
-        signerRole: formData.signerRole,
-        signerName: formData.signerRole !== "RESIDENT" ? formData.signerName.trim() : formData.clientPrintedName.trim(),
-        legalAuthority: formData.signerRole !== "RESIDENT" ? formData.legalAuthority.trim() : null,
-        primaryBillingContact: formData.primaryBillingContact,
-        primaryContactName: formData.primaryContactName.trim() || null,
-        primaryContactPhone: formData.primaryContactPhone.trim() || null,
-        primaryContactEmail: formData.primaryContactEmail.trim() || null,
-        primaryContactRelation: formData.primaryContactRelation.trim() || null,
-        emergencyContactName: formData.emergencyContactName.trim(),
-        emergencyContactPhone: formData.emergencyContactPhone.trim(),
-        emergencyContactRelation: formData.emergencyContactRelation.trim() || null,
-        homeAccessType: formData.homeAccessType,
-        homeAccessInstructions: formData.homeAccessInstructions.trim() || null,
-        homeAccessCode: formData.homeAccessCode.trim() || null,
-        planId: selectedPlanObj?.id || null,
-        planVersionId: selectedPlanObj?.versionId || null,
-        selectedPlan: selectedPlanObj?.code || formData.selectedPlanCode,
-        hasCleaningAddon: formData.hasCleaningAddon,
-        billingMethod: "INVOICE",
-        clientPrintedName: formData.clientPrintedName.trim(),
-        authorizedRepName: formData.signerRole !== "RESIDENT" ? formData.signerName.trim() : null,
-        relationshipToClient: formData.signerRole !== "RESIDENT" ? formData.relationshipToClient.trim() : null,
-        agreementDate: formData.agreementDate,
-        clientSignature: savedSignatureData || "data:image/png;base64,signed",
-        agreedToTerms: true,
-      }).unwrap();
-
-      if (response.success) {
-        setIsSuccess(true);
-        await showSuccessAlert(
-          "Agreement Executed Successfully!",
-          "Your service agreement has been executed. Your invoice statement is ready in your billing portal."
-        );
-        router.push("/dashboard/billing");
-      }
-    } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "Failed to submit agreement.";
-      setErrors({
-        submit: msg,
-      });
-      showErrorAlert("Submission Failed", msg);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#F7FAFC] text-[#243746]">
       {/* Horizontal Top Header Bar */}
@@ -1525,7 +1470,6 @@ export function ClientAgreementForm() {
               selectedPlan={selectedPlanObj?.code || "GUARDIAN_PLUS"}
               hasCleaningAddon={formData.hasCleaningAddon}
               onPaymentSuccess={handleFinalPaymentSuccess}
-              onInvoiceSelect={handleInvoiceBillingSuccess}
             />
           )}
         </div>

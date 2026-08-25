@@ -29,19 +29,32 @@ interface FullAgreementViewerProps {
 export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  const statusUpper = (agreement.status || "").toUpperCase();
   const isExecuted =
-    agreement.status === "SIGNED" ||
-    agreement.status === "executed" ||
-    agreement.status === "signed";
+    Boolean(agreement.clientSignature) ||
+    statusUpper === "EXECUTED" ||
+    statusUpper === "SIGNED" ||
+    statusUpper === "ACTIVE" ||
+    statusUpper === "COMPLETED" ||
+    Boolean(agreement.signedAt) ||
+    Boolean(agreement.executedAt);
 
   const isGuardianPlus = agreement.selectedPlan === "GUARDIAN_PLUS";
 
-  const formattedDate = agreement.agreementDate
-    ? new Date(agreement.agreementDate).toLocaleDateString("en-US", {
+  const rawDate =
+    agreement.agreementDate ||
+    agreement.signedAt ||
+    agreement.executedAt ||
+    agreement.createdAt;
+
+  const formattedDate = rawDate
+    ? new Date(rawDate).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
       })
+    : isExecuted
+    ? "Executed & Active"
     : "Pending Execution";
 
   const handleDownloadPdf = async () => {

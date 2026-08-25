@@ -16,12 +16,8 @@ import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
-  Sparkles,
-  Heart,
   Shield,
-  CreditCard,
   Calendar,
-  FileText,
 } from "lucide-react";
 
 interface PaymentStepCardProps {
@@ -33,7 +29,6 @@ interface PaymentStepCardProps {
   onBackToAgreement?: () => void;
   onPaymentSuccess?: (setupIntentId: string, paymentMethodId: string) => Promise<void>;
   onPaymentConfirmed?: (setupIntentId: string, paymentMethodId: string) => Promise<void>;
-  onInvoiceSelect?: () => Promise<void>;
   isSubmittingOverall?: boolean;
 }
 
@@ -46,7 +41,6 @@ export function PaymentStepCard({
   onBackToAgreement,
   onPaymentSuccess,
   onPaymentConfirmed,
-  onInvoiceSelect,
   isSubmittingOverall = false,
 }: PaymentStepCardProps) {
   const { data: configData, isLoading: isLoadingConfig } = useGetStripeConfigQuery();
@@ -59,7 +53,6 @@ export function PaymentStepCard({
   const [billingZip, setBillingZip] = useState(clientPostalCode || "");
   const [initError, setInitError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isInvoiceSubmitting, setIsInvoiceSubmitting] = useState(false);
 
   // Dynamically resolve plan info
   const planObj =
@@ -119,16 +112,6 @@ export function PaymentStepCard({
     setIsProcessing(false);
   };
 
-  const handleInvoiceClick = async () => {
-    if (!onInvoiceSelect) return;
-    setIsInvoiceSubmitting(true);
-    try {
-      await onInvoiceSelect();
-    } finally {
-      setIsInvoiceSubmitting(false);
-    }
-  };
-
   const publishableKey =
     configData?.data?.publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
@@ -149,10 +132,10 @@ export function PaymentStepCard({
             </button>
           )}
           <h2 className="text-2xl font-extrabold text-[#243746]">
-            Choose Payment &amp; Activation Method
+            Secure Payment &amp; Membership Activation
           </h2>
           <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-            Authorize automatic credit/debit card billing or request manual invoice billing.
+            Authorize your contracted membership rate via secure Stripe card checkout.
           </p>
         </div>
 
@@ -237,14 +220,13 @@ export function PaymentStepCard({
           </div>
         </div>
 
-        {/* Right Column: Payment Options */}
+        {/* Right Column: Payment Form */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Option A: Automatic Card Checkout */}
           <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-md space-y-6">
             <div className="flex items-center justify-between border-b border-[#D9E4EC] pb-4">
               <div className="space-y-0.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                  Recommended · Instant Activation
+                  Secure Stripe Checkout
                 </span>
                 <h3 className="text-lg font-black text-[#243746]">
                   Pay with Credit or Debit Card
@@ -293,31 +275,6 @@ export function PaymentStepCard({
               </Elements>
             )}
           </div>
-
-          {/* Option B: Manual Invoice Billing */}
-          {onInvoiceSelect && (
-            <div className="bg-[#F0F5F9]/60 rounded-3xl border border-[#D9E4EC] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-[#294B68]" />
-                  <h4 className="font-extrabold text-sm text-[#243746]">
-                    Prefer Manual Invoice Billing?
-                  </h4>
-                </div>
-                <p className="text-xs text-[#5E8FB2] leading-relaxed font-medium">
-                  We will issue a formal digital invoice payable by check or ACH within 14 days.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleInvoiceClick}
-                disabled={isInvoiceSubmitting || isProcessing}
-                className="px-5 py-2.5 bg-white hover:bg-[#EAF3F8] border border-[#D9E4EC] text-[#294B68] text-xs font-black rounded-xl shadow-xs transition-colors shrink-0 cursor-pointer disabled:opacity-50"
-              >
-                {isInvoiceSubmitting ? "Generating Invoice..." : "Pay by Invoice"}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

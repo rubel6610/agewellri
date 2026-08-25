@@ -25,11 +25,53 @@ import {
   showErrorAlert,
   showToast,
 } from "@/lib/alerts/sweetalert";
+import { ServiceItem } from "@/redux/features/plan/planTypes";
+
+const DEFAULT_STANDARD_SERVICES: ServiceItem[] = [
+  {
+    id: "srv_safety",
+    name: "Safety Oversight & Hazard Mitigation",
+    category: "SAFETY_OVERSIGHT",
+    description: "Home safety oversight visits and hazard audits",
+    durationMinutes: 60,
+    displayOrder: 1,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "srv_cleaning",
+    name: "Specialized Environmental Cleaning",
+    category: "CLEANING",
+    description: "HEPA allergen vacuuming and sanitation",
+    durationMinutes: 90,
+    displayOrder: 2,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "srv_maintenance",
+    name: "Preventative Home Maintenance",
+    category: "MAINTENANCE",
+    description: "Handyman and stability inspections",
+    durationMinutes: 60,
+    displayOrder: 3,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+];
 
 export default function CreatePlanPage() {
   const router = useRouter();
   const [createPlan, { isLoading }] = useCreatePlanMutation();
   const { data: servicesList = [] } = useGetAllServicesQuery();
+
+  const availableServices =
+    servicesList && servicesList.length > 0
+      ? servicesList
+      : DEFAULT_STANDARD_SERVICES;
 
   const [form, setForm] = useState({
     name: "",
@@ -41,7 +83,7 @@ export default function CreatePlanPage() {
     billingInterval: "QUARTERLY" as "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME",
     displayOrder: 1,
     supportsAutomaticBilling: true,
-    supportsInvoiceBilling: true,
+    supportsInvoiceBilling: false,
     autoRenewDefault: true,
     isActive: true,
   });
@@ -73,13 +115,12 @@ export default function CreatePlanPage() {
   };
 
   const handleAddServiceAllocation = () => {
-    if (servicesList.length > 0) {
-      setServiceAllocations([
-        ...serviceAllocations,
-        { serviceTypeId: servicesList[0].id, allocatedVisits: 6, unit: "visits" },
-      ]);
-      showToast("Service quota added");
-    }
+    const defaultServiceId = availableServices[0]?.id || "srv_safety";
+    setServiceAllocations((prev) => [
+      ...prev,
+      { serviceTypeId: defaultServiceId, allocatedVisits: 6, unit: "visits" },
+    ]);
+    showToast("Service quota added");
   };
 
   const handleUpdateServiceAllocation = (
@@ -179,10 +220,15 @@ export default function CreatePlanPage() {
                 placeholder="e.g. Guardian Plus"
                 value={form.name}
                 onChange={(e) => {
+                  const newName = e.target.value;
+                  const autoCode = newName
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9\s_-]/g, "")
+                    .replace(/[\s-]+/g, "_");
                   setForm({
                     ...form,
-                    name: e.target.value,
-                    code: form.code || e.target.value.toUpperCase().replace(/\s+/g, "_"),
+                    name: newName,
+                    code: autoCode,
                   });
                 }}
                 className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
@@ -190,15 +236,25 @@ export default function CreatePlanPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                System Code <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>
+                  System Code <span className="text-red-500">*</span>
+                </span>
+                <span className="text-[10px] text-[#5E8FB2] font-semibold lowercase">
+                  (auto-generated)
+                </span>
               </label>
               <input
                 type="text"
                 required
                 placeholder="e.g. GUARDIAN_PLUS"
                 value={form.code}
-                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, "") })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    code: e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, ""),
+                  })
+                }
                 className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-mono font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
               />
             </div>
@@ -285,28 +341,6 @@ export default function CreatePlanPage() {
               />
             </div>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-[#D9E4EC] bg-[#F0F5F9]/40 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.supportsAutomaticBilling}
-                onChange={(e) => setForm({ ...form, supportsAutomaticBilling: e.target.checked })}
-                className="w-4 h-4 text-[#294B68] rounded"
-              />
-              <span className="text-xs font-bold text-[#243746]">Support Automatic Card Billing</span>
-            </label>
-
-            <label className="flex items-center gap-2.5 p-3 rounded-xl border border-[#D9E4EC] bg-[#F0F5F9]/40 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.supportsInvoiceBilling}
-                onChange={(e) => setForm({ ...form, supportsInvoiceBilling: e.target.checked })}
-                className="w-4 h-4 text-[#294B68] rounded"
-              />
-              <span className="text-xs font-bold text-[#243746]">Support Manual Invoice Billing</span>
-            </label>
-          </div>
         </div>
 
         {/* Included Services & Visit Allocations */}
@@ -340,9 +374,9 @@ export default function CreatePlanPage() {
                       onChange={(e) => handleUpdateServiceAllocation(index, "serviceTypeId", e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-[#243746]"
                     >
-                      {servicesList.map((srv) => (
+                      {availableServices.map((srv) => (
                         <option key={srv.id} value={srv.id}>
-                          {srv.name} ({srv.category.replace("_", " ")})
+                          {srv.name} ({srv.category ? srv.category.replace(/_/g, " ") : "Service"})
                         </option>
                       ))}
                     </select>

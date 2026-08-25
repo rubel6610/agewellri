@@ -323,9 +323,8 @@ export default function BillingAdminPage() {
               onChange={(e) => setBillingMethodFilter(e.target.value)}
               className="h-10 px-3 text-xs font-bold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] shadow-2xs cursor-pointer"
             >
-              <option value="ALL">All Billing Methods</option>
-              <option value="AUTOMATIC">Automatic Card</option>
-              <option value="INVOICE">Pay by Invoice</option>
+              <option value="ALL">All Payment Methods</option>
+              <option value="AUTOMATIC">Stripe Card Payment</option>
             </select>
           </div>
         </div>
@@ -506,14 +505,10 @@ export default function BillingAdminPage() {
                           </span>
                         </td>
                         <td className="py-4 px-4 text-xs">
-                          {r.billingMethod === "AUTOMATIC" ? (
-                            <div className="flex items-center gap-1.5 font-bold text-[#243746]">
-                              <CreditCard className="w-3.5 h-3.5 text-[#294B68]" />
-                              <span>{r.cardBrand} •••• {r.cardLast4}</span>
-                            </div>
-                          ) : (
-                            <div className="font-bold text-amber-700">Pay by Invoice</div>
-                          )}
+                          <div className="flex items-center gap-1.5 font-bold text-[#243746]">
+                            <CreditCard className="w-3.5 h-3.5 text-[#294B68]" />
+                            <span>{r.cardLast4 ? `${r.cardBrand || "Card"} •••• ${r.cardLast4}` : "Stripe Card"}</span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-right">
                           <Link

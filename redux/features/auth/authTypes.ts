@@ -230,6 +230,8 @@ export interface AgreementDocument {
   emergencyContactPhone: string;
   emergencyContactRelation?: string | null;
   clientNumber: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface ForgotPasswordRequest {

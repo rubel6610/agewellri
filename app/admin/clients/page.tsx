@@ -12,11 +12,13 @@ export default function ClientsDirectoryPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
 
   const clients = (clientsRes?.data || []) as any[];
 
-  const handleOpenScheduleModal = (clientId?: string) => {
+  const handleOpenScheduleModal = (clientId?: string, clientName?: string) => {
     setSelectedClientId(clientId);
+    setSelectedClientName(clientName);
     setScheduleModalOpen(true);
   };
 
@@ -69,6 +71,7 @@ export default function ClientsDirectoryPage() {
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         defaultClientId={selectedClientId}
+        clientName={selectedClientName}
       />
     </div>
   );

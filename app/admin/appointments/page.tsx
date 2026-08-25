@@ -17,6 +17,7 @@ export default function AppointmentsAdminPage() {
   const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     getAdminAppointments().then((data) => {
@@ -36,6 +37,7 @@ export default function AppointmentsAdminPage() {
     if (!confirmed) return;
 
     setSelectedClientId(appt.clientId);
+    setSelectedClientName(appt.clientName);
     setScheduleModalOpen(true);
   };
 
@@ -127,6 +129,7 @@ export default function AppointmentsAdminPage() {
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         defaultClientId={selectedClientId}
+        clientName={selectedClientName}
       />
     </div>
   );

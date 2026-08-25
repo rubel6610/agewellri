@@ -139,7 +139,13 @@ export default function AgreementsAdminPage() {
                 </tr>
               ) : (
                 filteredAgreements.map((agr) => {
-                  const isExecuted = agr.status === "EXECUTED" || agr.status === "SIGNED";
+                  const statusUpper = (agr.status || "").toUpperCase();
+                  const isExecuted =
+                    statusUpper === "EXECUTED" ||
+                    statusUpper === "SIGNED" ||
+                    statusUpper === "ACTIVE" ||
+                    statusUpper === "COMPLETED" ||
+                    Boolean(agr.signedDate);
 
                   return (
                     <tr key={agr.id} className="hover:bg-[#F7FAFC]">

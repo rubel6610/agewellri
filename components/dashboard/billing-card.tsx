@@ -56,7 +56,6 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
     }
   };
 
-  const isInvoiceBilling = billing.billingMethod === "INVOICE";
   const isCancelled = billing.cancelAtPeriodEnd || billing.subscriptionStatus === "CANCELLATION_REQUESTED";
 
   return (
@@ -69,14 +68,8 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                 Subscription &amp; Membership
               </span>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                  isInvoiceBilling
-                    ? "bg-amber-50 text-[#C28A3A] border-amber-200"
-                    : "bg-[#EAF3F8] text-[#294B68] border-[#5E8FB2]/30"
-                }`}
-              >
-                {isInvoiceBilling ? "Pay by Invoice" : "Automatic Payment"}
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[#EAF3F8] text-[#294B68] border-[#5E8FB2]/30">
+                Stripe Card Payment
               </span>
             </div>
             <h3 className="text-2xl font-extrabold text-[#243746] mt-1 flex items-center gap-2">

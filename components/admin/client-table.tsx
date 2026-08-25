@@ -115,7 +115,13 @@ export function ClientTable({
               </tr>
             ) : (
               filteredClients.map((c) => {
-                const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+                const isExecuted =
+                  c.agreementStatus === "EXECUTED" ||
+                  c.agreementStatus === "SIGNED" ||
+                  Boolean(c.agreementSignedDate) ||
+                  c.timeline?.agreementSigned ||
+                  c.onboardingStatus === "ACTIVE" ||
+                  c.onboardingStatus === "COMPLETED";
 
                 return (
                   <tr key={c.id} className="hover:bg-[#F7FAFC] transition-colors">

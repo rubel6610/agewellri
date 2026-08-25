@@ -392,13 +392,6 @@ export function PlanVersionsModal({ isOpen, onClose, plan }: PlanVersionsModalPr
                     </div>
 
                     <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-[#D9E4EC]">
-                      <span className="font-semibold text-[#243746]">Direct Billing / Invoice Statements</span>
-                      <span className={`font-bold ${currentPlan.supportsInvoiceBilling !== false ? "text-emerald-600" : "text-slate-400"}`}>
-                        {currentPlan.supportsInvoiceBilling !== false ? "Enabled" : "Disabled"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-[#D9E4EC]">
                       <span className="font-semibold text-[#243746]">Auto-Renewal by Default</span>
                       <span className={`font-bold ${currentPlan.autoRenewDefault !== false ? "text-emerald-600" : "text-slate-400"}`}>
                         {currentPlan.autoRenewDefault !== false ? "Enabled" : "Disabled"}

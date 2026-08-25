@@ -11,7 +11,13 @@ interface AgreementCardProps {
 }
 
 export function AgreementCard({ agreement }: AgreementCardProps) {
-  const isExecuted = agreement.status === "executed" || agreement.status === "signed";
+  const statusUpper = (agreement.status || "").toUpperCase();
+  const isExecuted =
+    Boolean(agreement.signedDate) ||
+    statusUpper === "EXECUTED" ||
+    statusUpper === "SIGNED" ||
+    statusUpper === "ACTIVE" ||
+    statusUpper === "COMPLETED";
 
   const handleDownload = () => {
     showToast("Downloading Agreement PDF...");

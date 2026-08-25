@@ -12,6 +12,7 @@ export default function SubscriptionsAdminPage() {
   const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     getAdminSubscriptions().then((data) => {
@@ -20,8 +21,9 @@ export default function SubscriptionsAdminPage() {
     });
   }, []);
 
-  const handleOpenScheduleModal = (clientId: string) => {
+  const handleOpenScheduleModal = (clientId: string, clientName?: string) => {
     setSelectedClientId(clientId);
+    setSelectedClientName(clientName);
     setScheduleModalOpen(true);
   };
 
@@ -100,7 +102,7 @@ export default function SubscriptionsAdminPage() {
                   </td>
                   <td className="py-4 px-4 text-right">
                     <button
-                      onClick={() => handleOpenScheduleModal(sub.clientId)}
+                      onClick={() => handleOpenScheduleModal(sub.clientId, sub.clientName)}
                       className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1"
                     >
                       <Calendar className="w-3.5 h-3.5" /> Schedule Visits
@@ -117,6 +119,7 @@ export default function SubscriptionsAdminPage() {
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         defaultClientId={selectedClientId}
+        clientName={selectedClientName}
       />
     </div>
   );

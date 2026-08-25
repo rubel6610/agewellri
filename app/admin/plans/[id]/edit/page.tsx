@@ -29,6 +29,43 @@ import {
   showErrorAlert,
   showToast,
 } from "@/lib/alerts/sweetalert";
+import { ServiceItem } from "@/redux/features/plan/planTypes";
+
+const DEFAULT_STANDARD_SERVICES: ServiceItem[] = [
+  {
+    id: "srv_safety",
+    name: "Safety Oversight & Hazard Mitigation",
+    category: "SAFETY_OVERSIGHT",
+    description: "Home safety oversight visits and hazard audits",
+    durationMinutes: 60,
+    displayOrder: 1,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "srv_cleaning",
+    name: "Specialized Environmental Cleaning",
+    category: "CLEANING",
+    description: "HEPA allergen vacuuming and sanitation",
+    durationMinutes: 90,
+    displayOrder: 2,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+  {
+    id: "srv_maintenance",
+    name: "Preventative Home Maintenance",
+    category: "MAINTENANCE",
+    description: "Handyman and stability inspections",
+    durationMinutes: 60,
+    displayOrder: 3,
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
+  },
+];
 
 export default function EditPlanPage() {
   const params = useParams();
@@ -39,6 +76,11 @@ export default function EditPlanPage() {
     skip: !planId,
   });
   const { data: servicesList = [] } = useGetAllServicesQuery();
+  const availableServices =
+    servicesList && servicesList.length > 0
+      ? servicesList
+      : DEFAULT_STANDARD_SERVICES;
+
   const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
 
   const [form, setForm] = useState({
@@ -50,7 +92,7 @@ export default function EditPlanPage() {
     billingInterval: "QUARTERLY" as "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME",
     displayOrder: 1,
     supportsAutomaticBilling: true,
-    supportsInvoiceBilling: true,
+    supportsInvoiceBilling: false,
     autoRenewDefault: true,
     isActive: true,
   });
@@ -73,8 +115,8 @@ export default function EditPlanPage() {
         currency: latestVer?.currency || "USD",
         billingInterval: (latestVer?.billingInterval || plan.billingInterval || "QUARTERLY") as any,
         displayOrder: plan.displayOrder ?? 1,
-        supportsAutomaticBilling: plan.supportsAutomaticBilling ?? true,
-        supportsInvoiceBilling: plan.supportsInvoiceBilling ?? true,
+        supportsAutomaticBilling: true,
+        supportsInvoiceBilling: false,
         autoRenewDefault: plan.autoRenewDefault ?? true,
         isActive: plan.isActive ?? true,
       });
@@ -121,13 +163,12 @@ export default function EditPlanPage() {
   };
 
   const handleAddServiceAllocation = () => {
-    if (servicesList.length > 0) {
-      setServiceAllocations([
-        ...serviceAllocations,
-        { serviceTypeId: servicesList[0].id, allocatedVisits: 6, unit: "visits" },
-      ]);
-      showToast("Service allocation added");
-    }
+    const defaultServiceId = availableServices[0]?.id || "srv_safety";
+    setServiceAllocations((prev) => [
+      ...prev,
+      { serviceTypeId: defaultServiceId, allocatedVisits: 6, unit: "visits" },
+    ]);
+    showToast("Service allocation added");
   };
 
   const handleUpdateServiceAllocation = (
@@ -397,9 +438,9 @@ export default function EditPlanPage() {
                     onChange={(e) => handleUpdateServiceAllocation(index, "serviceTypeId", e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-[#243746]"
                   >
-                    {servicesList.map((srv) => (
+                    {availableServices.map((srv) => (
                       <option key={srv.id} value={srv.id}>
-                        {srv.name} ({srv.category.replace("_", " ")})
+                        {srv.name} ({srv.category ? srv.category.replace(/_/g, " ") : "Service"})
                       </option>
                     ))}
                   </select>
