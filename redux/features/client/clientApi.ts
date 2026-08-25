@@ -104,6 +104,7 @@ export interface SendInvitationPayload {
   state?: string;
   planName?: string;
   expiresInDays?: number;
+  skipEmail?: boolean;
 }
 
 export const clientApi = baseApi.injectEndpoints({
