@@ -52,15 +52,32 @@ export function ClientTable({
 
     const matchesState = stateFilter === "ALL" || client.state === stateFilter;
 
+    const isExecuted = client.agreementStatus === "EXECUTED" || client.agreementStatus === "SIGNED";
+    const isPaid = client.paymentStatus === "PAID";
+
     const matchesStatus =
       statusFilter === "ALL" ||
       client.status === statusFilter ||
-      (statusFilter === "agreement_pending" && client.agreementStatus !== "EXECUTED") ||
-      (statusFilter === "agreement_executed" && client.agreementStatus === "EXECUTED") ||
-      (statusFilter === "payment_pending" && client.paymentStatus !== "PAID");
+      (statusFilter === "agreement_signed_payment_pending" && isExecuted && !isPaid) ||
+      (statusFilter === "active" && isExecuted && isPaid) ||
+      (statusFilter === "agreement_pending" && !isExecuted) ||
+      (statusFilter === "agreement_executed" && isExecuted) ||
+      (statusFilter === "payment_pending" && !isPaid);
 
     return matchesSearch && matchesState && matchesStatus;
   });
+
+  // KPI Quick Filter Counters
+  const totalCount = clients.length;
+  const activeCount = clients.filter(
+    (c) => (c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED") && c.paymentStatus === "PAID"
+  ).length;
+  const agreementSignedPaymentPendingCount = clients.filter(
+    (c) => (c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED") && c.paymentStatus !== "PAID"
+  ).length;
+  const pendingAgreementCount = clients.filter(
+    (c) => c.agreementStatus !== "EXECUTED" && c.agreementStatus !== "SIGNED"
+  ).length;
 
   const totalItems = filteredClients.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -71,6 +88,78 @@ export function ClientTable({
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
+      {/* Quick Status Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-[#D9E4EC]/60">
+        <button
+          type="button"
+          onClick={() => setStatusFilter("ALL")}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            statusFilter === "ALL"
+              ? "bg-[#294B68] text-white shadow-2xs"
+              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
+          }`}
+        >
+          <span>All Clients</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+            statusFilter === "ALL" ? "bg-white/20 text-white" : "bg-[#EAF3F8] text-[#294B68]"
+          }`}>
+            {totalCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter("active")}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            statusFilter === "active"
+              ? "bg-[#166534] text-white shadow-2xs"
+              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#166534]"
+          }`}
+        >
+          <span>Active Members</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+            statusFilter === "active" ? "bg-white/20 text-white" : "bg-[#EBF8F2] text-[#166534]"
+          }`}>
+            {activeCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter("agreement_signed_payment_pending")}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            statusFilter === "agreement_signed_payment_pending"
+              ? "bg-[#C28A3A] text-white shadow-2xs"
+              : "bg-amber-50/60 border border-amber-200 text-amber-800 hover:bg-amber-100/60"
+          }`}
+          title="Clients who signed the agreement but have not yet submitted payment or activated subscription"
+        >
+          <span>Agreement Signed (Payment Pending)</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+            statusFilter === "agreement_signed_payment_pending" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"
+          }`}>
+            {agreementSignedPaymentPendingCount}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter("agreement_pending")}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            statusFilter === "agreement_pending"
+              ? "bg-[#294B68] text-white shadow-2xs"
+              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
+          }`}
+        >
+          <span>Pending Signature</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+            statusFilter === "agreement_pending" ? "bg-white/20 text-white" : "bg-[#F0F5F9] text-[#64748B]"
+          }`}>
+            {pendingAgreementCount}
+          </span>
+        </button>
+      </div>
+
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -106,8 +195,8 @@ export function ClientTable({
             >
               <option value="ALL">All Statuses</option>
               <option value="active">Active Members</option>
-              <option value="onboarding">Onboarding</option>
-              <option value="agreement_pending">Agreement Pending</option>
+              <option value="agreement_signed_payment_pending">Agreement Signed (Payment Pending)</option>
+              <option value="agreement_pending">Agreement Pending Signature</option>
               <option value="agreement_executed">Agreement Executed</option>
               <option value="payment_pending">Payment Pending</option>
             </select>
@@ -154,6 +243,7 @@ export function ClientTable({
             ) : (
               paginatedClients.map((c) => {
                 const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+                const isEligibleToSchedule = isExecuted && c.paymentStatus === "PAID";
 
                 return (
                   <tr key={c.id} className="hover:bg-[#F7FAFC] transition-colors">
@@ -216,7 +306,7 @@ export function ClientTable({
                     {/* Visits Remaining */}
                     <td className="py-4 px-4">
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-[#294B68]">
-                        <span className="w-2 h-2 rounded-full bg-[#5E8FB2]"></span>
+                        <span className={`w-2 h-2 rounded-full ${c.remainingVisitsCount > 0 ? "bg-[#5E8FB2]" : "bg-slate-300"}`}></span>
                         {c.remainingVisitsCount} / {c.totalVisitsAllowed} left
                       </span>
                     </td>
@@ -224,13 +314,23 @@ export function ClientTable({
                     {/* Actions */}
                     <td className="py-4 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => onOpenScheduleModal(c.id)}
-                          className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors cursor-pointer"
-                          title="Schedule Visit"
-                        >
-                          <Calendar className="w-4 h-4" />
-                        </button>
+                        {isEligibleToSchedule ? (
+                          <button
+                            onClick={() => onOpenScheduleModal(c.id)}
+                            className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors cursor-pointer"
+                            title="Schedule Visit"
+                          >
+                            <Calendar className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            disabled
+                            className="p-2 text-slate-300 rounded-xl cursor-not-allowed"
+                            title="Scheduling unavailable: Agreement or payment pending"
+                          >
+                            <Calendar className="w-4 h-4" />
+                          </button>
+                        )}
                         <Link
                           href={`/admin/clients/${c.id}`}
                           className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors"
@@ -258,60 +358,75 @@ export function ClientTable({
         ) : paginatedClients.length === 0 ? (
           <div className="py-8 text-center text-[#64748B]">No clients found.</div>
         ) : (
-          paginatedClients.map((c) => (
-            <div
-              key={c.id}
-              className="p-5 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-bold text-base text-[#243746]">
-                    {c.firstName} {c.lastName}
-                  </h4>
-                  <p className="text-xs text-[#64748B] font-mono">{c.id} • {c.email}</p>
-                </div>
-                <ClientStatusBadge status={c.status} />
-              </div>
+          paginatedClients.map((c) => {
+            const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+            const isEligibleToSchedule = isExecuted && c.paymentStatus === "PAID";
 
-              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D9E4EC]/60">
-                <div>
-                  <span className="text-[#64748B] block">State:</span>
-                  <span className="font-bold text-[#243746]">{c.state}</span>
+            return (
+              <div
+                key={c.id}
+                className="p-5 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-base text-[#243746]">
+                      {c.firstName} {c.lastName}
+                    </h4>
+                    <p className="text-xs text-[#64748B] font-mono">{c.id} • {c.email}</p>
+                  </div>
+                  <ClientStatusBadge status={c.status} />
                 </div>
-                <div>
-                  <span className="text-[#64748B] block">Visits Left:</span>
-                  <span className="font-bold text-[#294B68]">
-                    {c.remainingVisitsCount} / {c.totalVisitsAllowed}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] block">Agreement:</span>
-                  <span className="font-bold text-[#243746]">{c.agreementStatus}</span>
-                </div>
-                <div>
-                  <span className="text-[#64748B] block">Payment:</span>
-                  <span className="font-bold text-[#243746]">{c.paymentStatus}</span>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
-                <button
-                  onClick={() => onOpenScheduleModal(c.id)}
-                  className="font-bold text-[#294B68] flex items-center gap-1"
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span>Schedule</span>
-                </button>
-                <Link
-                  href={`/admin/clients/${c.id}`}
-                  className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
-                >
-                  <span>Manage</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D9E4EC]/60">
+                  <div>
+                    <span className="text-[#64748B] block">State:</span>
+                    <span className="font-bold text-[#243746]">{c.state}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#64748B] block">Visits Left:</span>
+                    <span className="font-bold text-[#294B68]">
+                      {c.remainingVisitsCount} / {c.totalVisitsAllowed}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[#64748B] block">Agreement:</span>
+                    <span className="font-bold text-[#243746]">{c.agreementStatus}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#64748B] block">Payment:</span>
+                    <span className="font-bold text-[#243746]">{c.paymentStatus}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
+                  {isEligibleToSchedule ? (
+                    <button
+                      onClick={() => onOpenScheduleModal(c.id)}
+                      className="font-bold text-[#294B68] flex items-center gap-1 cursor-pointer"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Schedule</span>
+                    </button>
+                  ) : (
+                    <span
+                      className="font-bold text-slate-400 flex items-center gap-1 cursor-not-allowed"
+                      title="Agreement or payment pending"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Schedule (Locked)</span>
+                    </span>
+                  )}
+                  <Link
+                    href={`/admin/clients/${c.id}`}
+                    className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
+                  >
+                    <span>Manage</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

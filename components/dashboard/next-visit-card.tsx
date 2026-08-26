@@ -47,10 +47,7 @@ export function NextVisitCard({ appointment, onScheduleVisit }: NextVisitCardPro
   });
 
   return (
-    <div className="bg-[#294B68] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden flex flex-col justify-between space-y-6">
-      {/* Background soft ambient pattern */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-
+    <div className="bg-[#294B68] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md relative flex flex-col justify-between space-y-6">
       <div>
         <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">

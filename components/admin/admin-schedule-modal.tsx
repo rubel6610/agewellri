@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Calendar, Loader2, CheckCircle2, UserCheck, Search, ChevronDown, Check } from "lucide-react";
+import { X, Calendar, Loader2, CheckCircle2, UserCheck, Search, ChevronDown, Check, AlertCircle } from "lucide-react";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { useGetAllServicesQuery } from "@/redux/features/plan/planApi";
@@ -32,7 +32,16 @@ export function AdminScheduleModal({
   const { data: servicesList = [], isLoading: isServicesLoading } = useGetAllServicesQuery(undefined, { skip: !isOpen });
   const clientsList = clientsRes?.data || [];
 
-  // Client Selection State
+  // Client Selection State & Eligibility Filtering
+  const isClientEligible = (c: any) => {
+    if (!c) return false;
+    const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+    const isPaid = c.paymentStatus === "PAID";
+    return isExecuted && isPaid;
+  };
+
+  const eligibleClients = clientsList.filter(isClientEligible);
+
   const [selectedClientId, setSelectedClientId] = useState(defaultClientId || "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,10 +81,10 @@ export function AdminScheduleModal({
   useEffect(() => {
     if (defaultClientId) {
       setSelectedClientId(defaultClientId);
-    } else if (clientsList.length > 0 && !selectedClientId) {
-      setSelectedClientId(clientsList[0].id);
+    } else if (eligibleClients.length > 0 && !selectedClientId) {
+      setSelectedClientId(eligibleClients[0].id);
     }
-  }, [defaultClientId, clientsList, isOpen, selectedClientId]);
+  }, [defaultClientId, eligibleClients, isOpen, selectedClientId]);
 
   useEffect(() => {
     if (specialists.length > 0 && !technicianName) {
@@ -127,10 +136,11 @@ export function AdminScheduleModal({
     selectedClientId ||
     "AW-CLIENT";
 
-  const selectedClient = matchedClient || clientsList[0];
+  const selectedClient = matchedClient || eligibleClients[0] || clientsList[0];
+  const isTargetClientEligible = selectedClient ? isClientEligible(selectedClient) : false;
 
-  // Filtered Clients
-  const filteredClients = clientsList.filter((c) => {
+  // Filtered Clients (Only eligible active enrolled clients)
+  const filteredClients = eligibleClients.filter((c) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const fullName = `${c.firstName || ""} ${c.lastName || ""}`.toLowerCase();
@@ -268,6 +278,17 @@ export function AdminScheduleModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+            {/* Ineligible Client Warning Banner */}
+            {!isTargetClientEligible && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-950">Visit Scheduling Unavailable</strong>
+                  <span>This client has not executed their Service Agreement or completed their subscription payment. Both an executed agreement and active payment are required before scheduling visits.</span>
+                </div>
+              </div>
+            )}
+
             {/* Target Client Display or Searchable Selection */}
             {isLockedClient ? (
               <div>
@@ -696,14 +717,20 @@ export function AdminScheduleModal({
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                disabled={isSubmitting || !isTargetClientEligible}
+                className={`w-full py-3 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 ${
+                  !isTargetClientEligible
+                    ? "bg-slate-100 text-[#94A3B8] border border-slate-200 cursor-not-allowed"
+                    : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
+                }`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
+                ) : !isTargetClientEligible ? (
+                  <span>Agreement &amp; Payment Required to Schedule</span>
                 ) : (
                   <span>Confirm &amp; Schedule Visit</span>
                 )}

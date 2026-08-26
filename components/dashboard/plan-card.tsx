@@ -10,10 +10,7 @@ export function PlanCard({ plan }: PlanCardProps) {
   const percentage = Math.round((plan.completedVisits / plan.totalVisits) * 100);
 
   return (
-    <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-6">
-      {/* Decorative top accent glow */}
-      <div className="absolute top-0 right-0 w-48 h-48 bg-[#EAF3F8] rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
-
+    <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs relative flex flex-col justify-between space-y-6">
       <div>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">

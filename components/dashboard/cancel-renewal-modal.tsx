@@ -62,7 +62,7 @@ export function CancelRenewalModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-[#D9E4EC] p-6 sm:p-8 space-y-6 relative">
         <div className="flex items-center justify-between border-b border-[#D9E4EC] pb-4">
           <div className="flex items-center gap-3">

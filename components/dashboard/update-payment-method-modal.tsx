@@ -195,7 +195,7 @@ export function UpdatePaymentMethodModal({
     configData?.data?.publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
       <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-[#D9E4EC] p-6 sm:p-8 space-y-6 relative">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#D9E4EC] pb-4">
