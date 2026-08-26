@@ -7,9 +7,13 @@ import { AdminSubscription } from "@/lib/types/admin";
 import { RefreshCw, Calendar, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 
+import { TablePagination } from "@/components/ui/table-pagination";
+
 export default function SubscriptionsAdminPage() {
   const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
   const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
@@ -20,6 +24,13 @@ export default function SubscriptionsAdminPage() {
       setLoading(false);
     });
   }, []);
+
+  const totalItems = subscriptions.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedSubscriptions = subscriptions.slice(startIndex, endIndex);
 
   const handleOpenScheduleModal = (clientId: string, clientName?: string) => {
     setSelectedClientId(clientId);
@@ -57,7 +68,7 @@ export default function SubscriptionsAdminPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -72,7 +83,7 @@ export default function SubscriptionsAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-              {subscriptions.map((sub) => (
+              {paginatedSubscriptions.map((sub) => (
                 <tr key={sub.id} className="hover:bg-[#F7FAFC]">
                   <td className="py-4 px-4 font-bold">
                     <Link href={`/admin/clients/${sub.clientId}`} className="hover:underline">
@@ -113,6 +124,15 @@ export default function SubscriptionsAdminPage() {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          currentPage={validCurrentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="subscriptions"
+        />
       </div>
 
       <AdminScheduleModal

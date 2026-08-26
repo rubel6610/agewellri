@@ -11,23 +11,22 @@ import {
   ShieldCheck,
   AlertCircle,
   Clock,
-  UserCheck,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
+  Loader2,
 } from "lucide-react";
 import { MasterClientRecord } from "@/redux/features/client/clientApi";
 import { ClientStatusBadge } from "./client-status-badge";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 interface ClientTableProps {
   clients: MasterClientRecord[];
+  isLoading?: boolean;
   onOpenAddClientModal: () => void;
   onOpenScheduleModal: (clientId: string) => void;
 }
 
 export function ClientTable({
   clients,
+  isLoading = false,
   onOpenAddClientModal,
   onOpenScheduleModal,
 }: ClientTableProps) {
@@ -70,89 +69,83 @@ export function ClientTable({
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   const paginatedClients = filteredClients.slice(startIndex, endIndex);
 
-  // Generate visible page numbers with ellipsis
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (validCurrentPage <= 3) {
-        pages.push(1, 2, 3, 4, "...", totalPages);
-      } else if (validCurrentPage >= totalPages - 2) {
-        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, "...", validCurrentPage - 1, validCurrentPage, validCurrentPage + 1, "...", totalPages);
-      }
-    }
-    return pages;
-  };
-
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
-            <Search className="w-4 h-4" />
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
+              <Search className="w-4 h-4" />
+            </div>
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search clients by name, email, ID..."
+              className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            />
           </div>
-          <input
-            type="search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by client name, email, state, or AW-ID..."
-            className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] placeholder:text-[#94A3B8]"
-          />
+
+          <div className="flex items-center gap-2">
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            >
+              <option value="ALL">All States</option>
+              <option value="RI">Rhode Island (RI)</option>
+              <option value="CT">Connecticut (CT)</option>
+              <option value="MA">Massachusetts (MA)</option>
+            </select>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="active">Active Members</option>
+              <option value="onboarding">Onboarding</option>
+              <option value="agreement_pending">Agreement Pending</option>
+              <option value="agreement_executed">Agreement Executed</option>
+              <option value="payment_pending">Payment Pending</option>
+            </select>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={stateFilter}
-            onChange={(e) => setStateFilter(e.target.value)}
-            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
-          >
-            <option value="ALL">All States (RI, CT, MA)</option>
-            <option value="RI">Rhode Island (RI)</option>
-            <option value="CT">Connecticut (CT)</option>
-            <option value="MA">Massachusetts (MA)</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
-          >
-            <option value="ALL">All Agreement Statuses</option>
-            <option value="agreement_executed">Agreement Executed</option>
-            <option value="agreement_pending">Pending Signature</option>
-            <option value="payment_pending">Payment Pending</option>
-          </select>
-
-          <button
-            onClick={onOpenAddClientModal}
-            className="h-11 px-4 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Client</span>
-          </button>
-        </div>
+        <button
+          onClick={onOpenAddClientModal}
+          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Add New Client</span>
+        </button>
       </div>
 
-      {/* Desktop Table */}
+      {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
               <th className="py-3.5 px-4">Client</th>
               <th className="py-3.5 px-4">State</th>
-              <th className="py-3.5 px-4">Signer Role</th>
-              <th className="py-3.5 px-4">Agreement Status</th>
-              <th className="py-3.5 px-4">Billing &amp; Plan</th>
-              <th className="py-3.5 px-4">Created</th>
+              <th className="py-3.5 px-4">Signer / Rep</th>
+              <th className="py-3.5 px-4">Agreement</th>
+              <th className="py-3.5 px-4">Payment</th>
+              <th className="py-3.5 px-4">Visits</th>
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-            {paginatedClients.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={7} className="py-16 text-center text-[#64748B]">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#294B68]" />
+                  Loading clients...
+                </td>
+              </tr>
+            ) : paginatedClients.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-[#64748B]">
                   No clients match your filter criteria.
@@ -160,81 +153,90 @@ export function ClientTable({
               </tr>
             ) : (
               paginatedClients.map((c) => {
-                const isExecuted =
-                  c.agreementStatus === "EXECUTED" ||
-                  c.agreementStatus === "SIGNED" ||
-                  Boolean(c.agreementSignedDate) ||
-                  c.timeline?.agreementSigned ||
-                  c.onboardingStatus === "ACTIVE" ||
-                  c.onboardingStatus === "COMPLETED";
+                const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
 
                 return (
                   <tr key={c.id} className="hover:bg-[#F7FAFC] transition-colors">
-                    <td className="py-4 px-4">
+                    {/* Client Name & ID */}
+                    <td className="py-4 px-4 font-bold">
                       <Link
                         href={`/admin/clients/${c.id}`}
-                        className="font-bold text-[#243746] hover:text-[#294B68] hover:underline block"
+                        className="hover:underline text-[#243746] block text-sm"
                       >
                         {c.firstName} {c.lastName}
                       </Link>
-                      <span className="block text-xs text-[#64748B] font-mono">
+                      <span className="block text-xs font-mono text-[#64748B] font-normal">
                         {c.id} • {c.email}
                       </span>
                     </td>
 
+                    {/* State */}
                     <td className="py-4 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-extrabold bg-[#EAF3F8] text-[#294B68]">
+                      <span className="inline-flex px-2 py-0.5 rounded-md text-xs font-bold bg-[#F0F5F9] text-[#294B68]">
                         {c.state || "RI"}
                       </span>
                     </td>
 
+                    {/* Signer / Relationship */}
                     <td className="py-4 px-4 text-xs">
-                      <span className="font-semibold text-[#243746] block capitalize">
-                        {c.signerRole.replace(/_/g, " ").toLowerCase()}
-                      </span>
-                      {c.legalAuthority && (
-                        <span className="text-[11px] text-[#64748B] block">
-                          {c.legalAuthority.replace(/_/g, " ")}
-                        </span>
-                      )}
+                      <div className="font-bold text-[#243746]">
+                        {c.signerRole === "CLIENT" ? "Self (Client)" : "Representative"}
+                      </div>
+                      <div className="text-[#64748B] capitalize">
+                        {c.legalAuthority ? c.legalAuthority.replace(/_/g, " ") : c.signerRole?.replace(/_/g, " ").toLowerCase() || "Self"}
+                      </div>
                     </td>
 
+                    {/* Agreement Status */}
                     <td className="py-4 px-4">
                       {isExecuted ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-[#EBF8F2] text-[#166534]">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF8F2] text-[#166534]">
                           <ShieldCheck className="w-3.5 h-3.5" /> Executed
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-50 text-[#C28A3A]">
-                          <AlertCircle className="w-3.5 h-3.5" /> Pending Signature
-                        </span>
-                      )}
-                      {c.agreementSignedDate && (
-                        <span className="block text-[11px] text-[#64748B] mt-0.5">
-                          {c.agreementSignedDate}
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-[#C28A3A]">
+                          <AlertCircle className="w-3.5 h-3.5" /> Pending
                         </span>
                       )}
                     </td>
 
-                    <td className="py-4 px-4 text-xs">
-                      <strong className="text-[#243746] block">{c.planName}</strong>
-                      <span className="text-[#64748B] capitalize">
-                        {c.paymentStatus.replace(/_/g, " ").toLowerCase()}
+                    {/* Payment Status */}
+                    <td className="py-4 px-4">
+                      {c.paymentStatus === "PAID" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#3F8F6B]">
+                          <ShieldCheck className="w-3.5 h-3.5" /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-[#C28A3A]">
+                          <Clock className="w-3.5 h-3.5" /> Pending
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Visits Remaining */}
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-[#294B68]">
+                        <span className="w-2 h-2 rounded-full bg-[#5E8FB2]"></span>
+                        {c.remainingVisitsCount} / {c.totalVisitsAllowed} left
                       </span>
                     </td>
 
-                    <td className="py-4 px-4 text-xs text-[#64748B]">
-                      {c.createdAt}
-                    </td>
-
+                    {/* Actions */}
                     <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => onOpenScheduleModal(c.id)}
+                          className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors cursor-pointer"
+                          title="Schedule Visit"
+                        >
+                          <Calendar className="w-4 h-4" />
+                        </button>
                         <Link
                           href={`/admin/clients/${c.id}`}
-                          className="px-3 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-lg transition-colors inline-flex items-center gap-1"
+                          className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors"
+                          title="View Client Details"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
+                          <Eye className="w-4 h-4" />
                         </Link>
                       </div>
                     </td>
@@ -246,39 +248,60 @@ export function ClientTable({
         </table>
       </div>
 
-      {/* Mobile Cards View */}
-      <div className="md:hidden space-y-3">
-        {paginatedClients.length === 0 ? (
-          <div className="p-8 text-center text-[#64748B] bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC]">
-            No clients match your filter criteria.
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {isLoading ? (
+          <div className="py-12 text-center text-[#64748B]">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#294B68]" />
+            Loading clients...
           </div>
+        ) : paginatedClients.length === 0 ? (
+          <div className="py-8 text-center text-[#64748B]">No clients found.</div>
         ) : (
           paginatedClients.map((c) => (
             <div
               key={c.id}
-              className="p-4 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
+              className="p-5 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
             >
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-[#294B68]">
-                  {c.id} ({c.state})
-                </span>
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-bold text-base text-[#243746]">
+                    {c.firstName} {c.lastName}
+                  </h4>
+                  <p className="text-xs text-[#64748B] font-mono">{c.id} • {c.email}</p>
+                </div>
                 <ClientStatusBadge status={c.status} />
               </div>
 
-              <div>
-                <Link
-                  href={`/admin/clients/${c.id}`}
-                  className="font-bold text-[#243746] text-base hover:underline"
-                >
-                  {c.firstName} {c.lastName}
-                </Link>
-                <p className="text-xs text-[#64748B] mt-0.5">{c.planName} • {c.email}</p>
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D9E4EC]/60">
+                <div>
+                  <span className="text-[#64748B] block">State:</span>
+                  <span className="font-bold text-[#243746]">{c.state}</span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block">Visits Left:</span>
+                  <span className="font-bold text-[#294B68]">
+                    {c.remainingVisitsCount} / {c.totalVisitsAllowed}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block">Agreement:</span>
+                  <span className="font-bold text-[#243746]">{c.agreementStatus}</span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block">Payment:</span>
+                  <span className="font-bold text-[#243746]">{c.paymentStatus}</span>
+                </div>
               </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
-                <span className="text-[#64748B]">
-                  Agreement: <strong>{c.agreementStatus}</strong>
-                </span>
+                <button
+                  onClick={() => onOpenScheduleModal(c.id)}
+                  className="font-bold text-[#294B68] flex items-center gap-1"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Schedule</span>
+                </button>
                 <Link
                   href={`/admin/clients/${c.id}`}
                   className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
@@ -292,103 +315,14 @@ export function ClientTable({
         )}
       </div>
 
-      {/* Pagination & Limit Footer Controls */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#D9E4EC] text-xs font-medium text-[#64748B]">
-        {/* Left: Summary & Rows per page selector */}
-        <div className="flex flex-wrap items-center gap-4">
-          <span>
-            Showing <strong className="text-[#243746]">{totalItems > 0 ? startIndex + 1 : 0}</strong> to{" "}
-            <strong className="text-[#243746]">{endIndex}</strong> of{" "}
-            <strong className="text-[#243746]">{totalItems}</strong> clients
-          </span>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[#64748B]">Rows per page:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="h-8 px-2.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Right: Page Navigation Buttons */}
-        <div className="flex items-center gap-1">
-          {/* First Page */}
-          <button
-            type="button"
-            onClick={() => setCurrentPage(1)}
-            disabled={validCurrentPage === 1}
-            title="First Page"
-            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronsLeft className="w-4 h-4" />
-          </button>
-
-          {/* Previous Page */}
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={validCurrentPage === 1}
-            title="Previous Page"
-            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* Page Numbers */}
-          <div className="flex items-center gap-1 px-1">
-            {getPageNumbers().map((page, idx) =>
-              typeof page === "number" ? (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentPage(page)}
-                  className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    validCurrentPage === page
-                      ? "bg-[#294B68] text-white shadow-2xs"
-                      : "border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746]"
-                  }`}
-                >
-                  {page}
-                </button>
-              ) : (
-                <span key={idx} className="px-1 text-xs text-[#94A3B8]">
-                  {page}
-                </span>
-              )
-            )}
-          </div>
-
-          {/* Next Page */}
-          <button
-            type="button"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={validCurrentPage === totalPages}
-            title="Next Page"
-            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-
-          {/* Last Page */}
-          <button
-            type="button"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={validCurrentPage === totalPages}
-            title="Last Page"
-            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          >
-            <ChevronsRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      <TablePagination
+        currentPage={validCurrentPage}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+        itemLabel="clients"
+      />
     </div>
   );
 }

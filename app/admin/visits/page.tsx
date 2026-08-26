@@ -6,10 +6,13 @@ import { getAdminVisits } from "@/lib/api/admin-api";
 import { AdminVisit } from "@/lib/types/admin";
 import { Sparkles, FileUp, CheckCircle2, Clock } from "lucide-react";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 export default function VisitsAdminPage() {
   const [visits, setVisits] = useState<AdminVisit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedVisitId, setSelectedVisitId] = useState("vst_01");
   const [selectedClientId, setSelectedClientId] = useState("AW-1001");
@@ -20,6 +23,13 @@ export default function VisitsAdminPage() {
       setLoading(false);
     });
   }, []);
+
+  const totalItems = visits.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedVisits = visits.slice(startIndex, endIndex);
 
   const handleOpenUploadModal = (visitId: string, clientId: string) => {
     setSelectedVisitId(visitId);
@@ -47,7 +57,7 @@ export default function VisitsAdminPage() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -63,7 +73,7 @@ export default function VisitsAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-              {visits.map((v) => (
+              {paginatedVisits.map((v) => (
                 <tr key={v.id} className="hover:bg-[#F7FAFC]">
                   <td className="py-4 px-4 font-mono text-xs font-bold text-[#294B68]">{v.id}</td>
                   <td className="py-4 px-4 font-bold">
@@ -112,6 +122,15 @@ export default function VisitsAdminPage() {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          currentPage={validCurrentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="visits"
+        />
       </div>
 
       <ReportUploadModal

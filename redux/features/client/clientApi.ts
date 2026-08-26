@@ -1,5 +1,6 @@
 import { baseApi } from "../../api/baseApi";
 import { ApiResponse } from "../auth/authTypes";
+import { VisitEntitlementItem } from "../payment/paymentTypes";
 
 export interface MasterClientRecord {
   id: string;
@@ -64,6 +65,7 @@ export interface MasterClientRecord {
   invoices?: any[];
   appointments?: any[];
   reports?: any[];
+  visitEntitlements?: VisitEntitlementItem[];
   auditLogs?: Array<{
     id: string;
     action: string;
@@ -109,28 +111,26 @@ export interface SendInvitationPayload {
 
 export const clientApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getAdminClients: builder.query<ApiResponse<MasterClientRecord[]>, { state?: string; onboardingStatus?: string; search?: string } | void>({
+    getAdminClients: builder.query<
+      ApiResponse<MasterClientRecord[]>,
+      { state?: string; onboardingStatus?: string; search?: string; page?: number; limit?: number } | void
+    >({
       query: (params) => {
         const queryParams = new URLSearchParams();
         if (params && params.state) queryParams.append("state", params.state);
         if (params && params.onboardingStatus) queryParams.append("onboardingStatus", params.onboardingStatus);
         if (params && params.search) queryParams.append("search", params.search);
+        if (params && params.page) queryParams.append("page", params.page.toString());
+        if (params && params.limit) queryParams.append("limit", params.limit.toString());
         const qs = queryParams.toString();
         return `/clients/admin/all${qs ? `?${qs}` : ""}`;
       },
-      keepUnusedDataFor: 300,
-      providesTags: (result) =>
-        result?.data
-          ? [
-              ...result.data.map(({ id }) => ({ type: "Client" as const, id })),
-              { type: "Client", id: "ADMIN_LIST" },
-            ]
-          : [{ type: "Client", id: "ADMIN_LIST" }],
+      providesTags:["Client"]
     }),
 
     getAdminClientById: builder.query<ApiResponse<MasterClientRecord>, string>({
       query: (id) => `/clients/admin/${id}`,
-      keepUnusedDataFor: 300,
+     
       providesTags: (_result, _error, id) => [
         { type: "Client", id },
         { type: "Agreement", id },
@@ -155,7 +155,7 @@ export const clientApi = baseApi.injectEndpoints({
         const qs = queryParams.toString();
         return `/agreements/admin/all${qs ? `?${qs}` : ""}`;
       },
-      keepUnusedDataFor: 300,
+     
       providesTags: ["Agreement"],
     }),
 

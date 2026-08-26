@@ -16,8 +16,6 @@ import {
   HeartPulse,
   RefreshCw,
   Search,
-  ArrowRight,
-  Package,
   SlidersHorizontal,
 } from "lucide-react";
 import {
@@ -37,6 +35,7 @@ import {
   showErrorAlert,
   showToast,
 } from "@/lib/alerts/sweetalert";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 const CATEGORY_CONFIG: Record<
   string,
@@ -75,9 +74,11 @@ const CATEGORY_CONFIG: Record<
 };
 
 export default function AdminServicesPage() {
-  const [categoryFilter, setCategoryFilter] = useState("ALL");
-  const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     data: services = [],
@@ -125,6 +126,13 @@ export default function AdminServicesPage() {
 
     return matchesSearch && matchesCategory && matchesStatus;
   });
+
+  const totalItems = filteredServices.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedServices = filteredServices.slice(startIndex, endIndex);
 
   const activeServicesCount = services.filter((s) => s.isActive).length;
 
@@ -291,26 +299,6 @@ export default function AdminServicesPage() {
         </div>
       </div>
 
-      {/* Concept Clarification Banner: Service Catalog vs Service Plans */}
-      <div className="p-4 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs sm:text-sm">
-        <div className="flex items-center gap-3 text-[#243746]">
-          <div className="w-8 h-8 rounded-lg bg-[#294B68] text-white flex items-center justify-center shrink-0">
-            <Layers className="w-4 h-4" />
-          </div>
-          <div>
-            <strong>Service Catalog vs Service Plans:</strong> The Catalog defines <em>individual deliverable services</em> (e.g. Safety Visit, Home Cleaning). Customer subscription tiers (e.g. Guardian Plus) bundle quotas of these services in <strong>Service Plans</strong>.
-          </div>
-        </div>
-        <Link
-          href="/admin/plans"
-          className="inline-flex items-center gap-1.5 font-bold text-[#294B68] hover:text-[#1E364B] bg-white px-3 py-1.5 rounded-lg border border-[#D9E4EC] shadow-2xs whitespace-nowrap self-start md:self-auto hover:bg-[#F0F5F9] transition-colors"
-        >
-          <Package className="w-3.5 h-3.5" />
-          <span>Manage Service Plans</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
-      </div>
-
       {/* Metrics Overview - Backend Sourced Statistics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
@@ -423,7 +411,7 @@ export default function AdminServicesPage() {
         </div>
       </div>
 
-      {/* Services Grid */}
+      {/* Services Table */}
       {isLoading ? (
         <div className="py-20 text-center text-[#5E8FB2] flex flex-col items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin text-[#294B68]" />
@@ -438,98 +426,132 @@ export default function AdminServicesPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredServices.map((service) => {
-            const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
-            const CategoryIcon = config.icon;
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-4 sm:p-6 shadow-xs overflow-hidden">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]">
+                  <th className="py-3.5 px-4 rounded-l-xl">Service Details</th>
+                  <th className="py-3.5 px-4">Category</th>
+                  <th className="py-3.5 px-4">Duration</th>
+                  <th className="py-3.5 px-4">Baseline Price</th>
+                  <th className="py-3.5 px-4">Status</th>
+                  <th className="py-3.5 px-4 text-right rounded-r-xl">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+                {paginatedServices.map((service) => {
+                  const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
+                  const CategoryIcon = config.icon;
 
-            return (
-              <div
-                key={service.id}
-                className={`bg-white p-5 rounded-2xl border transition-all flex flex-col justify-between hover:shadow-md ${
-                  service.isActive ? "border-[#D9E4EC] hover:border-[#5E8FB2]" : "border-slate-200 bg-slate-50/50 opacity-80"
-                }`}
-              >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className={`w-10 h-10 rounded-xl ${config.bgClass} ${config.colorClass} flex items-center justify-center font-bold`}>
-                      <CategoryIcon className="w-5 h-5" />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {config.label}
-                      </span>
-                    </div>
-                  </div>
+                  return (
+                    <tr key={service.id} className="hover:bg-[#F8FAFC] transition-colors">
+                      {/* Service Details */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl ${config.bgClass} ${config.colorClass} flex items-center justify-center font-bold shrink-0`}>
+                            <CategoryIcon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-[#243746] flex items-center gap-2">
+                              <span>{service.name}</span>
+                              {service.code && (
+                                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
+                                  {service.code}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1 max-w-md">
+                              {service.description || "In-home care delivery service component."}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-                  <div>
-                    <h3 className="font-extrabold text-[#243746] text-base leading-snug">
-                      {service.name}
-                    </h3>
-                    {service.code && (
-                      <div className="text-xs font-mono font-bold text-[#5E8FB2] mt-0.5">
-                        {service.code}
-                      </div>
-                    )}
-                    <p className="text-xs text-[#64748B] mt-2 leading-relaxed line-clamp-2">
-                      {service.description || "In-home care delivery service component."}
-                    </p>
-                  </div>
+                      {/* Category */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md ${config.bgClass} ${config.colorClass}`}>
+                          <CategoryIcon className="w-3.5 h-3.5" />
+                          {config.label}
+                        </span>
+                      </td>
 
-                  <div className="flex items-center gap-4 text-xs font-bold text-[#243746] pt-2 border-t border-[#D9E4EC]/60">
-                    <div className="flex items-center gap-1 text-[#5E8FB2]">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>{service.durationMinutes} mins / visit</span>
-                    </div>
-                    {service.defaultPrice && service.defaultPrice > 0 ? (
-                      <div className="text-[#243746]">${service.defaultPrice} baseline</div>
-                    ) : null}
-                  </div>
-                </div>
+                      {/* Duration */}
+                      <td className="py-4 px-4 whitespace-nowrap font-semibold text-xs text-[#243746]">
+                        <div className="flex items-center gap-1.5 text-[#5E8FB2]">
+                          <Clock className="w-4 h-4" />
+                          <span>{service.durationMinutes} mins / visit</span>
+                        </div>
+                      </td>
 
-                <div className="mt-4 pt-3 border-t border-[#D9E4EC] flex items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleStatus(service)}
-                    disabled={isStatusChanging}
-                    className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
-                      service.isActive
-                        ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
-                        : "text-amber-700 bg-amber-50 hover:bg-amber-100"
-                    }`}
-                  >
-                    {service.isActive ? (
-                      <>
-                        <CheckCircle2 className="w-3 h-3" /> Active
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="w-3 h-3" /> Inactive
-                      </>
-                    )}
-                  </button>
+                      {/* Baseline Price */}
+                      <td className="py-4 px-4 whitespace-nowrap text-xs font-bold text-[#243746]">
+                        {service.defaultPrice && service.defaultPrice > 0 ? (
+                          <span className="text-[#243746]">${service.defaultPrice} / visit</span>
+                        ) : (
+                          <span className="text-[#64748B] font-semibold">Included in Plan</span>
+                        )}
+                      </td>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleOpenEdit(service)}
-                      className="px-2.5 py-1 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                      title="Edit Service Definition"
-                    >
-                      <Edit className="w-3.5 h-3.5" /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(service)}
-                      disabled={isDeleting}
-                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                      title="Delete or Deactivate Service"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      {/* Status */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleStatus(service)}
+                          disabled={isStatusChanging}
+                          className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-md transition-colors cursor-pointer border ${
+                            service.isActive
+                              ? "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
+                              : "text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100"
+                          }`}
+                        >
+                          {service.isActive ? (
+                            <>
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="w-3 h-3 text-amber-600" /> Inactive
+                            </>
+                          )}
+                        </button>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleOpenEdit(service)}
+                            className="px-2.5 py-1 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Edit Service Definition"
+                          >
+                            <Edit className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(service)}
+                            disabled={isDeleting}
+                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                            title="Delete or Deactivate Service"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <TablePagination
+            currentPage={validCurrentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+            itemLabel="services"
+          />
         </div>
       )}
 

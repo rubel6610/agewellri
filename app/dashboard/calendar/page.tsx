@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Calendar as CalendarIcon,
@@ -22,47 +22,132 @@ import {
   AlertCircle,
   ArrowRight,
   Loader2,
+  Trash2,
+  Layers,
+  HeartPulse,
+  ClipboardCheck,
 } from "lucide-react";
-import { getAppointments, getCurrentPlan } from "@/lib/api/dashboard";
-import { Appointment, ServicePlan, VisitType } from "@/lib/types/dashboard";
+import {
+  useGetMyAppointmentsQuery,
+  useCancelAppointmentMutation,
+} from "@/redux/features/appointment/appointmentApi";
+import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
+import {
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
+
+const CATEGORY_STYLES: Record<
+  string,
+  {
+    icon: React.ElementType;
+    badgeBg: string;
+    badgeText: string;
+    cellBg: string;
+    cellBorder: string;
+    cellText: string;
+    iconColor: string;
+  }
+> = {
+  SAFETY_OVERSIGHT: {
+    icon: ShieldCheck,
+    badgeBg: "bg-[#EAF3F8]",
+    badgeText: "text-[#294B68]",
+    cellBg: "bg-[#EAF3F8]",
+    cellBorder: "border-[#294B68]/20",
+    cellText: "text-[#294B68]",
+    iconColor: "text-[#294B68]",
+  },
+  CLEANING: {
+    icon: Sparkles,
+    badgeBg: "bg-emerald-50",
+    badgeText: "text-emerald-800",
+    cellBg: "bg-emerald-50",
+    cellBorder: "border-emerald-200",
+    cellText: "text-emerald-800",
+    iconColor: "text-emerald-600",
+  },
+  ASSESSMENT: {
+    icon: ClipboardCheck,
+    badgeBg: "bg-purple-50",
+    badgeText: "text-purple-800",
+    cellBg: "bg-purple-50",
+    cellBorder: "border-purple-200",
+    cellText: "text-purple-800",
+    iconColor: "text-purple-600",
+  },
+  WELLNESS: {
+    icon: HeartPulse,
+    badgeBg: "bg-teal-50",
+    badgeText: "text-teal-800",
+    cellBg: "bg-teal-50",
+    cellBorder: "border-teal-200",
+    cellText: "text-teal-800",
+    iconColor: "text-teal-600",
+  },
+  OTHER: {
+    icon: Layers,
+    badgeBg: "bg-slate-100",
+    badgeText: "text-slate-800",
+    cellBg: "bg-slate-100",
+    cellBorder: "border-slate-200",
+    cellText: "text-slate-800",
+    iconColor: "text-slate-600",
+  },
+};
 
 export default function ClientCalendarPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [plan, setPlan] = useState<ServicePlan | null>(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: apptRes,
+    isLoading: isApptLoading,
+    refetch: refetchAppointments,
+  } = useGetMyAppointmentsQuery();
+  const { data: entitlementsRes, isLoading: isEntLoading } =
+    useGetVisitEntitlementsQuery();
+  const [cancelAppointment, { isLoading: isCancelling }] =
+    useCancelAppointmentMutation();
 
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 8, 1)); // September 2026 default
-  const [viewMode, setViewMode] = useState<"month" | "week" | "agenda">("month");
-  const [filterType, setFilterType] = useState<"ALL" | VisitType>("ALL");
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const appointments: AppointmentItem[] = apptRes?.data || [];
+  const entitlementData = entitlementsRes?.data;
+
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<"month" | "agenda">("month");
+  const [filterCategory, setFilterCategory] = useState<string>("ALL");
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  useEffect(() => {
-    Promise.all([getAppointments(), getCurrentPlan()])
-      .then(([apptData, planData]) => {
-        setAppointments(apptData);
-        setPlan(planData);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
 
-  // Filtered appointments
+  // Filtered appointments by category
   const filteredAppointments = useMemo(() => {
-    if (filterType === "ALL") return appointments;
-    return appointments.filter((a) => a.serviceType === filterType);
-  }, [appointments, filterType]);
+    if (filterCategory === "ALL") return appointments;
+    return appointments.filter((a) => {
+      const cat = a.serviceCategory || (a.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
+      return cat === filterCategory;
+    });
+  }, [appointments, filterCategory]);
 
-  // Next upcoming appointment
+  // Next upcoming active appointment
   const nextAppointment = useMemo(() => {
-    return appointments.find((a) => a.status === "scheduled") || null;
+    const active = appointments.filter(
+      (a) =>
+        a.status === "scheduled" ||
+        a.status === "confirmed" ||
+        a.status === "rescheduled"
+    );
+    if (active.length === 0) return null;
+
+    return [...active].sort(
+      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+    )[0];
   }, [appointments]);
 
   // Calendar Date Calculations
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-
   const monthName = currentDate.toLocaleString("default", { month: "long" });
 
   const firstDayOfMonth = new Date(year, month, 1).getDay();
@@ -81,21 +166,33 @@ export default function ClientCalendarPage() {
     setCurrentDate(new Date());
   };
 
-  // Helper to format ISO date string "YYYY-MM-DD"
+  // Helper to format ISO date key "YYYY-MM-DD"
   const formatDateKey = (y: number, m: number, d: number) => {
     const mm = String(m + 1).padStart(2, "0");
     const dd = String(d).padStart(2, "0");
     return `${y}-${mm}-${dd}`;
   };
 
-  // Map appointments by date
-  const appointmentsByDate = useMemo(() => {
-    const map: Record<string, Appointment[]> = {};
-    for (const appt of filteredAppointments) {
-      if (!map[appt.date]) {
-        map[appt.date] = [];
+  // Helper to extract "YYYY-MM-DD" from appointment startAt
+  const getApptDateKey = (appt: AppointmentItem): string => {
+    if (appt.startAt) {
+      const d = new Date(appt.startAt);
+      if (!isNaN(d.getTime())) {
+        return formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
       }
-      map[appt.date].push(appt);
+    }
+    return appt.date || "";
+  };
+
+  // Map appointments by dateKey
+  const appointmentsByDate = useMemo(() => {
+    const map: Record<string, AppointmentItem[]> = {};
+    for (const appt of filteredAppointments) {
+      const key = getApptDateKey(appt);
+      if (!map[key]) {
+        map[key] = [];
+      }
+      map[key].push(appt);
     }
     return map;
   }, [filteredAppointments]);
@@ -150,18 +247,45 @@ export default function ClientCalendarPage() {
 
     return cells;
   }, [year, month, firstDayOfMonth, daysInMonth, daysInPrevMonth, appointmentsByDate]);
-console.log(process.env.NEXT_PUBLIC_API_URL);
-  if (loading || !plan) {
-    return (
-      <div className="p-16 text-center text-[#5E8FB2] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <span className="font-bold text-sm">Loading your care visit calendar...</span>
-      </div>
-    );
-  }
+
+  // Handle Cancel Appointment
+  const handleCancelAppointment = async (appt: AppointmentItem) => {
+    const confirmed = await confirmDelete({
+      title: "Cancel this scheduled visit?",
+      text: `Are you sure you want to cancel your ${appt.serviceType} visit on ${appt.date}? Your visit quota will be restored immediately.`,
+      confirmButtonText: "Yes, Cancel Visit",
+      cancelButtonText: "Keep Appointment",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await cancelAppointment({
+        id: appt.id,
+        reason: "Client cancelled from Calendar portal",
+      }).unwrap();
+
+      setSelectedAppointment(null);
+      await showSuccessAlert(
+        "Visit Cancelled",
+        "Your visit has been successfully cancelled and your quarterly entitlement quota has been restored."
+      );
+      refetchAppointments();
+    } catch (err: any) {
+      showErrorAlert(
+        "Cancellation Failed",
+        err?.data?.message || err?.message || "Could not cancel appointment."
+      );
+    }
+  };
+
+  const planName = entitlementData?.planName || "Guardian Plus";
+  const totalRemaining = entitlementData?.totalRemaining ?? 0;
+  const totalAllocated = entitlementData?.totalAllocated ?? 12;
+  const entitlementsList = entitlementData?.entitlements || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[#243746]">
       {/* Top Header & Scheduling CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
@@ -170,11 +294,11 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
               Visit &amp; Care Calendar
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
-              {plan.name}
+              {planName}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium mt-1">
-            View upcoming and past safety oversight check-ins, home deep cleanings, and schedule your care visits.
+            View upcoming and past safety check-ins, home deep cleanings, and manage your scheduled visits.
           </p>
         </div>
 
@@ -216,12 +340,12 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
             {nextAppointment ? (
               <div>
                 <div className="text-lg font-black text-white flex items-center gap-2">
-                  {nextAppointment.serviceType === "Cleaning" ? (
+                  {nextAppointment.serviceCategory === "CLEANING" ? (
                     <Sparkles className="w-5 h-5 text-emerald-300" />
                   ) : (
                     <ShieldCheck className="w-5 h-5 text-sky-300" />
                   )}
-                  <span>{nextAppointment.serviceType} Visit</span>
+                  <span>{nextAppointment.serviceType}</span>
                 </div>
                 <p className="text-xs text-slate-200 mt-0.5">
                   Assigned Care Specialist: <strong>{nextAppointment.technicianName}</strong> ({nextAppointment.technicianTitle})
@@ -230,7 +354,9 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
             ) : (
               <div>
                 <div className="text-base font-black text-white">No upcoming visits scheduled</div>
-                <p className="text-xs text-slate-300">You have care visits available to book for this cycle.</p>
+                <p className="text-xs text-slate-300">
+                  You have {totalRemaining} care visit{totalRemaining !== 1 ? "s" : ""} available to book for this cycle.
+                </p>
               </div>
             )}
           </div>
@@ -243,51 +369,59 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
           </button>
         </div>
 
-        {/* Quarterly Quotas Breakdown */}
+        {/* Dynamic Quarterly Quotas Breakdown */}
         <div className="p-5 rounded-2xl bg-white border border-[#D9E4EC] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-[#5E8FB2]">
               Quarterly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
-              {plan.remainingVisits} Remaining
+              {totalRemaining} of {totalAllocated} Remaining
             </span>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="flex items-center gap-1.5 text-[#243746]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#294B68]" /> Safety Oversight:
-              </span>
-              <span className="text-[#294B68]">
-                {plan.safetyVisitsCompleted} / {plan.safetyVisitsTotal} completed
-              </span>
-            </div>
-            <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-[#294B68] h-full rounded-full transition-all"
-                style={{
-                  width: `${(plan.safetyVisitsCompleted / (plan.safetyVisitsTotal || 1)) * 100}%`,
-                }}
-              />
-            </div>
+          <div className="space-y-2.5">
+            {entitlementsList.length > 0 ? (
+              entitlementsList.map((item) => {
+                const isCleaning = item.category === "CLEANING";
+                const isSafety = item.category === "SAFETY_OVERSIGHT";
+                const used = item.completed + item.scheduled;
+                const total = item.allocated || 1;
+                const pct = Math.min(100, Math.round((used / total) * 100));
 
-            <div className="flex items-center justify-between text-xs font-bold pt-1">
-              <span className="flex items-center gap-1.5 text-[#243746]">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Home Cleaning:
-              </span>
-              <span className="text-emerald-700">
-                {plan.cleaningVisitsCompleted} / {plan.cleaningVisitsTotal} completed
-              </span>
-            </div>
-            <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
-              <div
-                className="bg-emerald-600 h-full rounded-full transition-all"
-                style={{
-                  width: `${(plan.cleaningVisitsCompleted / (plan.cleaningVisitsTotal || 1)) * 100}%`,
-                }}
-              />
-            </div>
+                return (
+                  <div key={item.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="flex items-center gap-1.5 text-[#243746] truncate max-w-[170px]">
+                        {isCleaning ? (
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : isSafety ? (
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
+                        ) : (
+                          <ClipboardCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        )}
+                        <span className="truncate">{item.serviceName}:</span>
+                      </span>
+                      <span className="text-[#294B68] shrink-0">
+                        {item.completed}/{item.allocated} done ({item.remaining} left)
+                      </span>
+                    </div>
+                    <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          isCleaning ? "bg-emerald-600" : "bg-[#294B68]"
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-xs text-[#64748B] py-2">
+                Plan visit quotas active for current cycle.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -328,22 +462,22 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
 
           {/* Filters & View Modes */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Service Type Filter */}
+            {/* Service Category Filter */}
             <div className="flex items-center gap-1.5 bg-[#F0F5F9] p-1 rounded-xl border border-[#D9E4EC] text-xs font-bold">
               <button
-                onClick={() => setFilterType("ALL")}
+                onClick={() => setFilterCategory("ALL")}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  filterType === "ALL"
+                  filterCategory === "ALL"
                     ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
                     : "text-[#64748B] hover:text-[#243746]"
                 }`}
               >
-                All Visits
+                All Visits ({appointments.length})
               </button>
               <button
-                onClick={() => setFilterType("Safety Oversight")}
+                onClick={() => setFilterCategory("SAFETY_OVERSIGHT")}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterType === "Safety Oversight"
+                  filterCategory === "SAFETY_OVERSIGHT"
                     ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
                     : "text-[#64748B] hover:text-[#243746]"
                 }`}
@@ -352,9 +486,9 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                 <span>Safety</span>
               </button>
               <button
-                onClick={() => setFilterType("Cleaning")}
+                onClick={() => setFilterCategory("CLEANING")}
                 className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterType === "Cleaning"
+                  filterCategory === "CLEANING"
                     ? "bg-emerald-700 text-white shadow-2xs font-extrabold"
                     : "text-[#64748B] hover:text-[#243746]"
                 }`}
@@ -405,83 +539,95 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
             </div>
 
             {/* 42 Calendar Cells */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
-              {calendarCells.map((cell, idx) => {
-                const isToday =
-                  cell.isCurrentMonth &&
-                  new Date().toDateString() === new Date(year, month, cell.dayNumber).toDateString();
+            {isApptLoading ? (
+              <div className="py-20 text-center text-[#5E8FB2] flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
+                <span className="font-bold text-xs">Loading appointments on calendar...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+                {calendarCells.map((cell, idx) => {
+                  const isToday =
+                    cell.isCurrentMonth &&
+                    new Date().toDateString() === new Date(year, month, cell.dayNumber).toDateString();
 
-                return (
-                  <div
-                    key={idx}
-                    className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
-                      cell.isCurrentMonth
-                        ? "bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs"
-                        : "bg-[#F8FAFC]/70 border-[#EAEFF4] text-[#94A3B8]"
-                    } ${isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""}`}
-                  >
-                    {/* Date Number */}
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`text-xs font-black rounded-lg w-6 h-6 flex items-center justify-center ${
-                          isToday
-                            ? "bg-[#294B68] text-white shadow-2xs"
-                            : cell.isCurrentMonth
-                            ? "text-[#243746]"
-                            : "text-[#94A3B8]"
-                        }`}
-                      >
-                        {cell.dayNumber}
-                      </span>
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
+                        cell.isCurrentMonth
+                          ? "bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs"
+                          : "bg-[#F8FAFC]/70 border-[#EAEFF4] text-[#94A3B8]"
+                      } ${isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""}`}
+                    >
+                      {/* Date Number */}
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-xs font-black rounded-lg w-6 h-6 flex items-center justify-center ${
+                            isToday
+                              ? "bg-[#294B68] text-white shadow-2xs"
+                              : cell.isCurrentMonth
+                              ? "text-[#243746]"
+                              : "text-[#94A3B8]"
+                          }`}
+                        >
+                          {cell.dayNumber}
+                        </span>
 
-                      {cell.appointments.length > 0 && (
-                        <span className="w-2 h-2 rounded-full bg-[#294B68] sm:hidden" />
-                      )}
+                        {cell.appointments.length > 0 && (
+                          <span className="w-2 h-2 rounded-full bg-[#294B68] sm:hidden" />
+                        )}
+                      </div>
+
+                      {/* Appointments Stack inside cell */}
+                      <div className="space-y-1 mt-1 overflow-hidden">
+                        {cell.appointments.map((appt) => {
+                          const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
+                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                          const Icon = style.icon;
+
+                          return (
+                            <button
+                              key={appt.id}
+                              onClick={() => setSelectedAppointment(appt)}
+                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${style.cellBg} ${style.cellText} border ${style.cellBorder}`}
+                            >
+                              <Icon className={`w-2.5 h-2.5 ${style.iconColor} shrink-0`} />
+                              <span className="truncate">{appt.serviceType}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-
-                    {/* Appointments Stack inside cell */}
-                    <div className="space-y-1 mt-1 overflow-hidden">
-                      {cell.appointments.map((appt) => {
-                        const isCleaning = appt.serviceType === "Cleaning";
-                        return (
-                          <button
-                            key={appt.id}
-                            onClick={() => setSelectedAppointment(appt)}
-                            className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${
-                              isCleaning
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
-                                : "bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 hover:bg-[#D9EAF4]"
-                            }`}
-                          >
-                            {isCleaning ? (
-                              <Sparkles className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                            ) : (
-                              <ShieldCheck className="w-2.5 h-2.5 text-[#294B68] shrink-0" />
-                            )}
-                            <span className="truncate">{appt.serviceType}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* VIEW 2: AGENDA / CHRONOLOGICAL LIST */}
         {viewMode === "agenda" && (
           <div className="space-y-4">
-            {filteredAppointments.length === 0 ? (
+            {isApptLoading ? (
+              <div className="py-20 text-center text-[#5E8FB2] flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
+                <span className="font-bold text-xs">Loading appointments...</span>
+              </div>
+            ) : filteredAppointments.length === 0 ? (
               <div className="p-12 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
                 No visits found matching the selected filter.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredAppointments.map((appt) => {
-                  const isCleaning = appt.serviceType === "Cleaning";
-                  const isScheduled = appt.status === "scheduled";
+                  const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
+                  const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                  const Icon = style.icon;
+                  const isScheduled =
+                    appt.status === "scheduled" ||
+                    appt.status === "confirmed" ||
+                    appt.status === "rescheduled";
 
                   return (
                     <div
@@ -496,14 +642,10 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
-                              isCleaning
-                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                : "bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20"
-                            }`}
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${style.badgeBg} ${style.badgeText}`}
                           >
-                            {isCleaning ? <Sparkles className="w-3.5 h-3.5" /> : <ShieldCheck className="w-3.5 h-3.5" />}
-                            {appt.serviceType} Visit
+                            <Icon className="w-3.5 h-3.5" />
+                            {appt.serviceType}
                           </span>
 
                           <span
@@ -531,7 +673,9 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                         <div className="pt-2 border-t border-[#D9E4EC]/60 space-y-1">
                           <div className="text-xs text-[#243746] font-semibold flex items-center gap-1.5">
                             <UserCheck className="w-3.5 h-3.5 text-[#294B68]" />
-                            <span>Care Specialist: <strong>{appt.technicianName}</strong></span>
+                            <span>
+                              Care Specialist: <strong>{appt.technicianName}</strong>
+                            </span>
                           </div>
                           <div className="text-[11px] text-[#5E8FB2]">
                             {appt.technicianTitle}
@@ -566,12 +710,12 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
               <div className="flex items-center gap-2.5">
                 <span
                   className={`p-2.5 rounded-xl ${
-                    selectedAppointment.serviceType === "Cleaning"
+                    selectedAppointment.serviceCategory === "CLEANING"
                       ? "bg-emerald-50 text-emerald-700"
                       : "bg-[#EAF3F8] text-[#294B68]"
                   }`}
                 >
-                  {selectedAppointment.serviceType === "Cleaning" ? (
+                  {selectedAppointment.serviceCategory === "CLEANING" ? (
                     <Sparkles className="w-6 h-6" />
                   ) : (
                     <ShieldCheck className="w-6 h-6" />
@@ -579,7 +723,7 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                 </span>
                 <div>
                   <h3 className="text-lg font-black text-[#243746]">
-                    {selectedAppointment.serviceType} Visit Details
+                    {selectedAppointment.serviceType}
                   </h3>
                   <p className="text-xs text-[#5E8FB2] font-semibold">
                     Appointment ID: #{selectedAppointment.id}
@@ -623,7 +767,12 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                   Assigned Care Specialist
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#294B68] text-white flex items-center justify-center font-black text-sm shadow-xs">
+                  <div
+                    className="w-10 h-10 rounded-full text-white flex items-center justify-center font-black text-sm shadow-xs"
+                    style={{
+                      backgroundColor: selectedAppointment.technicianColor || "#294B68",
+                    }}
+                  >
                     {selectedAppointment.technicianName.charAt(0)}
                   </div>
                   <div>
@@ -637,46 +786,10 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
                 </div>
               </div>
 
-              {/* Inclusions Checklist */}
-              <div className="space-y-2">
-                <div className="text-[11px] uppercase tracking-wider text-[#64748B] font-extrabold">
-                  {selectedAppointment.serviceType === "Cleaning"
-                    ? "Deep Cleaning Protocol Included"
-                    : "Safety Oversight Protocol Included"}
-                </div>
-                <ul className="space-y-1.5 text-xs text-[#243746]">
-                  {selectedAppointment.serviceType === "Cleaning" ? (
-                    <>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>HEPA allergen vacuuming of high-traffic living areas</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Bathroom sanitization &amp; grab-bar safety check</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span>Kitchen surface disinfecting &amp; walkway clearance</span>
-                      </li>
-                    </>
-                  ) : (
-                    <>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#294B68] shrink-0" />
-                        <span>Comprehensive fall hazard audit &amp; pathway safety score</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#294B68] shrink-0" />
-                        <span>Smoke &amp; CO alarm operational test</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-[#294B68] shrink-0" />
-                        <span>Digital Wellness Report dispatched to emergency contact</span>
-                      </li>
-                    </>
-                  )}
-                </ul>
+              {/* Location */}
+              <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
+                <MapPin className="w-4 h-4 text-[#5E8FB2] shrink-0" />
+                <span>{selectedAppointment.location || selectedAppointment.clientAddress}</span>
               </div>
 
               {selectedAppointment.notes && (
@@ -687,19 +800,34 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/70">
-              <a
-                href="tel:4015552439"
-                className="text-xs font-bold text-[#294B68] hover:underline flex items-center gap-1.5"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>Call Care Concierge</span>
-              </a>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
+              <div className="flex items-center gap-3">
+                <a
+                  href="tel:4015552439"
+                  className="text-xs font-bold text-[#294B68] hover:underline flex items-center gap-1.5"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Call Concierge</span>
+                </a>
+
+                {selectedAppointment.status !== "cancelled" &&
+                  selectedAppointment.status !== "completed" && (
+                    <button
+                      type="button"
+                      disabled={isCancelling}
+                      onClick={() => handleCancelAppointment(selectedAppointment)}
+                      className="text-xs font-bold text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Cancel Visit</span>
+                    </button>
+                  )}
+              </div>
 
               <button
                 type="button"
                 onClick={() => setSelectedAppointment(null)}
-                className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
               >
                 Close Details
               </button>
@@ -712,7 +840,6 @@ console.log(process.env.NEXT_PUBLIC_API_URL);
       <ScheduleVisitModal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
-        plan={plan}
       />
     </div>
   );

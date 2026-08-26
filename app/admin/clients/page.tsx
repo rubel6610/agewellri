@@ -5,7 +5,7 @@ import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { ClientTable } from "@/components/admin/client-table";
 import { AddClientModal } from "@/components/admin/add-client-modal";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
-import { Loader2, UserPlus, Users } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 export default function ClientsDirectoryPage() {
   const { data: clientsRes, isLoading, refetch } = useGetAdminClientsQuery();
@@ -22,15 +22,6 @@ export default function ClientsDirectoryPage() {
     setScheduleModalOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading client directory from database...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -43,20 +34,11 @@ export default function ClientsDirectoryPage() {
             Manage AgeWellRI client accounts, onboarding progress, state-specific legal agreements, and active subscriptions.
           </p>
         </div>
-
-        <div>
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Send Welcome Link</span>
-          </button>
-        </div>
       </div>
 
       <ClientTable
         clients={clients}
+        isLoading={isLoading}
         onOpenAddClientModal={() => setAddModalOpen(true)}
         onOpenScheduleModal={handleOpenScheduleModal}
       />

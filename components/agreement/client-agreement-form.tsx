@@ -502,7 +502,7 @@ export function ClientAgreementForm() {
   return (
     <div className="min-h-screen bg-[#F7FAFC] text-[#243746]">
       {/* Horizontal Top Header Bar */}
-      <header className="bg-white border-b border-[#D9E4EC] py-3 sm:py-3.5 px-3 sm:px-6 lg:px-8 sticky top-0 z-30 shadow-xs mb-6 sm:mb-8 max-w-full w-full overflow-hidden box-border">
+      <header className="bg-white border-b border-[#D9E4EC] py-3 sm:py-3.5 px-3 sm:px-6 lg:px-8 fixed top-0 left-0 right-0 z-30 shadow-xs box-border">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center justify-between md:justify-start gap-3 w-full md:w-auto">
             <div className="flex items-center gap-3">
@@ -538,45 +538,36 @@ export function ClientAgreementForm() {
             </div>
           </div>
 
-          {/* Actions & Stepper Container */}
-          <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 w-full md:w-auto">
-            {/* Go Back / Return to Login on desktop */}
-            <button
-              type="button"
-              onClick={handleGoBackToLogin}
-              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
-              title="Exit agreement and return to login screen"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Login</span>
-            </button>
-
-            {/* Stepper Pill Indicator */}
-            <div className="flex items-center gap-1 sm:gap-2 bg-[#F0F5F9] p-1 sm:p-1.5 rounded-full border border-[#D9E4EC] shrink-0">
+          {/* Stepper Progress */}
+          <div className="flex items-center justify-between md:justify-end gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-1 sm:gap-2 text-xs font-bold w-full md:w-auto justify-center">
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer ${
                   currentStep === 1
-                    ? "bg-[#294B68] text-white shadow-xs"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    ? "bg-[#294B68] text-white shadow-2xs"
+                    : "bg-[#EAF3F8] text-[#294B68]"
                 }`}
               >
-                {currentStep > 1 ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : null}
-                <span className="hidden sm:inline">1. Review &amp; Sign</span>
-                <span className="sm:hidden">1. Sign</span>
+                <span className="hidden sm:inline">1. Service Agreement</span>
+                <span className="sm:hidden">1. Agreement</span>
               </button>
-              <div className="w-2 sm:w-4 h-0.5 bg-[#D9E4EC]" />
+
+              <span className="text-[#94A3B8]">/</span>
+
               <button
                 type="button"
-                disabled={currentStep === 1 && (!hasSignature || !formData.agreedToTerms)}
                 onClick={() => {
                   if (hasSignature && formData.agreedToTerms) setCurrentStep(2);
                 }}
-                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
+                disabled={!(hasSignature && formData.agreedToTerms)}
+                className={`px-3 py-1.5 rounded-full transition-all flex items-center gap-1.5 ${
                   currentStep === 2
-                    ? "bg-[#294B68] text-white shadow-xs"
-                    : "text-[#64748B]"
+                    ? "bg-[#294B68] text-white shadow-2xs"
+                    : hasSignature && formData.agreedToTerms
+                    ? "bg-[#EAF3F8] text-[#294B68] cursor-pointer"
+                    : "bg-slate-100 text-[#94A3B8] cursor-not-allowed opacity-60"
                 }`}
               >
                 <span className="hidden sm:inline">2. Membership &amp; Billing</span>
@@ -586,6 +577,9 @@ export function ClientAgreementForm() {
           </div>
         </div>
       </header>
+
+      {/* Fixed Header Height Spacer */}
+      <div className="h-16 sm:h-20 shrink-0 mb-6 sm:mb-8" aria-hidden="true" />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6 pb-20">
 
@@ -1072,7 +1066,7 @@ export function ClientAgreementForm() {
                 <p className="text-xs text-[#64748B] max-w-md">Please contact AgeWellRI support or try refreshing the agreement page.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="space-y-3.5">
                 {dynamicPlans.map((plan) => {
                   const isSelected =
                     formData.selectedPlanId === plan.id ||
@@ -1091,105 +1085,106 @@ export function ClientAgreementForm() {
                           selectedPlanCode: plan.code,
                         })
                       }
-                      className={`relative p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer flex flex-col justify-between group ${
+                      className={`relative p-5 sm:p-6 rounded-2xl border-2 transition-all duration-200 cursor-pointer group ${
                         isSelected
-                          ? "border-[#294B68] bg-linear-to-b from-[#F0F7FD] via-white to-white shadow-xl ring-2 ring-[#294B68]/15 transform -translate-y-1"
-                          : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2] hover:shadow-md hover:-translate-y-0.5"
+                          ? "border-[#294B68] bg-linear-to-r from-[#F0F7FD] via-white to-white shadow-md ring-2 ring-[#294B68]/15"
+                          : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2] hover:bg-[#FBFDFE] hover:shadow-xs"
                       }`}
                     >
-                      {/* Top highlight bar */}
+                      {/* Selection accent indicator left bar */}
                       {isSelected && (
-                        <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#294B68] rounded-t-2xl" />
+                        <div className="absolute top-3 bottom-3 left-0 w-1.5 bg-[#294B68] rounded-r-full" />
                       )}
 
-                      <div className="space-y-4">
-                        {/* Header row: Badge + Selection radio */}
-                        <div className="flex items-center justify-between gap-2">
-                          {isGuardianPlus ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
-                              <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Most Popular · Dual Care
-                            </span>
-                          ) : isEssential ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 shadow-xs">
-                              <Shield className="w-3.5 h-3.5 text-[#294B68]" /> Essential Safety
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
-                              <Sparkles className="w-3.5 h-3.5 text-amber-600" /> Deep Sanitization
-                            </span>
-                          )}
-
-                          {/* Checkbox indicator */}
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                        {/* Left Info Column */}
+                        <div className="flex items-start gap-4 flex-1">
+                          {/* Radio Checkbox */}
                           <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                            className={`w-6 h-6 rounded-full mt-1 flex items-center justify-center transition-all shrink-0 ${
                               isSelected
-                                ? "bg-[#294B68] text-white shadow-sm ring-2 ring-[#294B68]/20"
+                                ? "bg-[#294B68] text-white shadow-xs ring-2 ring-[#294B68]/20"
                                 : "border-2 border-[#CBD5E1] bg-white group-hover:border-[#5E8FB2]"
                             }`}
                           >
                             {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                           </div>
+
+                          {/* Content */}
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <h3 className="text-lg sm:text-xl font-black text-[#243746] tracking-tight group-hover:text-[#294B68] transition-colors">
+                                {plan.name}
+                              </h3>
+
+                              {isGuardianPlus ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                                  <Sparkles className="w-3 h-3 text-emerald-600" /> Most Popular · Dual Care
+                                </span>
+                              ) : isEssential ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 shadow-2xs">
+                                  <Shield className="w-3 h-3 text-[#294B68]" /> Essential Safety
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200">
+                                  <Sparkles className="w-3 h-3 text-amber-600" /> Deep Sanitization
+                                </span>
+                              )}
+                            </div>
+
+                            {plan.shortDescription && (
+                              <p className="text-xs text-[#5E8FB2] leading-relaxed font-medium max-w-2xl">
+                                {plan.shortDescription}
+                              </p>
+                            )}
+
+                            {/* Included Services Breakdown Badges */}
+                            {plan.services && plan.services.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 pt-1">
+                                {plan.services.map((srv, sidx) => (
+                                  <span
+                                    key={sidx}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-[#F8FAFC] border border-[#D9E4EC] text-[#243746]"
+                                  >
+                                    {srv.category === "CLEANING" ? "✨" : "🛡️"} {srv.allocatedVisits} {srv.serviceName}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Key Features Chips */}
+                            {plan.features && plan.features.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1.5 text-xs text-[#243746]">
+                                {plan.features.slice(0, 3).map((feat, fidx) => (
+                                  <span key={fidx} className="inline-flex items-center gap-1.5 text-[#243746] font-semibold text-[11px]">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                    <span>{feat}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Title & Description */}
-                        <div>
-                          <div className="text-2xl font-black text-[#243746] tracking-tight group-hover:text-[#294B68] transition-colors">
-                            {plan.name}
-                          </div>
-                          <div className="text-xs text-[#5E8FB2] mt-1 leading-relaxed font-medium">
-                            {plan.shortDescription}
-                          </div>
-                        </div>
-
-                        {/* Price Hero & Visit Counter */}
-                        <div className="p-3.5 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] space-y-2">
-                          <div className="flex items-baseline justify-between">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-3xl sm:text-4xl font-black text-[#243746] tracking-tight">
+                        {/* Right Pricing Column */}
+                        <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-center gap-2 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#D9E4EC]/70 lg:pl-6 shrink-0 min-w-[190px]">
+                          <div className="text-left lg:text-right">
+                            <div className="flex items-baseline gap-1 lg:justify-end">
+                              <span className="text-2xl sm:text-3xl font-black text-[#243746] tracking-tight">
                                 ${plan.price}
                               </span>
                               <span className="text-xs font-bold text-[#64748B] capitalize">
                                 / {plan.billingInterval.toLowerCase()}
                               </span>
                             </div>
-                            <span className="text-[11px] font-extrabold text-[#294B68] bg-white px-2.5 py-1 rounded-md border border-[#D9E4EC] shadow-2xs">
-                              {plan.billingInterval === "ONE_TIME" ? "One-Time Charge" : "Contracted Rate"}
-                            </span>
+                            <div className="text-[11px] font-bold text-[#5E8FB2] mt-0.5">
+                              {plan.totalVisits} Total Care Visits / Cycle
+                            </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#243746]">
-                            <Calendar className="w-3.5 h-3.5 text-[#294B68]" />
-                            <span>{plan.totalVisits} Total Care Visits / Cycle</span>
-                          </div>
-                        </div>
-
-                        {/* Included Services Breakdown Badges */}
-                        {plan.services && plan.services.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {plan.services.map((srv, sidx) => (
-                              <span
-                                key={sidx}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white border border-[#D9E4EC] text-[#243746] shadow-2xs"
-                              >
-                                {srv.category === "CLEANING" ? "✨" : "🛡️"} {srv.allocatedVisits} {srv.serviceName}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Key Inclusions Bullet List */}
-                        <div className="pt-2 border-t border-[#D9E4EC]/70 space-y-2">
-                          <div className="text-[11px] font-black text-[#64748B] uppercase tracking-wider">
-                            Included in this plan:
-                          </div>
-                          <ul className="space-y-2 text-xs font-semibold text-[#243746]">
-                            {plan.features.map((feat, fidx) => (
-                              <li key={fidx} className="flex items-start gap-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                                <span className="leading-snug">{feat}</span>
-                              </li>
-                            ))}
-                          </ul>
+                          <span className="text-[10px] font-extrabold text-[#294B68] bg-[#EAF3F8] px-2.5 py-1 rounded-md border border-[#D9E4EC]">
+                            {plan.billingInterval === "ONE_TIME" ? "One-Time Charge" : "Contracted Rate"}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1197,50 +1192,6 @@ export function ClientAgreementForm() {
                 })}
               </div>
             )}
-
-            {/* Cleaning Add-On ($60/quarter) */}
-            <div
-              onClick={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  hasCleaningAddon: !prev.hasCleaningAddon,
-                }))
-              }
-              className={`p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                formData.hasCleaningAddon
-                  ? "border-emerald-600 bg-emerald-50/50 ring-2 ring-emerald-600/10 shadow-sm"
-                  : "border-[#D9E4EC] bg-[#F8FAFC] hover:border-[#5E8FB2]"
-              }`}
-            >
-              <div className="flex items-start gap-3.5">
-                <div
-                  className={`w-6 h-6 rounded-lg mt-0.5 flex items-center justify-center transition-all shrink-0 ${
-                    formData.hasCleaningAddon
-                      ? "bg-emerald-600 text-white shadow-xs"
-                      : "border-2 border-[#CBD5E1] bg-white"
-                  }`}
-                >
-                  {formData.hasCleaningAddon && <Check className="w-4 h-4 stroke-[3]" />}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-extrabold text-sm text-[#243746]">
-                      Add Specialized Cleaning Add-On
-                    </span>
-                    <span className="text-[11px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      +6 Additional Visits
-                    </span>
-                  </div>
-                  <div className="text-xs text-[#5E8FB2] font-medium mt-0.5 leading-relaxed">
-                    Adds 6 HEPA allergen deep cleanings, pathway clearing &amp; bathroom sanitizations per quarter.
-                  </div>
-                </div>
-              </div>
-              <div className="sm:text-right shrink-0">
-                <div className="text-base font-black text-[#243746]">+$60.00</div>
-                <div className="text-[11px] font-bold text-[#64748B]">per quarter</div>
-              </div>
-            </div>
 
             {/* Live Total Pricing Summary Ribbon */}
             <div className="p-4 bg-linear-to-r from-[#294B68] to-[#1E374D] text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
@@ -1250,19 +1201,14 @@ export function ClientAgreementForm() {
                 </div>
                 <div className="text-base font-black flex items-center gap-2 mt-0.5">
                   <span>{selectedPlanObj?.name || "Service Plan"}</span>
-                  {formData.hasCleaningAddon && (
-                    <span className="text-xs font-bold text-emerald-300 bg-emerald-900/40 px-2 py-0.5 rounded-md border border-emerald-400/30">
-                      + Cleaning Add-On
-                    </span>
-                  )}
                 </div>
               </div>
               <div className="sm:text-right">
                 <div className="text-2xl font-black text-white leading-tight">
-                  ${totalPrice.toFixed(2)}
+                  ${basePrice.toFixed(2)}
                 </div>
                 <div className="text-[11px] text-slate-300 font-medium">
-                  Billed {selectedPlanObj?.billingInterval.toLowerCase() || "quarterly"} · Cancel anytime
+                  Billed {selectedPlanObj?.billingInterval?.toLowerCase() || "quarterly"} · Cancel anytime
                 </div>
               </div>
             </div>

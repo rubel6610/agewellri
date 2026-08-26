@@ -114,11 +114,6 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
-  // 5 minutes default retention for unused cache entries (prevents refetching when switching tabs)
-  keepUnusedDataFor: 300,
-  refetchOnFocus: false,
-  refetchOnReconnect: true,
-  refetchOnMountOrArgChange: false,
   tagTypes: [
     "Auth",
     "User",

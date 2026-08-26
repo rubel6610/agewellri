@@ -6,11 +6,14 @@ import { getAdminReports } from "@/lib/api/admin-api";
 import { AdminReport } from "@/lib/types/admin";
 import { FileCheck2, FileUp, Download, CheckCircle2, Clock } from "lucide-react";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { showToast } from "@/lib/alerts/sweetalert";
 
 export default function ReportsAdminPage() {
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
   useEffect(() => {
@@ -19,6 +22,13 @@ export default function ReportsAdminPage() {
       setLoading(false);
     });
   }, []);
+
+  const totalItems = reports.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedReports = reports.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -50,7 +60,7 @@ export default function ReportsAdminPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -64,7 +74,7 @@ export default function ReportsAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-              {reports.map((rep) => (
+              {paginatedReports.map((rep) => (
                 <tr key={rep.id} className="hover:bg-[#F7FAFC]">
                   <td className="py-4 px-4 font-bold">
                     <Link href={`/admin/clients/${rep.clientId}`} className="hover:underline">
@@ -110,6 +120,15 @@ export default function ReportsAdminPage() {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          currentPage={validCurrentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="reports"
+        />
       </div>
 
       <ReportUploadModal isOpen={uploadModalOpen} onClose={() => setUploadModalOpen(false)} />

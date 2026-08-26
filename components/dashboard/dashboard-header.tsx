@@ -25,7 +25,7 @@ export function DashboardHeader({
   const lastName = authUser?.lastName || user.lastName;
 
   return (
-    <header className="h-16 sm:h-20 bg-white border-b border-[#D9E4EC] px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs max-w-full w-full overflow-hidden box-border">
+    <header className="h-16 sm:h-20 bg-white border-b border-[#D9E4EC] px-3 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 right-0 left-0 lg:left-64 z-30 shadow-xs box-border">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 mr-2">
         {/* Mobile menu trigger button */}
         <button

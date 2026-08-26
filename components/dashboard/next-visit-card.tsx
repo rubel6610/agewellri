@@ -4,9 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { Calendar, Clock, UserCheck, ArrowRight, Plus, ShieldCheck } from "lucide-react";
 import { Appointment } from "@/lib/types/dashboard";
+import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 
 interface NextVisitCardProps {
-  appointment?: Appointment;
+  appointment?: Appointment | AppointmentItem | any;
   onScheduleVisit: () => void;
 }
 

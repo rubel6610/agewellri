@@ -27,7 +27,7 @@ export const specialistApi = baseApi.injectEndpoints({
       keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: SpecialistItem }) =>
         response.data,
-      providesTags: (_result, _error, id) => [{ type: "Specialist", id }],
+      providesTags: ["Specialist"],
     }),
 
     createSpecialist: builder.mutation<SpecialistItem, CreateSpecialistPayload>({
@@ -65,7 +65,7 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Specialist", "Appointment"],
+      invalidatesTags: ["Specialist"],
     }),
   }),
   overrideExisting: true,

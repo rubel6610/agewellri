@@ -385,6 +385,65 @@ export default function ClientDetailPage({
                 </span>
               </div>
             </div>
+
+            {/* Visit Entitlements Breakdown */}
+            <div className="p-5 bg-white rounded-2xl border border-[#D9E4EC] space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-extrabold text-[#243746] text-base">
+                    Active Period Visit Entitlements
+                  </h4>
+                  <p className="text-xs text-[#64748B]">
+                    Allocations configured dynamically from contracted plan services.
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-[#EAF3F8] text-[#294B68] text-xs font-black rounded-full">
+                  {client.remainingVisitsCount} / {client.totalVisitsAllowed} Remaining
+                </span>
+              </div>
+
+              {client.visitEntitlements && client.visitEntitlements.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-[#D9E4EC] text-[#64748B] uppercase tracking-wider">
+                        <th className="py-2.5 px-3">Service</th>
+                        <th className="py-2.5 px-3 text-center">Allocated</th>
+                        <th className="py-2.5 px-3 text-center">Scheduled</th>
+                        <th className="py-2.5 px-3 text-center">Completed</th>
+                        <th className="py-2.5 px-3 text-center">Remaining</th>
+                        <th className="py-2.5 px-3 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#D9E4EC]/60 text-[#243746] font-semibold">
+                      {client.visitEntitlements.map((ent: any) => (
+                        <tr key={ent.id} className="hover:bg-[#F8FAFC]">
+                          <td className="py-3 px-3">
+                            <span className="font-bold block">{ent.serviceName}</span>
+                            <span className="text-[11px] text-[#5E8FB2] font-normal">{ent.durationMinutes} min</span>
+                          </td>
+                          <td className="py-3 px-3 text-center font-bold">{ent.allocated}</td>
+                          <td className="py-3 px-3 text-center text-[#5E8FB2]">{ent.scheduled}</td>
+                          <td className="py-3 px-3 text-center text-[#166534]">{ent.completed}</td>
+                          <td className="py-3 px-3 text-center font-extrabold text-[#294B68]">{ent.remaining}</td>
+                          <td className="py-3 px-3 text-right">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black ${
+                              ent.status === "ACTIVE" ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"
+                            }`}>
+                              {ent.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-[#64748B] py-4 text-center">
+                  No active visit allocation records found for this period.
+                </p>
+              )}
+            </div>
           </div>
         )}
 

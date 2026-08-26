@@ -25,6 +25,7 @@ import {
 } from "@/redux/features/plan/planApi";
 import { AdminPlan } from "@/redux/features/plan/planTypes";
 import { PlanVersionsModal } from "@/components/admin/plan-versions-modal";
+import { TablePagination } from "@/components/ui/table-pagination";
 import {
   confirmDelete,
   confirmCriticalAction,
@@ -36,6 +37,8 @@ import {
 export default function AdminPlansPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedPlanForDetails, setSelectedPlanForDetails] = useState<AdminPlan | null>(null);
 
   const { data: plans = [], isLoading, refetch, isFetching } = useGetAdminPlansQuery();
@@ -55,6 +58,13 @@ export default function AdminPlansPage() {
 
     return matchesSearch && matchesStatus;
   });
+
+  const totalItems = filteredPlans.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedPlans = filteredPlans.slice(startIndex, endIndex);
 
   const totalSubscribers = plans.reduce((sum, p) => sum + (p.activeSubscribersCount || 0), 0);
   const activePlansCount = plans.filter((p) => p.isActive && !p.isArchived).length;
@@ -231,7 +241,10 @@ export default function AdminPlansPage() {
             type="text"
             placeholder="Search plans by name, code..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full pl-10 pr-4 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
           />
         </div>
@@ -240,7 +253,10 @@ export default function AdminPlansPage() {
           {["ALL", "ACTIVE", "INACTIVE", "ARCHIVED"].map((tab) => (
             <button
               key={tab}
-              onClick={() => setStatusFilter(tab)}
+              onClick={() => {
+                setStatusFilter(tab);
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
                 statusFilter === tab
                   ? "bg-[#294B68] text-white"
@@ -267,142 +283,153 @@ export default function AdminPlansPage() {
             <p className="text-xs">Adjust your search or click &quot;Create New Plan&quot; to define a new tier.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Plan Name &amp; Code</th>
-                  <th className="py-3.5 px-4">Price &amp; Frequency</th>
-                  <th className="py-3.5 px-4">Included Visits</th>
-                  <th className="py-3.5 px-4">Subscribers</th>
-                  <th className="py-3.5 px-4">Version History</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#D9E4EC] text-sm">
-                {filteredPlans.map((plan) => (
-                  <tr key={plan.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlanForDetails(plan)}
-                        className="font-extrabold text-[#243746] hover:text-[#294B68] hover:underline text-left cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span>{plan.name}</span>
-                        <Eye className="w-3.5 h-3.5 text-[#5E8FB2] opacity-70" />
-                      </button>
-                      <div className="text-xs font-mono font-bold text-[#5E8FB2]">{plan.code}</div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="font-black text-[#243746]">${plan.currentPrice}</div>
-                      <div className="text-xs text-[#5E8FB2] font-semibold capitalize">
-                        {plan.billingInterval.toLowerCase()}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="font-bold text-[#243746]">
-                        {plan.totalVisits} visits
-                      </div>
-                      <div className="text-xs text-[#5E8FB2]">
-                        {(plan.services || []).map((s) => `${s.allocatedVisits} ${s.serviceName}`).join(" + ") || "Safety oversight"}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlanForDetails(plan)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] hover:bg-[#D9E4EC] cursor-pointer transition-colors"
-                        title="View subscribed members"
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                        {plan.activeSubscribersCount} active
-                      </button>
-                    </td>
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlanForDetails(plan)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-100 hover:bg-[#EAF3F8] text-slate-700 hover:text-[#294B68] border border-slate-200 cursor-pointer transition-colors"
-                        title="Inspect versioning details"
-                      >
-                        <History className="w-3 h-3 text-[#5E8FB2]" />
-                        <span>v{plan.latestVersionNumber}.0</span>
-                        <span className="text-[10px] text-[#64748B] font-normal">
-                          ({plan.totalVersionsCount || 1} ver)
-                        </span>
-                      </button>
-                    </td>
-                    <td className="py-4 px-4">
-                      {plan.isArchived ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-slate-100 text-slate-600">
-                          <Archive className="w-3 h-3" /> Archived
-                        </span>
-                      ) : plan.isActive ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3" /> Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                          <AlertCircle className="w-3 h-3" /> Inactive
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
+                    <th className="py-3.5 px-4">Plan Name &amp; Code</th>
+                    <th className="py-3.5 px-4">Price &amp; Frequency</th>
+                    <th className="py-3.5 px-4">Included Visits</th>
+                    <th className="py-3.5 px-4">Subscribers</th>
+                    <th className="py-3.5 px-4">Version History</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D9E4EC] text-sm">
+                  {paginatedPlans.map((plan) => (
+                    <tr key={plan.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
+                      <td className="py-4 px-4">
                         <button
                           type="button"
                           onClick={() => setSelectedPlanForDetails(plan)}
-                          className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
-                          title="View Versioning & Plan Details"
+                          className="font-extrabold text-[#243746] hover:text-[#294B68] hover:underline text-left cursor-pointer flex items-center gap-1.5"
                         >
-                          <Eye className="w-4 h-4" />
+                          <span>{plan.name}</span>
+                          <Eye className="w-3.5 h-3.5 text-[#5E8FB2] opacity-70" />
                         </button>
-                        <Link
-                          href={`/admin/plans/${plan.id}/edit`}
-                          className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors"
-                          title="Edit Plan & Prices"
+                        <div className="text-xs font-mono font-bold text-[#5E8FB2]">{plan.code}</div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="font-black text-[#243746]">${plan.currentPrice}</div>
+                        <div className="text-xs text-[#5E8FB2] font-semibold capitalize">
+                          {plan.billingInterval.toLowerCase()}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="font-bold text-[#243746]">
+                          {plan.totalVisits} visits
+                        </div>
+                        <div className="text-xs text-[#5E8FB2]">
+                          {(plan.services || []).map((s) => `${s.allocatedVisits} ${s.serviceName}`).join(" + ") || "Safety oversight"}
+                        </div>
+                      </td>
+                      <td className="py-4 px-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPlanForDetails(plan)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] hover:bg-[#D9E4EC] cursor-pointer transition-colors"
+                          title="View subscribed members"
                         >
-                          <Edit className="w-4 h-4" />
-                        </Link>
+                          <Users className="w-3.5 h-3.5" />
+                          {plan.activeSubscribersCount} active
+                        </button>
+                      </td>
+                      <td className="py-4 px-4">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPlanForDetails(plan)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-slate-100 hover:bg-[#EAF3F8] text-slate-700 hover:text-[#294B68] border border-slate-200 cursor-pointer transition-colors"
+                          title="Inspect versioning details"
+                        >
+                          <History className="w-3 h-3 text-[#5E8FB2]" />
+                          <span>v{plan.latestVersionNumber}.0</span>
+                          <span className="text-[10px] text-[#64748B] font-normal">
+                            ({plan.totalVersionsCount || 1} ver)
+                          </span>
+                        </button>
+                      </td>
+                      <td className="py-4 px-4">
                         {plan.isArchived ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-slate-100 text-slate-600">
+                            <Archive className="w-3 h-3" /> Archived
+                          </span>
+                        ) : plan.isActive ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3" /> Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                            <AlertCircle className="w-3.5 h-3.5" /> Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
-                            onClick={() => handleUnarchive(plan)}
-                            disabled={isStatusChanging}
-                            className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#EAF3F8] text-[#294B68] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-                            title="Unarchive and restore this plan"
+                            onClick={() => setSelectedPlanForDetails(plan)}
+                            className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
+                            title="View Versioning & Plan Details"
                           >
-                            <ArchiveRestore className="w-3.5 h-3.5 text-[#294B68]" />
-                            <span>Unarchive</span>
+                            <Eye className="w-4 h-4" />
                           </button>
-                        ) : (
-                          <>
+                          <Link
+                            href={`/admin/plans/${plan.id}/edit`}
+                            className="p-1.5 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors"
+                            title="Edit Plan & Prices"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                          {plan.isArchived ? (
                             <button
-                              onClick={() => handleToggleStatus(plan)}
+                              type="button"
+                              onClick={() => handleUnarchive(plan)}
                               disabled={isStatusChanging}
-                              className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] transition-colors cursor-pointer"
+                              className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#EAF3F8] text-[#294B68] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                              title="Unarchive and restore this plan"
                             >
-                              {plan.isActive ? "Deactivate" : "Activate"}
+                              <ArchiveRestore className="w-3.5 h-3.5 text-[#294B68]" />
+                              <span>Unarchive</span>
                             </button>
-                            {plan.activeSubscribersCount === 0 && (
+                          ) : (
+                            <>
                               <button
-                                onClick={() => handleArchive(plan)}
-                                className="p-1.5 text-[#C95C5C] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                                title="Archive Plan"
+                                onClick={() => handleToggleStatus(plan)}
+                                disabled={isStatusChanging}
+                                className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] transition-colors cursor-pointer"
                               >
-                                <Archive className="w-4 h-4" />
+                                {plan.isActive ? "Deactivate" : "Activate"}
                               </button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                              {plan.activeSubscribersCount === 0 && (
+                                <button
+                                  onClick={() => handleArchive(plan)}
+                                  className="p-1.5 text-[#C95C5C] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                  title="Archive Plan"
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <TablePagination
+              currentPage={validCurrentPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+              itemLabel="plans"
+            />
+          </>
         )}
       </div>
 

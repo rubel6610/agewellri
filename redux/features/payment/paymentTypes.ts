@@ -83,6 +83,41 @@ export interface PaymentHistoryItem {
   paymentMethod: string;
 }
 
+export interface VisitEntitlementItem {
+  id: string;
+  serviceTypeId: string;
+  serviceName: string;
+  serviceCode: string | null;
+  category: string;
+  durationMinutes: number;
+  allocated: number;
+  scheduled: number;
+  completed: number;
+  remaining: number;
+  unit: string;
+  status: "ACTIVE" | "EXHAUSTED" | "EXPIRED" | "CANCELLED";
+}
+
+export interface ClientVisitEntitlementsResponse {
+  subscriptionId: string | null;
+  planName: string;
+  planCode: string;
+  billingInterval: string;
+  billingPeriod: {
+    id: string;
+    periodNumber: number;
+    startDate: string;
+    endDate: string;
+    isCurrent: boolean;
+    status: string;
+  } | null;
+  totalAllocated: number;
+  totalScheduled: number;
+  totalCompleted: number;
+  totalRemaining: number;
+  entitlements: VisitEntitlementItem[];
+}
+
 export interface BillingOverviewData {
   currentPlanName: string;
   selectedPlanCode: string;
@@ -103,6 +138,7 @@ export interface BillingOverviewData {
   };
   invoices: InvoiceItem[];
   payments: PaymentHistoryItem[];
+  visitEntitlements?: VisitEntitlementItem[];
 }
 
 export interface ProcessAgreementPaymentRequest {

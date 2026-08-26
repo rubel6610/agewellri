@@ -14,10 +14,13 @@ import {
   showErrorAlert,
   showToast,
 } from "@/lib/alerts/sweetalert";
+import { TablePagination } from "@/components/ui/table-pagination";
 
 export default function AgreementsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const { data: agreementsRes, isLoading, refetch } = useGetAdminAgreementsQuery({
     state: stateFilter,
@@ -57,15 +60,6 @@ export default function AgreementsAdminPage() {
     window.open(`/dashboard/agreements`, "_blank");
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading service agreements from database...</p>
-      </div>
-    );
-  }
-
   const filteredAgreements = agreements.filter((agr) => {
     const term = searchTerm.toLowerCase();
     return (
@@ -75,6 +69,22 @@ export default function AgreementsAdminPage() {
       agr.signerName.toLowerCase().includes(term)
     );
   });
+
+  const totalItems = filteredAgreements.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedAgreements = filteredAgreements.slice(startIndex, endIndex);
+
+  if (isLoading) {
+    return (
+      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
+        <p className="font-bold text-sm text-[#243746]">Loading service agreements from database...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -98,7 +108,10 @@ export default function AgreementsAdminPage() {
             <input
               type="search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search by client, email, signer..."
               className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
@@ -107,7 +120,10 @@ export default function AgreementsAdminPage() {
           <div>
             <select
               value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
+              onChange={(e) => {
+                setStateFilter(e.target.value);
+                setCurrentPage(1);
+              }}
               className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             >
               <option value="ALL">All States (RI, CT, MA)</option>
@@ -138,7 +154,7 @@ export default function AgreementsAdminPage() {
                   </td>
                 </tr>
               ) : (
-                filteredAgreements.map((agr) => {
+                paginatedAgreements.map((agr) => {
                   const statusUpper = (agr.status || "").toUpperCase();
                   const isExecuted =
                     statusUpper === "EXECUTED" ||
@@ -212,6 +228,15 @@ export default function AgreementsAdminPage() {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          currentPage={validCurrentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+          itemLabel="agreements"
+        />
       </div>
     </div>
   );

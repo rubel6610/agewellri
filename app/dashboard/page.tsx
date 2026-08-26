@@ -6,12 +6,13 @@ import { ArrowRight, Clock, Sparkles } from "lucide-react";
 import {
   getMemberProfile,
   getCurrentPlan,
-  getAppointments,
   getReports,
 } from "@/lib/api/dashboard";
-import { UserProfile, ServicePlan, Appointment, Report } from "@/lib/types/dashboard";
+import { UserProfile, ServicePlan, Report } from "@/lib/types/dashboard";
+import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { NextVisitCard } from "@/components/dashboard/next-visit-card";
+import { VisitEntitlementsCard } from "@/components/dashboard/visit-entitlements-card";
 import { ReportCard } from "@/components/dashboard/report-card";
 import { OnboardingBanner } from "@/components/dashboard/onboarding-banner";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
@@ -19,21 +20,21 @@ import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal"
 export default function DashboardHomePage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [plan, setPlan] = useState<ServicePlan | null>(null);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const { data: apptsRes } = useGetMyAppointmentsQuery();
+  const realAppointments = apptsRes?.data || [];
 
   useEffect(() => {
     Promise.all([
       getMemberProfile(),
       getCurrentPlan(),
-      getAppointments(),
       getReports(),
-    ]).then(([userData, planData, apptData, reportData]) => {
+    ]).then(([userData, planData, reportData]) => {
       setUser(userData);
       setPlan(planData);
-      setAppointments(apptData);
       setReports(reportData);
       setLoading(false);
     });
@@ -47,7 +48,7 @@ export default function DashboardHomePage() {
     );
   }
 
-  const nextVisit = appointments.find((a) => a.status === "scheduled");
+  const nextVisit = realAppointments.find((a) => a.status === "scheduled" || a.status === "confirmed");
 
   return (
     <div className="space-y-8">
@@ -79,6 +80,9 @@ export default function DashboardHomePage() {
           onScheduleVisit={() => setScheduleModalOpen(true)}
         />
       </div>
+
+      {/* Level 1.5: Dynamic Visit Entitlements Breakdown */}
+      <VisitEntitlementsCard />
 
       {/* Level 2: Renewal Alert Banner */}
       <div className="p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -196,26 +196,43 @@ export default function AdminOverviewPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC]/60 text-xs font-medium text-[#243746]">
-              {clients.slice(0, 5).map((c) => (
-                <tr key={c.id} className="hover:bg-[#F7FAFC]">
-                  <td className="py-3.5 px-3 font-mono font-bold text-[#294B68]">{c.id}</td>
-                  <td className="py-3.5 px-3 font-bold">{c.firstName} {c.lastName}</td>
-                  <td className="py-3.5 px-3">{c.planName}</td>
-                  <td className="py-3.5 px-3">
-                    <ClientStatusBadge status={c.status} />
-                  </td>
-                  <td className="py-3.5 px-3 capitalize">{c.agreementStatus.replace("_", " ")}</td>
-                  <td className="py-3.5 px-3 capitalize">{c.paymentStatus}</td>
-                  <td className="py-3.5 px-3 text-right">
-                    <Link
-                      href={`/admin/clients/${c.id}`}
-                      className="font-bold text-[#5E8FB2] hover:underline"
-                    >
-                      Manage →
-                    </Link>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-[#64748B]">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#294B68]" />
+                      <span>Loading client records...</span>
+                    </div>
                   </td>
                 </tr>
-              ))}
+              ) : clients.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-[#64748B]">
+                    No client records available.
+                  </td>
+                </tr>
+              ) : (
+                clients.slice(0, 5).map((c) => (
+                  <tr key={c.id} className="hover:bg-[#F7FAFC]">
+                    <td className="py-3.5 px-3 font-mono font-bold text-[#294B68]">{c.id}</td>
+                    <td className="py-3.5 px-3 font-bold">{c.firstName} {c.lastName}</td>
+                    <td className="py-3.5 px-3">{c.planName}</td>
+                    <td className="py-3.5 px-3">
+                      <ClientStatusBadge status={c.status} />
+                    </td>
+                    <td className="py-3.5 px-3 capitalize">{c.agreementStatus.replace("_", " ")}</td>
+                    <td className="py-3.5 px-3 capitalize">{c.paymentStatus}</td>
+                    <td className="py-3.5 px-3 text-right">
+                      <Link
+                        href={`/admin/clients/${c.id}`}
+                        className="font-bold text-[#5E8FB2] hover:underline"
+                      >
+                        Manage →
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

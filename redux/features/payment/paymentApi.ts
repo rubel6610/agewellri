@@ -9,6 +9,7 @@ import {
   SavePaymentMethodRequest,
   PaymentMethodsData,
   BillingOverviewData,
+  ClientVisitEntitlementsResponse,
   ProcessAgreementPaymentRequest,
   ProcessAgreementPaymentData,
   CreateInvoicePaymentRequest,
@@ -82,6 +83,14 @@ export const paymentApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       providesTags: ["Billing", "Subscription"],
+    }),
+
+    getVisitEntitlements: builder.query<ApiResponse<ClientVisitEntitlementsResponse>, void>({
+      query: () => ({
+        url: "/payments/visit-entitlements",
+        method: "GET",
+      }),
+      providesTags: ["Subscription", "Billing"],
     }),
 
     processAgreementPayment: builder.mutation<
@@ -208,6 +217,7 @@ export const {
   useSavePaymentMethodMutation,
   useGetPaymentMethodsQuery,
   useGetBillingOverviewQuery,
+  useGetVisitEntitlementsQuery,
   useProcessAgreementPaymentMutation,
   useCreateInvoicePaymentMutation,
   useCancelSubscriptionRenewalMutation,
