@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Archive,
+  ArchiveRestore,
   Edit,
   Layers,
   Users,
@@ -78,6 +79,7 @@ export default function AdminPlansPage() {
         id: plan.id,
         body: { status: nextStatus },
       }).unwrap();
+      refetch();
       showToast(`Plan successfully ${plan.isActive ? "deactivated" : "activated"}.`, "success");
     } catch (err: any) {
       showErrorAlert("Status Update Failed", err?.data?.message || "Failed to update plan status.");
@@ -98,9 +100,32 @@ export default function AdminPlansPage() {
         id: plan.id,
         body: { status: "ARCHIVED" },
       }).unwrap();
+      refetch();
       showSuccessAlert("Plan Archived", `"${plan.name}" has been permanently archived.`);
     } catch (err: any) {
       showErrorAlert("Archive Failed", err?.data?.message || "Failed to archive plan.");
+    }
+  };
+
+  const handleUnarchive = async (plan: AdminPlan) => {
+    const confirmed = await confirmCriticalAction({
+      title: `Unarchive "${plan.name}"?`,
+      text: `Restoring "${plan.name}" will return it to the plans catalog as an inactive draft, allowing you to edit or activate it.`,
+      confirmButtonText: "Yes, Unarchive Plan",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      await changePlanStatus({
+        id: plan.id,
+        body: { status: "INACTIVE" },
+      }).unwrap();
+      refetch();
+      showSuccessAlert("Plan Restored", `"${plan.name}" has been unarchived successfully.`);
+    } catch (err: any) {
+      showErrorAlert("Unarchive Failed", err?.data?.message || "Failed to unarchive plan.");
     }
   };
 
@@ -137,6 +162,25 @@ export default function AdminPlansPage() {
         </div>
       </div>
 
+      {/* Services Catalog Link Banner */}
+      <div className="p-4 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-3 text-[#243746]">
+          <div className="w-8 h-8 rounded-lg bg-[#294B68] text-white flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div>
+            <strong>Service Catalog Library:</strong> Service Plans bundle individual catalog services (*Safety Oversight, Cleaning, Assessment, etc.*) with allocated visit quotas.
+          </div>
+        </div>
+        <Link
+          href="/admin/services"
+          className="inline-flex items-center gap-1.5 font-bold text-[#294B68] hover:text-[#1E364B] bg-white px-3 py-1.5 rounded-lg border border-[#D9E4EC] shadow-2xs whitespace-nowrap self-start md:self-auto hover:bg-[#F0F5F9] transition-colors"
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>Manage Services Catalog</span>
+        </Link>
+      </div>
+
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
@@ -145,7 +189,9 @@ export default function AdminPlansPage() {
           </div>
           <div>
             <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Plans</div>
-            <div className="text-2xl font-black text-[#243746]">{activePlansCount} / {plans.length}</div>
+            <div className="text-2xl font-black text-[#243746]">
+              {activePlansCount} <span className="text-sm font-semibold text-[#64748B]">/ {plans.length} Total</span>
+            </div>
           </div>
         </div>
 
@@ -155,7 +201,9 @@ export default function AdminPlansPage() {
           </div>
           <div>
             <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Subscribers</div>
-            <div className="text-2xl font-black text-[#243746]">{totalSubscribers}</div>
+            <div className="text-2xl font-black text-[#243746]">
+              {totalSubscribers} <span className="text-sm font-semibold text-[#64748B]">{totalSubscribers === 1 ? "Subscriber" : "Subscribers"}</span>
+            </div>
           </div>
         </div>
 
@@ -165,8 +213,11 @@ export default function AdminPlansPage() {
           </div>
           <div>
             <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Pricing Protection</div>
-            <div className="text-sm font-bold text-emerald-700 mt-1 flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" /> Versioned & Protected
+            <div className="text-2xl font-black text-emerald-700 flex items-center gap-1.5">
+              <span>100%</span>
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                Rate-Locked
+              </span>
             </div>
           </div>
         </div>
@@ -314,23 +365,36 @@ export default function AdminPlansPage() {
                         >
                           <Edit className="w-4 h-4" />
                         </Link>
-                        {!plan.isArchived && (
+                        {plan.isArchived ? (
                           <button
-                            onClick={() => handleToggleStatus(plan)}
+                            type="button"
+                            onClick={() => handleUnarchive(plan)}
                             disabled={isStatusChanging}
-                            className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] transition-colors cursor-pointer"
+                            className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#EAF3F8] text-[#294B68] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                            title="Unarchive and restore this plan"
                           >
-                            {plan.isActive ? "Deactivate" : "Activate"}
+                            <ArchiveRestore className="w-3.5 h-3.5 text-[#294B68]" />
+                            <span>Unarchive</span>
                           </button>
-                        )}
-                        {!plan.isArchived && plan.activeSubscribersCount === 0 && (
-                          <button
-                            onClick={() => handleArchive(plan)}
-                            className="p-1.5 text-[#C95C5C] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            title="Archive Plan"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleToggleStatus(plan)}
+                              disabled={isStatusChanging}
+                              className="px-2.5 py-1 text-xs font-bold rounded-lg border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] transition-colors cursor-pointer"
+                            >
+                              {plan.isActive ? "Deactivate" : "Activate"}
+                            </button>
+                            {plan.activeSubscribersCount === 0 && (
+                              <button
+                                onClick={() => handleArchive(plan)}
+                                className="p-1.5 text-[#C95C5C] hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="Archive Plan"
+                              >
+                                <Archive className="w-4 h-4" />
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>

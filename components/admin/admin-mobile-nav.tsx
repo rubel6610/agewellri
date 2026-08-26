@@ -15,6 +15,8 @@ import {
   FileText,
   CreditCard,
   RefreshCw,
+  Package,
+  Layers,
   Bell,
   Settings,
   LogOut,
@@ -51,6 +53,8 @@ export function AdminMobileNav({
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
     { label: "Clients", href: "/admin/clients", icon: Users, badge: "128" },
+    { label: "Service Plans", href: "/admin/plans", icon: Package },
+    { label: "Services Catalog", href: "/admin/services", icon: Layers },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarCheck },
     { label: "Calendar", href: "/admin/calendar", icon: CalendarDays },
     { label: "Visits", href: "/admin/visits", icon: Sparkles },

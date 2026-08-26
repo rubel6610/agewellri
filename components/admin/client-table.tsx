@@ -1,8 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Eye, Calendar, Plus, ShieldCheck, AlertCircle, Clock, UserCheck } from "lucide-react";
+import {
+  Search,
+  ArrowRight,
+  Eye,
+  Calendar,
+  Plus,
+  ShieldCheck,
+  AlertCircle,
+  Clock,
+  UserCheck,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { MasterClientRecord } from "@/redux/features/client/clientApi";
 import { ClientStatusBadge } from "./client-status-badge";
 
@@ -20,6 +34,13 @@ export function ClientTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  // Reset to page 1 on filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, stateFilter, statusFilter, pageSize]);
 
   const filteredClients = clients.filter((client) => {
     const term = searchTerm.toLowerCase();
@@ -42,6 +63,30 @@ export function ClientTable({
     return matchesSearch && matchesState && matchesStatus;
   });
 
+  const totalItems = filteredClients.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedClients = filteredClients.slice(startIndex, endIndex);
+
+  // Generate visible page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (validCurrentPage <= 3) {
+        pages.push(1, 2, 3, 4, "...", totalPages);
+      } else if (validCurrentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", validCurrentPage - 1, validCurrentPage, validCurrentPage + 1, "...", totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
       {/* Search & Filter Bar */}
@@ -63,7 +108,7 @@ export function ClientTable({
           <select
             value={stateFilter}
             onChange={(e) => setStateFilter(e.target.value)}
-            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
           >
             <option value="ALL">All States (RI, CT, MA)</option>
             <option value="RI">Rhode Island (RI)</option>
@@ -74,7 +119,7 @@ export function ClientTable({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            className="h-11 px-3 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
           >
             <option value="ALL">All Agreement Statuses</option>
             <option value="agreement_executed">Agreement Executed</option>
@@ -107,14 +152,14 @@ export function ClientTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-            {filteredClients.length === 0 ? (
+            {paginatedClients.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-[#64748B]">
                   No clients match your filter criteria.
                 </td>
               </tr>
             ) : (
-              filteredClients.map((c) => {
+              paginatedClients.map((c) => {
                 const isExecuted =
                   c.agreementStatus === "EXECUTED" ||
                   c.agreementStatus === "SIGNED" ||
@@ -203,42 +248,146 @@ export function ClientTable({
 
       {/* Mobile Cards View */}
       <div className="md:hidden space-y-3">
-        {filteredClients.map((c) => (
-          <div
-            key={c.id}
-            className="p-4 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-[#294B68]">
-                {c.id} ({c.state})
-              </span>
-              <ClientStatusBadge status={c.status} />
-            </div>
-
-            <div>
-              <Link
-                href={`/admin/clients/${c.id}`}
-                className="font-bold text-[#243746] text-base hover:underline"
-              >
-                {c.firstName} {c.lastName}
-              </Link>
-              <p className="text-xs text-[#64748B] mt-0.5">{c.planName} • {c.email}</p>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
-              <span className="text-[#64748B]">
-                Agreement: <strong>{c.agreementStatus}</strong>
-              </span>
-              <Link
-                href={`/admin/clients/${c.id}`}
-                className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
-              >
-                <span>Manage</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+        {paginatedClients.length === 0 ? (
+          <div className="p-8 text-center text-[#64748B] bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC]">
+            No clients match your filter criteria.
           </div>
-        ))}
+        ) : (
+          paginatedClients.map((c) => (
+            <div
+              key={c.id}
+              className="p-4 rounded-2xl border border-[#D9E4EC] bg-[#F7FAFC] space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-[#294B68]">
+                  {c.id} ({c.state})
+                </span>
+                <ClientStatusBadge status={c.status} />
+              </div>
+
+              <div>
+                <Link
+                  href={`/admin/clients/${c.id}`}
+                  className="font-bold text-[#243746] text-base hover:underline"
+                >
+                  {c.firstName} {c.lastName}
+                </Link>
+                <p className="text-xs text-[#64748B] mt-0.5">{c.planName} • {c.email}</p>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-[#D9E4EC]/60 text-xs">
+                <span className="text-[#64748B]">
+                  Agreement: <strong>{c.agreementStatus}</strong>
+                </span>
+                <Link
+                  href={`/admin/clients/${c.id}`}
+                  className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
+                >
+                  <span>Manage</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Pagination & Limit Footer Controls */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#D9E4EC] text-xs font-medium text-[#64748B]">
+        {/* Left: Summary & Rows per page selector */}
+        <div className="flex flex-wrap items-center gap-4">
+          <span>
+            Showing <strong className="text-[#243746]">{totalItems > 0 ? startIndex + 1 : 0}</strong> to{" "}
+            <strong className="text-[#243746]">{endIndex}</strong> of{" "}
+            <strong className="text-[#243746]">{totalItems}</strong> clients
+          </span>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#64748B]">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="h-8 px-2.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Right: Page Navigation Buttons */}
+        <div className="flex items-center gap-1">
+          {/* First Page */}
+          <button
+            type="button"
+            onClick={() => setCurrentPage(1)}
+            disabled={validCurrentPage === 1}
+            title="First Page"
+            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ChevronsLeft className="w-4 h-4" />
+          </button>
+
+          {/* Previous Page */}
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={validCurrentPage === 1}
+            title="Previous Page"
+            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Page Numbers */}
+          <div className="flex items-center gap-1 px-1">
+            {getPageNumbers().map((page, idx) =>
+              typeof page === "number" ? (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    validCurrentPage === page
+                      ? "bg-[#294B68] text-white shadow-2xs"
+                      : "border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746]"
+                  }`}
+                >
+                  {page}
+                </button>
+              ) : (
+                <span key={idx} className="px-1 text-xs text-[#94A3B8]">
+                  {page}
+                </span>
+              )
+            )}
+          </div>
+
+          {/* Next Page */}
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={validCurrentPage === totalPages}
+            title="Next Page"
+            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Last Page */}
+          <button
+            type="button"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={validCurrentPage === totalPages}
+            title="Last Page"
+            className="p-2 rounded-lg border border-[#D9E4EC] bg-white hover:bg-[#F0F5F9] text-[#243746] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            <ChevronsRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

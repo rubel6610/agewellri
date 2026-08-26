@@ -136,6 +136,8 @@ export interface ServiceItem {
   defaultPrice?: number;
   isActive: boolean;
   displayOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreatePlanPayload {
@@ -185,7 +187,7 @@ export interface UpdatePlanPayload {
 }
 
 export interface ChangePlanStatusPayload {
-  status: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
+  status: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
 }
 
 export interface CreateServicePayload {
@@ -208,4 +210,15 @@ export interface UpdateServicePayload {
   defaultPrice?: number;
   displayOrder?: number;
   isActive?: boolean;
+}
+
+export interface ServiceCatalogStats {
+  totalServices: number;
+  activeServices: number;
+  inactiveServices: number;
+  totalCategories: number;
+  activeCategoriesCount: number;
+  categoryBreakdown: Record<string, { total: number; active: number }>;
+  totalPlanAllocations: number;
+  totalScheduledAppointments: number;
 }

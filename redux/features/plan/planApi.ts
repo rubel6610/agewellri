@@ -9,6 +9,7 @@ import {
   ChangePlanStatusPayload,
   CreateServicePayload,
   UpdateServicePayload,
+  ServiceCatalogStats,
 } from "./planTypes";
 
 export const planApi = baseApi.injectEndpoints({
@@ -19,7 +20,6 @@ export const planApi = baseApi.injectEndpoints({
         url: "/plans/active",
         method: "GET",
       }),
-      keepUnusedDataFor: 3600,
       transformResponse: (response: { success: boolean; data: ActivePlan[] }) =>
         response.data || [],
       providesTags: (result) =>
@@ -37,7 +37,6 @@ export const planApi = baseApi.injectEndpoints({
         url: "/plans/admin/all",
         method: "GET",
       }),
-      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: AdminPlan[] }) =>
         response.data || [],
       providesTags: (result) =>
@@ -55,7 +54,6 @@ export const planApi = baseApi.injectEndpoints({
         url: `/plans/admin/${id}`,
         method: "GET",
       }),
-      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: AdminPlanDetail }) =>
         response.data,
       providesTags: (_result, _error, id) => [{ type: "Plan", id }],
@@ -106,12 +104,29 @@ export const planApi = baseApi.injectEndpoints({
     }),
 
     // Dynamic Service Catalog
-    getAllServices: builder.query<ServiceItem[], void>({
+    getServiceStats: builder.query<ServiceCatalogStats, void>({
       query: () => ({
-        url: "/plans/services/all",
+        url: "/plans/services/stats",
         method: "GET",
       }),
-      keepUnusedDataFor: 3600,
+      transformResponse: (response: { success: boolean; data: ServiceCatalogStats }) =>
+        response.data,
+      providesTags: [{ type: "Service", id: "STATS" }, { type: "Service", id: "LIST" }],
+    }),
+
+    getAllServices: builder.query<ServiceItem[], { includeInactive?: boolean; category?: string; search?: string } | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params && params.includeInactive) queryParams.append("includeInactive", "true");
+        if (params && params.category && params.category !== "ALL") queryParams.append("category", params.category);
+        if (params && params.search) queryParams.append("search", params.search);
+
+        const qs = queryParams.toString();
+        return {
+          url: `/plans/services/all${qs ? `?${qs}` : ""}`,
+          method: "GET",
+        };
+      },
       transformResponse: (response: { success: boolean; data: ServiceItem[] }) =>
         response.data || [],
       providesTags: (result) =>
@@ -149,7 +164,34 @@ export const planApi = baseApi.injectEndpoints({
         { type: "Plan", id: "ADMIN_LIST" },
       ],
     }),
+
+    changeServiceStatus: builder.mutation<ServiceItem, { id: string; isActive: boolean }>({
+      query: ({ id, isActive }) => ({
+        url: `/plans/services/${id}/status`,
+        method: "PATCH",
+        body: { isActive },
+      }),
+      transformResponse: (response: { success: boolean; data: ServiceItem }) =>
+        response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Service", id },
+        { type: "Service", id: "LIST" },
+        { type: "Plan", id: "ACTIVE" },
+        { type: "Plan", id: "ADMIN_LIST" },
+      ],
+    }),
+
+    deleteService: builder.mutation<{ message: string; deleted: boolean; deactivated: boolean }, string>({
+      query: (id) => ({
+        url: `/plans/services/${id}`,
+        method: "DELETE",
+      }),
+      transformResponse: (response: { success: boolean; data: { message: string; deleted: boolean; deactivated: boolean } }) =>
+        response.data,
+      invalidatesTags: [{ type: "Service", id: "LIST" }, { type: "Plan", id: "ACTIVE" }, { type: "Plan", id: "ADMIN_LIST" }],
+    }),
   }),
+  overrideExisting: true,
 });
 
 export const {
@@ -159,7 +201,10 @@ export const {
   useCreatePlanMutation,
   useUpdatePlanMutation,
   useChangePlanStatusMutation,
+  useGetServiceStatsQuery,
   useGetAllServicesQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
+  useChangeServiceStatusMutation,
+  useDeleteServiceMutation,
 } = planApi;

@@ -1048,6 +1048,12 @@ export function ClientAgreementForm() {
                 <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
                 <span>Loading certified service plans...</span>
               </div>
+            ) : dynamicPlans.length === 0 ? (
+              <div className="py-12 text-center text-[#5E8FB2] flex flex-col items-center justify-center gap-3 font-bold bg-[#F8FAFC] rounded-2xl border border-dashed border-[#D9E4EC]">
+                <AlertCircle className="w-7 h-7 text-amber-600" />
+                <span className="text-sm font-black text-[#243746]">No active service plans available</span>
+                <p className="text-xs text-[#64748B] max-w-md">Please contact AgeWellRI support or try refreshing the agreement page.</p>
+              </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {dynamicPlans.map((plan) => {

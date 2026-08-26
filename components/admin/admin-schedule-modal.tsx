@@ -98,7 +98,7 @@ export function AdminScheduleModal({
       : "Client Account";
 
   const resolvedDisplayId =
-    matchedClient?.clientNumber ||
+    (matchedClient as any)?.clientNumber ||
     matchedClient?.id ||
     defaultClientId ||
     selectedClientId ||
@@ -245,7 +245,7 @@ export function AdminScheduleModal({
                           {selectedClient.firstName} {selectedClient.lastName}
                         </span>
                         <span className="text-xs text-[#5E8FB2] font-semibold ml-2">
-                          ({selectedClient.clientNumber || selectedClient.id}) — {selectedClient.planName || "Active Plan"}
+                          ({(selectedClient as any)?.clientNumber || selectedClient.id}) — {(selectedClient as any)?.planName || "Active Plan"}
                         </span>
                       </div>
                     </div>

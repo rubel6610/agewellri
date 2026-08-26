@@ -1,53 +1,146 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Layers,
   Plus,
   Edit,
+  Trash2,
   CheckCircle2,
   AlertCircle,
   Clock,
   Sparkles,
   ShieldCheck,
+  ClipboardCheck,
+  HeartPulse,
   RefreshCw,
   Search,
+  ArrowRight,
+  Package,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   useGetAllServicesQuery,
+  useGetServiceStatsQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
+  useChangeServiceStatusMutation,
+  useDeleteServiceMutation,
 } from "@/redux/features/plan/planApi";
+import { ServiceItem } from "@/redux/features/plan/planTypes";
 import {
   confirmEdit,
+  confirmDelete,
+  confirmCriticalAction,
   showSuccessAlert,
   showErrorAlert,
   showToast,
 } from "@/lib/alerts/sweetalert";
 
+const CATEGORY_CONFIG: Record<
+  string,
+  { label: string; icon: React.ElementType; colorClass: string; bgClass: string }
+> = {
+  SAFETY_OVERSIGHT: {
+    label: "Safety Oversight",
+    icon: ShieldCheck,
+    colorClass: "text-[#294B68]",
+    bgClass: "bg-[#EAF3F8]",
+  },
+  CLEANING: {
+    label: "Cleaning",
+    icon: Sparkles,
+    colorClass: "text-amber-700",
+    bgClass: "bg-amber-50",
+  },
+  ASSESSMENT: {
+    label: "Assessment",
+    icon: ClipboardCheck,
+    colorClass: "text-purple-700",
+    bgClass: "bg-purple-50",
+  },
+  WELLNESS: {
+    label: "Wellness",
+    icon: HeartPulse,
+    colorClass: "text-emerald-700",
+    bgClass: "bg-emerald-50",
+  },
+  OTHER: {
+    label: "Other Support",
+    icon: Layers,
+    colorClass: "text-slate-700",
+    bgClass: "bg-slate-100",
+  },
+};
+
 export default function AdminServicesPage() {
-  const { data: services = [], isLoading, refetch, isFetching } = useGetAllServicesQuery();
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const {
+    data: services = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useGetAllServicesQuery({ includeInactive: true });
+
+  const {
+    data: stats,
+    isLoading: isStatsLoading,
+    refetch: refetchStats,
+  } = useGetServiceStatsQuery();
+
   const [createService, { isLoading: isCreating }] = useCreateServiceMutation();
   const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation();
+  const [changeServiceStatus, { isLoading: isStatusChanging }] = useChangeServiceStatusMutation();
+  const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingService, setEditingService] = useState<any | null>(null);
+  const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    category: "SAFETY_OVERSIGHT" as any,
+    category: "SAFETY_OVERSIGHT" as ServiceItem["category"],
     description: "",
     durationMinutes: 60,
     defaultPrice: 0,
     isActive: true,
   });
 
-  const filteredServices = services.filter((s) =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.description && s.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredServices = services.filter((s) => {
+    const matchesSearch =
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.code && s.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.description && s.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesCategory = categoryFilter === "ALL" || s.category === categoryFilter;
+
+    const matchesStatus =
+      statusFilter === "ALL" ||
+      (statusFilter === "ACTIVE" && s.isActive) ||
+      (statusFilter === "INACTIVE" && !s.isActive);
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  const activeServicesCount = services.filter((s) => s.isActive).length;
+
+  const handleNameChange = (name: string) => {
+    const autoCode = name
+      .toUpperCase()
+      .trim()
+      .replace(/[^A-Z0-9\s_-]/g, "")
+      .replace(/[\s-]+/g, "_");
+
+    setFormData((prev) => ({
+      ...prev,
+      name,
+      code: !editingService ? autoCode : prev.code,
+    }));
+  };
 
   const handleOpenCreate = () => {
     setFormData({
@@ -59,10 +152,11 @@ export default function AdminServicesPage() {
       defaultPrice: 0,
       isActive: true,
     });
+    setEditingService(null);
     setIsCreateModalOpen(true);
   };
 
-  const handleOpenEdit = (service: any) => {
+  const handleOpenEdit = (service: ServiceItem) => {
     setEditingService(service);
     setFormData({
       name: service.name,
@@ -73,54 +167,97 @@ export default function AdminServicesPage() {
       defaultPrice: service.defaultPrice || 0,
       isActive: service.isActive,
     });
+    setIsCreateModalOpen(true);
   };
 
-  const handleSaveCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const confirmed = await confirmEdit({
-      title: `Create Service "${formData.name}"?`,
-      text: "Add this service component to the catalog?",
-      confirmButtonText: "Yes, Create",
+  const handleToggleStatus = async (service: ServiceItem) => {
+    const nextStatus = !service.isActive;
+    const actionLabel = nextStatus ? "Activate" : "Deactivate";
+
+    const confirmed = await confirmCriticalAction({
+      title: `${actionLabel} "${service.name}"?`,
+      text: nextStatus
+        ? `Activating will make this service selectable when constructing new Service Plans and assigning visits.`
+        : `Deactivating will prevent this service from being added to new plans. Existing plans and appointments will retain their allocations.`,
+      confirmButtonText: `Yes, ${actionLabel}`,
+      isDestructive: !nextStatus,
     });
+
     if (!confirmed) return;
 
     try {
-      await createService(formData).unwrap();
-      setIsCreateModalOpen(false);
-      await showSuccessAlert("Service Created", `"${formData.name}" is now available in the catalog.`);
+      await changeServiceStatus({ id: service.id, isActive: nextStatus }).unwrap();
+      showToast(`Service "${service.name}" ${nextStatus ? "activated" : "deactivated"}.`, "success");
       refetch();
+      refetchStats();
     } catch (err: any) {
-      showErrorAlert("Creation Failed", err?.data?.message || "Failed to create service.");
+      showErrorAlert("Status Update Failed", err?.data?.message || "Failed to update service status.");
     }
   };
 
-  const handleSaveEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingService) return;
-
-    const confirmed = await confirmEdit({
-      title: `Update Service "${formData.name}"?`,
-      text: "Save updates to this service definition?",
-      confirmButtonText: "Yes, Save",
+  const handleDelete = async (service: ServiceItem) => {
+    const confirmed = await confirmDelete({
+      title: `Delete "${service.name}"?`,
+      text: "If this service is referenced by active subscription plans or visits, it will be safely deactivated instead of deleted.",
+      confirmButtonText: "Yes, Delete Service",
     });
+
     if (!confirmed) return;
 
     try {
-      await updateService({
-        id: editingService.id,
-        body: formData,
-      }).unwrap();
-      setEditingService(null);
-      await showSuccessAlert("Service Updated", `"${formData.name}" updates have been saved.`);
+      const res = await deleteService(service.id).unwrap();
+      if (res.deactivated) {
+        showSuccessAlert("Service Deactivated", res.message);
+      } else {
+        showSuccessAlert("Service Deleted", res.message);
+      }
       refetch();
+      refetchStats();
     } catch (err: any) {
-      showErrorAlert("Update Failed", err?.data?.message || "Failed to update service.");
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete service.");
+    }
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name.trim()) {
+      showErrorAlert("Missing Name", "Please provide a valid service name.");
+      return;
+    }
+
+    const isEdit = Boolean(editingService);
+    const confirmed = await confirmEdit({
+      title: `${isEdit ? "Update" : "Create"} Service "${formData.name}"?`,
+      text: `${isEdit ? "Save changes to this" : "Add this new"} service deliverable in the master catalog?`,
+      confirmButtonText: isEdit ? "Yes, Save Changes" : "Yes, Create Service",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      if (isEdit && editingService) {
+        await updateService({
+          id: editingService.id,
+          body: formData,
+        }).unwrap();
+        await showSuccessAlert("Service Updated", `"${formData.name}" updates have been saved.`);
+      } else {
+        await createService(formData).unwrap();
+        await showSuccessAlert("Service Created", `"${formData.name}" is now available in the catalog.`);
+      }
+      setIsCreateModalOpen(false);
+      setEditingService(null);
+      refetch();
+      refetchStats();
+    } catch (err: any) {
+      showErrorAlert("Operation Failed", err?.data?.message || "Failed to save service.");
     }
   };
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#D9E4EC] pb-5">
         <div>
           <h1 className="text-2xl font-black text-[#243746] tracking-tight flex items-center gap-2.5">
@@ -128,17 +265,20 @@ export default function AdminServicesPage() {
             Services Catalog
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Manage individual visit services, durations, and assignable plan components.
+            Master library of individual services, visit durations, and assignable plan components.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => refetch()}
-            disabled={isFetching}
+            onClick={() => {
+              refetch();
+              refetchStats();
+            }}
+            disabled={isFetching || isStatsLoading}
             className="p-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-sm font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
             title="Refresh services catalog"
           >
-            <RefreshCw className={`w-4 h-4 ${isFetching ? "animate-spin text-[#294B68]" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${(isFetching || isStatsLoading) ? "animate-spin text-[#294B68]" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
@@ -151,17 +291,135 @@ export default function AdminServicesPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white p-4 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center justify-between">
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#5E8FB2]" />
-          <input
-            type="text"
-            placeholder="Search services..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-          />
+      {/* Concept Clarification Banner: Service Catalog vs Service Plans */}
+      <div className="p-4 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-3 text-[#243746]">
+          <div className="w-8 h-8 rounded-lg bg-[#294B68] text-white flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div>
+            <strong>Service Catalog vs Service Plans:</strong> The Catalog defines <em>individual deliverable services</em> (e.g. Safety Visit, Home Cleaning). Customer subscription tiers (e.g. Guardian Plus) bundle quotas of these services in <strong>Service Plans</strong>.
+          </div>
+        </div>
+        <Link
+          href="/admin/plans"
+          className="inline-flex items-center gap-1.5 font-bold text-[#294B68] hover:text-[#1E364B] bg-white px-3 py-1.5 rounded-lg border border-[#D9E4EC] shadow-2xs whitespace-nowrap self-start md:self-auto hover:bg-[#F0F5F9] transition-colors"
+        >
+          <Package className="w-3.5 h-3.5" />
+          <span>Manage Service Plans</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
+      {/* Metrics Overview - Backend Sourced Statistics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center font-bold">
+            <Layers className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Total Services</div>
+            <div className="text-2xl font-black text-[#243746]">
+              {stats?.totalServices !== undefined
+                ? `${stats.totalServices} Catalog Items`
+                : `${services.length} Catalog Items`}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Services</div>
+            <div className="text-2xl font-black text-[#243746]">
+              {stats?.activeServices !== undefined ? stats.activeServices : activeServicesCount}{" "}
+              <span className="text-sm font-semibold text-[#64748B]">
+                / {stats?.totalServices !== undefined ? stats.totalServices : services.length} Total
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+            <SlidersHorizontal className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Service Categories</div>
+            <div className="text-2xl font-black text-[#243746]">
+              {stats?.totalCategories !== undefined
+                ? `${stats.totalCategories} Categories`
+                : `${new Set(services.map((s) => s.category)).size} Categories`}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters & Category Tabs */}
+      <div className="bg-white p-4 rounded-2xl border border-[#D9E4EC] shadow-xs space-y-3">
+        {/* Category Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setCategoryFilter("ALL")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+              categoryFilter === "ALL"
+                ? "bg-[#294B68] text-white shadow-xs"
+                : "bg-[#F0F5F9] text-[#243746] hover:bg-[#EAF3F8]"
+            }`}
+          >
+            All Categories ({stats ? stats.totalServices : services.length})
+          </button>
+          {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
+            const count = stats?.categoryBreakdown?.[key]?.total ?? services.filter((s) => s.category === key).length;
+            const Icon = config.icon;
+            return (
+              <button
+                key={key}
+                onClick={() => setCategoryFilter(key)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                  categoryFilter === key
+                    ? "bg-[#294B68] text-white shadow-xs"
+                    : "bg-[#F0F5F9] text-[#243746] hover:bg-[#EAF3F8]"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{config.label}</span>
+                <span className="text-[10px] opacity-80">({count})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search & Status Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-between pt-2 border-t border-[#D9E4EC]/60">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#5E8FB2]" />
+            <input
+              type="text"
+              placeholder="Search catalog by service name, code..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {["ALL", "ACTIVE", "INACTIVE"].map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  statusFilter === status
+                    ? "bg-[#294B68] text-white"
+                    : "bg-[#F0F5F9] text-[#243746] hover:bg-[#EAF3F8]"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -169,75 +427,135 @@ export default function AdminServicesPage() {
       {isLoading ? (
         <div className="py-20 text-center text-[#5E8FB2] flex flex-col items-center gap-3">
           <RefreshCw className="w-6 h-6 animate-spin text-[#294B68]" />
-          Loading services catalog...
+          <span className="font-bold text-sm">Loading services catalog...</span>
+        </div>
+      ) : filteredServices.length === 0 ? (
+        <div className="py-16 text-center text-[#5E8FB2] bg-white rounded-2xl border border-[#D9E4EC] p-8 flex flex-col items-center gap-2">
+          <Layers className="w-10 h-10 text-[#D9E4EC]" />
+          <div className="text-base font-bold text-[#243746]">No services found</div>
+          <p className="text-xs max-w-sm text-[#64748B]">
+            No catalog items matched your selected filters. Try changing your search or click &quot;Add Service&quot; to create a new one.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex flex-col justify-between hover:border-[#5E8FB2] transition-all"
-            >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center font-bold">
-                    {service.category === "CLEANING" ? (
-                      <Sparkles className="w-5 h-5" />
-                    ) : (
-                      <ShieldCheck className="w-5 h-5" />
+          {filteredServices.map((service) => {
+            const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
+            const CategoryIcon = config.icon;
+
+            return (
+              <div
+                key={service.id}
+                className={`bg-white p-5 rounded-2xl border transition-all flex flex-col justify-between hover:shadow-md ${
+                  service.isActive ? "border-[#D9E4EC] hover:border-[#5E8FB2]" : "border-slate-200 bg-slate-50/50 opacity-80"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className={`w-10 h-10 rounded-xl ${config.bgClass} ${config.colorClass} flex items-center justify-center font-bold`}>
+                      <CategoryIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                        {config.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-extrabold text-[#243746] text-base leading-snug">
+                      {service.name}
+                    </h3>
+                    {service.code && (
+                      <div className="text-xs font-mono font-bold text-[#5E8FB2] mt-0.5">
+                        {service.code}
+                      </div>
                     )}
+                    <p className="text-xs text-[#64748B] mt-2 leading-relaxed line-clamp-2">
+                      {service.description || "In-home care delivery service component."}
+                    </p>
                   </div>
-                  <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
-                    {service.category.replace("_", " ")}
-                  </span>
+
+                  <div className="flex items-center gap-4 text-xs font-bold text-[#243746] pt-2 border-t border-[#D9E4EC]/60">
+                    <div className="flex items-center gap-1 text-[#5E8FB2]">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{service.durationMinutes} mins / visit</span>
+                    </div>
+                    {service.defaultPrice && service.defaultPrice > 0 ? (
+                      <div className="text-[#243746]">${service.defaultPrice} baseline</div>
+                    ) : null}
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="font-extrabold text-[#243746] text-base">{service.name}</h3>
-                  <p className="text-xs text-[#5E8FB2] mt-1 leading-relaxed line-clamp-2">
-                    {service.description || "Comprehensive in-home care delivery service."}
-                  </p>
-                </div>
+                <div className="mt-4 pt-3 border-t border-[#D9E4EC] flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStatus(service)}
+                    disabled={isStatusChanging}
+                    className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
+                      service.isActive
+                        ? "text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                        : "text-amber-700 bg-amber-50 hover:bg-amber-100"
+                    }`}
+                  >
+                    {service.isActive ? (
+                      <>
+                        <CheckCircle2 className="w-3 h-3" /> Active
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-3 h-3" /> Inactive
+                      </>
+                    )}
+                  </button>
 
-                <div className="flex items-center gap-4 text-xs font-bold text-[#243746] pt-2 border-t border-[#D9E4EC]/60">
-                  <div className="flex items-center gap-1 text-[#5E8FB2]">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{service.durationMinutes} mins</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleOpenEdit(service)}
+                      className="px-2.5 py-1 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] rounded-lg text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Edit Service Definition"
+                    >
+                      <Edit className="w-3.5 h-3.5" /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(service)}
+                      disabled={isDeleting}
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Delete or Deactivate Service"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  {service.defaultPrice && service.defaultPrice > 0 ? (
-                    <div>${service.defaultPrice} baseline</div>
-                  ) : null}
                 </div>
               </div>
-
-              <div className="mt-4 pt-3 border-t border-[#D9E4EC] flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Active
-                </span>
-                <button
-                  onClick={() => handleOpenEdit(service)}
-                  className="px-3 py-1 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Edit className="w-3.5 h-3.5" /> Edit
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {/* Create / Edit Modal */}
-      {(isCreateModalOpen || editingService) && (
+      {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl border border-[#D9E4EC] shadow-2xl max-w-lg w-full p-6 space-y-4">
-            <h2 className="text-lg font-black text-[#243746]">
-              {editingService ? "Edit Service" : "Create New Service"}
-            </h2>
+          <div className="bg-white rounded-2xl border border-[#D9E4EC] shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D9E4EC]">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-[#294B68]" />
+                <h2 className="text-lg font-black text-[#243746]">
+                  {editingService ? "Edit Catalog Service" : "Create New Catalog Service"}
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setEditingService(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 font-bold text-sm cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
 
-            <form
-              onSubmit={editingService ? handleSaveEdit : handleSaveCreate}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
                   Service Name <span className="text-red-500">*</span>
@@ -245,16 +563,30 @@ export default function AdminServicesPage() {
                 <input
                   type="text"
                   required
+                  placeholder="e.g. Safety Oversight Visit, HEPA Home Cleaning"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
-                    Category
+                    System Code / Slug
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. SAFETY_OVERSIGHT"
+                    value={formData.code}
+                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-xs font-mono font-bold text-[#294B68]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
+                    Category <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.category}
@@ -265,10 +597,12 @@ export default function AdminServicesPage() {
                     <option value="CLEANING">Cleaning</option>
                     <option value="ASSESSMENT">Assessment</option>
                     <option value="WELLNESS">Wellness</option>
-                    <option value="OTHER">Other</option>
+                    <option value="OTHER">Other Support</option>
                   </select>
                 </div>
+              </div>
 
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
                     Duration (Minutes)
@@ -278,7 +612,26 @@ export default function AdminServicesPage() {
                     min={15}
                     step={15}
                     value={formData.durationMinutes}
-                    onChange={(e) => setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 60 })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 60 })
+                    }
+                    className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
+                    Baseline Cost ($ Optional)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={formData.defaultPrice || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, defaultPrice: parseFloat(e.target.value) || 0 })
+                    }
+                    placeholder="0"
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold"
                   />
                 </div>
@@ -286,17 +639,33 @@ export default function AdminServicesPage() {
 
               <div>
                 <label className="block text-xs font-bold text-[#243746] uppercase mb-1">
-                  Description
+                  Service Deliverables Description
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
+                  placeholder="Describe standard protocol tasks, audits, and checklists executed during this service visit..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3.5 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white"
+                  className="w-full px-3.5 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white text-[#243746]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
+              <div className="flex items-center justify-between p-3 bg-[#F0F5F9] rounded-xl">
+                <div>
+                  <div className="text-xs font-bold text-[#243746]">Service Active in Catalog</div>
+                  <div className="text-[11px] text-[#64748B]">
+                    Active services can be bundled into Service Plans and scheduled for visits.
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-4 h-4 accent-[#294B68] rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#D9E4EC]">
                 <button
                   type="button"
                   onClick={() => {
@@ -312,7 +681,7 @@ export default function AdminServicesPage() {
                   disabled={isCreating || isUpdating}
                   className="px-5 py-2 bg-[#294B68] text-white rounded-xl text-xs font-bold hover:bg-[#1E364B] cursor-pointer disabled:opacity-50"
                 >
-                  {editingService ? "Save Service" : "Create Service"}
+                  {editingService ? "Save Changes" : "Create Service"}
                 </button>
               </div>
             </form>

@@ -26,52 +26,14 @@ import {
   showToast,
 } from "@/lib/alerts/sweetalert";
 import { ServiceItem } from "@/redux/features/plan/planTypes";
-
-const DEFAULT_STANDARD_SERVICES: ServiceItem[] = [
-  {
-    id: "srv_safety",
-    name: "Safety Oversight & Hazard Mitigation",
-    category: "SAFETY_OVERSIGHT",
-    description: "Home safety oversight visits and hazard audits",
-    durationMinutes: 60,
-    displayOrder: 1,
-    isActive: true,
-    createdAt: "",
-    updatedAt: "",
-  },
-  {
-    id: "srv_cleaning",
-    name: "Specialized Environmental Cleaning",
-    category: "CLEANING",
-    description: "HEPA allergen vacuuming and sanitation",
-    durationMinutes: 90,
-    displayOrder: 2,
-    isActive: true,
-    createdAt: "",
-    updatedAt: "",
-  },
-  {
-    id: "srv_maintenance",
-    name: "Preventative Home Maintenance",
-    category: "MAINTENANCE",
-    description: "Handyman and stability inspections",
-    durationMinutes: 60,
-    displayOrder: 3,
-    isActive: true,
-    createdAt: "",
-    updatedAt: "",
-  },
-];
+import { CatalogPickerModal } from "@/components/admin/catalog-picker-modal";
 
 export default function CreatePlanPage() {
   const router = useRouter();
   const [createPlan, { isLoading }] = useCreatePlanMutation();
-  const { data: servicesList = [] } = useGetAllServicesQuery();
+  const { data: servicesList = [], isLoading: isServicesLoading, refetch: refetchServices } = useGetAllServicesQuery({ includeInactive: true });
 
-  const availableServices =
-    servicesList && servicesList.length > 0
-      ? servicesList
-      : DEFAULT_STANDARD_SERVICES;
+  const availableServices = servicesList;
 
   const [form, setForm] = useState({
     name: "",
@@ -99,6 +61,7 @@ export default function CreatePlanPage() {
     { serviceTypeId: string; allocatedVisits: number; unit: string }[]
   >([]);
 
+  const [isCatalogPickerOpen, setIsCatalogPickerOpen] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleAddFeature = () => {
@@ -114,13 +77,17 @@ export default function CreatePlanPage() {
     showToast("Feature removed", "info");
   };
 
-  const handleAddServiceAllocation = () => {
-    const defaultServiceId = availableServices[0]?.id || "srv_safety";
-    setServiceAllocations((prev) => [
-      ...prev,
-      { serviceTypeId: defaultServiceId, allocatedVisits: 6, unit: "visits" },
-    ]);
-    showToast("Service quota added");
+  const handleSelectCatalogService = (serviceTypeId: string, allocatedVisits: number) => {
+    setServiceAllocations((prev) => {
+      const existingIndex = prev.findIndex((s) => s.serviceTypeId === serviceTypeId);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], allocatedVisits };
+        return updated;
+      }
+      return [...prev, { serviceTypeId, allocatedVisits, unit: "visits" }];
+    });
+    showToast("Service quota updated in plan");
   };
 
   const handleUpdateServiceAllocation = (
@@ -345,24 +312,45 @@ export default function CreatePlanPage() {
 
         {/* Included Services & Visit Allocations */}
         <div className="bg-white p-6 rounded-2xl border border-[#D9E4EC] shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-[#D9E4EC]/60 pb-3">
-            <h2 className="text-base font-extrabold text-[#243746] flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#294B68]" />
-              Included Services & Visit Quotas
-            </h2>
-            <button
-              type="button"
-              onClick={handleAddServiceAllocation}
-              className="px-3 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Service
-            </button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#D9E4EC]/60 pb-3 gap-2">
+            <div>
+              <h2 className="text-base font-extrabold text-[#243746] flex items-center gap-2">
+                <Layers className="w-5 h-5 text-[#294B68]" />
+                Included Services &amp; Visit Quotas
+              </h2>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Allocate quantities of individual service catalog items per billing cycle.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold bg-[#EAF3F8] text-[#294B68] px-2.5 py-1 rounded-lg">
+                Total: {serviceAllocations.reduce((sum, s) => sum + (Number(s.allocatedVisits) || 0), 0)} visits / cycle
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCatalogPickerOpen(true)}
+                className="px-3.5 py-2 bg-[#294B68] hover:bg-[#1E364B] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+              >
+                <Layers className="w-4 h-4" />
+                <span>Browse Catalog</span>
+              </button>
+            </div>
           </div>
 
           {serviceAllocations.length === 0 ? (
-            <div className="p-4 bg-[#F0F5F9] rounded-xl text-center text-xs text-[#5E8FB2] font-semibold">
-              No services attached yet. Click &quot;Add Service&quot; to configure visit quotas per billing cycle.
+            <div className="p-6 bg-[#F0F5F9] rounded-2xl text-center flex flex-col items-center gap-2">
+              <Layers className="w-7 h-7 text-[#5E8FB2]" />
+              <p className="text-xs text-[#243746] font-bold">No services attached yet.</p>
+              <p className="text-xs text-[#64748B] max-w-sm">
+                Click &quot;Browse Catalog&quot; to pick dynamic services and assign visit quotas per billing cycle.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsCatalogPickerOpen(true)}
+                className="mt-1 px-4 py-2 bg-white border border-[#D9E4EC] text-[#294B68] hover:bg-[#EAF3F8] rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+              >
+                Open Catalog Selector
+              </button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -471,6 +459,14 @@ export default function CreatePlanPage() {
           </button>
         </div>
       </form>
+
+      <CatalogPickerModal
+        isOpen={isCatalogPickerOpen}
+        onClose={() => setIsCatalogPickerOpen(false)}
+        availableServices={availableServices}
+        currentAllocations={serviceAllocations}
+        onAddOrUpdateService={handleSelectCatalogService}
+      />
     </div>
   );
 }

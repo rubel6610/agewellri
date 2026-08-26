@@ -167,6 +167,7 @@ export const clientApi = baseApi.injectEndpoints({
       invalidatesTags: ["Agreement"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

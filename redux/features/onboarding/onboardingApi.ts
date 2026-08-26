@@ -171,6 +171,7 @@ export const onboardingApi = baseApi.injectEndpoints({
       keepUnusedDataFor: 1800,
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {
