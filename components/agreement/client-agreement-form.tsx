@@ -502,34 +502,49 @@ export function ClientAgreementForm() {
   return (
     <div className="min-h-screen bg-[#F7FAFC] text-[#243746]">
       {/* Horizontal Top Header Bar */}
-      <header className="bg-white border-b border-[#D9E4EC] py-3.5 px-4 sm:px-8 sticky top-0 z-30 shadow-xs mb-6 sm:mb-8">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="AgeWellRI Logo"
-              width={165}
-              height={44}
-              priority
-              className="h-auto w-auto max-h-10 object-contain"
-            />
-            <div className="hidden sm:block border-l border-[#D9E4EC] pl-3.5 py-0.5">
-              <h1 className="text-sm font-extrabold text-[#243746] tracking-tight leading-tight">
-                Client Service Agreement
-              </h1>
-              <p className="text-[11px] text-[#5E8FB2] font-medium">
-                Review &amp; Digital Activation
-              </p>
+      <header className="bg-white border-b border-[#D9E4EC] py-3 sm:py-3.5 px-3 sm:px-6 lg:px-8 sticky top-0 z-30 shadow-xs mb-6 sm:mb-8 max-w-full w-full overflow-hidden box-border">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center justify-between md:justify-start gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/logo.png"
+                alt="AgeWellRI Logo"
+                width={165}
+                height={44}
+                priority
+                className="h-auto w-auto max-h-8 sm:max-h-10 object-contain"
+              />
+              <div className="hidden sm:block border-l border-[#D9E4EC] pl-3.5 py-0.5">
+                <h1 className="text-xs sm:text-sm font-extrabold text-[#243746] tracking-tight leading-tight">
+                  Client Service Agreement
+                </h1>
+                <p className="text-[10px] sm:text-[11px] text-[#5E8FB2] font-medium">
+                  Review &amp; Digital Activation
+                </p>
+              </div>
+            </div>
+
+            {/* Back button on small mobile header */}
+            <div className="md:hidden">
+              <button
+                type="button"
+                onClick={handleGoBackToLogin}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+                title="Exit agreement and return to login screen"
+              >
+                <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>Back</span>
+              </button>
             </div>
           </div>
 
           {/* Actions & Stepper Container */}
-          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
-            {/* Go Back / Return to Login */}
+          <div className="flex items-center justify-between md:justify-end gap-2 sm:gap-3 w-full md:w-auto">
+            {/* Go Back / Return to Login on desktop */}
             <button
               type="button"
               onClick={handleGoBackToLogin}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] text-xs font-bold transition-all shadow-2xs cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#D9E4EC] bg-white hover:bg-slate-50 text-[#64748B] hover:text-[#243746] text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
               title="Exit agreement and return to login screen"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
@@ -537,33 +552,35 @@ export function ClientAgreementForm() {
             </button>
 
             {/* Stepper Pill Indicator */}
-            <div className="flex items-center gap-2 bg-[#F0F5F9] p-1.5 rounded-full border border-[#D9E4EC]">
+            <div className="flex items-center gap-1 sm:gap-2 bg-[#F0F5F9] p-1 sm:p-1.5 rounded-full border border-[#D9E4EC] shrink-0">
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-black tracking-wide transition-all cursor-pointer ${
                   currentStep === 1
                     ? "bg-[#294B68] text-white shadow-xs"
                     : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                 }`}
               >
-                {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : "1."}
-                <span>Review &amp; Sign</span>
+                {currentStep > 1 ? <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : null}
+                <span className="hidden sm:inline">1. Review &amp; Sign</span>
+                <span className="sm:hidden">1. Sign</span>
               </button>
-              <div className="w-4 h-0.5 bg-[#D9E4EC]" />
+              <div className="w-2 sm:w-4 h-0.5 bg-[#D9E4EC]" />
               <button
                 type="button"
                 disabled={currentStep === 1 && (!hasSignature || !formData.agreedToTerms)}
                 onClick={() => {
                   if (hasSignature && formData.agreedToTerms) setCurrentStep(2);
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-xs font-black tracking-wide transition-all ${
                   currentStep === 2
                     ? "bg-[#294B68] text-white shadow-xs"
                     : "text-[#64748B]"
                 }`}
               >
-                <span>2. Membership &amp; Billing</span>
+                <span className="hidden sm:inline">2. Membership &amp; Billing</span>
+                <span className="sm:hidden">2. Billing</span>
               </button>
             </div>
           </div>

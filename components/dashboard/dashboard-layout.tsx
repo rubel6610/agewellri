@@ -25,7 +25,7 @@ export function DashboardLayout({
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746]">
+    <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746] overflow-x-hidden max-w-full w-full">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <DashboardSidebar />
@@ -39,7 +39,7 @@ export function DashboardLayout({
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
         <DashboardHeader
           user={user}
           notifications={notifications}
