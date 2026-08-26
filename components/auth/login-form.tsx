@@ -36,9 +36,11 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
 
-  const { isAuthenticated, isInitialized, user: currentAuthUser } = useAppSelector(
-    (state) => state.auth
-  );
+  const {
+    isAuthenticated,
+    isInitialized,
+    user: currentAuthUser,
+  } = useAppSelector((state) => state.auth);
 
   const [authMode, setAuthMode] = useState<"password" | "sms">("password");
 
@@ -53,11 +55,15 @@ export function LoginForm() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(null);
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(
+    null,
+  );
 
   const [login, { isLoading: isPasswordLoading }] = useLoginMutation();
-  const [requestSmsOtp, { isLoading: isSmsSending }] = useRequestSmsOtpMutation();
-  const [verifySmsOtp, { isLoading: isSmsVerifying }] = useVerifySmsOtpMutation();
+  const [requestSmsOtp, { isLoading: isSmsSending }] =
+    useRequestSmsOtpMutation();
+  const [verifySmsOtp, { isLoading: isSmsVerifying }] =
+    useVerifySmsOtpMutation();
 
   const handleRedirect = (user: any) => {
     const safeRedirect =
@@ -70,16 +76,23 @@ export function LoginForm() {
 
     let targetRoute = "/dashboard";
     if (user.role === "ADMIN") {
-      targetRoute = safeRedirect && safeRedirect.startsWith("/admin") ? safeRedirect : "/admin";
+      targetRoute =
+        safeRedirect && safeRedirect.startsWith("/admin")
+          ? safeRedirect
+          : "/admin";
     } else if (user.role === "TECHNICIAN") {
       targetRoute =
-        safeRedirect && safeRedirect.startsWith("/technician") ? safeRedirect : "/technician";
+        safeRedirect && safeRedirect.startsWith("/technician")
+          ? safeRedirect
+          : "/technician";
     } else if (user.role === "CLIENT") {
       if (user.requiresAgreement || !user.hasCompletedAgreement) {
         targetRoute = "/agreement";
       } else {
         targetRoute =
-          safeRedirect && safeRedirect.startsWith("/dashboard") ? safeRedirect : "/dashboard";
+          safeRedirect && safeRedirect.startsWith("/dashboard")
+            ? safeRedirect
+            : "/dashboard";
       }
     }
 
@@ -137,7 +150,9 @@ export function LoginForm() {
 
       if (response.success && response.data) {
         const user = response.data.user;
-        setLoginSuccessMessage(`Welcome back, ${user.firstName || "Member"}! Redirecting...`);
+        setLoginSuccessMessage(
+          `Welcome back, ${user.firstName || "Member"}! Redirecting...`,
+        );
         handleRedirect(user);
       }
     } catch (err: any) {
@@ -153,7 +168,9 @@ export function LoginForm() {
 
   const handleRequestSmsCode = async () => {
     if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
-      setErrors({ phone: "Please enter a valid 10-digit mobile phone number." });
+      setErrors({
+        phone: "Please enter a valid 10-digit mobile phone number.",
+      });
       return;
     }
 
@@ -165,7 +182,10 @@ export function LoginForm() {
       setResendCooldown(60);
     } catch (err: any) {
       setErrors({
-        general: err?.data?.message || err?.message || "Failed to send SMS verification code.",
+        general:
+          err?.data?.message ||
+          err?.message ||
+          "Failed to send SMS verification code.",
       });
     }
   };
@@ -187,12 +207,17 @@ export function LoginForm() {
 
       if (response.success && response.data) {
         const user = response.data.user;
-        setLoginSuccessMessage(`Verified successfully! Welcome back, ${user.firstName || "Member"}.`);
+        setLoginSuccessMessage(
+          `Verified successfully! Welcome back, ${user.firstName || "Member"}.`,
+        );
         handleRedirect(user);
       }
     } catch (err: any) {
       setErrors({
-        general: err?.data?.message || err?.message || "Invalid or expired code. Please try again.",
+        general:
+          err?.data?.message ||
+          err?.message ||
+          "Invalid or expired code. Please try again.",
       });
     }
   };
@@ -249,7 +274,9 @@ export function LoginForm() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#243746]">Signed In Successfully</h3>
+            <h3 className="text-lg font-bold text-[#243746]">
+              Signed In Successfully
+            </h3>
             <p className="text-sm text-[#64748B] mt-1">{loginSuccessMessage}</p>
           </div>
           <div className="flex items-center justify-center gap-2 text-sm text-[#294B68] font-semibold">
@@ -276,7 +303,8 @@ export function LoginForm() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+              if (errors.email)
+                setErrors((prev) => ({ ...prev, email: undefined }));
             }}
             error={errors.email}
             icon={<Mail className="w-5 h-5" aria-hidden="true" />}
@@ -292,7 +320,8 @@ export function LoginForm() {
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
-              if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+              if (errors.password)
+                setErrors((prev) => ({ ...prev, password: undefined }));
             }}
             error={errors.password}
             required
@@ -344,7 +373,8 @@ export function LoginForm() {
                 value={phone}
                 onChange={(e) => {
                   setPhone(e.target.value);
-                  if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                  if (errors.phone)
+                    setErrors((prev) => ({ ...prev, phone: undefined }));
                 }}
                 error={errors.phone}
                 icon={<Phone className="w-5 h-5" aria-hidden="true" />}
@@ -394,7 +424,8 @@ export function LoginForm() {
                 value={otp}
                 onChange={(e) => {
                   setOtp(e.target.value.replace(/\D/g, ""));
-                  if (errors.otp) setErrors((prev) => ({ ...prev, otp: undefined }));
+                  if (errors.otp)
+                    setErrors((prev) => ({ ...prev, otp: undefined }));
                 }}
                 error={errors.otp}
                 icon={<KeyRound className="w-5 h-5" aria-hidden="true" />}
@@ -409,7 +440,9 @@ export function LoginForm() {
                   onClick={handleRequestSmsCode}
                   className="text-[#5E8FB2] hover:text-[#294B68] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
+                  {resendCooldown > 0
+                    ? `Resend in ${resendCooldown}s`
+                    : "Resend Code"}
                 </button>
               </div>
 

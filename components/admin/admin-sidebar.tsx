@@ -48,7 +48,7 @@ export function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen sticky top-0 shrink-0 z-30">
+    <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen fixed top-0 left-0 bottom-0 shrink-0 z-30">
       {/* Top Header Logo & Badge */}
       <div>
         <div className="px-5 py-4 border-b border-[#D9E4EC]/60 flex items-center justify-between gap-2">

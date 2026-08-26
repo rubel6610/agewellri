@@ -85,7 +85,7 @@ export function DashboardSidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen sticky top-0 shrink-0">
+    <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen fixed top-0 left-0 bottom-0 shrink-0 z-30">
       {/* Top Logo */}
       <div>
         <div className="px-5 py-5 border-b border-[#D9E4EC]/60">

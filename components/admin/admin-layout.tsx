@@ -24,8 +24,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746] overflow-x-hidden max-w-full w-full">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      {/* Desktop Fixed Sidebar */}
+      <div className="hidden lg:block w-64 shrink-0">
         <DashboardSidebarContainer />
       </div>
 
