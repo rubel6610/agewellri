@@ -25,11 +25,201 @@ import {
   Shield,
   Home,
   UserCheck,
+  FileUp,
+  Eye,
 } from "lucide-react";
 import { useGetAdminClientByIdQuery } from "@/redux/features/client/clientApi";
+import { useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
+import { ReportUploadModal } from "@/components/admin/report-upload-modal";
 import { FullAgreementViewer } from "@/components/dashboard/full-agreement-viewer";
+import { downloadReportPdf } from "@/lib/api/report-download";
+
+function formatAuditDetails(action: string, details: any): string {
+  if (!details) {
+    return action
+      ? action.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Activity recorded";
+  }
+
+  let data: any = details;
+  if (typeof details === "string") {
+    if (!details.trim().startsWith("{")) {
+      return details;
+    }
+    try {
+      data = JSON.parse(details);
+    } catch {
+      return details;
+    }
+  }
+
+  if (typeof data !== "object" || data === null) {
+    return String(data);
+  }
+
+  const act = (action || "").toUpperCase().replace(/[\s_-]+/g, "_");
+
+  const formatDate = (val: any) => {
+    if (!val) return "";
+    try {
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return String(val);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return String(val);
+    }
+  };
+
+  const formatPlanName = (p?: string) => {
+    if (!p) return "Membership";
+    return p.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const formatRole = (r?: string) => {
+    if (!r) return "";
+    return r.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const stateNames: Record<string, string> = {
+    RI: "Rhode Island",
+    MA: "Massachusetts",
+    CT: "Connecticut",
+  };
+
+  if (act.includes("AGREEMENT_EXECUTED")) {
+    const signer = data.signerName || "Member";
+    const role = formatRole(data.signerRole);
+    const state = stateNames[data.state] || data.state || "Rhode Island";
+    const deadline = data.cancellationDeadline ? formatDate(data.cancellationDeadline) : null;
+    let text = `Service agreement executed for ${state} by ${signer}${role ? ` (${role})` : ""}.`;
+    if (deadline) {
+      text += ` Statutory cancellation deadline: ${deadline}.`;
+    }
+    return text;
+  }
+
+  if (act.includes("AGREEMENT_CREATED") || act.includes("AGREEMENT_SENT")) {
+    const state = stateNames[data.state] || data.state || "Rhode Island";
+    const version = data.templateVersion || "v2.0";
+    return `Client service agreement initiated (${version} for ${state}).`;
+  }
+
+  if (act.includes("SUBSCRIPTION_ACTIVATED")) {
+    const plan = formatPlanName(data.plan);
+    const price = data.totalPrice ? `$${Number(data.totalPrice).toFixed(2)}` : null;
+    const method = data.billingMethod
+      ? data.billingMethod === "AUTOMATIC"
+        ? "billed automatically"
+        : data.billingMethod.replace(/_/g, " ").toLowerCase()
+      : "billed automatically";
+    const invoice = data.invoiceNumber ? `Invoice #${data.invoiceNumber}` : null;
+    const parts = [
+      `${plan} plan subscription activated`,
+      price ? `(${price} / ${method})` : null,
+      invoice ? `• ${invoice}` : null,
+    ].filter(Boolean);
+    return parts.join(" ");
+  }
+
+  if (act.includes("PAYMENT_STARTED")) {
+    const plan = formatPlanName(data.plan);
+    const addon = data.hasCleaningAddon ? " with House Cleaning add-on" : "";
+    return `Payment checkout initiated for ${plan} plan${addon}.`;
+  }
+
+  if (act.includes("PAYMENT_PROCESSED") || act.includes("PAYMENT_SUCCEEDED")) {
+    const amount = data.amount || data.totalPrice ? `$${Number(data.amount || data.totalPrice).toFixed(2)}` : "Payment";
+    const plan = data.plan ? ` for ${formatPlanName(data.plan)} plan` : "";
+    const invoice = data.invoiceNumber ? ` (Invoice #${data.invoiceNumber})` : "";
+    return `${amount} processed successfully${plan}${invoice}.`;
+  }
+
+  if (act.includes("REPORT_UPLOADED")) {
+    const title = data.title || "Visit Report";
+    const specialist = data.specialistName ? ` from ${data.specialistName}` : "";
+    return `Official PDF report "${title}"${specialist} uploaded and published to member portal.`;
+  }
+
+  if (act.includes("APPOINTMENT_SCHEDULED") || act.includes("VISIT_SCHEDULED")) {
+    const service = data.serviceType || "Visit";
+    const date = data.date ? formatDate(data.date) : "scheduled date";
+    const time = data.timeSlot ? ` (${data.timeSlot})` : "";
+    const specialist = data.technicianName ? ` with specialist ${data.technicianName}` : "";
+    return `${service} booked for ${date}${time}${specialist}.`;
+  }
+
+  if (act.includes("APPOINTMENT_COMPLETED") || act.includes("VISIT_COMPLETED")) {
+    const service = data.serviceType || "Visit";
+    return `${service} marked as completed.`;
+  }
+
+  if (act.includes("APPOINTMENT_CANCELLED") || act.includes("VISIT_CANCELLED")) {
+    const reason = data.reason ? ` Reason: ${data.reason}` : "";
+    return `Visit appointment was cancelled.${reason}`;
+  }
+
+  if (act.includes("INVITATION_SENT")) {
+    const email = data.email ? ` to ${data.email}` : "";
+    return `Onboarding welcome invitation sent${email}.`;
+  }
+
+  if (act.includes("ACCOUNT_CREATED") || act.includes("USER_REGISTERED")) {
+    return `Member user account registration completed.`;
+  }
+
+  // Generic fallback: strip IDs and format dates nicely
+  const cleanParts: string[] = [];
+  for (const [key, val] of Object.entries(data)) {
+    if (
+      key.toLowerCase().endsWith("id") ||
+      key.toLowerCase() === "id" ||
+      key.toLowerCase().includes("token") ||
+      key.toLowerCase().includes("hash")
+    ) {
+      continue;
+    }
+
+    if (val === null || val === undefined || val === "") continue;
+
+    const label = key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}/.test(val)) {
+      cleanParts.push(`${label}: ${formatDate(val)}`);
+    } else if (typeof val === "boolean") {
+      cleanParts.push(val ? label : `No ${label}`);
+    } else if (
+      typeof val === "number" &&
+      (key.toLowerCase().includes("price") ||
+        key.toLowerCase().includes("amount") ||
+        key.toLowerCase().includes("cost"))
+    ) {
+      cleanParts.push(`${label}: $${val.toFixed(2)}`);
+    } else if (typeof val === "object") {
+      continue;
+    } else {
+      const formattedVal = String(val).replace(/_/g, " ");
+      cleanParts.push(`${label}: ${formattedVal}`);
+    }
+  }
+
+  if (cleanParts.length > 0) {
+    return cleanParts.join(" • ");
+  }
+
+  return action
+    ? action.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
+    : "Activity recorded";
+}
 
 export default function ClientDetailPage({
   params,
@@ -40,16 +230,20 @@ export default function ClientDetailPage({
   const clientId = resolvedParams.id;
 
   const { data: clientRes, isLoading, isError } = useGetAdminClientByIdQuery(clientId);
-  const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "agreement" | "billing" | "activity">("overview");
+  const { data: clientApptsRes } = useGetAdminAppointmentsQuery({ clientId });
+  const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "visits" | "agreement" | "billing" | "activity">("overview");
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
+  const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
 
   const client = clientRes?.data;
+  const clientAppointments = clientApptsRes?.data || [];
 
   if (isLoading) {
     return (
       <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading client profile from database...</p>
+        <p className="font-bold text-sm text-[#243746]">Loading ...</p>
       </div>
     );
   }
@@ -135,6 +329,7 @@ export default function ClientDetailPage({
         <div className="flex items-center gap-2 border-b border-[#D9E4EC] overflow-x-auto pb-1 text-sm font-bold">
           {[
             { id: "overview", label: "Overview & Contacts" },
+            { id: "visits", label: `Visits & Reports (${clientAppointments.length})` },
             { id: "timeline", label: "Onboarding Timeline" },
             { id: "agreement", label: "Service Agreement" },
             { id: "billing", label: "Billing & Subscription" },
@@ -447,6 +642,136 @@ export default function ClientDetailPage({
           </div>
         )}
 
+        {/* TAB: VISITS & REPORTS */}
+        {activeTab === "visits" && (
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-[#243746]">Client Visits &amp; Reports</h3>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Track scheduled, completed, and reported visits for this member.
+                </p>
+              </div>
+              <button
+                onClick={() => setScheduleModalOpen(true)}
+                className="px-3.5 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Book Visit</span>
+              </button>
+            </div>
+
+            {clientAppointments.length === 0 ? (
+              <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
+                <Calendar className="w-8 h-8 mx-auto text-[#94A3B8]" />
+                <p className="font-bold text-sm text-[#243746]">No Visits Scheduled</p>
+                <p className="text-xs text-[#64748B]">Book a visit to assign a caregiver or technician.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#D9E4EC] text-[#64748B] uppercase tracking-wider font-bold">
+                      <th className="py-2.5 px-3">Date &amp; Time</th>
+                      <th className="py-2.5 px-3">Service</th>
+                      <th className="py-2.5 px-3">Specialist</th>
+                      <th className="py-2.5 px-3">Visit Status</th>
+                      <th className="py-2.5 px-3">Report Status</th>
+                      <th className="py-2.5 px-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#D9E4EC]/60 text-[#243746] font-medium">
+                    {clientAppointments.map((appt) => {
+                      const isCompleted = appt.status === "completed";
+                      const hasReport = Boolean(appt.hasReport || appt.reportStatus === "uploaded");
+
+                      return (
+                        <tr key={appt.id} className="hover:bg-[#F8FAFC]">
+                          <td className="py-3 px-3 font-semibold">
+                            <span className="font-bold block text-[#243746]">{appt.date}</span>
+                            <span className="text-[11px] text-[#64748B]">{appt.timeSlot}</span>
+                          </td>
+                          <td className="py-3 px-3 font-bold text-[#294B68]">{appt.serviceType}</td>
+                          <td className="py-3 px-3 text-[#243746]">{appt.technicianName}</td>
+                          <td className="py-3 px-3 capitalize">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                isCompleted
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : appt.status === "cancelled"
+                                  ? "bg-rose-100 text-rose-800"
+                                  : "bg-[#EAF3F8] text-[#294B68]"
+                              }`}
+                            >
+                              {appt.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3">
+                            {isCompleted ? (
+                              hasReport ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#3F8F6B]">
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Uploaded
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#C28A3A]">
+                                  <Clock className="w-3.5 h-3.5" /> Not Uploaded
+                                </span>
+                              )
+                            ) : (
+                              <span className="text-[#94A3B8]">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            {isCompleted ? (
+                              !hasReport ? (
+                                <button
+                                  onClick={() => {
+                                    setSelectedApptForReport(appt);
+                                    setReportUploadModalOpen(true);
+                                  }}
+                                  className="px-2.5 py-1 bg-[#294B68] hover:bg-[#1E374D] text-white text-[11px] font-bold rounded-lg transition-all shadow-2xs cursor-pointer inline-flex items-center gap-1"
+                                >
+                                  <FileUp className="w-3 h-3" /> Upload Report
+                                </button>
+                              ) : (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {appt.reportId && (
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadReportPdf(appt.reportId!, `${client.firstName}_${client.lastName}_${appt.serviceType}_Report.pdf`)}
+                                      className="px-2 py-1 bg-[#294B68] hover:bg-[#1E374D] text-white text-[11px] font-bold rounded-lg cursor-pointer inline-flex items-center gap-1"
+                                      title="Download PDF Report"
+                                    >
+                                      <Download className="w-3 h-3" />
+                                      <span>Download PDF</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setSelectedApptForReport(appt);
+                                      setReportUploadModalOpen(true);
+                                    }}
+                                    className="p-1 text-[#64748B] hover:text-[#243746] rounded-lg cursor-pointer"
+                                    title="Replace PDF Report"
+                                  >
+                                    <FileUp className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              )
+                            ) : (
+                              <span className="text-[#94A3B8]">Scheduled</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 5: AUDIT LOG TRAIL */}
         {activeTab === "activity" && (
           <div className="space-y-4 pt-2">
@@ -457,7 +782,9 @@ export default function ClientDetailPage({
                   <div key={log.id} className="pt-3 flex items-start justify-between text-sm">
                     <div>
                       <span className="font-bold text-[#243746]">{log.action}</span>
-                      <p className="text-xs text-[#64748B] mt-0.5">{log.details}</p>
+                      <p className="text-xs text-[#64748B] mt-0.5 leading-relaxed">
+                        {formatAuditDetails(log.action, log.details)}
+                      </p>
                     </div>
                     <div className="text-right text-xs shrink-0">
                       <span className="font-semibold text-[#294B68] block">{log.performedBy}</span>
@@ -479,6 +806,15 @@ export default function ClientDetailPage({
         defaultClientId={client.id || clientId}
         clientName={`${client.firstName} ${client.lastName}`}
         hideClientSelect={true}
+      />
+
+      <ReportUploadModal
+        isOpen={reportUploadModalOpen}
+        onClose={() => {
+          setReportUploadModalOpen(false);
+          setSelectedApptForReport(null);
+        }}
+        appointment={selectedApptForReport}
       />
     </div>
   );

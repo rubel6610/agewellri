@@ -7,6 +7,7 @@ import { UserProfile, ServicePlan, Report } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { useGetMyReportsQuery } from "@/redux/features/report/reportApi";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { NextVisitCard } from "@/components/dashboard/next-visit-card";
 import { VisitEntitlementsCard } from "@/components/dashboard/visit-entitlements-card";
@@ -20,11 +21,13 @@ export default function DashboardHomePage() {
 
   const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery();
   const { data: apptsRes, isLoading: isApptsLoading } = useGetMyAppointmentsQuery();
+  const { data: reportsRes, isLoading: isReportsLoading } = useGetMyReportsQuery();
 
   const realAppointments = apptsRes?.data || [];
   const entitlementsData = entitlementsRes?.data;
+  const dynamicReports = reportsRes?.data || [];
 
-  const isLoading = isEntitlementsLoading || isApptsLoading;
+  const isLoading = isEntitlementsLoading || isApptsLoading || isReportsLoading;
 
   if (isLoading) {
     return (
@@ -81,28 +84,6 @@ export default function DashboardHomePage() {
   const nextVisit = realAppointments.find(
     (a) => a.status === "scheduled" || a.status === "confirmed"
   );
-
-  // Completed Appointments for Dynamic Reports Generation
-  const completedAppointments = realAppointments.filter(
-    (a) => a.status === "completed"
-  );
-
-  const dynamicReports: Report[] = completedAppointments.map((appt: any, idx: number) => ({
-    id: appt.id || `rep_${idx}`,
-    title: `${appt.serviceType || "Home Safety"} Assessment Report`,
-    visitDate: appt.date
-      ? new Date(appt.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "Recently",
-    score: 92,
-    status: "available",
-    summary: `Comprehensive evaluation completed by ${appt.technicianName || "Specialist"}. Fall hazards inspected, home perimeter safety verified.`,
-    recommendationsCount: 2,
-    pdfUrl: `/api/v1/reports/${appt.id}/pdf`,
-  }));
 
   return (
     <div className="space-y-8">

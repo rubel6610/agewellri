@@ -7,14 +7,27 @@ import {
   useUpdateAppointmentStatusMutation,
   useCancelAppointmentMutation,
 } from "@/redux/features/appointment/appointmentApi";
-import { CalendarCheck, Clock, UserCheck, Plus, Search, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import {
+  CalendarCheck,
+  Plus,
+  Search,
+  Loader2,
+  CheckCircle2,
+  FileUp,
+  Download,
+  Eye,
+  FileText,
+  Clock,
+  RefreshCw,
+} from "lucide-react";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
+import { ReportUploadModal } from "@/components/admin/report-upload-modal";
+import { downloadReportPdf } from "@/lib/api/report-download";
 import {
   confirmCriticalAction,
   showSuccessAlert,
   showErrorAlert,
 } from "@/lib/alerts/sweetalert";
-
 import { TablePagination } from "@/components/ui/table-pagination";
 
 export default function AppointmentsAdminPage() {
@@ -35,6 +48,9 @@ export default function AppointmentsAdminPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
   const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
 
+  const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
+  const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
+
   const appointments = apptsRes?.data || [];
 
   const totalItems = appointments.length;
@@ -47,7 +63,7 @@ export default function AppointmentsAdminPage() {
   const handleMarkComplete = async (appt: any) => {
     const confirmed = await confirmCriticalAction({
       title: `Mark Visit Completed?`,
-      text: `Mark ${appt.serviceType} visit for ${appt.clientName} as COMPLETED? This will update visit completion records.`,
+      text: `Mark ${appt.serviceType} visit for ${appt.clientName} as COMPLETED? This will record visit completion.`,
       confirmButtonText: "Yes, Mark Completed",
       isDestructive: false,
     });
@@ -59,7 +75,21 @@ export default function AppointmentsAdminPage() {
         id: appt.id,
         body: { status: "COMPLETED" },
       }).unwrap();
-      showSuccessAlert("Visit Completed", "Appointment marked as completed successfully.");
+
+      const proceedWithReport = await confirmCriticalAction({
+        title: "Visit Marked Completed",
+        text: `Would you like to upload the technician's PDF visit report for ${appt.clientName} now?`,
+        confirmButtonText: "Yes, Upload PDF",
+        cancelButtonText: "Later",
+        isDestructive: false,
+      });
+
+      if (proceedWithReport) {
+        setSelectedApptForReport(appt);
+        setReportUploadModalOpen(true);
+      } else {
+        showSuccessAlert("Visit Completed", "Appointment marked as completed successfully.");
+      }
     } catch (err: any) {
       showErrorAlert("Update Failed", err?.data?.message || "Failed to update visit status.");
     }
@@ -86,6 +116,10 @@ export default function AppointmentsAdminPage() {
     }
   };
 
+  const handleDownloadPdf = (reportId: string, clientName?: string, serviceType?: string) => {
+    downloadReportPdf(reportId, `${clientName || "Client"}_${serviceType || "Visit"}_Report.pdf`);
+  };
+
   return (
     <div className="space-y-6 text-[#243746]">
       {/* Header */}
@@ -95,7 +129,7 @@ export default function AppointmentsAdminPage() {
             Appointments &amp; Visit Management
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            View, schedule, dispatch, and track all AgeWellRI client visits and caregiver assignments.
+            View, schedule, dispatch, and track all AgeWellRI client visits and completed visit reports.
           </p>
         </div>
 
@@ -169,8 +203,8 @@ export default function AppointmentsAdminPage() {
                     <th className="py-3.5 px-4">Client</th>
                     <th className="py-3.5 px-4">Service Type</th>
                     <th className="py-3.5 px-4">Assigned Specialist</th>
-                    <th className="py-3.5 px-4">Booked By</th>
-                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Visit Status</th>
+                    <th className="py-3.5 px-4">Report Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -178,6 +212,7 @@ export default function AppointmentsAdminPage() {
                   {paginatedAppointments.map((appt) => {
                     const isCompleted = appt.status === "completed";
                     const isCancelled = appt.status === "cancelled";
+                    const hasReport = Boolean(appt.hasReport || appt.reportStatus === "uploaded");
 
                     return (
                       <tr key={appt.id} className="hover:bg-[#F7FAFC]">
@@ -197,7 +232,6 @@ export default function AppointmentsAdminPage() {
                         <td className="py-4 px-4 text-xs font-semibold text-[#243746]">
                           {appt.technicianName}
                         </td>
-                        <td className="py-4 px-4 text-xs text-[#64748B]">{appt.bookedBy}</td>
                         <td className="py-4 px-4">
                           <span
                             className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${
@@ -211,9 +245,26 @@ export default function AppointmentsAdminPage() {
                             {appt.status}
                           </span>
                         </td>
-                        <td className="py-4 px-4 text-right space-x-2">
-                          {!isCompleted && !isCancelled && (
-                            <>
+                        <td className="py-4 px-4">
+                          {isCompleted ? (
+                            hasReport ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Report Uploaded</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>Not Uploaded</span>
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-xs text-[#94A3B8]">—</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          {!isCompleted && !isCancelled ? (
+                            <div className="flex items-center justify-end gap-2">
                               <button
                                 onClick={() => handleMarkComplete(appt)}
                                 title="Mark Completed"
@@ -229,12 +280,49 @@ export default function AppointmentsAdminPage() {
                               >
                                 Cancel
                               </button>
-                            </>
-                          )}
-                          {isCompleted && (
-                            <span className="text-xs font-semibold text-[#3F8F6B] flex items-center justify-end gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-                            </span>
+                            </div>
+                          ) : isCompleted ? (
+                            <div className="flex items-center justify-end gap-2">
+                              {!hasReport ? (
+                                <button
+                                  onClick={() => {
+                                    setSelectedApptForReport(appt);
+                                    setReportUploadModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
+                                  title="Upload technician PDF report"
+                                >
+                                  <FileUp className="w-3.5 h-3.5" />
+                                  <span>Upload Report</span>
+                                </button>
+                              ) : (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {appt.reportId && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadPdf(appt.reportId!, appt.clientName, appt.serviceType)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                                      title="Download PDF Report"
+                                    >
+                                      <Download className="w-3.5 h-3.5" />
+                                      <span>Download PDF</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setSelectedApptForReport(appt);
+                                      setReportUploadModalOpen(true);
+                                    }}
+                                    className="p-1.5 text-[#64748B] hover:text-[#243746] hover:bg-[#F8FAFC] rounded-lg transition-colors cursor-pointer"
+                                    title="Replace PDF Report"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-[#94A3B8]">Cancelled</span>
                           )}
                         </td>
                       </tr>
@@ -261,6 +349,15 @@ export default function AppointmentsAdminPage() {
         onClose={() => setScheduleModalOpen(false)}
         defaultClientId={selectedClientId}
         clientName={selectedClientName}
+      />
+
+      <ReportUploadModal
+        isOpen={reportUploadModalOpen}
+        onClose={() => {
+          setReportUploadModalOpen(false);
+          setSelectedApptForReport(null);
+        }}
+        appointment={selectedApptForReport}
       />
     </div>
   );

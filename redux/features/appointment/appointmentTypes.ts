@@ -21,6 +21,13 @@ export interface AppointmentItem {
   date: string;
   timeSlot: string;
   status: "scheduled" | "confirmed" | "rescheduled" | "completed" | "cancelled" | "no_show";
+  reportStatus?: "uploaded" | "not_uploaded";
+  hasReport?: boolean;
+  reportId?: string | null;
+  reportTitle?: string | null;
+  reportFileUrl?: string | null;
+  reportUploadedAt?: string | null;
+  visitId?: string | null;
   location: string;
   notes: string;
   bookedBy: string;

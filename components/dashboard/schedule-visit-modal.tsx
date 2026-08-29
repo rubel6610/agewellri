@@ -89,10 +89,14 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   ];
 
   const currentEntitlement = entitlements.find((e) => e.serviceTypeId === selectedServiceTypeId);
-  const remainingCount = currentEntitlement ? currentEntitlement.remaining : (plan ? plan.remainingVisits : 6);
+  const remainingCount = currentEntitlement ? currentEntitlement.remaining : (plan ? plan.remainingVisits : 0);
+  const isCurrentServiceExhausted = remainingCount <= 0;
+  const areAllServicesExhausted = entitlements.length > 0
+    ? entitlements.every((e) => e.remaining <= 0)
+    : (plan ? plan.remainingVisits <= 0 : false);
 
   const handleConfirm = async () => {
-    if (currentEntitlement && currentEntitlement.remaining <= 0) {
+    if (isCurrentServiceExhausted) {
       showErrorAlert(
         "No Remaining Visits",
         `You have 0 remaining visits available for ${selectedServiceName} in your current quarterly plan.`
@@ -186,6 +190,25 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <span className="text-xs font-semibold text-[#64748B]">Active Plan Quota</span>
             </div>
 
+            {/* Quota Exhaustion Warning Banners */}
+            {areAllServicesExhausted ? (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">Quarterly Visit Quota Fully Utilized</strong>
+                  <span>You have used all included visits for your current quarter. Your visit quota will automatically renew on your next billing cycle.</span>
+                </div>
+              </div>
+            ) : isCurrentServiceExhausted ? (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-950">0 Remaining Visits for {selectedServiceName}</strong>
+                  <span>You have 0 remaining visits available for {selectedServiceName}. Please select another service with available quota to continue.</span>
+                </div>
+              </div>
+            ) : null}
+
             {isEntitlementsLoading ? (
               <div className="p-6 text-center text-sm text-[#64748B] flex items-center justify-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-[#294B68]" />
@@ -206,9 +229,13 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                       }}
                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         isSelected
-                          ? "border-[#294B68] bg-[#EAF3F8]/60"
+                          ? isExhausted
+                            ? "border-rose-400 bg-rose-50/50"
+                            : "border-[#294B68] bg-[#EAF3F8]/60"
+                          : isExhausted
+                          ? "border-[#D9E4EC] bg-slate-50/60 opacity-60 hover:opacity-100"
                           : "border-[#D9E4EC] hover:border-[#5E8FB2] bg-white"
-                      } ${isExhausted ? "opacity-60" : ""}`}
+                      }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-[#243746] text-base flex items-center gap-2">
@@ -222,11 +249,11 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         <span
                           className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
                             isExhausted
-                              ? "bg-rose-50 border-rose-200 text-rose-700"
+                              ? "bg-rose-100 border-rose-300 text-rose-800"
                               : "bg-white border-[#D9E4EC] text-[#294B68]"
                           }`}
                         >
-                          {srv.remaining} remaining
+                          {srv.remaining > 0 ? `${srv.remaining} remaining` : "0 remaining"}
                         </span>
                       </div>
                       <p className="text-xs text-[#64748B] mt-1.5 font-medium">
@@ -242,47 +269,81 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                   {
                     name: "Safety Oversight Visit",
                     desc: "Comprehensive home environment, grab-bar, and hazard inspection.",
-                    rem: plan ? plan.safetyVisitsTotal - plan.safetyVisitsCompleted : 6,
+                    rem: plan ? plan.safetyVisitsTotal - plan.safetyVisitsCompleted : 0,
                   },
                   {
                     name: "Cleaning Visit",
                     desc: "Dedicated deep cleaning of living areas, bathrooms, and walkways.",
-                    rem: plan ? plan.cleaningVisitsTotal - plan.cleaningVisitsCompleted : 6,
+                    rem: plan ? plan.cleaningVisitsTotal - plan.cleaningVisitsCompleted : 0,
                   },
-                ].map((s) => (
-                  <div
-                    key={s.name}
-                    onClick={() => setSelectedServiceName(s.name)}
-                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
-                      selectedServiceName === s.name
-                        ? "border-[#294B68] bg-[#EAF3F8]/60"
-                        : "border-[#D9E4EC] hover:border-[#5E8FB2] bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#243746] text-base flex items-center gap-2">
-                        {s.name.includes("Safety") ? (
-                          <ShieldCheck className="w-5 h-5 text-[#294B68]" />
-                        ) : (
-                          <Sparkles className="w-5 h-5 text-[#5E8FB2]" />
-                        )}
-                        {s.name}
-                      </span>
-                      <span className="text-xs font-bold px-2.5 py-1 bg-white border border-[#D9E4EC] rounded-full text-[#294B68]">
-                        {s.rem} available
-                      </span>
+                ].map((s) => {
+                  const isExhausted = s.rem <= 0;
+                  return (
+                    <div
+                      key={s.name}
+                      onClick={() => setSelectedServiceName(s.name)}
+                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                        selectedServiceName === s.name
+                          ? isExhausted
+                            ? "border-rose-400 bg-rose-50/50"
+                            : "border-[#294B68] bg-[#EAF3F8]/60"
+                          : isExhausted
+                          ? "border-[#D9E4EC] bg-slate-50/60 opacity-60"
+                          : "border-[#D9E4EC] hover:border-[#5E8FB2] bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#243746] text-base flex items-center gap-2">
+                          {s.name.includes("Safety") ? (
+                            <ShieldCheck className="w-5 h-5 text-[#294B68]" />
+                          ) : (
+                            <Sparkles className="w-5 h-5 text-[#5E8FB2]" />
+                          )}
+                          {s.name}
+                        </span>
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
+                            isExhausted
+                              ? "bg-rose-100 border-rose-300 text-rose-800"
+                              : "bg-white border-[#D9E4EC] text-[#294B68]"
+                          }`}
+                        >
+                          {s.rem > 0 ? `${s.rem} available` : "0 remaining"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1.5">{s.desc}</p>
                     </div>
-                    <p className="text-xs text-[#64748B] mt-1.5">{s.desc}</p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             <button
-              onClick={() => setStep(2)}
-              className="w-full mt-4 py-3.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold rounded-xl cursor-pointer shadow-xs transition-all"
+              type="button"
+              disabled={isCurrentServiceExhausted || areAllServicesExhausted}
+              onClick={() => {
+                if (isCurrentServiceExhausted || areAllServicesExhausted) {
+                  showErrorAlert(
+                    "No Remaining Visits",
+                    `You have 0 remaining visits available for ${selectedServiceName}. Please select a service with available quota to schedule.`
+                  );
+                  return;
+                }
+                setStep(2);
+              }}
+              className={`w-full mt-4 py-3.5 font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 ${
+                isCurrentServiceExhausted || areAllServicesExhausted
+                  ? "bg-slate-100 text-[#94A3B8] border border-slate-200 cursor-not-allowed"
+                  : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
+              }`}
             >
-              Continue to Select Date →
+              {areAllServicesExhausted ? (
+                <span>All Quarterly Visits Utilized (0 Remaining)</span>
+              ) : isCurrentServiceExhausted ? (
+                <span>0 Remaining Visits for {selectedServiceName} — Cannot Schedule</span>
+              ) : (
+                <span>Continue to Select Date →</span>
+              )}
             </button>
           </div>
         )}

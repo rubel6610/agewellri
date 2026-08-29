@@ -37,7 +37,8 @@ export function AdminScheduleModal({
     if (!c) return false;
     const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
     const isPaid = c.paymentStatus === "PAID";
-    return isExecuted && isPaid;
+    const hasQuota = c.remainingVisitsCount === undefined || c.remainingVisitsCount > 0;
+    return isExecuted && isPaid && hasQuota;
   };
 
   const eligibleClients = clientsList.filter(isClientEligible);
@@ -137,7 +138,14 @@ export function AdminScheduleModal({
     "AW-CLIENT";
 
   const selectedClient = matchedClient || eligibleClients[0] || clientsList[0];
-  const isTargetClientEligible = selectedClient ? isClientEligible(selectedClient) : false;
+  const isTargetClientAgreementPaid = selectedClient
+    ? (selectedClient.agreementStatus === "EXECUTED" || selectedClient.agreementStatus === "SIGNED") &&
+      selectedClient.paymentStatus === "PAID"
+    : false;
+  const hasRemainingVisits = selectedClient
+    ? selectedClient.remainingVisitsCount === undefined || selectedClient.remainingVisitsCount > 0
+    : true;
+  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits;
 
   // Filtered Clients (Only eligible active enrolled clients)
   const filteredClients = eligibleClients.filter((c) => {
@@ -195,6 +203,21 @@ export function AdminScheduleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isTargetClientEligible) {
+      if (!isTargetClientAgreementPaid) {
+        showErrorAlert(
+          "Ineligible Client",
+          "This client must execute their Service Agreement and complete subscription payment before scheduling visits."
+        );
+      } else if (!hasRemainingVisits) {
+        showErrorAlert(
+          "No Remaining Visits",
+          "This client has 0 remaining visits in their current quarterly cycle. Cannot schedule visit."
+        );
+      }
+      return;
+    }
 
     const targetClientId = isLockedClient ? (defaultClientId || selectedClientId) : selectedClientId;
     const targetDisplayName = clientName || (selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : targetClientId) || "Client";
@@ -278,8 +301,8 @@ export function AdminScheduleModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            {/* Ineligible Client Warning Banner */}
-            {!isTargetClientEligible && (
+            {/* Warning Banners */}
+            {!isTargetClientAgreementPaid ? (
               <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
@@ -287,7 +310,15 @@ export function AdminScheduleModal({
                   <span>This client has not executed their Service Agreement or completed their subscription payment. Both an executed agreement and active payment are required before scheduling visits.</span>
                 </div>
               </div>
-            )}
+            ) : !hasRemainingVisits ? (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">No Remaining Visits for Client (0 Remaining)</strong>
+                  <span>This client has utilized all {selectedClient?.totalVisitsAllowed || 0} visits allocated for their active subscription period. Additional visits cannot be scheduled until next quarterly renewal.</span>
+                </div>
+              </div>
+            ) : null}
 
             {/* Target Client Display or Searchable Selection */}
             {isLockedClient ? (
@@ -729,8 +760,10 @@ export function AdminScheduleModal({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
-                ) : !isTargetClientEligible ? (
+                ) : !isTargetClientAgreementPaid ? (
                   <span>Agreement &amp; Payment Required to Schedule</span>
+                ) : !hasRemainingVisits ? (
+                  <span>0 Remaining Visits — Cannot Dispatch Visit</span>
                 ) : (
                   <span>Confirm &amp; Schedule Visit</span>
                 )}
