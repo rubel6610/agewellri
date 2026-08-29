@@ -228,12 +228,33 @@ export function ClientTable({
           </thead>
           <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
             {isLoading ? (
-              <tr>
-                <td colSpan={7} className="py-16 text-center text-[#64748B]">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-[#294B68]" />
-                  Loading clients...
-                </td>
-              </tr>
+              [...Array(6)].map((_, i) => (
+                <tr key={i} className="animate-pulse">
+                  <td className="py-4 px-4 space-y-2">
+                    <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
+                    <div className="h-3 bg-[#F1F5F9] rounded-md w-44"></div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="h-5 bg-[#E2E8F0] rounded-md w-12"></div>
+                  </td>
+                  <td className="py-4 px-4 space-y-1.5">
+                    <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                    <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="h-5 bg-[#E2E8F0] rounded-full w-24"></div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
+                  </td>
+                  <td className="py-4 px-4">
+                    <div className="h-4 bg-[#E2E8F0] rounded-md w-14"></div>
+                  </td>
+                  <td className="py-4 px-4 text-right">
+                    <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                  </td>
+                </tr>
+              ))
             ) : paginatedClients.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-12 text-center text-[#64748B]">

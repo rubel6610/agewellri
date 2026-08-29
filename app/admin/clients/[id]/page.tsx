@@ -644,20 +644,40 @@ export default function ClientDetailPage({
 
         {/* TAB: VISITS & REPORTS */}
         {activeTab === "visits" && (
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-extrabold text-[#243746]">Client Visits &amp; Reports</h3>
-                <p className="text-xs text-[#64748B] mt-0.5">
-                  Track scheduled, completed, and reported visits for this member.
-                </p>
+          <div className="space-y-5 pt-2">
+            {/* Active Quarter Entitlement Summary */}
+            <div className="p-5 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#294B68] text-white">
+                    Current Active Quarter
+                  </span>
+                  {client.renewalDate && (
+                    <span className="text-xs text-[#64748B] font-semibold">
+                      Renewal Date: <strong>{client.renewalDate}</strong>
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-base font-extrabold text-[#243746]">
+                  {client.planName} Care Entitlements
+                </h3>
+                <div className="flex flex-wrap items-center gap-3 text-xs text-[#64748B] pt-0.5 font-medium">
+                  <span>Allocated: <strong className="text-[#243746]">{client.totalVisitsAllowed || client.totalVisitsCount || 12}</strong></span>
+                  <span>•</span>
+                  <span>Scheduled: <strong className="text-[#294B68]">{clientAppointments.filter((a: any) => a.status === "scheduled" || a.status === "confirmed").length}</strong></span>
+                  <span>•</span>
+                  <span>Completed: <strong className="text-[#166534]">{client.completedVisitsCount ?? 0}</strong></span>
+                  <span>•</span>
+                  <span>Unscheduled: <strong className="text-[#294B68] font-bold">{client.remainingVisitsCount ?? 12}</strong></span>
+                </div>
               </div>
+
               <button
                 onClick={() => setScheduleModalOpen(true)}
-                className="px-3.5 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Book Visit</span>
+                <Plus className="w-4 h-4" />
+                <span>Book / Schedule Visit</span>
               </button>
             </div>
 

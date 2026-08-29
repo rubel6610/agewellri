@@ -115,6 +115,8 @@ export interface ClientVisitEntitlementsResponse {
   totalScheduled: number;
   totalCompleted: number;
   totalRemaining: number;
+  unscheduledCount?: number;
+  isNewQuarterReadyToSchedule?: boolean;
   entitlements: VisitEntitlementItem[];
 }
 

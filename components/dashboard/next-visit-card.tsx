@@ -8,10 +8,36 @@ import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 
 interface NextVisitCardProps {
   appointment?: Appointment | AppointmentItem | any;
+  isLoading?: boolean;
   onScheduleVisit: () => void;
 }
 
-export function NextVisitCard({ appointment, onScheduleVisit }: NextVisitCardProps) {
+export function NextVisitCard({
+  appointment,
+  isLoading = false,
+  onScheduleVisit,
+}: NextVisitCardProps) {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6 animate-pulse">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+              Your Next Visit
+            </span>
+            <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
+          </div>
+          <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]/60 space-y-2.5">
+            <div className="h-5 bg-[#E2E8F0] rounded-md w-40"></div>
+            <div className="h-3 bg-[#F1F5F9] rounded-md w-56"></div>
+            <div className="h-3 bg-[#F1F5F9] rounded-md w-32"></div>
+          </div>
+        </div>
+        <div className="h-11 bg-[#E2E8F0] rounded-xl w-full"></div>
+      </div>
+    );
+  }
+
   if (!appointment) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">

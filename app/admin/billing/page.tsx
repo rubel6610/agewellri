@@ -415,32 +415,55 @@ export default function BillingAdminPage() {
         {/* TAB 1: INVOICES & PAYMENTS */}
         {activeTab === "invoices" && (
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs overflow-hidden space-y-4">
-            {isLoadingInvoices ? (
-              <div className="py-16 text-center space-y-2">
-                <Loader2 className="w-7 h-7 animate-spin text-[#294B68] mx-auto" />
-                <p className="text-xs font-bold text-[#64748B]">Loading invoices...</p>
-              </div>
-            ) : invoices.length === 0 ? (
-              <div className="py-12 text-center text-xs font-bold text-[#64748B]">
-                No matching invoices or transactions found.
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                        <th className="py-3.5 px-4">Invoice #</th>
-                        <th className="py-3.5 px-4">Client</th>
-                        <th className="py-3.5 px-4">Plan</th>
-                        <th className="py-3.5 px-4">Amount</th>
-                        <th className="py-3.5 px-4">Billing Method</th>
-                        <th className="py-3.5 px-4">Status</th>
-                        <th className="py-3.5 px-4 text-right">Actions</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                    <th className="py-3.5 px-4">Invoice #</th>
+                    <th className="py-3.5 px-4">Client</th>
+                    <th className="py-3.5 px-4">Plan</th>
+                    <th className="py-3.5 px-4">Amount</th>
+                    <th className="py-3.5 px-4">Billing Method</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+                  {isLoadingInvoices ? (
+                    [...Array(6)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                        </td>
+                        <td className="py-4 px-4 space-y-1.5">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-16"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-                      {paginatedInvoices.map((inv) => (
+                    ))
+                  ) : invoices.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs font-bold text-[#64748B]">
+                        No matching invoices or transactions found.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedInvoices.map((inv) => (
                         <tr key={inv.id} className="hover:bg-[#F7FAFC] transition-colors">
                           <td className="py-4 px-4 font-mono text-xs font-bold text-[#294B68]">
                             {inv.invoiceNumber}
@@ -511,109 +534,135 @@ export default function BillingAdminPage() {
                             </div>
                           </td>
                         </tr>
-                      ))}
-                    </tbody>
+                      ))
+                    )}
+                  </tbody>
                   </table>
                 </div>
 
-                <TablePagination
-                  currentPage={invoicePage}
-                  totalItems={totalInvoices}
-                  pageSize={invoicePageSize}
-                  onPageChange={setInvoicePage}
-                  onPageSizeChange={setInvoicePageSize}
-                  itemLabel="invoices"
-                />
-              </>
+                {!isLoadingInvoices && invoices.length > 0 && (
+                  <TablePagination
+                    currentPage={invoicePage}
+                    totalItems={totalInvoices}
+                    pageSize={invoicePageSize}
+                    onPageChange={setInvoicePage}
+                    onPageSizeChange={setInvoicePageSize}
+                    itemLabel="invoices"
+                  />
+                )}
+              </div>
             )}
-          </div>
-        )}
 
         {/* TAB 2: UPCOMING RENEWALS */}
         {activeTab === "renewals" && (
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs overflow-hidden space-y-4">
-            {isLoadingRenewals ? (
-              <div className="py-16 text-center space-y-2">
-                <Loader2 className="w-7 h-7 animate-spin text-[#294B68] mx-auto" />
-                <p className="text-xs font-bold text-[#64748B]">Loading renewals...</p>
-              </div>
-            ) : renewals.length === 0 ? (
-              <div className="py-12 text-center text-xs font-bold text-[#64748B]">
-                No upcoming renewals scheduled.
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                        <th className="py-3.5 px-4">Client Member</th>
-                        <th className="py-3.5 px-4">Plan &amp; Rate</th>
-                        <th className="py-3.5 px-4">Interval</th>
-                        <th className="py-3.5 px-4">Renewal Date</th>
-                        <th className="py-3.5 px-4">Countdown</th>
-                        <th className="py-3.5 px-4">Payment Channel</th>
-                        <th className="py-3.5 px-4 text-right">Actions</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                    <th className="py-3.5 px-4">Client Member</th>
+                    <th className="py-3.5 px-4">Plan &amp; Rate</th>
+                    <th className="py-3.5 px-4">Interval</th>
+                    <th className="py-3.5 px-4">Renewal Date</th>
+                    <th className="py-3.5 px-4">Countdown</th>
+                    <th className="py-3.5 px-4">Payment Channel</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+                  {isLoadingRenewals ? (
+                    [...Array(6)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="py-4 px-4 space-y-1.5">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
+                        </td>
+                        <td className="py-4 px-4 space-y-1.5">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-16"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-                      {paginatedRenewals.map((r: AdminUpcomingRenewalItem) => (
-                        <tr key={r.subscriptionId} className="hover:bg-[#F7FAFC] transition-colors">
-                          <td className="py-4 px-4 font-bold">
-                            <Link href={`/admin/clients/${r.clientId}`} className="hover:underline text-[#243746]">
-                              {r.clientName}
-                            </Link>
-                            <div className="text-[11px] text-[#64748B] font-mono">{r.clientNumber} • {r.clientEmail}</div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="font-extrabold text-[#243746]">{r.planName}</div>
-                            <div className="text-xs font-black text-emerald-700">${r.contractedPrice.toFixed(2)}</div>
-                          </td>
-                          <td className="py-4 px-4 text-xs font-bold text-[#64748B] capitalize">
-                            {r.billingInterval.toLowerCase()}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-xs text-[#243746]">
-                            {new Date(r.scheduledRenewalDate).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/30">
-                              <Clock className="w-3 h-3" />
-                              {r.daysRemaining} days
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-xs">
-                            <div className="flex items-center gap-1.5 font-bold text-[#243746]">
-                              <CreditCard className="w-3.5 h-3.5 text-[#294B68]" />
-                              <span>Stripe Card</span>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4 text-right">
-                            <Link
-                              href={`/admin/clients/${r.clientId}`}
-                              className="px-3 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-xl transition-colors inline-block"
-                            >
-                              View Client →
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))
+                  ) : renewals.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs font-bold text-[#64748B]">
+                        No upcoming renewals scheduled.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRenewals.map((r: AdminUpcomingRenewalItem) => (
+                      <tr key={r.subscriptionId} className="hover:bg-[#F7FAFC] transition-colors">
+                        <td className="py-4 px-4 font-bold">
+                          <Link href={`/admin/clients/${r.clientId}`} className="hover:underline text-[#243746]">
+                            {r.clientName}
+                          </Link>
+                          <div className="text-[11px] text-[#64748B] font-mono">{r.clientNumber} • {r.clientEmail}</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="font-extrabold text-[#243746]">{r.planName}</div>
+                          <div className="text-xs font-black text-emerald-700">${r.contractedPrice.toFixed(2)}</div>
+                        </td>
+                        <td className="py-4 px-4 text-xs font-bold text-[#64748B] capitalize">
+                          {r.billingInterval.toLowerCase()}
+                        </td>
+                        <td className="py-4 px-4 font-bold text-xs text-[#243746]">
+                          {new Date(r.scheduledRenewalDate).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/30">
+                            <Clock className="w-3 h-3" />
+                            {r.daysRemaining} days
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-xs">
+                          <div className="flex items-center gap-1.5 font-bold text-[#243746]">
+                            <CreditCard className="w-3.5 h-3.5 text-[#294B68]" />
+                            <span>Stripe Card</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <Link
+                            href={`/admin/clients/${r.clientId}`}
+                            className="px-3 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-xl transition-colors inline-block"
+                          >
+                            View Client →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                <TablePagination
-                  currentPage={renewalsPage}
-                  totalItems={totalRenewals}
-                  pageSize={renewalsPageSize}
-                  onPageChange={setRenewalsPage}
-                  onPageSizeChange={setRenewalsPageSize}
-                  itemLabel="renewals"
-                />
-              </>
+            {!isLoadingRenewals && renewals.length > 0 && (
+              <TablePagination
+                currentPage={renewalsPage}
+                totalItems={totalRenewals}
+                pageSize={renewalsPageSize}
+                onPageChange={setRenewalsPage}
+                onPageSizeChange={setRenewalsPageSize}
+                itemLabel="renewals"
+              />
             )}
           </div>
         )}
@@ -621,99 +670,124 @@ export default function BillingAdminPage() {
         {/* TAB 3: ALL SUBSCRIPTIONS */}
         {activeTab === "subscriptions" && (
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs overflow-hidden space-y-4">
-            {isLoadingSubscriptions ? (
-              <div className="py-16 text-center space-y-2">
-                <Loader2 className="w-7 h-7 animate-spin text-[#294B68] mx-auto" />
-                <p className="text-xs font-bold text-[#64748B]">Loading subscriptions...</p>
-              </div>
-            ) : subscriptions.length === 0 ? (
-              <div className="py-12 text-center text-xs font-bold text-[#64748B]">
-                No subscriptions matching filter.
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                        <th className="py-3.5 px-4">Client</th>
-                        <th className="py-3.5 px-4">Plan &amp; Contracted Price</th>
-                        <th className="py-3.5 px-4">Current Cycle</th>
-                        <th className="py-3.5 px-4">Next Renewal</th>
-                        <th className="py-3.5 px-4">Auto-Renew</th>
-                        <th className="py-3.5 px-4">Status</th>
-                        <th className="py-3.5 px-4 text-right">Actions</th>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                    <th className="py-3.5 px-4">Client</th>
+                    <th className="py-3.5 px-4">Plan &amp; Contracted Price</th>
+                    <th className="py-3.5 px-4">Current Cycle</th>
+                    <th className="py-3.5 px-4">Next Renewal</th>
+                    <th className="py-3.5 px-4">Auto-Renew</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+                  {isLoadingSubscriptions ? (
+                    [...Array(6)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="py-4 px-4 space-y-1.5">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-24"></div>
+                        </td>
+                        <td className="py-4 px-4 space-y-1.5">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-                      {paginatedSubscriptions.map((sub: any) => (
-                        <tr key={sub.id} className="hover:bg-[#F7FAFC] transition-colors">
-                          <td className="py-4 px-4 font-bold">
-                            <Link
-                              href={`/admin/clients/${sub.clientId}`}
-                              className="hover:underline text-[#243746]"
-                            >
-                              {sub.clientName}
-                            </Link>
-                            <span className="block text-[11px] text-[#64748B] font-mono">
-                              {sub.clientNumber}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 font-extrabold text-[#243746]">
-                            {sub.planName}
-                            <span className="block text-xs font-bold text-emerald-700">
-                              {sub.planPrice}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-xs text-[#64748B]">
-                            {sub.currentPeriod}
-                          </td>
-                          <td className="py-4 px-4 font-bold text-xs text-[#243746]">
-                            {sub.nextRenewalDate}
-                          </td>
-                          <td className="py-4 px-4 text-xs font-semibold">
-                            {sub.autoRenew ? (
-                              <span className="text-emerald-700 font-bold">● Enabled</span>
-                            ) : (
-                              <span className="text-amber-700 font-bold">● Cancelled at Period End</span>
-                            )}
-                          </td>
-                          <td className="py-4 px-4">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                                sub.status === "ACTIVE"
-                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                  : sub.status === "CANCELLATION_REQUESTED"
-                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
-                                  : "bg-red-50 text-red-700 border border-red-200"
-                              }`}
-                            >
-                              {sub.status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4 text-right">
-                            <Link
-                              href={`/admin/clients/${sub.clientId}`}
-                              className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors font-bold text-xs inline-block"
-                            >
-                              View Client →
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))
+                  ) : subscriptions.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-xs font-bold text-[#64748B]">
+                        No subscriptions matching filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedSubscriptions.map((sub: any) => (
+                      <tr key={sub.id} className="hover:bg-[#F7FAFC] transition-colors">
+                        <td className="py-4 px-4 font-bold">
+                          <Link
+                            href={`/admin/clients/${sub.clientId}`}
+                            className="hover:underline text-[#243746]"
+                          >
+                            {sub.clientName}
+                          </Link>
+                          <span className="block text-[11px] text-[#64748B] font-mono">
+                            {sub.clientNumber}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 font-extrabold text-[#243746]">
+                          {sub.planName}
+                          <span className="block text-xs font-bold text-emerald-700">
+                            {sub.planPrice}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-xs text-[#64748B]">
+                          {sub.currentPeriod}
+                        </td>
+                        <td className="py-4 px-4 font-bold text-xs text-[#243746]">
+                          {sub.nextRenewalDate}
+                        </td>
+                        <td className="py-4 px-4 text-xs font-semibold">
+                          {sub.autoRenew ? (
+                            <span className="text-emerald-700 font-bold">● Enabled</span>
+                          ) : (
+                            <span className="text-amber-700 font-bold">● Cancelled at Period End</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                              sub.status === "ACTIVE"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : sub.status === "CANCELLATION_REQUESTED"
+                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                : "bg-red-50 text-red-700 border border-red-200"
+                            }`}
+                          >
+                            {sub.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-right">
+                          <Link
+                            href={`/admin/clients/${sub.clientId}`}
+                            className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-xl transition-colors font-bold text-xs inline-block"
+                          >
+                            View Client →
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-                <TablePagination
-                  currentPage={subscriptionsPage}
-                  totalItems={totalSubscriptions}
-                  pageSize={subscriptionsPageSize}
-                  onPageChange={setSubscriptionsPage}
-                  onPageSizeChange={setSubscriptionsPageSize}
-                  itemLabel="subscriptions"
-                />
-              </>
+            {!isLoadingSubscriptions && subscriptions.length > 0 && (
+              <TablePagination
+                currentPage={subscriptionsPage}
+                totalItems={totalSubscriptions}
+                pageSize={subscriptionsPageSize}
+                onPageChange={setSubscriptionsPage}
+                onPageSizeChange={setSubscriptionsPageSize}
+                itemLabel="subscriptions"
+              />
             )}
           </div>
         )}

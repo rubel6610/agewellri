@@ -114,6 +114,9 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
+  keepUnusedDataFor: 300, // Retain cache in memory for 5 minutes
+  refetchOnFocus: false, // Prevent redundant refetch when clicking back onto window
+  refetchOnReconnect: true,
   tagTypes: [
     "Auth",
     "User",

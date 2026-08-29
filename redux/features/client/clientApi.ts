@@ -42,6 +42,7 @@ export interface MasterClientRecord {
   cardBrand?: string;
   cardLast4?: string;
   totalVisitsAllowed: number;
+  totalVisitsCount?: number;
   completedVisitsCount: number;
   remainingVisitsCount: number;
   nextVisitDate?: string | null;
@@ -109,8 +110,75 @@ export interface SendInvitationPayload {
   skipEmail?: boolean;
 }
 
+export interface AdminDashboardStats {
+  kpis: {
+    activeClientsCount: number;
+    totalClientsCount: number;
+    newClientsThisMonth: number;
+    pendingOnboardingCount: number;
+    upcomingVisitsCount: number;
+    completedVisitsCount: number;
+    reportsPendingCount: number;
+    totalReportsUploaded: number;
+    executedAgreementsCount: number;
+    pendingAgreementsCount: number;
+    paymentsDueCount: number;
+    totalPendingInvoicesAmount: string;
+    totalRevenueCollected: string;
+    renewalsUpcomingCount: number;
+    activeSubscriptionsCount: number;
+  };
+  upcomingSchedule: Array<{
+    id: string;
+    clientName: string;
+    clientId: string;
+    serviceType: string;
+    specialistName: string;
+    specialistColor: string;
+    dateFormatted: string;
+    timeSlot: string;
+    status: string;
+    address: string;
+  }>;
+  recentClients: Array<{
+    id: string;
+    internalId: string;
+    name: string;
+    email: string;
+    state: string;
+    planName: string;
+    status: string;
+    createdAt: string;
+  }>;
+  attentionItems: Array<{
+    id: string;
+    type: "AGREEMENT" | "REPORT" | "BILLING" | "ONBOARDING";
+    title: string;
+    description: string;
+    actionLabel: string;
+    actionHref: string;
+    urgency: "HIGH" | "MEDIUM" | "LOW";
+  }>;
+  planDistribution: Record<string, number>;
+  stateDistribution: Record<string, number>;
+  recentActivity: Array<{
+    id: string;
+    action: string;
+    details: string;
+    performedBy: string;
+    role: string;
+    time: string;
+    date: string;
+  }>;
+}
+
 export const clientApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getAdminDashboardStats: builder.query<ApiResponse<AdminDashboardStats>, void>({
+      query: () => "/clients/admin/dashboard-stats",
+      providesTags: ["Client", "Appointment", "Report", "Agreement", "Billing", "Subscription"],
+    }),
+
     getAdminClients: builder.query<
       ApiResponse<MasterClientRecord[]>,
       { state?: string; onboardingStatus?: string; search?: string; page?: number; limit?: number } | void
@@ -125,12 +193,11 @@ export const clientApi = baseApi.injectEndpoints({
         const qs = queryParams.toString();
         return `/clients/admin/all${qs ? `?${qs}` : ""}`;
       },
-      providesTags:["Client"]
+      providesTags: ["Client"],
     }),
 
     getAdminClientById: builder.query<ApiResponse<MasterClientRecord>, string>({
       query: (id) => `/clients/admin/${id}`,
-     
       providesTags: (_result, _error, id) => [
         { type: "Client", id },
         { type: "Agreement", id },
@@ -143,7 +210,7 @@ export const clientApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Client", id: "ADMIN_LIST" }],
+      invalidatesTags: [{ type: "Client", id: "ADMIN_LIST" }, "Client"],
     }),
 
     getAdminAgreements: builder.query<ApiResponse<AdminAgreementRecord[]>, { state?: string; status?: string; search?: string } | void>({
@@ -155,7 +222,6 @@ export const clientApi = baseApi.injectEndpoints({
         const qs = queryParams.toString();
         return `/agreements/admin/all${qs ? `?${qs}` : ""}`;
       },
-     
       providesTags: ["Agreement"],
     }),
 
@@ -171,6 +237,7 @@ export const clientApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetAdminDashboardStatsQuery,
   useGetAdminClientsQuery,
   useGetAdminClientByIdQuery,
   useSendInvitationMutation,

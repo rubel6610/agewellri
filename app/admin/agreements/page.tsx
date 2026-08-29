@@ -15,12 +15,16 @@ import {
   showToast,
 } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { AgreementPreviewModal } from "@/components/admin/agreement-preview-modal";
+import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
 
 export default function AgreementsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [previewAgreement, setPreviewAgreement] = useState<AdminAgreementRecord | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const { data: agreementsRes, isLoading, refetch } = useGetAdminAgreementsQuery({
     state: stateFilter,
@@ -55,9 +59,21 @@ export default function AgreementsAdminPage() {
     }
   };
 
-  const handleDownload = (agr: AdminAgreementRecord) => {
-    showToast(`Downloading agreement document for ${agr.clientName}...`);
-    window.open(`/dashboard/agreements`, "_blank");
+  const handleDownload = async (agr: AdminAgreementRecord) => {
+    try {
+      setDownloadingId(agr.id);
+      showToast(`Generating agreement PDF for ${agr.clientName}...`);
+      await downloadAgreementPdf({
+        ...agr,
+        clientFullName: agr.clientName,
+        email: agr.clientEmail,
+      });
+    } catch (err: any) {
+      console.error("Failed to download agreement PDF:", err);
+      showErrorAlert("Download Failed", "Failed to generate agreement PDF.");
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const filteredAgreements = agreements.filter((agr) => {
@@ -76,15 +92,6 @@ export default function AgreementsAdminPage() {
   const startIndex = (validCurrentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   const paginatedAgreements = filteredAgreements.slice(startIndex, endIndex);
-
-  if (isLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading service agreements from database...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -146,8 +153,34 @@ export default function AgreementsAdminPage() {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-              {filteredAgreements.length === 0 ? (
+            <tbody className="divide-y divide-[#D9E4EC]/60">
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-44"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-24"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-24"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : paginatedAgreements.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-[#64748B]">
                     No service agreements found.
@@ -202,24 +235,46 @@ export default function AgreementsAdminPage() {
                       </td>
 
                       <td className="py-4 px-4 text-right">
-                        {isExecuted ? (
-                          <Link
-                            href={`/admin/clients/${agr.clientId}`}
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Direct PDF Download Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDownload(agr)}
+                            disabled={downloadingId === agr.id}
+                            className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                            title="Download Official Agreement PDF"
+                          >
+                            {downloadingId === agr.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-[#294B68]" />
+                            ) : (
+                              <Download className="w-4 h-4" />
+                            )}
+                          </button>
+
+                          {/* Agreement Preview Document Button */}
+                          <button
+                            type="button"
+                            onClick={() => setPreviewAgreement(agr)}
                             className="p-2 text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors inline-block cursor-pointer"
-                            title="View Agreement Document"
+                            title="Preview Agreement Document"
                           >
                             <FileText className="w-4 h-4" />
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={() => handleSendReminder(agr)}
-                            disabled={isSendingReminder}
-                            className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 disabled:opacity-50"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                            <span>Send Reminder</span>
                           </button>
-                        )}
+
+                          {/* Send Reminder button if pending signature */}
+                          {!isExecuted && (
+                            <button
+                              type="button"
+                              onClick={() => handleSendReminder(agr)}
+                              disabled={isSendingReminder}
+                              className="px-2.5 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 disabled:opacity-50"
+                              title="Send Signature Email Reminder"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span className="hidden sm:inline">Reminder</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -238,6 +293,13 @@ export default function AgreementsAdminPage() {
           itemLabel="agreements"
         />
       </div>
+
+      {/* Agreement Preview & Download Modal */}
+      <AgreementPreviewModal
+        agreement={previewAgreement}
+        isOpen={Boolean(previewAgreement)}
+        onClose={() => setPreviewAgreement(null)}
+      />
     </div>
   );
 }

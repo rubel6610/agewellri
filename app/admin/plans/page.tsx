@@ -271,34 +271,61 @@ export default function AdminPlansPage() {
 
       {/* Plans Table */}
       <div className="bg-white rounded-2xl border border-[#D9E4EC] shadow-xs overflow-hidden">
-        {isLoading ? (
-          <div className="py-16 text-center text-[#5E8FB2] font-semibold flex flex-col items-center gap-3">
-            <RefreshCw className="w-6 h-6 animate-spin text-[#294B68]" />
-            Loading dynamic service plans...
-          </div>
-        ) : filteredPlans.length === 0 ? (
-          <div className="py-16 text-center text-[#5E8FB2] flex flex-col items-center gap-2">
-            <Package className="w-10 h-10 text-[#D9E4EC]" />
-            <div className="text-base font-bold text-[#243746]">No service plans found</div>
-            <p className="text-xs">Adjust your search or click &quot;Create New Plan&quot; to define a new tier.</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
-                    <th className="py-3.5 px-4">Plan Name &amp; Code</th>
-                    <th className="py-3.5 px-4">Price &amp; Frequency</th>
-                    <th className="py-3.5 px-4">Included Visits</th>
-                    <th className="py-3.5 px-4">Subscribers</th>
-                    <th className="py-3.5 px-4">Version History</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
+                <th className="py-3.5 px-4">Plan Name &amp; Code</th>
+                <th className="py-3.5 px-4">Price &amp; Frequency</th>
+                <th className="py-3.5 px-4">Included Visits</th>
+                <th className="py-3.5 px-4">Subscribers</th>
+                <th className="py-3.5 px-4">Version History</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#D9E4EC] text-sm">
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-4 space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-36"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-32"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-6 bg-[#E2E8F0] rounded-full w-24"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-6 bg-[#E2E8F0] rounded-lg w-20"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-[#D9E4EC] text-sm">
-                  {paginatedPlans.map((plan) => (
+                ))
+              ) : filteredPlans.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center text-[#5E8FB2]">
+                    <div className="flex flex-col items-center gap-2">
+                      <Package className="w-10 h-10 text-[#D9E4EC]" />
+                      <div className="text-base font-bold text-[#243746]">No service plans found</div>
+                      <p className="text-xs">Adjust your search or click &quot;Create New Plan&quot; to define a new tier.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedPlans.map((plan) => (
                     <tr key={plan.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
                       <td className="py-4 px-4">
                         <button
@@ -416,22 +443,23 @@ export default function AdminPlansPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  ))
+                )}
+              </tbody>
               </table>
             </div>
 
-            <TablePagination
-              currentPage={validCurrentPage}
-              totalItems={totalItems}
-              pageSize={pageSize}
-              onPageChange={setCurrentPage}
-              onPageSizeChange={setPageSize}
-              itemLabel="plans"
-            />
-          </>
-        )}
-      </div>
+            {!isLoading && filteredPlans.length > 0 && (
+              <TablePagination
+                currentPage={validCurrentPage}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                itemLabel="plans"
+              />
+            )}
+          </div>
 
       {/* Plan Details & Versioning Modal */}
       <PlanVersionsModal

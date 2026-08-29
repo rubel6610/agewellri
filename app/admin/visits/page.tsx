@@ -96,10 +96,50 @@ export default function VisitsAdminPage() {
       </div>
 
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-        {isLoading ? (
-          <div className="p-12 text-center text-[#64748B] flex flex-col items-center justify-center space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-            <p className="font-bold text-sm text-[#243746]">Loading field visit operations...</p>
+        {isLoading && appointments.length === 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                  <th className="py-3.5 px-4">Visit Date &amp; Time</th>
+                  <th className="py-3.5 px-4">Client</th>
+                  <th className="py-3.5 px-4">Service</th>
+                  <th className="py-3.5 px-4">Specialist</th>
+                  <th className="py-3.5 px-4">Visit Status</th>
+                  <th className="py-3.5 px-4">Report Status</th>
+                  <th className="py-3.5 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9E4EC]/60">
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-36"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-24"></div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : appointments.length === 0 ? (
           <div className="p-12 text-center text-[#64748B] bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">

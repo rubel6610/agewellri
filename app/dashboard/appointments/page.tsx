@@ -5,7 +5,7 @@ import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointm
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { VisitCard } from "@/components/dashboard/visit-card";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
-import { Calendar, Plus, Loader2 } from "lucide-react";
+import { Calendar, Plus, Clock } from "lucide-react";
 
 export default function AppointmentsPage() {
   const { data: apptRes, isLoading: isApptLoading } = useGetMyAppointmentsQuery();
@@ -14,15 +14,6 @@ export default function AppointmentsPage() {
 
   const appointments = apptRes?.data || [];
   const entitlementData = entitlementsRes?.data;
-
-  if (isApptLoading || isEntLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading your scheduled care visits...</p>
-      </div>
-    );
-  }
 
   const upcomingVisits = appointments.filter(
     (a) => a.status === "scheduled" || a.status === "confirmed" || a.status === "rescheduled"
@@ -34,7 +25,7 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-8 text-[#243746]">
-      {/* Header */}
+      {/* Header - ALWAYS VISIBLE IMMEDIATELY */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
@@ -48,9 +39,13 @@ export default function AppointmentsPage() {
         <div className="flex items-center gap-4">
           <div className="text-right text-xs font-semibold text-[#64748B] hidden sm:block">
             <span>Visits remaining this quarter:</span>
-            <strong className="text-[#294B68] block text-base font-extrabold">
-              {totalRemaining} of {totalAllocated}
-            </strong>
+            {isEntLoading ? (
+              <span className="block h-5 bg-[#E2E8F0] rounded w-16 ml-auto animate-pulse mt-0.5" />
+            ) : (
+              <strong className="text-[#294B68] block text-base font-extrabold">
+                {totalRemaining} of {totalAllocated}
+              </strong>
+            )}
           </div>
 
           <button
@@ -68,11 +63,36 @@ export default function AppointmentsPage() {
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#243746] flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#294B68]" />
-            Upcoming Visits ({upcomingVisits.length})
+            <span>Upcoming Visits {isApptLoading ? "" : `(${upcomingVisits.length})`}</span>
           </h2>
         </div>
 
-        {upcomingVisits.length === 0 ? (
+        {isApptLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#E2E8F0]"></div>
+                    <div className="space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-36"></div>
+                    </div>
+                  </div>
+                  <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
+                </div>
+                <div className="p-3.5 bg-[#F8FAFC] rounded-2xl space-y-2">
+                  <div className="h-3.5 bg-[#E2E8F0] rounded-md w-40"></div>
+                  <div className="h-3 bg-[#F1F5F9] rounded-md w-56"></div>
+                </div>
+                <div className="pt-2 flex justify-between items-center">
+                  <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                  <div className="h-8 bg-[#E2E8F0] rounded-xl w-28"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : upcomingVisits.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B] space-y-3">
             <p>No upcoming visits scheduled right now.</p>
             <button
@@ -93,15 +113,36 @@ export default function AppointmentsPage() {
       </div>
 
       {/* Section 2: Past Visits */}
-      <div className="space-y-4 pt-4">
+      <div className="space-y-4 pt-4 border-t border-[#D9E4EC]/60">
         <h2 className="text-xl font-bold text-[#243746] flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-[#5E8FB2]" />
-          Past Completed Visits ({pastVisits.length})
+          <Clock className="w-5 h-5 text-[#64748B]" />
+          <span>Past Completed Visits {isApptLoading ? "" : `(${pastVisits.length})`}</span>
         </h2>
 
-        {pastVisits.length === 0 ? (
+        {isApptLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#E2E8F0]"></div>
+                    <div className="space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-36"></div>
+                    </div>
+                  </div>
+                  <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
+                </div>
+                <div className="p-3.5 bg-[#F8FAFC] rounded-2xl space-y-2">
+                  <div className="h-3.5 bg-[#E2E8F0] rounded-md w-40"></div>
+                  <div className="h-3 bg-[#F1F5F9] rounded-md w-56"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : pastVisits.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-            No completed past visits yet.
+            <p>No completed past visits yet.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

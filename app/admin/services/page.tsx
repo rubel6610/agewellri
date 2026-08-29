@@ -412,35 +412,63 @@ export default function AdminServicesPage() {
       </div>
 
       {/* Services Table */}
-      {isLoading ? (
-        <div className="py-20 text-center text-[#5E8FB2] flex flex-col items-center gap-3">
-          <RefreshCw className="w-6 h-6 animate-spin text-[#294B68]" />
-          <span className="font-bold text-sm">Loading services catalog...</span>
-        </div>
-      ) : filteredServices.length === 0 ? (
-        <div className="py-16 text-center text-[#5E8FB2] bg-white rounded-2xl border border-[#D9E4EC] p-8 flex flex-col items-center gap-2">
-          <Layers className="w-10 h-10 text-[#D9E4EC]" />
-          <div className="text-base font-bold text-[#243746]">No services found</div>
-          <p className="text-xs max-w-sm text-[#64748B]">
-            No catalog items matched your selected filters. Try changing your search or click &quot;Add Service&quot; to create a new one.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-4 sm:p-6 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]">
-                  <th className="py-3.5 px-4 rounded-l-xl">Service Details</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Duration</th>
-                  <th className="py-3.5 px-4">Baseline Price</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right rounded-r-xl">Actions</th>
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-4 sm:p-6 shadow-xs overflow-hidden">
+        <div className="overflow-x-auto -mx-4 sm:mx-0">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]">
+                <th className="py-3.5 px-4 rounded-l-xl">Service Details</th>
+                <th className="py-3.5 px-4">Category</th>
+                <th className="py-3.5 px-4">Duration</th>
+                <th className="py-3.5 px-4">Baseline Price</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right rounded-r-xl">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#E2E8F0] shrink-0"></div>
+                        <div className="space-y-1.5 flex-1">
+                          <div className="h-4 bg-[#E2E8F0] rounded-md w-36"></div>
+                          <div className="h-3 bg-[#F1F5F9] rounded-md w-56"></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-24"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-16"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredServices.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-[#5E8FB2]">
+                    <div className="flex flex-col items-center gap-2">
+                      <Layers className="w-10 h-10 text-[#D9E4EC]" />
+                      <div className="text-base font-bold text-[#243746]">No services found</div>
+                      <p className="text-xs max-w-sm text-[#64748B]">
+                        No catalog items matched your selected filters. Try changing your search or click &quot;Add Service&quot; to create a new one.
+                      </p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-                {paginatedServices.map((service) => {
+              ) : (
+                paginatedServices.map((service) => {
                   const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
                   const CategoryIcon = config.icon;
 
@@ -539,11 +567,13 @@ export default function AdminServicesPage() {
                       </td>
                     </tr>
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
 
+        {!isLoading && filteredServices.length > 0 && (
           <TablePagination
             currentPage={validCurrentPage}
             totalItems={totalItems}
@@ -552,8 +582,8 @@ export default function AdminServicesPage() {
             onPageSizeChange={setPageSize}
             itemLabel="services"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Create / Edit Modal */}
       {isCreateModalOpen && (

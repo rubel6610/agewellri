@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock, Sparkles, FileCheck2, Loader2 } from "lucide-react";
-import { UserProfile, ServicePlan, Report } from "@/lib/types/dashboard";
+import { ArrowRight, Clock, Sparkles, FileCheck2, CalendarCheck } from "lucide-react";
+import { ServicePlan } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
@@ -26,17 +26,6 @@ export default function DashboardHomePage() {
   const realAppointments = apptsRes?.data || [];
   const entitlementsData = entitlementsRes?.data;
   const dynamicReports = reportsRes?.data || [];
-
-  const isLoading = isEntitlementsLoading || isApptsLoading || isReportsLoading;
-
-  if (isLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading your AgeWellRI portal...</p>
-      </div>
-    );
-  }
 
   // Dynamic user data
   const firstName = authUser?.firstName || "Member";
@@ -90,7 +79,7 @@ export default function DashboardHomePage() {
       {/* Onboarding State Banner (if pending) */}
       <OnboardingBanner status={accountStatus} />
 
-      {/* Top Welcome Header */}
+      {/* Top Welcome Header - ALWAYS VISIBLE IMMEDIATELY */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#243746] tracking-tight">
@@ -103,15 +92,73 @@ export default function DashboardHomePage() {
 
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#294B68] bg-[#EAF3F8] px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 shrink-0">
           <Clock className="w-4 h-4 text-[#5E8FB2]" />
-          <span>Next Quarter Renewal: <strong>{renewalDateFormatted}</strong></span>
+          <span>
+            Next Quarter Renewal:{" "}
+            {isEntitlementsLoading ? (
+              <span className="inline-block h-3 bg-[#5E8FB2]/30 rounded w-16 align-middle animate-pulse ml-1" />
+            ) : (
+              <strong>{renewalDateFormatted}</strong>
+            )}
+          </span>
         </div>
       </div>
 
+      {/* Active Service Quarter Renewal & Scheduling Action Banner */}
+      {isEntitlementsLoading ? (
+        <div className="p-6 bg-gradient-to-r from-[#294B68]/30 to-[#1E374D]/30 rounded-2xl sm:rounded-3xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-pulse">
+          <div className="flex items-start gap-3.5 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-[#E2E8F0] shrink-0"></div>
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-[#E2E8F0] rounded-full w-36"></div>
+              <div className="h-5 bg-[#E2E8F0] rounded-md w-64"></div>
+              <div className="h-3 bg-[#F1F5F9] rounded-md w-3/4"></div>
+            </div>
+          </div>
+          <div className="h-11 bg-[#E2E8F0] rounded-xl w-44 shrink-0"></div>
+        </div>
+      ) : entitlementsData && (entitlementsData.totalRemaining > 0 || entitlementsData.isNewQuarterReadyToSchedule) ? (
+        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#294B68] to-[#1E374D] text-white rounded-2xl sm:rounded-3xl shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-[#5E8FB2]/30">
+          <div className="flex items-start gap-3.5">
+            <div className="p-3 bg-white/10 text-white rounded-2xl shrink-0 backdrop-blur-xs border border-white/10">
+              <CalendarCheck className="w-6 h-6 text-emerald-300" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  New Service Quarter Active
+                </span>
+                <span className="text-xs text-white/70 font-semibold">{periodFormatted}</span>
+              </div>
+              <h3 className="font-extrabold text-base sm:text-lg text-white tracking-tight">
+                Your Care Visits Are Ready to Schedule
+              </h3>
+              <p className="text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
+                You have <strong>{entitlementsData.totalRemaining} visit{entitlementsData.totalRemaining > 1 ? "s" : ""}</strong> available this quarter (
+                {entitlementsData.entitlements
+                  ?.filter((e: any) => e.remaining > 0)
+                  .map((e: any) => `${e.serviceName}: ${e.remaining}`)
+                  .join(", ")}
+                ). Select your preferred dates, times, and specialists.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setScheduleModalOpen(true)}
+            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 shrink-0 cursor-pointer"
+          >
+            <CalendarCheck className="w-4 h-4" />
+            <span>Schedule Your Visits</span>
+          </button>
+        </div>
+      ) : null}
+
       {/* Level 1: Plan & Next Visit Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <PlanCard plan={dynamicPlan} />
+        <PlanCard plan={dynamicPlan} isLoading={isEntitlementsLoading} />
         <NextVisitCard
           appointment={nextVisit}
+          isLoading={isApptsLoading}
           onScheduleVisit={() => setScheduleModalOpen(true)}
         />
       </div>
@@ -130,7 +177,13 @@ export default function DashboardHomePage() {
               Quarterly Renewal Notice
             </h4>
             <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-              Your next AgeWellRI quarter begins on <strong>{renewalDateFormatted}</strong> ({dynamicPlan.totalVisits} visits included).
+              Your next AgeWellRI quarter begins on{" "}
+              {isEntitlementsLoading ? (
+                <span className="inline-block h-3 bg-[#E2E8F0] rounded w-20 align-middle animate-pulse" />
+              ) : (
+                <strong>{renewalDateFormatted}</strong>
+              )}{" "}
+              ({dynamicPlan.totalVisits} visits included).
             </p>
           </div>
         </div>
@@ -160,7 +213,24 @@ export default function DashboardHomePage() {
           </Link>
         </div>
 
-        {dynamicReports.length === 0 ? (
+        {isReportsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+            {[1, 2].map((i) => (
+              <div key={i} className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
+                <div className="flex justify-between items-center">
+                  <div className="h-5 bg-[#E2E8F0] rounded-md w-36"></div>
+                  <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
+                </div>
+                <div className="h-3 bg-[#F1F5F9] rounded-md w-full"></div>
+                <div className="h-3 bg-[#F1F5F9] rounded-md w-3/4"></div>
+                <div className="pt-4 border-t border-[#D9E4EC]/60 flex justify-between items-center">
+                  <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                  <div className="h-9 bg-[#E2E8F0] rounded-xl w-28"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : dynamicReports.length === 0 ? (
           <div className="p-8 sm:p-10 text-center bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] space-y-3">
             <div className="w-12 h-12 bg-[#EAF3F8] text-[#294B68] rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
               <FileCheck2 className="w-6 h-6 text-[#294B68]" />

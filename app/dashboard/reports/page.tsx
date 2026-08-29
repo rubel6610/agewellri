@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ReportCard } from "@/components/dashboard/report-card";
-import { FileCheck2, Loader2, FileText } from "lucide-react";
+import { FileCheck2, FileText } from "lucide-react";
 import { useGetMyReportsQuery } from "@/redux/features/report/reportApi";
 import { ReportItem } from "@/redux/features/report/reportTypes";
 
@@ -10,18 +10,9 @@ export default function ReportsPage() {
   const { data: reportsRes, isLoading } = useGetMyReportsQuery();
   const reports: ReportItem[] = reportsRes?.data || [];
 
-  if (isLoading) {
-    return (
-      <div className="p-16 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC] flex flex-col items-center justify-center space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#294B68]" />
-        <p className="font-bold text-sm text-[#243746]">Loading your visit reports...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8 text-[#243746]">
-      {/* Header */}
+      {/* Header - ALWAYS VISIBLE IMMEDIATELY */}
       <div className="pb-4 border-b border-[#D9E4EC]/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -38,7 +29,24 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {reports.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
+          {[1, 2].map((i) => (
+            <div key={i} className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
+              <div className="flex justify-between items-center">
+                <div className="h-6 bg-[#E2E8F0] rounded-xl w-32"></div>
+                <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
+              </div>
+              <div className="h-4 bg-[#F1F5F9] rounded-md w-full"></div>
+              <div className="h-4 bg-[#F1F5F9] rounded-md w-3/4"></div>
+              <div className="pt-4 border-t border-[#D9E4EC]/60 flex justify-between items-center">
+                <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                <div className="h-9 bg-[#E2E8F0] rounded-xl w-28"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : reports.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-3xl border border-[#D9E4EC] space-y-3 shadow-xs">
           <div className="w-12 h-12 bg-[#EAF3F8] text-[#294B68] rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
             <FileCheck2 className="w-6 h-6 text-[#294B68]" />
