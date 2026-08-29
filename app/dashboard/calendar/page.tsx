@@ -16,7 +16,6 @@ import {
   ListFilter,
   Eye,
   X,
-  Phone,
   MapPin,
   Check,
   AlertCircle,
@@ -801,15 +800,7 @@ export default function ClientCalendarPage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
-              <div className="flex items-center gap-3">
-                <a
-                  href="tel:4015552439"
-                  className="text-xs font-bold text-[#294B68] hover:underline flex items-center gap-1.5"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  <span>Call Concierge</span>
-                </a>
-
+              <div>
                 {selectedAppointment.status !== "cancelled" &&
                   selectedAppointment.status !== "completed" && (
                     <button

@@ -20,7 +20,8 @@ export interface AppointmentItem {
   endAt: string;
   date: string;
   timeSlot: string;
-  status: "scheduled" | "confirmed" | "rescheduled" | "completed" | "cancelled" | "no_show";
+  status: "requested" | "scheduled" | "confirmed" | "rescheduled" | "completed" | "cancelled" | "no_show" | string;
+  isRequested?: boolean;
   reportStatus?: "uploaded" | "not_uploaded";
   hasReport?: boolean;
   reportId?: string | null;
@@ -60,12 +61,27 @@ export interface AdminScheduleAppointmentRequest {
 export interface RescheduleAppointmentRequest {
   date: string;
   timeSlot: string;
+  startAt?: string;
+  endAt?: string;
   technicianId?: string;
-  technicianName?: string;
   reason?: string;
 }
 
 export interface UpdateAppointmentStatusRequest {
-  status: "SCHEDULED" | "CONFIRMED" | "RESCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
+  status: "REQUESTED" | "SCHEDULED" | "CONFIRMED" | "RESCHEDULED" | "COMPLETED" | "CANCELLED" | "NO_SHOW";
   notes?: string;
+}
+
+export interface AcceptVisitRequest {
+  technicianId: string;
+  technicianName?: string;
+  date?: string;
+  timeSlot?: string;
+  startAt?: string;
+  endAt?: string;
+  notes?: string;
+}
+
+export interface DeclineVisitRequest {
+  reason?: string;
 }

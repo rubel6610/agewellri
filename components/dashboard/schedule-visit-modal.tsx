@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, Loader2, UserCheck, AlertCircle } from "lucide-react";
-import { ServicePlan, VisitType } from "@/lib/types/dashboard";
+import { ServicePlan } from "@/lib/types/dashboard";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
-import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
 import { useScheduleAppointmentMutation } from "@/redux/features/appointment/appointmentApi";
 import {
   confirmCriticalAction,
@@ -20,7 +19,6 @@ interface ScheduleVisitModalProps {
 
 export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModalProps) {
   const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
-  const { data: specialists = [] } = useGetAllSpecialistsQuery(undefined, { skip: !isOpen });
   const [scheduleAppointmentMutation, { isLoading: isSubmitting }] = useScheduleAppointmentMutation();
 
   const entitlements = entitlementsRes?.data?.entitlements || [];
@@ -28,8 +26,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("");
   const [selectedServiceName, setSelectedServiceName] = useState<string>("Safety Oversight");
-  const [selectedSpecialistId, setSelectedSpecialistId] = useState<string>("");
-  const [selectedSpecialistName, setSelectedSpecialistName] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("10:00 AM – 12:00 PM");
   const [notes, setNotes] = useState("");
@@ -72,13 +68,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     }
   }, [entitlements, selectedServiceTypeId]);
 
-  useEffect(() => {
-    if (specialists.length > 0 && !selectedSpecialistId) {
-      setSelectedSpecialistId(specialists[0].id);
-      setSelectedSpecialistName(specialists[0].name);
-    }
-  }, [specialists, selectedSpecialistId]);
-
   if (!isOpen) return null;
 
   const timeSlots = [
@@ -105,9 +94,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     }
 
     const confirmed = await confirmCriticalAction({
-      title: `Confirm ${selectedServiceName} Visit?`,
-      text: `Book appointment for ${selectedDate} at ${selectedTimeSlot}?`,
-      confirmButtonText: "Yes, Schedule Appointment",
+      title: `Submit ${selectedServiceName} Visit Request?`,
+      text: `Request care visit for ${selectedDate} at ${selectedTimeSlot}? Admin will review and assign your specialist.`,
+      confirmButtonText: "Yes, Submit Request",
       isDestructive: false,
     });
 
@@ -117,8 +106,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       await scheduleAppointmentMutation({
         serviceTypeId: selectedServiceTypeId,
         serviceType: selectedServiceName,
-        technicianId: selectedSpecialistId || undefined,
-        technicianName: selectedSpecialistName || undefined,
         date: selectedDate,
         timeSlot: selectedTimeSlot,
         notes,
@@ -126,12 +113,12 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
 
       setStep(5);
       await showSuccessAlert(
-        "Appointment Booked",
-        `Your ${selectedServiceName} visit has been scheduled for ${selectedDate} (${selectedTimeSlot}).`
+        "Visit Request Submitted",
+        `Your ${selectedServiceName} visit request has been received for ${selectedDate} (${selectedTimeSlot}). AgeWellRI administration will assign your specialist.`
       );
     } catch (err: any) {
-      const errMsg = err?.data?.message || err?.message || "Unable to schedule appointment right now. Please try again.";
-      showErrorAlert("Scheduling Failed", errMsg);
+      const errMsg = err?.data?.message || err?.message || "Unable to submit visit request. Please try again.";
+      showErrorAlert("Submission Failed", errMsg);
     }
   };
 
@@ -155,9 +142,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         <div className="flex items-center justify-between pb-4 border-b border-[#D9E4EC]">
           <div>
             <h3 className="text-xl font-extrabold text-[#243746] tracking-tight">
-              {step === 5 ? "Visit Confirmed" : `Schedule a Visit — Step ${step} of 4`}
+              {step === 5 ? "Request Submitted" : `Request a Visit — Step ${step} of 4`}
             </h3>
-            <p className="text-xs text-[#64748B] font-medium">AgeWellRI Home Care Portal</p>
+            <p className="text-xs text-[#64748B] font-medium">AgeWellRI Care Scheduling</p>
           </div>
           <button
             onClick={resetAndClose}
@@ -348,12 +335,15 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
           </div>
         )}
 
-        {/* Step 2: Select Date & Specialist */}
+        {/* Step 2: Select Date */}
         {step === 2 && (
           <div className="space-y-4 py-2">
             <h4 className="font-bold text-[#243746] text-base flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#294B68]" /> Choose Date &amp; Specialist
+              <Calendar className="w-5 h-5 text-[#294B68]" /> Choose Preferred Date
             </h4>
+            <p className="text-xs text-[#64748B]">
+              Select your preferred day for the visit. An administrator will assign an available specialist for this date.
+            </p>
 
             {/* Date Selection */}
             <div className="grid grid-cols-1 gap-2.5">
@@ -372,30 +362,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 </button>
               ))}
             </div>
-
-            {/* Preferred Specialist (Optional) */}
-            {specialists.length > 0 && (
-              <div className="pt-2 border-t border-[#D9E4EC]/60 space-y-1.5">
-                <label className="block text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                  Assigned Care Specialist
-                </label>
-                <select
-                  value={selectedSpecialistId}
-                  onChange={(e) => {
-                    const found = specialists.find((s) => s.id === e.target.value);
-                    setSelectedSpecialistId(e.target.value);
-                    setSelectedSpecialistName(found ? found.name : "");
-                  }}
-                  className="w-full p-3 text-sm bg-white border border-[#D9E4EC] rounded-xl font-medium focus:ring-2 focus:ring-[#294B68] focus:outline-none"
-                >
-                  {specialists.map((sp) => (
-                    <option key={sp.id} value={sp.id}>
-                      {sp.name} — {sp.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <div className="flex gap-3 pt-3">
               <button
@@ -418,7 +384,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         {step === 3 && (
           <div className="space-y-4 py-2">
             <h4 className="font-bold text-[#243746] text-base flex items-center gap-2">
-              <Clock className="w-5 h-5 text-[#5E8FB2]" /> Available Time Slots
+              <Clock className="w-5 h-5 text-[#5E8FB2]" /> Select Preferred Arrival Window
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {timeSlots.map((ts) => (
@@ -448,7 +414,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 onClick={() => setStep(4)}
                 className="w-2/3 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold rounded-xl cursor-pointer shadow-xs"
               >
-                Review Appointment →
+                Review Request →
               </button>
             </div>
           </div>
@@ -457,26 +423,26 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         {/* Step 4: Review & Confirm */}
         {step === 4 && (
           <div className="space-y-4 py-2">
-            <h4 className="font-bold text-[#243746] text-base">Review Appointment Details</h4>
+            <h4 className="font-bold text-[#243746] text-base">Review Visit Request</h4>
             <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5 text-sm">
               <div className="flex justify-between border-b border-[#D9E4EC]/60 pb-2">
                 <span className="text-[#64748B]">Service:</span>
                 <span className="font-bold text-[#243746]">{selectedServiceName}</span>
               </div>
               <div className="flex justify-between border-b border-[#D9E4EC]/60 pb-2">
-                <span className="text-[#64748B]">Date:</span>
+                <span className="text-[#64748B]">Requested Date:</span>
                 <span className="font-bold text-[#243746]">{selectedDate}</span>
               </div>
               <div className="flex justify-between border-b border-[#D9E4EC]/60 pb-2">
-                <span className="text-[#64748B]">Time Slot:</span>
+                <span className="text-[#64748B]">Arrival Window:</span>
                 <span className="font-bold text-[#294B68]">{selectedTimeSlot}</span>
               </div>
-              {selectedSpecialistName && (
-                <div className="flex justify-between">
-                  <span className="text-[#64748B]">Specialist:</span>
-                  <span className="font-bold text-[#243746]">{selectedSpecialistName}</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-[#64748B]">Specialist Assignment:</span>
+                <span className="font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-xs">
+                  Assigned by Admin upon Confirmation
+                </span>
+              </div>
             </div>
 
             <div>
@@ -507,10 +473,10 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Scheduling...</span>
+                    <span>Submitting Request...</span>
                   </>
                 ) : (
-                  <span>Confirm Appointment</span>
+                  <span>Submit Visit Request</span>
                 )}
               </button>
             </div>
@@ -520,17 +486,16 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         {/* Step 5: Confirmation Success */}
         {step === 5 && (
           <div className="py-6 text-center space-y-4">
-            <div className="w-16 h-16 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+            <div className="w-16 h-16 bg-amber-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
               <h4 className="text-2xl font-extrabold text-[#243746]">
-                Appointment Confirmed!
+                Visit Request Submitted!
               </h4>
-              <p className="text-sm text-[#64748B] mt-1 max-w-sm mx-auto font-medium">
-                Your {selectedServiceName} visit has been scheduled for{" "}
-                <strong className="text-[#243746]">{selectedDate}</strong> at{" "}
-                <strong className="text-[#294B68]">{selectedTimeSlot}</strong>.
+              <p className="text-sm text-[#64748B] mt-2 max-w-sm mx-auto font-medium leading-relaxed">
+                Your request for a <strong>{selectedServiceName}</strong> visit on{" "}
+                <strong className="text-[#243746]">{selectedDate}</strong> ({selectedTimeSlot}) has been received. Our administrative team will review and assign a certified specialist shortly.
               </p>
             </div>
 

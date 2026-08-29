@@ -72,13 +72,23 @@ export function NextVisitCard({
     day: "numeric",
   });
 
+  const isRequested =
+    appointment.status === "requested" ||
+    (!appointment.technicianId && appointment.status !== "cancelled");
+
   return (
     <div className="bg-[#294B68] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md relative flex flex-col justify-between space-y-6">
       <div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">
-            Your Next Visit
-          </span>
+          {isRequested ? (
+            <span className="text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
+              Visit Requested
+            </span>
+          ) : (
+            <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">
+              Your Next Visit
+            </span>
+          )}
           {appointment.bookedBy && (
             <span className="text-xs font-medium text-white/80 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
@@ -107,8 +117,12 @@ export function NextVisitCard({
         <div className="flex items-center gap-2.5 text-xs sm:text-sm text-white/90 pt-1 border-t border-white/10">
           <UserCheck className="w-4 h-4 text-[#5E8FB2]" />
           <div>
-            <span className="font-bold block">{appointment.technicianName}</span>
-            <span className="text-xs text-white/70">{appointment.technicianTitle}</span>
+            <span className="font-bold block">
+              {isRequested ? "Pending Admin Specialist Assignment" : appointment.technicianName}
+            </span>
+            <span className="text-xs text-white/70">
+              {isRequested ? "Our team is assigning a specialist" : appointment.technicianTitle}
+            </span>
           </div>
         </div>
       </div>

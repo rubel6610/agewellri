@@ -6,6 +6,8 @@ import {
   AdminScheduleAppointmentRequest,
   RescheduleAppointmentRequest,
   UpdateAppointmentStatusRequest,
+  AcceptVisitRequest,
+  DeclineVisitRequest,
 } from "./appointmentTypes";
 
 export const appointmentApi = baseApi.injectEndpoints({
@@ -68,6 +70,30 @@ export const appointmentApi = baseApi.injectEndpoints({
       invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
     }),
 
+    acceptVisitRequest: builder.mutation<
+      ApiResponse<AppointmentItem>,
+      { id: string; body: AcceptVisitRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/appointments/${id}/accept-request`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+    }),
+
+    declineVisitRequest: builder.mutation<
+      ApiResponse<AppointmentItem>,
+      { id: string; body?: DeclineVisitRequest }
+    >({
+      query: ({ id, body }) => ({
+        url: `/appointments/${id}/decline-request`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+    }),
+
     rescheduleAppointment: builder.mutation<
       ApiResponse<AppointmentItem>,
       { id: string; body: RescheduleAppointmentRequest }
@@ -113,6 +139,8 @@ export const {
   useGetAppointmentByIdQuery,
   useScheduleAppointmentMutation,
   useAdminScheduleAppointmentMutation,
+  useAcceptVisitRequestMutation,
+  useDeclineVisitRequestMutation,
   useRescheduleAppointmentMutation,
   useCancelAppointmentMutation,
   useUpdateAppointmentStatusMutation,
