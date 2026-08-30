@@ -89,7 +89,7 @@ export const planApi = baseApi.injectEndpoints({
       ],
     }),
 
-    // Admin: Change plan status (DRAFT / ACTIVE / INACTIVE / ARCHIVED)
+    // Admin: Change plan status (DRAFT / ACTIVE / INACTIVE)
     changePlanStatus: builder.mutation<void, { id: string; body: ChangePlanStatusPayload }>({
       query: ({ id, body }) => ({
         url: `/plans/admin/${id}/status`,
@@ -100,6 +100,24 @@ export const planApi = baseApi.injectEndpoints({
         { type: "Plan", id },
         { type: "Plan", id: "ACTIVE" },
         { type: "Plan", id: "ADMIN_LIST" },
+      ],
+    }),
+
+    // Admin: Delete a service plan permanently
+    deletePlan: builder.mutation<{ message: string; success: boolean }, string>({
+      query: (id) => ({
+        url: `/plans/admin/${id}`,
+        method: "DELETE",
+      }),
+      transformResponse: (response: { success: boolean; data: any; message: string }) => ({
+        success: response.success,
+        message: response.message,
+      }),
+      invalidatesTags: [
+        { type: "Plan", id: "ACTIVE" },
+        { type: "Plan", id: "ADMIN_LIST" },
+        "Subscription",
+        "Billing",
       ],
     }),
 
@@ -201,6 +219,7 @@ export const {
   useCreatePlanMutation,
   useUpdatePlanMutation,
   useChangePlanStatusMutation,
+  useDeletePlanMutation,
   useGetServiceStatsQuery,
   useGetAllServicesQuery,
   useCreateServiceMutation,

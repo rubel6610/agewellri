@@ -20,6 +20,7 @@ import {
 import {
   useGetAdminPlanByIdQuery,
   useUpdatePlanMutation,
+  useDeletePlanMutation,
   useGetAllServicesQuery,
 } from "@/redux/features/plan/planApi";
 import {
@@ -44,6 +45,7 @@ export default function EditPlanPage() {
   const availableServices = servicesList;
 
   const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
+  const [deletePlan, { isLoading: isDeleting }] = useDeletePlanMutation();
 
   const [form, setForm] = useState({
     name: "",
@@ -198,6 +200,25 @@ export default function EditPlanPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!plan) return;
+    const confirmed = await confirmDelete({
+      title: `Delete "${plan.name}"?`,
+      text: `Are you sure you want to permanently delete the "${plan.name}" service plan? This action cannot be undone.`,
+      confirmButtonText: "Yes, Delete Plan",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await deletePlan(plan.id).unwrap();
+      showSuccessAlert("Plan Deleted", res.message || `"${plan.name}" has been permanently deleted.`);
+      router.push("/admin/plans");
+    } catch (err: any) {
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete plan.");
+    }
+  };
+
   if (isPlanLoading) {
     return (
       <div className="py-24 text-center text-[#5E8FB2] flex flex-col items-center gap-3">
@@ -242,6 +263,16 @@ export default function EditPlanPage() {
             </span>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>Delete Plan</span>
+        </button>
       </div>
 
       {/* Historical Pricing Notice */}

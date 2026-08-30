@@ -12,7 +12,6 @@ import {
   Layers,
   CheckCircle2,
   AlertCircle,
-  Archive,
   Edit,
   ShieldCheck,
   CreditCard,
@@ -66,18 +65,12 @@ export function PlanVersionsModal({ isOpen, onClose, plan }: PlanVersionsModalPr
                 </span>
                 <span
                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                    currentPlan.isArchived
-                      ? "bg-slate-100 text-slate-600"
-                      : currentPlan.isActive
+                    currentPlan.isActive
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : "bg-amber-50 text-amber-700 border border-amber-200"
                   }`}
                 >
-                  {currentPlan.isArchived ? (
-                    <>
-                      <Archive className="w-3 h-3" /> Archived
-                    </>
-                  ) : currentPlan.isActive ? (
+                  {currentPlan.isActive ? (
                     <>
                       <CheckCircle2 className="w-3 h-3" /> Active Tier
                     </>
