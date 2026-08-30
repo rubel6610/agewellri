@@ -206,6 +206,41 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing", "Subscription"],
     }),
+
+    adminCancelSubscription: builder.mutation<
+      ApiResponse<any>,
+      { id: string; immediate?: boolean; reason?: string }
+    >({
+      query: ({ id, immediate, reason }) => ({
+        url: `/payments/admin/subscription/${id}/cancel`,
+        method: "POST",
+        body: { immediate, reason },
+      }),
+      invalidatesTags: ["Billing", "Subscription", "Appointment"],
+    }),
+
+    adminReactivateSubscription: builder.mutation<
+      ApiResponse<any>,
+      string
+    >({
+      query: (id) => ({
+        url: `/payments/admin/subscription/${id}/reactivate`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
+
+    adminUpdateSubscriptionStatus: builder.mutation<
+      ApiResponse<any>,
+      { id: string; status: string; reason?: string }
+    >({
+      query: ({ id, status, reason }) => ({
+        url: `/payments/admin/subscription/${id}/status`,
+        method: "POST",
+        body: { status, reason },
+      }),
+      invalidatesTags: ["Billing", "Subscription"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -228,5 +263,8 @@ export const {
   useGetAdminUpcomingRenewalsQuery,
   useAdminTriggerRemindersMutation,
   useAdminRetryChargeMutation,
+  useAdminCancelSubscriptionMutation,
+  useAdminReactivateSubscriptionMutation,
+  useAdminUpdateSubscriptionStatusMutation,
 } = paymentApi;
 

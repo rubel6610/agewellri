@@ -56,17 +56,47 @@ export default function DashboardHomePage() {
       e.serviceName?.toLowerCase().includes("clean") || e.category === "CLEANING_SUPPORT"
   );
 
+  const rawPlanName = entitlementsData?.planName || authUser?.client?.selectedPlan || "Guardian Plus Plan";
+  let formattedPlanName = rawPlanName;
+  if (rawPlanName === "GUARDIAN_PLUS" || rawPlanName.toLowerCase().includes("guardian")) {
+    formattedPlanName = "Guardian Plus Plan";
+  } else if (rawPlanName === "ESSENTIAL_GUARD" || rawPlanName.toLowerCase().includes("essential")) {
+    formattedPlanName = "Essential Guard Plan";
+  } else if (rawPlanName === "STANDALONE_CLEANING" || rawPlanName.toLowerCase().includes("clean")) {
+    formattedPlanName = "Home Care & Cleaning Plan";
+  }
+
+  const safetyTotal = safetyEntitlement?.allocated ?? 6;
+  const safetyCompleted = safetyEntitlement?.completed ?? 0;
+  const cleaningTotal = cleaningEntitlement?.allocated ?? (formattedPlanName.includes("Guardian") ? 6 : 0);
+  const cleaningCompleted = cleaningEntitlement?.completed ?? 0;
+
+  const totalVisits =
+    entitlementsData?.totalAllocated && entitlementsData.totalAllocated > 0
+      ? entitlementsData.totalAllocated
+      : safetyTotal + cleaningTotal;
+
+  const completedVisits =
+    entitlementsData?.totalCompleted !== undefined && entitlementsData.totalCompleted > 0
+      ? entitlementsData.totalCompleted
+      : safetyCompleted + cleaningCompleted;
+
+  const remainingVisits =
+    entitlementsData?.totalRemaining !== undefined && entitlementsData.totalAllocated && entitlementsData.totalAllocated > 0
+      ? entitlementsData.totalRemaining
+      : Math.max(0, totalVisits - completedVisits);
+
   const dynamicPlan: ServicePlan = {
-    name: entitlementsData?.planName || "Guardian Plus Plan",
+    name: formattedPlanName,
     currentPeriod: periodFormatted,
     renewalDate: renewalDateFormatted,
-    totalVisits: entitlementsData?.totalAllocated ?? 12,
-    completedVisits: entitlementsData?.totalCompleted ?? 0,
-    remainingVisits: entitlementsData?.totalRemaining ?? 12,
-    safetyVisitsTotal: safetyEntitlement?.allocated ?? 6,
-    safetyVisitsCompleted: safetyEntitlement?.completed ?? 0,
-    cleaningVisitsTotal: cleaningEntitlement?.allocated ?? 6,
-    cleaningVisitsCompleted: cleaningEntitlement?.completed ?? 0,
+    totalVisits,
+    completedVisits,
+    remainingVisits,
+    safetyVisitsTotal: safetyTotal,
+    safetyVisitsCompleted: safetyCompleted,
+    cleaningVisitsTotal: cleaningTotal,
+    cleaningVisitsCompleted: cleaningCompleted,
   };
 
   // Next scheduled appointment
