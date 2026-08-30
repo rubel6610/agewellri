@@ -182,10 +182,7 @@ export function ClientTable({
               onChange={(e) => setStateFilter(e.target.value)}
               className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             >
-              <option value="ALL">All States</option>
-              <option value="RI">Rhode Island (RI)</option>
-              <option value="CT">Connecticut (CT)</option>
-              <option value="MA">Massachusetts (MA)</option>
+              <option value="ALL">Rhode Island (RI)</option>
             </select>
 
             <select

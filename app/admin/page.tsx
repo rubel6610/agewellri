@@ -479,26 +479,33 @@ export default function AdminOverviewPage() {
               <p className="text-xs text-[#64748B]">Active state jurisdictions &amp; service plans</p>
             </div>
 
-            {/* State Distribution */}
+            {/* Service Jurisdiction */}
             <div className="space-y-2.5 pt-4">
               <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                Jurisdiction Breakdown
+                Service Jurisdiction
               </span>
               <div className="space-y-2">
                 {[
-                  { state: "Rhode Island", code: "RI", count: stats.stateDistribution?.RI || 0, color: "bg-[#294B68]" },
-                  { state: "Massachusetts", code: "MA", count: stats.stateDistribution?.MA || 0, color: "bg-[#5E8FB2]" },
-                  { state: "Connecticut", code: "CT", count: stats.stateDistribution?.CT || 0, color: "bg-[#C28A3A]" },
+                  {
+                    state: "Rhode Island",
+                    code: "RI",
+                    count: stats.stateDistribution?.RI || kpis?.totalClientsCount || 0,
+                    color: "bg-[#294B68]",
+                  },
                 ].map((item) => {
-                  const total = Math.max(1, (stats.stateDistribution?.RI || 0) + (stats.stateDistribution?.MA || 0) + (stats.stateDistribution?.CT || 0));
-                  const pct = Math.round((item.count / total) * 100);
+                  const total = Math.max(1, item.count);
+                  const pct = 100;
                   return (
                     <div key={item.code} className="space-y-1">
                       <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-[#243746]">{item.state} ({item.code})</span>
-                        <span className="text-[#64748B]">{item.count} Members ({pct}%)</span>
+                        <span className="text-[#243746] font-bold">
+                          {item.state} ({item.code})
+                        </span>
+                        <span className="text-[#294B68] font-bold">
+                          {item.count} Members ({pct}%)
+                        </span>
                       </div>
-                      <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-[#EAF3F8] h-2.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${item.color}`}
                           style={{ width: `${pct}%` }}

@@ -782,9 +782,6 @@ export function ClientAgreementForm() {
                   className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746]"
                 >
                   <option value="RI">Rhode Island (RI)</option>
-                  <option value="CT">Connecticut (CT)</option>
-                  <option value="MA">Massachusetts (MA)</option>
-                  <option value="OTHER">Other State  (Enter below)</option>
                 </select>
               </div>
 

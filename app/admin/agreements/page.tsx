@@ -101,7 +101,7 @@ export default function AgreementsAdminPage() {
           Service Agreements Lifecycle
         </h1>
         <p className="text-sm text-[#64748B] mt-1">
-          Monitor AgeWellRI Member Service Agreements across RI, CT, and MA, track e-signature execution, and dispatch signature reminders.
+          Monitor AgeWellRI Member Service Agreements, track e-signature execution, and dispatch signature reminders.
         </p>
       </div>
 
@@ -133,10 +133,7 @@ export default function AgreementsAdminPage() {
               }}
               className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             >
-              <option value="ALL">All States (RI, CT, MA)</option>
-              <option value="RI">Rhode Island (RI)</option>
-              <option value="CT">Connecticut (CT)</option>
-              <option value="MA">Massachusetts (MA)</option>
+              <option value="ALL">Rhode Island (RI)</option>
             </select>
           </div>
         </div>
