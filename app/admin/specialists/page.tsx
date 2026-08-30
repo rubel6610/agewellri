@@ -21,8 +21,13 @@ import {
   AlertCircle,
   X,
   CalendarCheck,
+  Check,
+  RefreshCw,
+  Power,
+  PowerOff,
 } from "lucide-react";
 import {
+  confirmCriticalAction,
   confirmDelete,
   confirmEdit,
   showSuccessAlert,
@@ -51,7 +56,12 @@ const PRESET_COLORS = [
 ];
 
 export default function SpecialistsPage() {
-  const { data: specialists = [], isLoading, refetch } = useGetAllSpecialistsQuery();
+  const {
+    data: specialists = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useGetAllSpecialistsQuery(undefined, { refetchOnMountOrArgChange: true });
   const [createSpecialist, { isLoading: isCreating }] = useCreateSpecialistMutation();
   const [updateSpecialist, { isLoading: isUpdating }] = useUpdateSpecialistMutation();
   const [deleteSpecialist, { isLoading: isDeleting }] = useDeleteSpecialistMutation();
@@ -183,21 +193,39 @@ export default function SpecialistsPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const confirmed = await confirmDelete({
-      title: `Remove Specialist "${name}"?`,
-      text: "Are you sure you want to remove this specialist? Any historical appointments assigned to them will preserve their record.",
-      confirmButtonText: "Yes, Remove Specialist",
+  const handleToggleStatus = async (specialist: SpecialistItem) => {
+    const isCurrentlyActive = specialist.status === "ACTIVE";
+    const nextStatus = isCurrentlyActive ? "INACTIVE" : "ACTIVE";
+
+    const confirmed = await confirmCriticalAction({
+      title: isCurrentlyActive
+        ? `Deactivate "${specialist.name}"?`
+        : `Activate "${specialist.name}"?`,
+      text: isCurrentlyActive
+        ? `"${specialist.name}" will be marked inactive and will not appear in assignment dropdowns for new appointments.`
+        : `"${specialist.name}" will be restored to active status and will become available for appointment scheduling.`,
+      confirmButtonText: isCurrentlyActive ? "Yes, Deactivate" : "Yes, Activate Specialist",
+      isDestructive: isCurrentlyActive,
     });
 
     if (!confirmed) return;
 
     try {
-      await deleteSpecialist(id).unwrap();
-      await showSuccessAlert("Specialist Removed", `"${name}" has been removed from the active directory.`);
-      refetch();
+      await updateSpecialist({
+        id: specialist.id,
+        data: { status: nextStatus },
+      }).unwrap();
+
+      showToast(
+        `"${specialist.name}" is now ${nextStatus === "ACTIVE" ? "Active" : "Inactive"}.`,
+        "success"
+      );
+      await refetch();
     } catch (err: any) {
-      showErrorAlert("Deletion Failed", err?.data?.message || "Failed to delete specialist.");
+      showErrorAlert(
+        "Status Change Failed",
+        err?.data?.message || err?.message || "Failed to update specialist status."
+      );
     }
   };
 
@@ -241,13 +269,26 @@ export default function SpecialistsPage() {
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Specialist</span>
-        </button>
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="px-3.5 py-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Refresh specialist roster"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`} />
+            <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
+
+          <button
+            onClick={openCreateModal}
+            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Specialist</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Table Card */}
@@ -395,20 +436,41 @@ export default function SpecialistsPage() {
 
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEditModal(specialist)}
-                            className="p-2 rounded-xl text-[#294B68] hover:bg-[#EAF3F8] transition-colors cursor-pointer"
-                            title="Edit Specialist"
+                            className="px-2.5 py-1.5 rounded-lg border border-[#D9E4EC] bg-white text-[#294B68] hover:bg-[#EAF3F8] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                            title="Edit Specialist Profile"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
+                            <span>Edit</span>
                           </button>
+
                           <button
-                            onClick={() => handleDelete(specialist.id, specialist.name)}
-                            className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Archive Specialist"
+                            onClick={() => handleToggleStatus(specialist)}
+                            disabled={isUpdating}
+                            className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                              specialist.status === "ACTIVE"
+                                ? "bg-white border-amber-200 text-amber-800 hover:bg-amber-50"
+                                : "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                            }`}
+                            title={
+                              specialist.status === "ACTIVE"
+                                ? "Deactivate Specialist (Mark Inactive)"
+                                : "Activate Specialist (Mark Active)"
+                            }
                           >
-                            <Trash2 className="w-4 h-4" />
+                            {specialist.status === "ACTIVE" ? (
+                              <>
+                                <PowerOff className="w-3.5 h-3.5 text-amber-600" />
+                                <span>Deactivate</span>
+                              </>
+                            ) : (
+                              <>
+                                <Power className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Activate</span>
+                              </>
+                            )}
                           </button>
                         </div>
                       </td>
@@ -512,32 +574,42 @@ export default function SpecialistsPage() {
                 </div>
               </div>
 
-              {/* Specialties Checkboxes */}
+              {/* Specialties Buttons */}
               <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-2">
-                  Specialties &amp; Capabilities
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider">
+                    Specialties &amp; Capabilities
+                  </label>
+                  <span className="text-[11px] font-semibold text-[#5E8FB2]">
+                    {formData.specialties.length} selected
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   {PRESET_SPECIALTIES.map((spec) => {
                     const isSelected = formData.specialties.includes(spec);
                     return (
-                      <label
+                      <button
                         key={spec}
-                        onClick={() => handleSpecialtyToggle(spec)}
-                        className={`p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all flex items-center gap-2 ${
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleSpecialtyToggle(spec);
+                        }}
+                        className={`p-2.5 rounded-xl border text-xs font-bold text-left cursor-pointer transition-all flex items-center justify-between gap-2 select-none ${
                           isSelected
-                            ? "bg-[#294B68] text-white border-[#294B68]"
+                            ? "bg-[#294B68] text-white border-[#294B68] shadow-xs"
                             : "bg-[#F0F5F9] text-[#243746] border-[#D9E4EC] hover:bg-[#EAF3F8]"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => {}}
-                          className="hidden"
-                        />
-                        <span>{spec}</span>
-                      </label>
+                        <span className="leading-snug">{spec}</span>
+                        {isSelected ? (
+                          <div className="w-4 h-4 rounded-md bg-white/20 flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-4 h-4 rounded-md border border-[#CBD5E1] bg-white shrink-0" />
+                        )}
+                      </button>
                     );
                   })}
                 </div>

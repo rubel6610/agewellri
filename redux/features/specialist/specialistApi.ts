@@ -13,10 +13,15 @@ export const specialistApi = baseApi.injectEndpoints({
         url: "/specialists",
         method: "GET",
       }),
-      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: SpecialistItem[] }) =>
         response.data || [],
-      providesTags: ["Specialist"],
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Specialist" as const, id })),
+              { type: "Specialist", id: "LIST" },
+            ]
+          : [{ type: "Specialist", id: "LIST" }],
     }),
 
     getSpecialistById: builder.query<SpecialistItem, string>({
@@ -24,10 +29,9 @@ export const specialistApi = baseApi.injectEndpoints({
         url: `/specialists/${id}`,
         method: "GET",
       }),
-      keepUnusedDataFor: 1800,
       transformResponse: (response: { success: boolean; data: SpecialistItem }) =>
         response.data,
-      providesTags: ["Specialist"],
+      providesTags: (_result, _error, id) => [{ type: "Specialist", id }],
     }),
 
     createSpecialist: builder.mutation<SpecialistItem, CreateSpecialistPayload>({
@@ -36,7 +40,7 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Specialist"],
+      invalidatesTags: [{ type: "Specialist", id: "LIST" }, "Specialist"],
     }),
 
     updateSpecialist: builder.mutation<
@@ -48,7 +52,11 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Specialist"],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Specialist", id },
+        { type: "Specialist", id: "LIST" },
+        "Specialist",
+      ],
     }),
 
     deleteSpecialist: builder.mutation<{ success: boolean; message: string }, string>({
@@ -56,7 +64,11 @@ export const specialistApi = baseApi.injectEndpoints({
         url: `/specialists/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Specialist"],
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Specialist", id },
+        { type: "Specialist", id: "LIST" },
+        "Specialist",
+      ],
     }),
 
     assignSpecialist: builder.mutation<any, AssignSpecialistPayload>({
@@ -65,7 +77,7 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Specialist"],
+      invalidatesTags: ["Specialist", "Appointment"],
     }),
   }),
   overrideExisting: true,
