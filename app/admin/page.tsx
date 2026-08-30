@@ -266,7 +266,7 @@ export default function AdminOverviewPage() {
     title: item.title,
     count: 1,
     description: item.description,
-    href: item.actionHref,
+    href: item.actionHref || (item.type === "REPORT" ? "/admin/appointments?tab=COMPLETED" : "/admin"),
     type:
       item.type === "AGREEMENT"
         ? "agreement"
@@ -345,7 +345,7 @@ export default function AdminOverviewPage() {
           value={kpis?.reportsPendingCount ?? 0}
           subtitle="Completed visits"
           icon={<FileCheck2 className="w-5 h-5 text-[#C95C5C]" />}
-          href="/admin/reports"
+          href="/admin/appointments?tab=COMPLETED"
           urgent={(kpis?.reportsPendingCount ?? 0) > 0}
         />
 

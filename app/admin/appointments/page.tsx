@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   useGetAdminAppointmentsQuery,
   useUpdateAppointmentStatusMutation,
@@ -35,9 +36,29 @@ import {
 } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
 
-export default function AppointmentsAdminPage() {
+function AppointmentsAdminContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab")?.toUpperCase() || searchParams.get("status")?.toUpperCase();
+
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"REQUESTS" | "SCHEDULED" | "COMPLETED" | "CANCELLED" | "ALL">("REQUESTS");
+  const [activeTab, setActiveTab] = useState<"REQUESTS" | "SCHEDULED" | "COMPLETED" | "CANCELLED" | "ALL">(() => {
+    if (tabParam === "COMPLETED") return "COMPLETED";
+    if (tabParam === "SCHEDULED") return "SCHEDULED";
+    if (tabParam === "CANCELLED") return "CANCELLED";
+    if (tabParam === "ALL") return "ALL";
+    return "REQUESTS";
+  });
+
+  useEffect(() => {
+    if (tabParam) {
+      if (tabParam === "COMPLETED") setActiveTab("COMPLETED");
+      else if (tabParam === "SCHEDULED") setActiveTab("SCHEDULED");
+      else if (tabParam === "REQUESTS") setActiveTab("REQUESTS");
+      else if (tabParam === "CANCELLED") setActiveTab("CANCELLED");
+      else if (tabParam === "ALL") setActiveTab("ALL");
+    }
+  }, [tabParam]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -659,5 +680,20 @@ export default function AppointmentsAdminPage() {
         appointment={selectedApptForReport}
       />
     </div>
+  );
+}
+
+export default function AppointmentsAdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-[#5E8FB2] space-y-3 animate-pulse">
+          <div className="h-8 bg-[#E2E8F0] rounded-xl w-64 mx-auto" />
+          <div className="h-64 bg-[#F8FAFC] rounded-3xl border border-[#D9E4EC] w-full" />
+        </div>
+      }
+    >
+      <AppointmentsAdminContent />
+    </Suspense>
   );
 }
