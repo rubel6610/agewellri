@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, KeyRound, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { PasswordInput } from "./password-input";
 import { useChangePasswordMutation } from "@/redux/features/auth/authApi";
+import { confirmEdit, showSuccessAlert, showErrorAlert } from "@/lib/alerts/sweetalert";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -49,6 +50,15 @@ export function ChangePasswordModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    const confirmed = await confirmEdit({
+      title: "Update Account Password?",
+      text: "Are you sure you want to change your account password?",
+      confirmButtonText: "Yes, Update Password",
+    });
+
+    if (!confirmed) return;
+
     setErrors({});
 
     try {
@@ -61,17 +71,15 @@ export function ChangePasswordModal({
         setSuccessMessage(
           response.message || "Password updated successfully!"
         );
-        setTimeout(() => {
-          setSuccessMessage(null);
-          setOldPassword("");
-          setNewPassword("");
-          setConfirmNewPassword("");
-          onClose();
-        }, 1500);
+        await showSuccessAlert("Password Updated", "Your account password has been updated securely.");
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        onClose();
       } else {
-        setErrors({
-          general: response.message || "Failed to update password.",
-        });
+        const msg = response.message || "Failed to update password.";
+        setErrors({ general: msg });
+        showErrorAlert("Update Failed", msg);
       }
     } catch (err: unknown) {
       const errorData = (
@@ -91,15 +99,17 @@ export function ChangePasswordModal({
         if (errorData.errors.newPassword?.[0]) {
           fieldErrors.newPassword = errorData.errors.newPassword[0];
         }
-        fieldErrors.general = errorData.message || "Please check the fields.";
+        const genMsg = errorData.message || "Please check the fields.";
+        fieldErrors.general = genMsg;
         setErrors(fieldErrors);
+        showErrorAlert("Password Error", genMsg);
       } else {
-        setErrors({
-          general:
-            errorData?.message ||
-            (err as { message?: string })?.message ||
-            "Unable to change password. Please verify your current password.",
-        });
+        const genMsg =
+          errorData?.message ||
+          (err as { message?: string })?.message ||
+          "Unable to change password. Please verify your current password.";
+        setErrors({ general: genMsg });
+        showErrorAlert("Update Failed", genMsg);
       }
     }
   };

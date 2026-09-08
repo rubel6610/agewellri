@@ -1,15 +1,35 @@
 "use client";
 
 import React from "react";
-import { FileText, Download, CheckCircle2, Clock, ShieldAlert } from "lucide-react";
-import { Report } from "@/lib/types/dashboard";
+import { FileText, Download, CheckCircle2, Clock, UserCheck } from "lucide-react";
+import { ReportItem } from "@/redux/features/report/reportTypes";
+import { downloadReportPdf } from "@/lib/api/report-download";
 
 interface ReportCardProps {
-  report: Report;
+  report: ReportItem | any;
 }
 
 export function ReportCard({ report }: ReportCardProps) {
-  const isAvailable = report.status === "available";
+  const isAvailable =
+    report.status === "available" ||
+    report.status === "UPLOADED" ||
+    report.status === "GENERATED" ||
+    report.reportStatus === "UPLOADED";
+
+  const formattedDate =
+    report.formattedVisitDate ||
+    (report.visitDate
+      ? new Date(report.visitDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "Recent Visit");
+
+  const handleDownload = () => {
+    const reportId = report.id || report.reportId;
+    downloadReportPdf(reportId, `${report.title || "Visit_Report"}.pdf`);
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 shadow-xs flex flex-col justify-between space-y-4 hover:border-[#5E8FB2] transition-all">
@@ -20,20 +40,24 @@ export function ReportCard({ report }: ReportCardProps) {
           </div>
           <div>
             <h4 className="font-bold text-[#243746] text-base sm:text-lg">
-              {report.title}
+              {report.title || `${report.serviceType || "Visit"} Report`}
             </h4>
             <p className="text-xs text-[#64748B] mt-0.5">
-              Completed Visit Date: <strong>{report.visitDate}</strong>
+              Service: <strong className="text-[#243746]">{report.serviceType || "Home Safety Visit"}</strong>
+            </p>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              Visit Date: <strong>{formattedDate}</strong>
             </p>
           </div>
         </div>
 
-        {isAvailable && report.score !== undefined && (
-          <div className="text-right shrink-0">
-            <span className="text-2xl font-extrabold text-[#294B68]">
-              {report.score}
+        {report.specialistName && (
+          <div className="text-right shrink-0 hidden sm:block">
+            <span className="text-[11px] text-[#94A3B8] block uppercase font-bold">Specialist</span>
+            <span className="text-xs font-bold text-[#294B68] flex items-center justify-end gap-1">
+              <UserCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
+              {report.specialistName}
             </span>
-            <span className="text-xs text-[#64748B] block font-semibold">/100 Score</span>
           </div>
         )}
       </div>
@@ -41,16 +65,12 @@ export function ReportCard({ report }: ReportCardProps) {
       {/* Summary Box */}
       <div className="p-4 bg-[#F7FAFC] rounded-xl border border-[#D9E4EC] text-sm text-[#243746]">
         <p className="text-xs text-[#64748B] font-bold uppercase tracking-wider mb-1">
-          Specialist Assessment Summary
+          Specialist Visit Summary
         </p>
-        <p className="leading-relaxed">{report.summary}</p>
-
-        {report.recommendationsCount > 0 && (
-          <div className="mt-2 text-xs font-semibold text-[#5E8FB2] flex items-center gap-1">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>{report.recommendationsCount} safety recommendations outlined in report</span>
-          </div>
-        )}
+        <p className="leading-relaxed text-xs sm:text-sm">
+          {report.summary ||
+            "Official visit report uploaded following your completed AgeWellRI service visit."}
+        </p>
       </div>
 
       {/* Actions */}
@@ -67,23 +87,16 @@ export function ReportCard({ report }: ReportCardProps) {
           </span>
         )}
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => alert(`Opening ${report.title} online view`)}
-            disabled={!isAvailable}
-            className="px-3.5 py-2 text-xs font-bold text-[#294B68] bg-[#EAF3F8] hover:bg-[#D9E4EC] rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            View Report
-          </button>
-          <button
-            onClick={() => alert(`Downloading PDF for ${report.title}`)}
-            disabled={!isAvailable}
-            aria-label={`Download PDF for ${report.title}`}
-            className="p-2 text-xs font-bold text-white bg-[#294B68] hover:bg-[#1E374D] rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleDownload}
+          disabled={!isAvailable}
+          aria-label={`Download PDF for ${report.title}`}
+          className="px-4 py-2 text-xs font-bold text-white bg-[#294B68] hover:bg-[#1E374D] rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
+        >
+          <Download className="w-4 h-4" />
+          <span>Download PDF</span>
+        </button>
       </div>
     </div>
   );

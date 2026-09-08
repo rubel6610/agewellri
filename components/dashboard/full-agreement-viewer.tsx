@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import jsPDF from "jspdf";
+import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
 interface FullAgreementViewerProps {
   agreement: AgreementDocument;
@@ -28,19 +29,32 @@ interface FullAgreementViewerProps {
 export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
+  const statusUpper = (agreement.status || "").toUpperCase();
   const isExecuted =
-    agreement.status === "SIGNED" ||
-    agreement.status === "executed" ||
-    agreement.status === "signed";
+    Boolean(agreement.clientSignature) ||
+    statusUpper === "EXECUTED" ||
+    statusUpper === "SIGNED" ||
+    statusUpper === "ACTIVE" ||
+    statusUpper === "COMPLETED" ||
+    Boolean(agreement.signedAt) ||
+    Boolean(agreement.executedAt);
 
   const isGuardianPlus = agreement.selectedPlan === "GUARDIAN_PLUS";
 
-  const formattedDate = agreement.agreementDate
-    ? new Date(agreement.agreementDate).toLocaleDateString("en-US", {
+  const rawDate =
+    agreement.agreementDate ||
+    agreement.signedAt ||
+    agreement.executedAt ||
+    agreement.createdAt;
+
+  const formattedDate = rawDate
+    ? new Date(rawDate).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
       })
+    : isExecuted
+    ? "Executed & Active"
     : "Pending Execution";
 
   const handleDownloadPdf = async () => {
@@ -424,9 +438,13 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       const clientNameSafe = (agreement.clientFullName || "Client")
         .replace(/[^a-zA-Z0-9]/g, "_");
       doc.save(`AgeWellRI_Service_Agreement_${clientNameSafe}.pdf`);
+      showToast("Agreement PDF downloaded successfully");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
-      alert("Unable to generate PDF. You can also use the Print button to Save as PDF.");
+      showErrorAlert(
+        "PDF Generation Error",
+        "Unable to generate PDF directly. You can also use the Print button to Save as PDF."
+      );
     } finally {
       setIsGeneratingPdf(false);
     }
