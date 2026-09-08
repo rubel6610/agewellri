@@ -1,15 +1,27 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { FileCheck, Download, ExternalLink, ShieldCheck, AlertCircle } from "lucide-react";
 import { Agreement } from "@/lib/types/dashboard";
+import { showSuccessAlert, showToast } from "@/lib/alerts/sweetalert";
 
 interface AgreementCardProps {
   agreement: Agreement;
 }
 
 export function AgreementCard({ agreement }: AgreementCardProps) {
-  const isExecuted = agreement.status === "executed" || agreement.status === "signed";
+  const statusUpper = (agreement.status || "").toUpperCase();
+  const isExecuted =
+    Boolean(agreement.signedDate) ||
+    statusUpper === "EXECUTED" ||
+    statusUpper === "SIGNED" ||
+    statusUpper === "ACTIVE" ||
+    statusUpper === "COMPLETED";
+
+  const handleDownload = () => {
+    showToast("Downloading Agreement PDF...");
+  };
 
   return (
     <div className="bg-white rounded-2xl border border-[#D9E4EC] p-6 shadow-xs space-y-6">
@@ -62,15 +74,16 @@ export function AgreementCard({ agreement }: AgreementCardProps) {
       <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
         {isExecuted ? (
           <>
-            <button
-              onClick={() => alert("Viewing AgeWellRI Service Agreement online")}
+            <Link
+              href="/agreement"
               className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <ExternalLink className="w-4 h-4" />
               <span>View Agreement</span>
-            </button>
+            </Link>
             <button
-              onClick={() => alert("Downloading Agreement PDF")}
+              type="button"
+              onClick={handleDownload}
               className="w-full sm:w-auto px-5 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <Download className="w-4 h-4" />
@@ -78,13 +91,13 @@ export function AgreementCard({ agreement }: AgreementCardProps) {
             </button>
           </>
         ) : (
-          <button
-            onClick={() => alert("Opening Document Signature Portal")}
+          <Link
+            href="/agreement"
             className="w-full sm:w-auto px-6 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-base rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <FileCheck className="w-5 h-5" />
             <span>Review &amp; Sign Agreement</span>
-          </button>
+          </Link>
         )}
       </div>
     </div>
