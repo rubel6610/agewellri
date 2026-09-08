@@ -19,8 +19,8 @@ export function TrustBadges({ className = "" }: TrustBadgesProps) {
     },
     {
       icon: HeartHandshake,
-      title: "Family First Care",
-      subtitle: "Transparent Reports Sent Directly to Caregivers",
+      title: "Family First",
+      subtitle: "Transparent Reports Sent Directly to Your Family",
     },
   ];
 

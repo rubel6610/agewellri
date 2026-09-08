@@ -248,15 +248,17 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
 
       y += 18;
 
-      // ------------------------------------------
-      // 3. Scope of Services
-      // ------------------------------------------
-      drawSectionHeader("3. Scope of Services");
-      checkPageBreak(25);
+      // ---------------------------------------------------------
+      // 3. Scope of Services, Policies & Signatures (Unified Section)
+      // ---------------------------------------------------------
+      drawSectionHeader("3. Scope of Services, Policies & Signatures");
+      checkPageBreak(32);
 
-      doc.setFillColor(...paleBg);
-      doc.setDrawColor(...borderColor);
-      doc.roundedRect(margin, y, contentWidth, 24, 1, 1, "FD");
+      // --- 3. Scope of Services ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...lightNavy);
+      doc.text("3. Scope of Services", margin + 3.5, y + 3.5);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
@@ -270,24 +272,28 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       const lines2 = doc.splitTextToSize(scope2, contentWidth - 7);
       const lines3 = doc.splitTextToSize(scope3, contentWidth - 7);
 
-      let textY = y + 4.2;
+      let textY = y + 7.5;
       doc.text(lines1, margin + 3.5, textY);
       textY += lines1.length * 2.8 + 1;
       doc.text(lines2, margin + 3.5, textY);
       textY += lines2.length * 2.8 + 1;
       doc.text(lines3, margin + 3.5, textY);
+      textY += lines3.length * 2.8 + 2;
 
-      y += 26;
+      y = textY;
 
-      // ------------------------------------------
-      // 4. Billing, Payment & Cancellation
-      // ------------------------------------------
-      drawSectionHeader("4. Billing, Payment & Cancellation");
-      checkPageBreak(17);
-
-      doc.setFillColor(...paleBg);
+      // Divider line
       doc.setDrawColor(...borderColor);
-      doc.roundedRect(margin, y, contentWidth, 16, 1, 1, "FD");
+      doc.line(margin + 3.5, y, margin + contentWidth - 3.5, y);
+      y += 3.5;
+
+      checkPageBreak(25);
+
+      // --- 4. Billing, Payment & Cancellation ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...lightNavy);
+      doc.text("4. Billing, Payment & Cancellation", margin + 3.5, y + 3.5);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
@@ -297,20 +303,26 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       const bLines1 = doc.splitTextToSize(bill1, contentWidth - 7);
       const bLines2 = doc.splitTextToSize(bill2, contentWidth - 7);
 
-      doc.text(bLines1, margin + 3.5, y + 4.2);
-      doc.text(bLines2, margin + 3.5, y + 4.2 + bLines1.length * 2.8 + 1);
+      textY = y + 7.5;
+      doc.text(bLines1, margin + 3.5, textY);
+      textY += bLines1.length * 2.8 + 1;
+      doc.text(bLines2, margin + 3.5, textY);
+      textY += bLines2.length * 2.8 + 2;
 
-      y += 18;
+      y = textY;
 
-      // ------------------------------------------
-      // 5. Liability, Privacy & Dispute Resolution
-      // ------------------------------------------
-      drawSectionHeader("5. Liability, Privacy & Dispute Resolution");
-      checkPageBreak(19);
-
-      doc.setFillColor(...paleBg);
+      // Divider line
       doc.setDrawColor(...borderColor);
-      doc.roundedRect(margin, y, contentWidth, 18, 1, 1, "FD");
+      doc.line(margin + 3.5, y, margin + contentWidth - 3.5, y);
+      y += 3.5;
+
+      checkPageBreak(25);
+
+      // --- 5. Liability, Privacy & Dispute Resolution ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...lightNavy);
+      doc.text("5. Liability, Privacy & Dispute Resolution", margin + 3.5, y + 3.5);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
@@ -320,16 +332,27 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       const lLines1 = doc.splitTextToSize(liab1, contentWidth - 7);
       const lLines2 = doc.splitTextToSize(liab2, contentWidth - 7);
 
-      doc.text(lLines1, margin + 3.5, y + 4.2);
-      doc.text(lLines2, margin + 3.5, y + 4.2 + lLines1.length * 2.8 + 1);
+      textY = y + 7.5;
+      doc.text(lLines1, margin + 3.5, textY);
+      textY += lLines1.length * 2.8 + 1;
+      doc.text(lLines2, margin + 3.5, textY);
+      textY += lLines2.length * 2.8 + 2;
 
-      y += 20;
+      y = textY;
 
-      // ------------------------------------------
-      // 6. Acknowledgment and Signatures
-      // ------------------------------------------
-      drawSectionHeader("6. Acknowledgment and Signatures");
-      checkPageBreak(42);
+      // Divider line
+      doc.setDrawColor(...borderColor);
+      doc.line(margin + 3.5, y, margin + contentWidth - 3.5, y);
+      y += 3.5;
+
+      checkPageBreak(45);
+
+      // --- 6. Acknowledgment and Signatures ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...lightNavy);
+      doc.text("6. Acknowledgment and Signatures", margin + 3.5, y + 3.5);
+      y += 5.5;
 
       // Consent statement
       doc.setFillColor(...cardBg);
@@ -415,6 +438,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFontSize(5.5);
       doc.setTextColor(...mutedText);
       doc.text(`Signed: ${formattedDate} • Legally Binding`, pageWidth - margin - 55, y + 28.5);
+
+      y += 34;
 
       // Document Bottom Footer on Page
       doc.setFont("helvetica", "normal");
@@ -670,140 +695,146 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
           </div>
         </div>
 
-        {/* 3. Scope of Services */}
-        <div className="space-y-3">
-          <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2">
-            <span>3. Scope of Services</span>
+        {/* 3. Scope of Services, Policies & Signatures (Unified Section) */}
+        <div className="space-y-4">
+          <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
+            <span>3. Scope of Services, Policies &amp; Signatures</span>
           </div>
 
-          <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl text-xs text-[#475569] space-y-2.5 leading-relaxed">
-            <p className="font-bold text-[#243746]">
-              AgeWellRI provides home safety oversight, organization, fall-prevention coaching, and safety system audits as outlined below:
-            </p>
-            <p>
-              <strong>Bedrooms &amp; Living Areas:</strong> Walk pathways, clear indoor electrical cords, ensure bedside lighting and emergency phones are easily reachable, secure throw rugs with non-skid backing, and perform HEPA vacuuming and dusting to reduce respiratory allergens.
-            </p>
-            <p>
-              <strong>Life Safety Systems:</strong> Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert systems; checks water heater temperature to prevent accidental scalding, and reviews emergency exit pathways.
-            </p>
-            <p>
-              <strong>Kitchen &amp; Laundry:</strong> Reorganizes heavy or daily items to lower-level shelves for easy, safe reach; inspects appliances for potential hazards, clears dryer lint pathways, and audits moisture/mold concerns.
-            </p>
-          </div>
-        </div>
-
-        {/* 4. Billing, Payment & Cancellation */}
-        <div className="space-y-3">
-          <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2">
-            <span>4. Billing, Payment &amp; Cancellation</span>
-          </div>
-
-          <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl text-xs text-[#475569] space-y-2 leading-relaxed">
-            <p>
-              <strong>Billing and Payment:</strong> Billed quarterly via check, ACH, or credit/debit card. Invoices are generated at the commencement of each cycle. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
-            </p>
-            <p>
-              <strong>Cancellation by Client:</strong> Cancel at any time with 30 days written notice. Cancellation takes effect at the end of the current billing quarter. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
-            </p>
-          </div>
-        </div>
-
-        {/* 5. Liability, Privacy & Dispute Resolution */}
-        <div className="space-y-3">
-          <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2">
-            <span>5. Liability, Privacy &amp; Dispute Resolution</span>
-          </div>
-
-          <div className="p-4 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl text-xs text-[#475569] space-y-2 leading-relaxed">
-            <p>
-              <strong>Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the quarter a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
-            </p>
-            <p>
-              <strong>Privacy and Confidentiality:</strong> Client safety data, contact info, and home assessment results are collected solely to deliver and coordinate services. Reports are confidential and accessible only to the client and designated authorized representatives.
-            </p>
-          </div>
-        </div>
-
-        {/* 6. Acknowledgment and Signatures */}
-        <div className="space-y-4 pt-2">
-          <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center gap-2">
-            <span>6. Acknowledgment and Signatures</span>
-          </div>
-
-          <div className="p-4 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] space-y-2 text-xs">
-            <div className="flex items-center gap-2 font-bold text-[#3F8F6B]">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Terms &amp; Conditions Acknowledged and Accepted</span>
-            </div>
-            <p className="text-[#64748B] leading-relaxed">
-              The client and authorized representative confirm they have read, understood, and agreed to all terms of this Client Service Agreement.
-            </p>
-          </div>
-
-          {/* Signatures & Execution Metadata */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] text-xs sm:text-sm">
-            <div>
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Client Printed Name
-              </span>
-              <p className="font-bold text-[#243746] text-base mt-0.5">
-                {agreement.clientPrintedName || agreement.clientFullName}
+          <div className="p-6 bg-[#F7FAFC] border border-[#D9E4EC] rounded-2xl space-y-6 text-xs text-[#475569]">
+            {/* 3. Scope of Services */}
+            <div className="space-y-2.5">
+              <h4 className="font-extrabold text-sm text-[#243746] border-b border-[#D9E4EC] pb-2">
+                3. Scope of Services
+              </h4>
+              <p className="font-bold text-[#243746]">
+                AgeWellRI provides home safety oversight, organization, fall-prevention coaching, and safety system audits as outlined below:
               </p>
+              <div className="space-y-2 leading-relaxed">
+                <p>
+                  <strong className="text-[#243746]">Bedrooms &amp; Living Areas:</strong> Walk pathways, clear indoor electrical cords, ensure bedside lighting and emergency phones are easily reachable, secure throw rugs with non-skid backing, and perform HEPA vacuuming and dusting to reduce respiratory allergens.
+                </p>
+                <p>
+                  <strong className="text-[#243746]">Life Safety Systems:</strong> Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert systems; checks water heater temperature to prevent accidental scalding, and reviews emergency exit pathways.
+                </p>
+                <p>
+                  <strong className="text-[#243746]">Kitchen &amp; Laundry:</strong> Reorganizes heavy or daily items to lower-level shelves for easy, safe reach; inspects appliances for potential hazards, clears dryer lint pathways, and audits moisture/mold concerns.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Authorized Representative Name
-              </span>
-              <p className="font-bold text-[#243746] mt-0.5">
-                {agreement.authorizedRepName || "N/A (Signed by Client)"}
-              </p>
+            {/* 4. Billing, Payment & Cancellation */}
+            <div className="space-y-2.5 pt-2">
+              <h4 className="font-extrabold text-sm text-[#243746] border-b border-[#D9E4EC] pb-2">
+                4. Billing, Payment &amp; Cancellation
+              </h4>
+              <div className="space-y-2 leading-relaxed">
+                <p>
+                  <strong className="text-[#243746]">Billing and Payment:</strong> Billed quarterly via check, ACH, or credit/debit card. Invoices are generated at the commencement of each cycle. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
+                </p>
+                <p>
+                  <strong className="text-[#243746]">Cancellation by Client:</strong> Cancel at any time with 30 days written notice. Cancellation takes effect at the end of the current billing quarter. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Execution Date
-              </span>
-              <p className="font-bold text-[#243746] mt-0.5">{formattedDate}</p>
+            {/* 5. Liability, Privacy & Dispute Resolution */}
+            <div className="space-y-2.5 pt-2">
+              <h4 className="font-extrabold text-sm text-[#243746] border-b border-[#D9E4EC] pb-2">
+                5. Liability, Privacy &amp; Dispute Resolution
+              </h4>
+              <div className="space-y-2 leading-relaxed">
+                <p>
+                  <strong className="text-[#243746]">Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the quarter a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
+                </p>
+                <p>
+                  <strong className="text-[#243746]">Privacy and Confidentiality:</strong> Client safety data, contact info, and home assessment results are collected solely to deliver and coordinate services. Reports are confidential and accessible only to the client and designated authorized representatives.
+                </p>
+              </div>
             </div>
 
-            <div>
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
-                Relationship to Client
-              </span>
-              <p className="font-bold text-[#243746] mt-0.5">
-                {agreement.relationshipToClient || "Self"}
-              </p>
-            </div>
+            {/* 6. Acknowledgment and Signatures */}
+            <div className="space-y-4 pt-2">
+              <h4 className="font-extrabold text-sm text-[#243746] border-b border-[#D9E4EC] pb-2">
+                6. Acknowledgment and Signatures
+              </h4>
 
-            {/* Digital Signature Render */}
-            <div className="sm:col-span-2 pt-3 border-t border-[#D9E4EC]">
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block mb-2">
-                Digital Signature on File
-              </span>
-
-              {agreement.clientSignature && agreement.clientSignature.startsWith("data:image") ? (
-                <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] max-w-sm">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={agreement.clientSignature}
-                    alt="Client Signature"
-                    className="h-16 w-auto object-contain"
-                  />
-                  <span className="text-[10px] text-[#3F8F6B] font-bold block pt-1">
-                    ✓ Verified Digital Electronic Signature
-                  </span>
+              <div className="p-4 bg-[#EAF3F8] rounded-xl border border-[#5E8FB2]/30 space-y-1.5 text-xs">
+                <div className="flex items-center gap-2 font-bold text-[#3F8F6B]">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Terms &amp; Conditions Acknowledged and Accepted</span>
                 </div>
-              ) : (
-                <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] max-w-sm">
-                  <p className="font-serif italic text-lg text-[#294B68]">
+                <p className="text-[#243746] leading-relaxed">
+                  The client and authorized representative confirm they have read, understood, and agreed to all terms of this Client Service Agreement.
+                </p>
+              </div>
+
+              {/* Signatures & Execution Metadata */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-white rounded-xl border border-[#D9E4EC] text-xs sm:text-sm">
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                    Client Printed Name
+                  </span>
+                  <p className="font-bold text-[#243746] text-base mt-0.5">
                     {agreement.clientPrintedName || agreement.clientFullName}
                   </p>
-                  <span className="text-[10px] text-[#3F8F6B] font-bold block pt-0.5">
-                    ✓ Verified Electronic Signature on Record
-                  </span>
                 </div>
-              )}
+
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                    Authorized Representative Name
+                  </span>
+                  <p className="font-bold text-[#243746] mt-0.5">
+                    {agreement.authorizedRepName || "N/A (Signed by Client)"}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                    Execution Date
+                  </span>
+                  <p className="font-bold text-[#243746] mt-0.5">{formattedDate}</p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                    Relationship to Client
+                  </span>
+                  <p className="font-bold text-[#243746] mt-0.5">
+                    {agreement.relationshipToClient || "Self"}
+                  </p>
+                </div>
+
+                {/* Digital Signature Render */}
+                <div className="sm:col-span-2 pt-3 border-t border-[#D9E4EC]">
+                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block mb-2">
+                    Digital Signature on File
+                  </span>
+
+                  {agreement.clientSignature && agreement.clientSignature.startsWith("data:image") ? (
+                    <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] max-w-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={agreement.clientSignature}
+                        alt="Client Signature"
+                        className="h-16 w-auto object-contain"
+                      />
+                      <span className="text-[10px] text-[#3F8F6B] font-bold block pt-1">
+                        ✓ Verified Digital Electronic Signature
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] max-w-sm">
+                      <p className="font-serif italic text-lg text-[#294B68]">
+                        {agreement.clientPrintedName || agreement.clientFullName}
+                      </p>
+                      <span className="text-[10px] text-[#3F8F6B] font-bold block pt-0.5">
+                        ✓ Verified Electronic Signature on Record
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
