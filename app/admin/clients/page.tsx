@@ -1,38 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { getAdminClients } from "@/lib/api/admin-api";
-import { MasterClientRecord } from "@/lib/types/admin";
+import React, { useState } from "react";
+import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { ClientTable } from "@/components/admin/client-table";
 import { AddClientModal } from "@/components/admin/add-client-modal";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
+import { Loader2 } from "lucide-react";
 
 export default function ClientsDirectoryPage() {
-  const [clients, setClients] = useState<MasterClientRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: clientsRes, isLoading, refetch } = useGetAdminClientsQuery();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
+  const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    getAdminClients().then((data) => {
-      setClients(data);
-      setLoading(false);
-    });
-  }, []);
+  const clients = (clientsRes?.data || []) as any[];
 
-  const handleOpenScheduleModal = (clientId?: string) => {
+  const handleOpenScheduleModal = (clientId?: string, clientName?: string) => {
     setSelectedClientId(clientId);
+    setSelectedClientName(clientName);
     setScheduleModalOpen(true);
   };
-
-  if (loading) {
-    return (
-      <div className="p-12 text-center text-[#64748B] bg-white rounded-3xl border border-[#D9E4EC]">
-        Loading client directory...
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -43,22 +31,29 @@ export default function ClientsDirectoryPage() {
             Master Client Directory
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage AgeWellRI client accounts, onboarding progress, agreements, and active subscriptions.
+            Manage AgeWellRI client accounts, onboarding progress, state-specific legal agreements, and active subscriptions.
           </p>
         </div>
       </div>
 
       <ClientTable
         clients={clients}
+        isLoading={isLoading}
         onOpenAddClientModal={() => setAddModalOpen(true)}
         onOpenScheduleModal={handleOpenScheduleModal}
       />
 
-      <AddClientModal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} />
+      <AddClientModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
       <AdminScheduleModal
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         defaultClientId={selectedClientId}
+        clientName={selectedClientName}
       />
     </div>
   );

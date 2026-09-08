@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
+import { showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 interface FormErrors {
   firstName?: string;
@@ -22,15 +23,28 @@ interface FormErrors {
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const emailParam = searchParams.get("email") || "";
+  const tokenParam = searchParams.get("token") || "";
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
-    email: "",
+    email: emailParam,
     phone: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
   });
+
+  useEffect(() => {
+    if (emailParam) {
+      setFormData((prev) => ({
+        ...prev,
+        email: prev.email || emailParam,
+      }));
+    }
+  }, [emailParam]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [registerSuccessMessage, setRegisterSuccessMessage] = useState<string | null>(null);
@@ -130,8 +144,8 @@ export function RegisterForm() {
         );
 
         setTimeout(() => {
-          router.push(targetRoute);
-        }, 800);
+          router.replace(targetRoute);
+        }, 300);
       } else {
         setErrors({
           general: response.message || "Registration failed. Please try again.",
@@ -199,6 +213,13 @@ export function RegisterForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          {(emailParam || tokenParam) && (
+            <div className="p-3 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-xl text-xs font-bold text-[#294B68] flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#3F8F6B] shrink-0" />
+              <span>Invited Member Onboarding: Complete registration to proceed to your Service Agreement.</span>
+            </div>
+          )}
+
           {errors.general && (
             <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C] flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -309,7 +330,10 @@ export function RegisterForm() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("AgeWellRI Terms of Service details");
+                    showSuccessAlert(
+                      "AgeWellRI Terms of Service",
+                      "By registering for AgeWellRI, you agree to our comprehensive care terms, privacy provisions, and home visit standards governed under the laws of the State of Rhode Island."
+                    );
                   }}
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
                 >
@@ -320,7 +344,10 @@ export function RegisterForm() {
                   href="#"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert("AgeWellRI Privacy Policy details");
+                    showSuccessAlert(
+                      "AgeWellRI Privacy Policy",
+                      "Your personal health details, home access codes, and caregiver contact information are strictly protected and never shared with unauthorized third parties."
+                    );
                   }}
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
                 >
