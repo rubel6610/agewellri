@@ -43,13 +43,19 @@ const STEPS = [
   { id: 9, label: "Done", icon: CheckCircle2 },
 ];
 
-export function SignupWizard() {
+interface SignupWizardProps {
+  skipAccountStep?: boolean;
+}
+
+export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}) {
   const authUser = useAppSelector((state) => state.auth.user);
   const [submitAgreement] = useSubmitAgreementMutation();
   const [processPayment] = useProcessAgreementPaymentMutation();
 
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(skipAccountStep ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const visibleSteps = skipAccountStep ? STEPS.filter((s) => s.id !== 1) : STEPS;
 
   // Master Wizard State
   const [accountData, setAccountData] = useState({
@@ -130,23 +136,30 @@ export function SignupWizard() {
 
   // If user is already authenticated, prefill details
   useEffect(() => {
-    if (authUser && currentStep === 1) {
+    if (authUser) {
       setAccountData({
-        firstName: authUser.firstName,
-        lastName: authUser.lastName,
+        firstName: authUser.firstName || "",
+        lastName: authUser.lastName || "",
         phone: authUser.phone || "",
-        email: authUser.email,
+        email: authUser.email || "",
       });
-      if (!residentData.fullName) {
-        setResidentData((prev) => ({
-          ...prev,
-          fullName: `${authUser.firstName} ${authUser.lastName}`.trim(),
-          phone: authUser.phone || prev.phone,
-          email: authUser.email,
-        }));
+
+      setResidentData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || `${authUser.firstName} ${authUser.lastName}`.trim(),
+        address: prev.address || authUser.client?.address || "",
+        city: prev.city || authUser.client?.city || "Providence",
+        state: prev.state || authUser.client?.state || "RI",
+        postalCode: prev.postalCode || authUser.client?.postalCode || "02906",
+        phone: prev.phone || authUser.client?.primaryContactPhone || authUser.phone || "",
+        email: prev.email || authUser.client?.primaryContactEmail || authUser.email || "",
+      }));
+
+      if (skipAccountStep && currentStep === 1) {
+        setCurrentStep(2);
       }
     }
-  }, [authUser, currentStep, residentData.fullName]);
+  }, [authUser, skipAccountStep, currentStep]);
 
   // Step Handlers
   const handleStep1Success = (account: typeof accountData) => {
@@ -325,7 +338,7 @@ export function SignupWizard() {
       {currentStep < 9 && (
         <div className="max-w-4xl mx-auto w-full mb-8">
           <div className="flex items-center justify-between relative overflow-x-auto pb-2 scrollbar-none">
-            {STEPS.slice(0, 8).map((step) => {
+            {visibleSteps.slice(0, visibleSteps.length - 1).map((step) => {
               const isCompleted = currentStep > step.id;
               const isCurrent = currentStep === step.id;
               const Icon = step.icon;
@@ -381,7 +394,7 @@ export function SignupWizard() {
           <Step2ChoosePlan
             selectedPlanId={planData.planId}
             onSelectPlan={handleStep2Success}
-            onBack={() => setCurrentStep(1)}
+            onBack={skipAccountStep ? undefined : () => setCurrentStep(1)}
           />
         )}
 

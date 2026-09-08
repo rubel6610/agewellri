@@ -74,6 +74,8 @@ export interface AuthUser {
   role: UserRole;
   status: UserStatus;
   permissions?: string[];
+  isFamilyMember?: boolean;
+  isPrimary?: boolean;
   hasCompletedAgreement?: boolean;
   requiresAgreement?: boolean;
   emailVerifiedAt?: string | null;

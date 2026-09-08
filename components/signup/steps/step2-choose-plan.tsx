@@ -16,7 +16,7 @@ interface Step2ChoosePlanProps {
     totalVisits: number;
     services: Array<{ serviceName: string; allocatedVisits: number }>;
   }) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2ChoosePlanProps) {
@@ -186,15 +186,17 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between pt-4">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border border-[#D9E4EC] bg-white text-sm font-bold text-[#64748B] hover:text-[#243746] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
-        </button>
+      <div className={`flex items-center ${onBack ? "justify-between" : "justify-end"} pt-4`}>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl border border-[#D9E4EC] bg-white text-sm font-bold text-[#64748B] hover:text-[#243746] hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
+        )}
 
         <button
           type="button"

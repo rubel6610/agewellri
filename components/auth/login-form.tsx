@@ -64,7 +64,13 @@ export function LoginForm() {
           ? safeRedirect
           : "/technician";
     } else if (user.role === "CLIENT") {
-      if (user.requiresAgreement || !user.hasCompletedAgreement) {
+      // Authorized family members never sign agreements -> go straight to dashboard
+      if (user.isFamilyMember) {
+        targetRoute =
+          safeRedirect && safeRedirect.startsWith("/dashboard")
+            ? safeRedirect
+            : "/dashboard";
+      } else if (user.requiresAgreement || !user.hasCompletedAgreement) {
         targetRoute = "/agreement";
       } else {
         targetRoute =

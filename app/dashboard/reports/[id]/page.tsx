@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use } from "react";
+import React, { use, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -14,9 +14,11 @@ import {
   AlertTriangle,
   ExternalLink,
   FileCheck2,
+  Share2,
 } from "lucide-react";
 import { useGetReportByIdQuery } from "@/redux/features/report/reportApi";
 import { downloadReportPdf, getReportFileUrl } from "@/lib/api/report-download";
+import { SendReportModal } from "@/components/dashboard/family-members/send-report-modal";
 
 export default function ReportDetailPage({
   params,
@@ -26,6 +28,7 @@ export default function ReportDetailPage({
   const resolvedParams = use(params);
   const { data: reportRes, isLoading, error } = useGetReportByIdQuery(resolvedParams.id);
   const report = reportRes?.data;
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -105,7 +108,16 @@ export default function ReportDetailPage({
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-4 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-2xs flex items-center gap-2 cursor-pointer shrink-0"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Share with Family</span>
+            </button>
+
             <button
               type="button"
               onClick={handleDownload}
@@ -192,15 +204,33 @@ export default function ReportDetailPage({
             </a>{" "}
             or (401) 555-0199.
           </div>
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="px-3.5 py-1.5 bg-[#294B68] text-white text-xs font-bold rounded-lg shrink-0 cursor-pointer"
-          >
-            Download PDF
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-3.5 py-1.5 bg-[#EAF3F8] text-[#294B68] hover:bg-[#D9E4EC] text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Share with Family</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="px-3.5 py-1.5 bg-[#294B68] text-white text-xs font-bold rounded-lg shrink-0 cursor-pointer"
+            >
+              Download PDF
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Share Report with Family Modal */}
+      <SendReportModal
+        isOpen={isShareModalOpen}
+        reportId={report.id}
+        reportTitle={report.title}
+        onClose={() => setIsShareModalOpen(false)}
+      />
     </div>
   );
 }
