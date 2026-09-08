@@ -8,6 +8,7 @@ import {
   X,
   LayoutDashboard,
   Users,
+  UserCheck,
   CalendarCheck,
   FileCheck2,
   FileText,
@@ -51,6 +52,7 @@ export function AdminMobileNav({
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
     { label: "Clients", href: "/admin/clients", icon: Users, badge: "128" },
+    { label: "Specialists", href: "/admin/specialists", icon: UserCheck },
     { label: "Service Plans", href: "/admin/plans", icon: Package },
     { label: "Services Catalog", href: "/admin/services", icon: Layers },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarCheck },
