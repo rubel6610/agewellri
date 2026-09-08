@@ -1,58 +1,107 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, UserPlus, Loader2, CheckCircle2 } from "lucide-react";
-import { createClientAccount } from "@/lib/api/admin-api";
+import { X, UserPlus, Loader2, CheckCircle2, Copy, Check, Send, Mail, Link as LinkIcon } from "lucide-react";
+import { useSendInvitationMutation } from "@/redux/features/client/clientApi";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 interface AddClientModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function AddClientModal({ isOpen, onClose }: AddClientModalProps) {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    street: "",
-    city: "Providence",
-    state: "RI",
-    zip: "02906",
-    planName: "Guardian Plus" as "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning",
-  });
+export function AddClientModal({ isOpen, onClose, onSuccess }: AddClientModalProps) {
+  const [sendInvitation, { isLoading: isSubmitting }] = useSendInvitationMutation();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [email, setEmail] = useState("");
+  const [createdLink, setCreatedLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  // Generate direct link without requiring email
+  const handleGenerateLinkOnly = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const trimmedEmail = email.trim().toLowerCase();
+
+    const link = trimmedEmail
+      ? `${origin}/register?email=${encodeURIComponent(trimmedEmail)}`
+      : `${origin}/register`;
+
+    setCreatedLink(link);
+    setErrorMsg(null);
+    showToast("Registration invitation link ready!");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      setErrorMsg("Please enter recipient email address to dispatch email invitation.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setErrorMsg("Please enter a valid email address.");
+      return;
+    }
+
+    setErrorMsg(null);
+
+    const confirmed = await confirmCriticalAction({
+      title: `Send Invitation to ${trimmedEmail}?`,
+      text: `An invitation email will be dispatched to ${trimmedEmail}, directing them to complete registration and their Client Service Agreement.`,
+      confirmButtonText: "Yes, Send Invitation",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
     try {
-      await createClientAccount(formData);
-      setSuccess(true);
+      const res = await sendInvitation({
+        email: trimmedEmail,
+      }).unwrap();
+
+      if (res.success && res.data?.invitationLink) {
+        setCreatedLink(res.data.invitationLink);
+        if (onSuccess) onSuccess();
+        await showSuccessAlert(
+          "Invitation Dispatched",
+          `An invitation link has been emailed to ${trimmedEmail}. You can also copy the direct registration link below.`
+        );
+      }
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.message || "Failed to generate invitation.";
+      setErrorMsg(msg);
+      showErrorAlert("Invitation Failed", msg);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!createdLink) return;
+    try {
+      await navigator.clipboard.writeText(createdLink);
+      setCopied(true);
+      showToast("Invitation link copied to clipboard!");
+      setTimeout(() => setCopied(false), 2500);
     } catch {
-      alert("Failed to create client account.");
-    } finally {
-      setIsSubmitting(false);
+      showToast("Unable to copy automatically.");
     }
   };
 
   const handleReset = () => {
-    setSuccess(false);
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      street: "",
-      city: "Providence",
-      state: "RI",
-      zip: "02906",
-      planName: "Guardian Plus",
-    });
+    setCreatedLink(null);
+    setCopied(false);
+    setErrorMsg(null);
+    setEmail("");
     onClose();
   };
 
@@ -60,159 +109,134 @@ export function AddClientModal({ isOpen, onClose }: AddClientModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={handleReset} />
 
-      <div className="relative w-full max-w-lg bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl p-6 sm:p-8 z-10 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-md bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl p-6 sm:p-8 z-10 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-[#D9E4EC]">
-          <div className="flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-[#294B68]" />
-            <h3 className="text-xl font-bold text-[#243746]">Add New Client</h3>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center">
+              <UserPlus className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-[#243746]">Send Invitation / Add Client</h3>
+              <p className="text-xs text-[#64748B]">Generate client onboarding registration link</p>
+            </div>
           </div>
-          <button onClick={handleReset} className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC]">
+          <button
+            onClick={handleReset}
+            className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl border border-[#D9E4EC] cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {success ? (
-          <div className="py-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto">
+        {createdLink ? (
+          <div className="py-6 text-center space-y-5">
+            <div className="w-16 h-16 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
               <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
-              <h4 className="text-2xl font-bold text-[#243746]">Client Profile Created!</h4>
-              <p className="text-sm text-[#64748B] mt-1">
-                Account created for <strong>{formData.firstName} {formData.lastName}</strong>.
-                Service agreement has been dispatched to {formData.email}.
+              <h4 className="text-xl font-black text-[#243746]">Invitation Link Ready!</h4>
+              <p className="text-xs text-[#64748B] mt-1">
+                {email ? (
+                  <>
+                    Generated for <strong>{email}</strong>
+                  </>
+                ) : (
+                  "Direct client registration link ready to copy and share"
+                )}
               </p>
             </div>
+
+            <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-left space-y-2">
+              <label className="text-xs font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
+                <LinkIcon className="w-3.5 h-3.5 text-[#294B68]" />
+                <span>Direct Registration Link</span>
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={createdLink}
+                  className="w-full px-3 py-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs font-mono text-[#243746] select-all focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="px-3.5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? "Copied" : "Copy"}</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-[#64748B]">
+                This link takes the client directly to account registration and their Service Agreement.
+              </p>
+            </div>
+
             <button
               onClick={handleReset}
-              className="w-full py-3 bg-[#294B68] text-white font-bold rounded-xl cursor-pointer"
+              className="w-full py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl cursor-pointer transition-colors"
             >
-              Done &amp; Return to Dashboard
+              Done &amp; Close
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-[#243746] mb-1">First Name *</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  placeholder="Jane"
-                  className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                />
+          <form onSubmit={handleSubmit} className="space-y-5 pt-4">
+            {errorMsg && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-bold text-red-600">
+                {errorMsg}
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#243746] mb-1">Last Name *</label>
-                <input
-                  required
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  placeholder="Doe"
-                  className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                />
-              </div>
-            </div>
+            )}
 
             <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Email Address *</label>
-              <input
-                required
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="jane.doe@example.com"
-                className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Phone Number *</label>
-              <input
-                required
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="(401) 555-0199"
-                className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Street Address *</label>
-              <input
-                required
-                type="text"
-                value={formData.street}
-                onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-                placeholder="142 Wayland Ave"
-                className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              <div>
-                <label className="block text-xs font-bold text-[#243746] mb-1">City</label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl"
-                />
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider">
+                  Recipient Email Address
+                </label>
+                <button
+                  type="button"
+                  onClick={handleGenerateLinkOnly}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#294B68] bg-[#EAF3F8] hover:bg-[#D4E6F1] active:scale-98 rounded-xl transition-all cursor-pointer border border-[#5E8FB2]/30 shadow-2xs"
+                  title="Generate registration link directly without entering an email"
+                >
+                  <LinkIcon className="w-3.5 h-3.5 text-[#294B68]" />
+                  <span>Generate Link</span>
+                </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#243746] mb-1">State</label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="text"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errorMsg) setErrorMsg(null);
+                  }}
+                  placeholder="client@example.com (optional to generate link)"
+                  className="w-full pl-10 pr-3.5 py-3 rounded-xl border border-[#D9E4EC] text-sm font-medium text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
                 />
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#243746] mb-1">ZIP Code</label>
-                <input
-                  type="text"
-                  value={formData.zip}
-                  onChange={(e) => setFormData({ ...formData, zip: e.target.value })}
-                  className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Selected Plan *</label>
-              <select
-                value={formData.planName}
-                onChange={(e) => setFormData({ ...formData, planName: e.target.value as any })}
-                className="w-full h-11 px-3.5 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              >
-                <option value="Guardian Plus">Guardian Plus (12 Visits / Qtr)</option>
-                <option value="Essential Guard">Essential Guard (6 Safety Visits / Qtr)</option>
-                <option value="Cleaning Add-On">Cleaning Add-On (6 Cleaning Visits / Qtr)</option>
-                <option value="Standalone Cleaning">Standalone Cleaning (1 Visit)</option>
-              </select>
+              <p className="text-[11px] text-[#64748B] mt-1.5">
+                Click <strong>Generate Link</strong> to create a direct registration link to share manually, or enter an email to dispatch an invitation email.
+              </p>
             </div>
 
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="w-full h-12 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-base rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                disabled={isSubmitting || !email.trim()}
+                className="w-full py-3.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-black text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Creating Profile...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Dispatching Invitation Email...</span>
                   </>
                 ) : (
-                  <span>Create Account &amp; Send Agreement</span>
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Dispatch Email Invitation</span>
+                  </>
                 )}
               </button>
             </div>
