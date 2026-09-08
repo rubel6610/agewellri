@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "./hooks";
 import { hydrateAuth, logout } from "./features/auth/authSlice";
 import { useLazyGetMeQuery } from "./features/auth/authApi";
@@ -12,8 +12,9 @@ export default function AuthInitializer({
   children: React.ReactNode;
 }) {
   const dispatch = useAppDispatch();
-  const { isInitialized, token } = useAppSelector((state) => state.auth);
+  const { isInitialized, token, user } = useAppSelector((state) => state.auth);
   const [triggerGetMe] = useLazyGetMeQuery();
+  const hasFetchedProfile = useRef(false);
 
   useEffect(() => {
     dispatch(hydrateAuth());
@@ -22,7 +23,8 @@ export default function AuthInitializer({
   useEffect(() => {
     if (isInitialized) {
       const activeToken = token || getAuthToken();
-      if (activeToken) {
+      if (activeToken && !hasFetchedProfile.current) {
+        hasFetchedProfile.current = true;
         triggerGetMe()
           .unwrap()
           .catch((error: { status?: number; originalStatus?: number }) => {
@@ -30,13 +32,9 @@ export default function AuthInitializer({
               dispatch(logout());
             }
           });
-      } else {
-        // Explicitly clear local storage & cookies if not logged in
-        dispatch(logout());
       }
     }
   }, [isInitialized, token, triggerGetMe, dispatch]);
 
   return <>{children}</>;
 }
-

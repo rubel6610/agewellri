@@ -5,12 +5,12 @@ export type AccountStatus =
   | "suspended"
   | "cancelled";
 
-export type ServicePlanType = "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning";
+export type ServicePlanType = "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning" | string;
 
 export interface ServicePlan {
-  id: string;
+  id?: string;
   name: ServicePlanType;
-  status: "active" | "pending" | "expired" | "cancelled";
+  status?: "active" | "pending" | "expired" | "cancelled" | string;
   currentPeriod: string;
   renewalDate: string;
   totalVisits: number;
@@ -20,8 +20,8 @@ export interface ServicePlan {
   cleaningVisitsCompleted: number;
   safetyVisitsTotal: number;
   safetyVisitsCompleted: number;
-  autoRenew: boolean;
-  pricePerQuarter: string;
+  autoRenew?: boolean;
+  pricePerQuarter?: string;
 }
 
 export type VisitType = "Safety Oversight" | "Cleaning";

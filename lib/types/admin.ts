@@ -1,6 +1,7 @@
 export type ClientStatus =
   | "invited"
   | "account_created"
+  | "pending_onboarding"
   | "agreement_pending"
   | "payment_pending"
   | "active"

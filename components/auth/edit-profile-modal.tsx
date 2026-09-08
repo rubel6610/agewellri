@@ -16,6 +16,7 @@ import {
 import { AuthInput } from "./auth-input";
 import { useUpdateProfileMutation } from "@/redux/features/auth/authApi";
 import { AuthUser } from "@/redux/features/auth/authTypes";
+import { confirmEdit, showSuccessAlert, showErrorAlert } from "@/lib/alerts/sweetalert";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -97,6 +98,15 @@ export function EditProfileModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+
+    const confirmed = await confirmEdit({
+      title: "Save Profile Changes?",
+      text: "Update your contact information and emergency coordination details?",
+      confirmButtonText: "Yes, Save Profile",
+    });
+
+    if (!confirmed) return;
+
     setErrors({});
 
     try {
@@ -115,12 +125,12 @@ export function EditProfileModal({
 
       if (response.success) {
         setSuccessMessage("Profile updated successfully!");
-        setTimeout(() => {
-          setSuccessMessage(null);
-          onClose();
-        }, 1200);
+        await showSuccessAlert("Profile Updated", "Your member details have been updated.");
+        onClose();
       } else {
-        setErrors({ general: response.message || "Failed to update profile." });
+        const msg = response.message || "Failed to update profile.";
+        setErrors({ general: msg });
+        showErrorAlert("Update Failed", msg);
       }
     } catch (err: unknown) {
       const errorData = (
@@ -137,15 +147,17 @@ export function EditProfileModal({
         if (errorData.errors.firstName?.[0]) fieldErrors.firstName = errorData.errors.firstName[0];
         if (errorData.errors.lastName?.[0]) fieldErrors.lastName = errorData.errors.lastName[0];
         if (errorData.errors.phone?.[0]) fieldErrors.phone = errorData.errors.phone[0];
-        fieldErrors.general = errorData.message || "Please check highlighted fields.";
+        const genMsg = errorData.message || "Please check highlighted fields.";
+        fieldErrors.general = genMsg;
         setErrors(fieldErrors);
+        showErrorAlert("Validation Error", genMsg);
       } else {
-        setErrors({
-          general:
-            errorData?.message ||
-            (err as { message?: string })?.message ||
-            "Unable to update profile. Please try again.",
-        });
+        const genMsg =
+          errorData?.message ||
+          (err as { message?: string })?.message ||
+          "Unable to update profile. Please try again.";
+        setErrors({ general: genMsg });
+        showErrorAlert("Update Failed", genMsg);
       }
     }
   };

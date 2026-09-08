@@ -35,6 +35,9 @@ export function AuthGuard({
         typeof window !== "undefined"
           ? window.location.pathname + window.location.search
           : pathname;
+
+      if (pathname === "/login" || pathname === "/register") return;
+
       router.replace(`/login?redirect=${encodeURIComponent(fullPath)}`);
       return;
     }
@@ -47,10 +50,8 @@ export function AuthGuard({
     ) {
       if (user.role === "ADMIN") {
         router.replace("/admin");
-      } else if (user.role === "TECHNICIAN") {
-        router.replace("/technician");
       } else if (user.role === "CLIENT") {
-        if (user.requiresAgreement || !user.hasCompletedAgreement) {
+        if (user?.requiresAgreement || !user?.hasCompletedAgreement) {
           router.replace("/agreement");
         } else {
           router.replace("/dashboard");
@@ -82,6 +83,7 @@ export function AuthGuard({
     user,
     allowedRoles,
     requireAgreement,
+    allowPendingAgreement,
     pathname,
     router,
   ]);

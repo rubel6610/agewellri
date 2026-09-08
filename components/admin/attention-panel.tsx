@@ -2,53 +2,31 @@
 
 import React from "react";
 import Link from "next/link";
-import { AlertTriangle, FileCheck, CreditCard, FileText, ArrowRight, UserPlus } from "lucide-react";
+import {
+  AlertTriangle,
+  FileCheck,
+  CreditCard,
+  FileText,
+  ArrowRight,
+  UserPlus,
+  CheckCircle2,
+} from "lucide-react";
 
-interface AttentionItem {
+export interface AttentionItem {
   id: string;
   title: string;
   count: number;
   description: string;
   href: string;
   type: "onboarding" | "payment" | "agreement" | "report" | "renewal";
+  urgency?: "HIGH" | "MEDIUM" | "LOW";
 }
 
-export function AttentionPanel() {
-  const items: AttentionItem[] = [
-    {
-      id: "att_1",
-      title: "Clients Pending Onboarding",
-      count: 7,
-      description: "Require agreement signature or payment setup",
-      href: "/admin/clients?status=agreement_pending",
-      type: "onboarding",
-    },
-    {
-      id: "att_2",
-      title: "Failed Quarterly Payments",
-      count: 4,
-      description: "Auto-charge declined — follow up with client",
-      href: "/admin/billing?status=failed",
-      type: "payment",
-    },
-    {
-      id: "att_3",
-      title: "Agreements Awaiting Signature",
-      count: 3,
-      description: "Sent to client — signature required",
-      href: "/admin/agreements?status=pending_signature",
-      type: "agreement",
-    },
-    {
-      id: "att_4",
-      title: "Completed Visits Needing Report Upload",
-      count: 5,
-      description: "Age Safe® Home Score™ report upload pending",
-      href: "/admin/reports?status=pending",
-      type: "report",
-    },
-  ];
+interface AttentionPanelProps {
+  items?: AttentionItem[];
+}
 
+export function AttentionPanel({ items = [] }: AttentionPanelProps) {
   const getIcon = (type: AttentionItem["type"]) => {
     switch (type) {
       case "onboarding":
@@ -59,8 +37,33 @@ export function AttentionPanel() {
         return <FileCheck className="w-5 h-5 text-[#294B68]" />;
       case "report":
         return <FileText className="w-5 h-5 text-[#5E8FB2]" />;
+      case "renewal":
+        return <AlertTriangle className="w-5 h-5 text-[#3F8F6B]" />;
     }
   };
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-base font-extrabold text-[#243746]">
+              All Operational Queues Clear
+            </h3>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              No outstanding signature bottlenecks, missing reports, or past-due billing items.
+            </p>
+          </div>
+        </div>
+        <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-xs font-bold shrink-0">
+          All Up to Date
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
@@ -72,7 +75,7 @@ export function AttentionPanel() {
           </h3>
         </div>
         <span className="px-3 py-1 bg-amber-50 text-[#C28A3A] border border-[#C28A3A]/30 rounded-full text-xs font-bold">
-          Operational Priority
+          {items.reduce((sum, item) => sum + item.count, 0)} Items Pending Action
         </span>
       </div>
 

@@ -8,9 +8,11 @@ export const metadata = {
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const user = await getMemberProfile();
-  const plan = await getCurrentPlan();
-  const notifications = await getNotifications();
+  const [user, plan, notifications] = await Promise.all([
+    getMemberProfile(),
+    getCurrentPlan(),
+    getNotifications(),
+  ]);
 
   return (
     <AuthGuard allowedRoles={["CLIENT"]} requireAgreement={true}>

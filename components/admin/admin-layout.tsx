@@ -23,9 +23,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746]">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+    <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746] overflow-x-hidden max-w-full w-full">
+      {/* Desktop Fixed Sidebar */}
+      <div className="hidden lg:block w-64 shrink-0">
         <DashboardSidebarContainer />
       </div>
 
@@ -38,12 +38,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full">
         <AdminHeader
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onOpenAddClientModal={() => setAddClientModalOpen(true)}
           onOpenScheduleModal={() => handleOpenScheduleModal()}
         />
+
+        {/* Fixed Header Height Spacer */}
+        <div className="h-16 sm:h-20 shrink-0" aria-hidden="true" />
 
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
           {children}
