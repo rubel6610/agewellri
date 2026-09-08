@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
@@ -8,7 +8,6 @@ import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
-import { showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 interface FormErrors {
   firstName?: string;
@@ -36,15 +35,6 @@ export function RegisterForm() {
     confirmPassword: "",
     agreeToTerms: false,
   });
-
-  useEffect(() => {
-    if (emailParam) {
-      setFormData((prev) => ({
-        ...prev,
-        email: prev.email || emailParam,
-      }));
-    }
-  }, [emailParam]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [registerSuccessMessage, setRegisterSuccessMessage] = useState<string | null>(null);
@@ -104,7 +94,7 @@ export function RegisterForm() {
 
     // Terms Agreement
     if (!formData.agreeToTerms) {
-      newErrors.terms = "You must agree to the Terms of Service and Privacy Policy.";
+      newErrors.terms = "You must agree to the Terms of Use and Privacy Policy.";
     }
 
     setErrors(newErrors);
@@ -327,29 +317,19 @@ export function RegisterForm() {
               <span className="text-sm text-[#243746] leading-snug">
                 I agree to the{" "}
                 <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    showSuccessAlert(
-                      "AgeWellRI Terms of Service",
-                      "By registering for AgeWellRI, you agree to our comprehensive care terms, privacy provisions, and home visit standards governed under the laws of the State of Rhode Island."
-                    );
-                  }}
-                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
+                  href="/terms-of-use"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
-                  Terms of Service
+                  Terms of Use
                 </Link>{" "}
-                and{" "}
+                and acknowledge the{" "}
                 <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    showSuccessAlert(
-                      "AgeWellRI Privacy Policy",
-                      "Your personal health details, home access codes, and caregiver contact information are strictly protected and never shared with unauthorized third parties."
-                    );
-                  }}
-                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
                   Privacy Policy
                 </Link>
