@@ -4,13 +4,40 @@ import React from "react";
 import Link from "next/link";
 import { Calendar, Clock, UserCheck, ArrowRight, Plus, ShieldCheck } from "lucide-react";
 import { Appointment } from "@/lib/types/dashboard";
+import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 
 interface NextVisitCardProps {
-  appointment?: Appointment;
+  appointment?: Appointment | AppointmentItem | any;
+  isLoading?: boolean;
   onScheduleVisit: () => void;
 }
 
-export function NextVisitCard({ appointment, onScheduleVisit }: NextVisitCardProps) {
+export function NextVisitCard({
+  appointment,
+  isLoading = false,
+  onScheduleVisit,
+}: NextVisitCardProps) {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6 animate-pulse">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+              Your Next Visit
+            </span>
+            <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
+          </div>
+          <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]/60 space-y-2.5">
+            <div className="h-5 bg-[#E2E8F0] rounded-md w-40"></div>
+            <div className="h-3 bg-[#F1F5F9] rounded-md w-56"></div>
+            <div className="h-3 bg-[#F1F5F9] rounded-md w-32"></div>
+          </div>
+        </div>
+        <div className="h-11 bg-[#E2E8F0] rounded-xl w-full"></div>
+      </div>
+    );
+  }
+
   if (!appointment) {
     return (
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs flex flex-col justify-between space-y-6">
@@ -45,16 +72,23 @@ export function NextVisitCard({ appointment, onScheduleVisit }: NextVisitCardPro
     day: "numeric",
   });
 
-  return (
-    <div className="bg-[#294B68] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md relative overflow-hidden flex flex-col justify-between space-y-6">
-      {/* Background soft ambient pattern */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+  const isRequested =
+    appointment.status === "requested" ||
+    (!appointment.technicianId && appointment.status !== "cancelled");
 
+  return (
+    <div className="bg-[#294B68] text-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md relative flex flex-col justify-between space-y-6">
       <div>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">
-            Your Next Visit
-          </span>
+          {isRequested ? (
+            <span className="text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
+              Visit Requested
+            </span>
+          ) : (
+            <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">
+              Your Next Visit
+            </span>
+          )}
           {appointment.bookedBy && (
             <span className="text-xs font-medium text-white/80 flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
@@ -83,8 +117,12 @@ export function NextVisitCard({ appointment, onScheduleVisit }: NextVisitCardPro
         <div className="flex items-center gap-2.5 text-xs sm:text-sm text-white/90 pt-1 border-t border-white/10">
           <UserCheck className="w-4 h-4 text-[#5E8FB2]" />
           <div>
-            <span className="font-bold block">{appointment.technicianName}</span>
-            <span className="text-xs text-white/70">{appointment.technicianTitle}</span>
+            <span className="font-bold block">
+              {isRequested ? "Pending Admin Specialist Assignment" : appointment.technicianName}
+            </span>
+            <span className="text-xs text-white/70">
+              {isRequested ? "Our team is assigning a specialist" : appointment.technicianTitle}
+            </span>
           </div>
         </div>
       </div>

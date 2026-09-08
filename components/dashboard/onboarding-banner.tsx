@@ -66,10 +66,5 @@ export function OnboardingBanner({ status }: OnboardingBannerProps) {
     );
   }
 
-  return (
-    <div className="p-5 bg-red-50 border border-[#C95C5C] rounded-2xl flex items-center gap-3 text-sm font-semibold text-[#C95C5C]">
-      <AlertTriangle className="w-5 h-5 shrink-0" />
-      <span>Account status requires attention. Please contact support at (401) 555-AGEWELL.</span>
-    </div>
-  );
+  return null;
 }

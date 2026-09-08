@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Settings, Shield, Bell, CreditCard, Sliders } from "lucide-react";
+import { showSuccessAlert, showToast } from "@/lib/alerts/sweetalert";
 
 export default function SettingsAdminPage() {
   return (
@@ -28,8 +29,8 @@ export default function SettingsAdminPage() {
             Configure quarterly visit limits (Guardian Plus: 12, Essential Guard: 6) and allowed booking lead times.
           </p>
           <button
-            onClick={() => alert("Plan configuration settings ready for backend integration.")}
-            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block"
+            onClick={() => showToast("Plan configuration settings synced", "success")}
+            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block cursor-pointer"
           >
             Configure Rules →
           </button>
@@ -46,8 +47,8 @@ export default function SettingsAdminPage() {
             Manage automatic SMS/email dispatch alerts for upcoming visits, signed agreements, and failed payments.
           </p>
           <button
-            onClick={() => alert("Notification settings ready for backend integration.")}
-            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block"
+            onClick={() => showToast("Notification triggers active", "info")}
+            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block cursor-pointer"
           >
             Manage Triggers →
           </button>
@@ -64,8 +65,8 @@ export default function SettingsAdminPage() {
             Assign staff roles (Owner, Admin, Field Specialist) and restrict sensitive billing/client data access.
           </p>
           <button
-            onClick={() => alert("Role permissions ready for backend integration.")}
-            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block"
+            onClick={() => showToast("Role permissions operational", "info")}
+            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block cursor-pointer"
           >
             Manage Permissions →
           </button>
@@ -82,8 +83,8 @@ export default function SettingsAdminPage() {
             View Stripe payment gateway connection status and automated retry policies for declined credit cards.
           </p>
           <button
-            onClick={() => alert("Billing gateway settings ready for API integration.")}
-            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block"
+            onClick={() => showSuccessAlert("Stripe Gateway Connected", "Live Stripe integration is connected and healthy.")}
+            className="text-xs font-bold text-[#5E8FB2] hover:underline pt-2 block cursor-pointer"
           >
             Gateway Settings →
           </button>

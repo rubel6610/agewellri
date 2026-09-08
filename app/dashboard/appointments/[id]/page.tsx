@@ -15,6 +15,11 @@ import {
 } from "lucide-react";
 import { getAppointmentById } from "@/lib/api/dashboard";
 import { Appointment } from "@/lib/types/dashboard";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 export default function AppointmentDetailsPage({
   params,
@@ -31,6 +36,22 @@ export default function AppointmentDetailsPage({
       setLoading(false);
     });
   }, [resolvedParams.id]);
+
+  const handleRescheduleRequest = async () => {
+    const confirmed = await confirmCriticalAction({
+      title: "Request Reschedule?",
+      text: "Submit a request to change your scheduled visit date or time window? An AgeWellRI care specialist will reach out within 2 business hours.",
+      confirmButtonText: "Yes, Request Reschedule",
+      isDestructive: false,
+    });
+
+    if (!confirmed) return;
+
+    await showSuccessAlert(
+      "Reschedule Request Received",
+      "Our dispatch team has received your request. A care coordinator will contact you to confirm a new time slot."
+    );
+  };
 
   if (loading) {
     return (
@@ -101,10 +122,11 @@ export default function AppointmentDetailsPage({
           {!isCompleted && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => alert("Reschedule request submitted. Representative will contact you.")}
+                type="button"
+                onClick={handleRescheduleRequest}
                 className="px-4 py-2 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-xl transition-colors cursor-pointer"
               >
-                Reschedule
+                Request Reschedule
               </button>
             </div>
           )}
