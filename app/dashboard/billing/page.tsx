@@ -21,7 +21,7 @@ export default function BillingPage() {
             Billing &amp; Subscription
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage your membership care plan, payment methods, and billing statements.
+            Manage your membership safety plan, payment methods, and billing statements.
           </p>
         </div>
 

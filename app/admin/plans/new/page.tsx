@@ -52,8 +52,8 @@ export default function CreatePlanPage() {
 
   const [features, setFeatures] = useState<string[]>([
     "Comprehensive Home Safety Oversight",
-    "Digital Wellness & Safety Reports",
-    "Dedicated Rhode Island Care Team",
+    "Digital Safety & Upkeep Reports",
+    "Dedicated Rhode Island Safety Oversight Team",
   ]);
   const [newFeature, setNewFeature] = useState("");
 

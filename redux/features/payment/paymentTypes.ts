@@ -11,7 +11,7 @@ export interface StripeConfigData {
 }
 
 export interface CreateSetupIntentRequest {
-  plan?: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  plan?: string;
   hasCleaningAddon?: boolean;
 }
 
@@ -148,8 +148,9 @@ export interface ProcessAgreementPaymentRequest {
   paymentMethodId?: string;
   setupIntentId?: string;
   billingMethod?: "AUTOMATIC" | "INVOICE";
-  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS" | "STANDALONE_CLEANING";
-  hasCleaningAddon: boolean;
+  selectedPlan?: string;
+  plan?: string;
+  hasCleaningAddon?: boolean;
 }
 
 export interface ProcessAgreementPaymentData {

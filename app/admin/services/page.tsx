@@ -490,7 +490,7 @@ export default function AdminServicesPage() {
                               )}
                             </div>
                             <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1 max-w-md">
-                              {service.description || "In-home care delivery service component."}
+                              {service.description || "In-home safety oversight service component."}
                             </p>
                           </div>
                         </div>

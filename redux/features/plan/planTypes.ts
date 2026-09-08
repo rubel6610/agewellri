@@ -9,23 +9,26 @@ export interface PlanServiceAllocation {
 
 export interface ActivePlan {
   id: string;
-  planId: string;
-  versionId: string | null;
-  versionNumber: number;
+  planId?: string;
+  versionId?: string | null;
+  versionNumber?: number;
   name: string;
   code: string;
-  shortDescription: string;
-  fullDescription: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  description?: string;
   price: number;
-  currency: string;
+  currency?: string;
   billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault: boolean;
-  features: string[];
+  supportsAutomaticBilling?: boolean;
+  supportsInvoiceBilling?: boolean;
+  autoRenewDefault?: boolean;
+  features?: string[];
   services: PlanServiceAllocation[];
   totalVisits: number;
-  effectiveFrom: string;
+  effectiveFrom?: string;
+  isActive?: boolean;
+  subscribersCount?: number;
 }
 
 export interface AdminPlan {

@@ -42,7 +42,7 @@ export function DashboardSidebar() {
     e.preventDefault();
     showSuccessAlert(
       "AgeWellRI Member Concierge",
-      "24/7 Care Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: care@agewellri.com\nDedicated Rhode Island Staff"
+      "24/7 Safety Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: support@agewellri.com\nDedicated Rhode Island Staff"
     );
   };
 
@@ -53,12 +53,12 @@ export function DashboardSidebar() {
       icon: LayoutDashboard,
     },
     {
-      label: "Care Calendar",
+      label: "My Calendar",
       href: "/dashboard/calendar",
       icon: CalendarDays,
     },
     {
-      label: "My Visits",
+      label: "My Safety Visits",
       href: "/dashboard/appointments",
       icon: CalendarCheck,
     },
@@ -68,12 +68,12 @@ export function DashboardSidebar() {
       icon: FileCheck2,
     },
     {
-      label: "My Agreement",
+      label: "My Agreements",
       href: "/dashboard/agreements",
       icon: FileText,
     },
     {
-      label: "Billing",
+      label: "My Billings",
       href: "/dashboard/billing",
       icon: CreditCard,
     },

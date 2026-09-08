@@ -282,7 +282,7 @@ export default function BillingAdminPage() {
             {isLoadingOverview ? "..." : overview.activeSubscriptions}
           </div>
           <span className="text-xs text-[#3F8F6B] font-semibold flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled in care plans
+            <CheckCircle2 className="w-3.5 h-3.5" /> Enrolled in safety plans
           </span>
         </div>
 

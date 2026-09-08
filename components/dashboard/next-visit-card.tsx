@@ -49,7 +49,7 @@ export function NextVisitCard({
             No upcoming visit scheduled
           </h3>
           <p className="text-sm text-[#64748B] mt-2">
-            Your next AgeWellRI home care or safety visit has not been scheduled yet.
+            Your next AgeWellRI safety oversight visit has not been scheduled yet.
           </p>
         </div>
 

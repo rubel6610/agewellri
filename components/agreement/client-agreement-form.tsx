@@ -672,7 +672,7 @@ export function ClientAgreementForm() {
                     <input
                       type="text"
                       name="relationshipToClient"
-                      placeholder="e.g. Daughter, Son, Guardian, Care Manager"
+                      placeholder="e.g. Daughter, Son, Guardian, Representative"
                       value={formData.relationshipToClient}
                       onChange={handleChange}
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
@@ -694,7 +694,7 @@ export function ClientAgreementForm() {
                     <option value="Durable Power of Attorney (POA)">Durable Power of Attorney (POA)</option>
                     <option value="Healthcare Proxy / Surrogate">Healthcare Proxy / Surrogate</option>
                     <option value="Court-Appointed Conservator / Guardian">Court-Appointed Conservator / Guardian</option>
-                    <option value="Authorized Family Care Coordinator">Authorized Family Care Coordinator</option>
+                    <option value="Authorized Family Representative">Authorized Family Representative</option>
                   </select>
                   {errors.legalAuthority && <p className="text-xs text-red-500 mt-1">{errors.legalAuthority}</p>}
                 </div>
@@ -856,7 +856,7 @@ export function ClientAgreementForm() {
                   className="w-full px-3.5 py-2.5 bg-slate-100 border border-[#D9E4EC] rounded-xl text-sm font-bold text-slate-600 cursor-not-allowed select-none shadow-inner"
                 />
                 <p className="text-[11px] text-[#64748B] mt-1 font-medium">
-                  Synced with your login account. All agreement receipts and care reports are routed here.
+                  Synced with your login account. All agreement receipts and safety reports are routed here.
                 </p>
               </div>
             </div>
@@ -1043,7 +1043,7 @@ export function ClientAgreementForm() {
                   Select Your Service Plan
                 </h2>
                 <p className="text-xs text-[#5E8FB2] mt-0.5 font-medium">
-                  Choose your desired safety oversight and home wellness care tier.
+                  Choose your desired safety oversight and home upkeep tier.
                 </p>
               </div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#EAF3F8] text-[#294B68] rounded-full text-xs font-black border border-[#D9E4EC] self-start sm:self-auto">
@@ -1116,7 +1116,7 @@ export function ClientAgreementForm() {
 
                               {isGuardianPlus ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                                  <Sparkles className="w-3 h-3 text-emerald-600" /> Most Popular · Dual Care
+                                  <Sparkles className="w-3 h-3 text-emerald-600" /> Most Popular · Safety &amp; Upkeep
                                 </span>
                               ) : isEssential ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 shadow-2xs">
@@ -1175,7 +1175,7 @@ export function ClientAgreementForm() {
                               </span>
                             </div>
                             <div className="text-[11px] font-bold text-[#5E8FB2] mt-0.5">
-                              {plan.totalVisits} Total Care Visits / Cycle
+                              {plan.totalVisits} Total Safety Visits / Cycle
                             </div>
                           </div>
 
@@ -1236,7 +1236,7 @@ export function ClientAgreementForm() {
 
             <div className="space-y-2 pt-2 text-[#64748B]">
               <p>
-                <strong>Non-Medical Safety Disclaimer:</strong> AgeWellRI provides non-medical home safety assessments, hazard mitigation, fall prevention checks, and wellness visits. AgeWellRI is NOT a home health agency, licensed medical provider, or 911 emergency dispatch service.
+                <strong>Non-Medical Safety Disclaimer:</strong> AgeWellRI provides non-medical home safety assessments, hazard mitigation, fall prevention checks, and safety oversight visits. AgeWellRI is NOT a home health agency, licensed medical provider, or 911 emergency dispatch service.
               </p>
               <p>
                 <strong>Billing & Payment Terms:</strong> Membership services renew automatically at the contracted rate of <strong>${totalPrice} / {selectedPlanObj?.billingInterval.toLowerCase() || "quarter"}</strong>. You may update billing methods or cancel renewal at any time from your member portal.

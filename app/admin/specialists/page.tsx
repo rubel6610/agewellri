@@ -44,7 +44,7 @@ const PRESET_SPECIALTIES = [
   "Pathway Clearance & Sanitization",
   "Lighting & Rug Safety",
   "Bathroom Safety Assessments",
-  "Wellness Check-ins",
+  "Safety Check-ins",
 ];
 
 const PRESET_COLORS = [

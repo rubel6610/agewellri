@@ -95,7 +95,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
 
     const confirmed = await confirmCriticalAction({
       title: `Submit ${selectedServiceName} Visit Request?`,
-      text: `Request care visit for ${selectedDate} at ${selectedTimeSlot}? Admin will review and assign your specialist.`,
+      text: `Request safety visit for ${selectedDate} at ${selectedTimeSlot}? Admin will review and assign your specialist.`,
       confirmButtonText: "Yes, Submit Request",
       isDestructive: false,
     });
@@ -144,7 +144,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
             <h3 className="text-xl font-extrabold text-[#243746] tracking-tight">
               {step === 5 ? "Request Submitted" : `Request a Visit — Step ${step} of 4`}
             </h3>
-            <p className="text-xs text-[#64748B] font-medium">AgeWellRI Care Scheduling</p>
+            <p className="text-xs text-[#64748B] font-medium">AgeWellRI Safety Visit Scheduling</p>
           </div>
           <button
             onClick={resetAndClose}
@@ -173,7 +173,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         {step === 1 && (
           <div className="space-y-4 py-2">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-[#243746] text-base">Select Care Service</h4>
+              <h4 className="font-bold text-[#243746] text-base">Select Safety Service</h4>
               <span className="text-xs font-semibold text-[#64748B]">Active Plan Quota</span>
             </div>
 
@@ -447,7 +447,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
 
             <div>
               <label className="block text-xs font-bold text-[#243746] mb-1">
-                Special Care Notes / Access Instructions (Optional)
+                Special Safety Notes / Access Instructions (Optional)
               </label>
               <textarea
                 value={notes}

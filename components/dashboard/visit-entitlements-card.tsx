@@ -48,7 +48,7 @@ export function VisitEntitlementsCard() {
               <Sparkles className="w-4 h-4 text-[#294B68]" />
             </span>
             <h3 className="text-lg sm:text-xl font-extrabold text-[#243746] tracking-tight">
-              Included Visits &amp; Care Allocation
+              Included Visits &amp; Safety Allocation
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-[#64748B] font-medium">

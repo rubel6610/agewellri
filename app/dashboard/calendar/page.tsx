@@ -290,7 +290,7 @@ export default function ClientCalendarPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
-              Visit &amp; Care Calendar
+              Safety Oversight Calendar
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
               {planName}
@@ -315,7 +315,7 @@ export default function ClientCalendarPage() {
             className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Schedule Care Visit</span>
+            <span>Schedule Safety Visit</span>
           </button>
         </div>
       </div>
@@ -347,14 +347,14 @@ export default function ClientCalendarPage() {
                   <span>{nextAppointment.serviceType}</span>
                 </div>
                 <p className="text-xs text-slate-200 mt-0.5">
-                  Assigned Care Specialist: <strong>{nextAppointment.technicianName}</strong> ({nextAppointment.technicianTitle})
+                  Assigned Safety Specialist: <strong>{nextAppointment.technicianName}</strong> ({nextAppointment.technicianTitle})
                 </p>
               </div>
             ) : (
               <div>
                 <div className="text-base font-black text-white">No upcoming visits scheduled</div>
                 <p className="text-xs text-slate-300">
-                  You have {totalRemaining} care visit{totalRemaining !== 1 ? "s" : ""} available to book for this cycle.
+                  You have {totalRemaining} safety visit{totalRemaining !== 1 ? "s" : ""} available to book for this cycle.
                 </p>
               </div>
             )}
@@ -673,7 +673,7 @@ export default function ClientCalendarPage() {
                           <div className="text-xs text-[#243746] font-semibold flex items-center gap-1.5">
                             <UserCheck className="w-3.5 h-3.5 text-[#294B68]" />
                             <span>
-                              Care Specialist: <strong>{appt.technicianName}</strong>
+                              Safety Specialist: <strong>{appt.technicianName}</strong>
                             </span>
                           </div>
                           <div className="text-[11px] text-[#5E8FB2]">
@@ -760,10 +760,10 @@ export default function ClientCalendarPage() {
                 </div>
               </div>
 
-              {/* Care Specialist Profile */}
+              {/* Safety Specialist Profile */}
               <div className="p-4 rounded-2xl border border-[#D9E4EC] bg-white space-y-2">
                 <div className="text-[11px] uppercase tracking-wider text-[#5E8FB2] font-extrabold">
-                  Assigned Care Specialist
+                  Assigned Safety Specialist
                 </div>
                 <div className="flex items-center gap-3">
                   <div

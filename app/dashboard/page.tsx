@@ -63,7 +63,7 @@ export default function DashboardHomePage() {
   } else if (rawPlanName === "ESSENTIAL_GUARD" || rawPlanName.toLowerCase().includes("essential")) {
     formattedPlanName = "Essential Guard Plan";
   } else if (rawPlanName === "STANDALONE_CLEANING" || rawPlanName.toLowerCase().includes("clean")) {
-    formattedPlanName = "Home Care & Cleaning Plan";
+    formattedPlanName = "Safety Oversight & Cleaning Plan";
   }
 
   const safetyTotal = safetyEntitlement?.allocated ?? 6;
@@ -116,7 +116,7 @@ export default function DashboardHomePage() {
             Welcome back, {firstName}
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">
-            Here is your AgeWellRI service overview and care schedule.
+            Here is your AgeWellRI service overview and safety schedule.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function DashboardHomePage() {
                 <span className="text-xs text-white/70 font-semibold">{periodFormatted}</span>
               </div>
               <h3 className="font-extrabold text-base sm:text-lg text-white tracking-tight">
-                Your Care Visits Are Ready to Schedule
+                Your Safety Visits Are Ready to Schedule
               </h3>
               <p className="text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
                 You have <strong>{entitlementsData.totalRemaining} visit{entitlementsData.totalRemaining > 1 ? "s" : ""}</strong> available this quarter (

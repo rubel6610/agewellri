@@ -173,7 +173,7 @@ export default function SubscriptionsAdminPage() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0" />
           <span>
-            <strong>Quarterly Billing Separation:</strong> Subscription billing renews automatically every 90 days. Care visit scheduling for incoming quarters must be coordinated separately per client.
+            <strong>Quarterly Billing Separation:</strong> Subscription billing renews automatically every 90 days. Safety visit scheduling for incoming quarters must be coordinated separately per client.
           </span>
         </div>
       </div>

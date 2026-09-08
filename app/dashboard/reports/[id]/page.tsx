@@ -186,7 +186,7 @@ export default function ReportDetailPage({
         {/* Help & Support Footer */}
         <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-xs text-[#64748B] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            Have questions about this visit report or need care adjustments? Contact AgeWellRI Care Coordination at{" "}
+            Have questions about this visit report? Contact AgeWellRI Safety Support at{" "}
             <a href="mailto:support@agewellri.com" className="font-bold text-[#294B68] underline">
               support@agewellri.com
             </a>{" "}

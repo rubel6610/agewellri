@@ -80,7 +80,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
-    doc.text("Comprehensive Senior Safety & Home Wellness Services", margin + 6, y + 17);
+    doc.text("Comprehensive Senior Home Safety & Upkeep Services", margin + 6, y + 17);
 
     // Document Title & Number (Right aligned)
     doc.setFont("helvetica", "bold");
@@ -256,7 +256,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(7.5);
     doc.setTextColor(110, 125, 140);
     doc.text(
-      inv.description || "Scheduled safety inspections, fall prevention audits & wellness allocations",
+      inv.description || "Scheduled safety inspections, fall prevention audits & safety allocations",
       margin + 4,
       y + 11.5
     );

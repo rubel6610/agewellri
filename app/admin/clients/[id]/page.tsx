@@ -659,7 +659,7 @@ export default function ClientDetailPage({
                   )}
                 </div>
                 <h3 className="text-base font-extrabold text-[#243746]">
-                  {client.planName} Care Entitlements
+                  {client.planName} Safety Entitlements
                 </h3>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-[#64748B] pt-0.5 font-medium">
                   <span>Allocated: <strong className="text-[#243746]">{client.totalVisitsAllowed || client.totalVisitsCount || 12}</strong></span>

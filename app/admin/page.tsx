@@ -288,7 +288,7 @@ export default function AdminOverviewPage() {
             <Sparkles className="w-6 h-6 text-[#5E8FB2]" />
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1">
-            Real-time operations &amp; care coordination overview for <strong>{todayFormatted}</strong>.
+            Real-time operations &amp; safety oversight overview for <strong>{todayFormatted}</strong>.
           </p>
         </div>
 
@@ -379,7 +379,7 @@ export default function AdminOverviewPage() {
                 <Calendar className="w-5 h-5 text-[#294B68]" />
                 <span>Upcoming Field Visits (Next 7 Days)</span>
               </h3>
-              <p className="text-xs text-[#64748B]">Scheduled home care and safety oversight visits</p>
+              <p className="text-xs text-[#64748B]">Scheduled safety oversight and home upkeep visits</p>
             </div>
             <Link
               href="/admin/appointments"

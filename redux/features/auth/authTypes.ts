@@ -157,9 +157,12 @@ export interface SubmitAgreementRequest {
   state: string;
   postalCode: string;
   phone: string;
-  dob: string;
+  dob?: string | null;
   email?: string;
+  signingTrack?: "TRACK_A" | "TRACK_B";
   signerRole?: SignerRole;
+  representativeCapacity?: "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR" | null;
+  authorityDocumentUrl?: string | null;
   signerName?: string | null;
   signerEmail?: string | null;
   signerPhone?: string | null;
@@ -170,17 +173,28 @@ export interface SubmitAgreementRequest {
   primaryContactPhone?: string | null;
   primaryContactEmail?: string | null;
   primaryContactRelation?: string | null;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
+  authorizedRecipients?: Array<{
+    name: string;
+    relationship: string;
+    email: string;
+  }>;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   emergencyContactEmail?: string | null;
   emergencyContactRelation?: string | null;
   homeAccessType?: HomeAccessType;
   homeAccessInstructions?: string | null;
   homeAccessCode?: string | null;
+  homeAccessAuthorized?: boolean;
+  authorizations?: {
+    emergencyRightOfEntry?: boolean;
+    residentAutonomyAcknowledgment?: boolean;
+    automaticBillingAuthorization?: boolean;
+  };
   planId?: string | null;
   planVersionId?: string | null;
   selectedPlan: string;
-  hasCleaningAddon: boolean;
+  hasCleaningAddon?: boolean;
   billingMethod?: "AUTOMATIC" | "INVOICE";
   paymentMethodId?: string | null;
   setupIntentId?: string | null;

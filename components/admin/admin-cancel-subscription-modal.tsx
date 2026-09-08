@@ -134,7 +134,7 @@ export function AdminCancelSubscriptionModal({
                   </span>
                 </div>
                 <p className="text-xs text-[#64748B] leading-relaxed">
-                  The client continues receiving care visits until the end of their current cycle (<strong>{subscription.nextRenewalDate}</strong>). Auto-renewal is disabled and no further charges will occur.
+                  The client continues receiving safety visits until the end of their current cycle (<strong>{subscription.nextRenewalDate}</strong>). Auto-renewal is disabled and no further charges will occur.
                 </p>
               </div>
             </label>

@@ -57,7 +57,7 @@ export default function ProfilePage() {
             My Member Profile
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">
-            Manage your personal contact info, credentials, and care coordination details.
+            Manage your personal contact info, credentials, and safety oversight details.
           </p>
         </div>
 

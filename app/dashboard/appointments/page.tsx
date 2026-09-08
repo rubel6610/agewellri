@@ -48,7 +48,7 @@ export default function AppointmentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
-            My Home Visits
+            My Safety Visits
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
             Manage scheduled Safety Oversight, Cleaning visits, and review past visits for your residence.

@@ -252,7 +252,7 @@ export function CatalogPickerModal({
                         )}
                       </div>
                       <p className="text-xs text-[#64748B] mt-1 line-clamp-1">
-                        {service.description || "Comprehensive in-home care delivery service."}
+                        {service.description || "Comprehensive in-home safety oversight service."}
                       </p>
                       <div className="flex items-center gap-3 text-[11px] font-bold text-[#5E8FB2] mt-1.5">
                         <span className="flex items-center gap-1">

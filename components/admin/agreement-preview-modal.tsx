@@ -174,7 +174,7 @@ export function AgreementPreviewModal({
                 <span className="text-[#243746] font-medium">{agreement.state}</span>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Selected Care Plan:</span>
+                <span className="text-[#64748B] block font-semibold">Selected Service Plan:</span>
                 <strong className="text-[#294B68]">{agreement.planName}</strong>
               </div>
               <div>
@@ -237,12 +237,12 @@ export function AgreementPreviewModal({
                 <div className="text-[11px] font-bold text-[#64748B] uppercase">AgeWellRI Authorized Officer</div>
                 <div className="h-14 flex items-center border-b border-dashed border-[#D9E4EC]">
                   <span className="font-serif italic text-lg text-[#294B68]">
-                    Sarah Jenkins, Care Director
+                    Sarah Jenkins, Director of Operations
                   </span>
                 </div>
                 <div className="text-[11px] text-[#64748B] space-y-0.5">
                   <div><strong>Officer:</strong> Sarah Jenkins</div>
-                  <div><strong>Status:</strong> Verified AgeWellRI Care Management</div>
+                  <div><strong>Status:</strong> Verified AgeWellRI Safety Oversight</div>
                 </div>
               </div>
             </div>

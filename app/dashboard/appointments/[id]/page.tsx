@@ -40,7 +40,7 @@ export default function AppointmentDetailsPage({
   const handleRescheduleRequest = async () => {
     const confirmed = await confirmCriticalAction({
       title: "Request Reschedule?",
-      text: "Submit a request to change your scheduled visit date or time window? An AgeWellRI care specialist will reach out within 2 business hours.",
+      text: "Submit a request to change your scheduled visit date or time window? An AgeWellRI safety specialist will reach out within 2 business hours.",
       confirmButtonText: "Yes, Request Reschedule",
       isDestructive: false,
     });
@@ -49,7 +49,7 @@ export default function AppointmentDetailsPage({
 
     await showSuccessAlert(
       "Reschedule Request Received",
-      "Our dispatch team has received your request. A care coordinator will contact you to confirm a new time slot."
+      "Our dispatch team has received your request. A safety coordinator will contact you to confirm a new time slot."
     );
   };
 

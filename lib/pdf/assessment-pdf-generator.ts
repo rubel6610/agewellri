@@ -286,7 +286,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setFontSize(7);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      "DISCLAIMER: AgeWellRI provides non-medical senior home safety checks, hazard mitigation, and wellness coordination. AgeWellRI is not a licensed medical provider or emergency 911 dispatch service. This assessment evaluates home environmental safety at the time of inspection.",
+      "DISCLAIMER: AgeWellRI provides non-medical senior home safety checks, hazard mitigation, and safety oversight coordination. AgeWellRI is not a licensed medical provider or emergency 911 dispatch service. This assessment evaluates home environmental safety at the time of inspection.",
       margin,
       footerY,
       { maxWidth: contentWidth, align: "center", lineHeightFactor: 1.3 }
@@ -296,7 +296,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setFontSize(7.5);
     doc.setTextColor(...primaryNavy);
     doc.text(
-      `AgeWellRI Care Coordination • (401) 555-0199 • support@agewellri.com • Westerly, Rhode Island`,
+      `AgeWellRI Safety Coordination • (401) 555-0199 • support@agewellri.com • Westerly, Rhode Island`,
       pageWidth / 2,
       footerY + 11,
       { align: "center" }

@@ -19,7 +19,7 @@ export function HelpSchedulingWidget({ className = "" }: HelpSchedulingWidgetPro
             Need help scheduling or have questions?
           </h4>
           <p className="text-xs text-[#5E8FB2] mt-0.5 leading-relaxed font-medium">
-            Our local Rhode Island Care Concierge team is here to assist you or your family member.
+            Our local Rhode Island Safety Concierge team is here to assist you or your family member.
           </p>
         </div>
       </div>
