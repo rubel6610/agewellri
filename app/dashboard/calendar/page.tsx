@@ -115,19 +115,9 @@ export default function ClientCalendarPage() {
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"month" | "agenda">("month");
-  const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
-  // Filtered appointments by category
-  const filteredAppointments = useMemo(() => {
-    if (filterCategory === "ALL") return appointments;
-    return appointments.filter((a) => {
-      const cat = a.serviceCategory || (a.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-      return cat === filterCategory;
-    });
-  }, [appointments, filterCategory]);
 
   // Next upcoming active appointment
   const nextAppointment = useMemo(() => {
@@ -186,7 +176,7 @@ export default function ClientCalendarPage() {
   // Map appointments by dateKey
   const appointmentsByDate = useMemo(() => {
     const map: Record<string, AppointmentItem[]> = {};
-    for (const appt of filteredAppointments) {
+    for (const appt of appointments) {
       const key = getApptDateKey(appt);
       if (!map[key]) {
         map[key] = [];
@@ -194,7 +184,7 @@ export default function ClientCalendarPage() {
       map[key].push(appt);
     }
     return map;
-  }, [filteredAppointments]);
+  }, [appointments]);
 
   // Generate 42 calendar grid cells (6 weeks)
   const calendarCells = useMemo(() => {
@@ -459,44 +449,8 @@ export default function ClientCalendarPage() {
             </div>
           </div>
 
-          {/* Filters & View Modes */}
+          {/* View Modes */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Service Category Filter */}
-            <div className="flex items-center gap-1.5 bg-[#F0F5F9] p-1 rounded-xl border border-[#D9E4EC] text-xs font-bold">
-              <button
-                onClick={() => setFilterCategory("ALL")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  filterCategory === "ALL"
-                    ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                All Visits ({appointments.length})
-              </button>
-              <button
-                onClick={() => setFilterCategory("SAFETY_OVERSIGHT")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterCategory === "SAFETY_OVERSIGHT"
-                    ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                <ShieldCheck className="w-3 h-3" />
-                <span>Safety</span>
-              </button>
-              <button
-                onClick={() => setFilterCategory("CLEANING")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterCategory === "CLEANING"
-                    ? "bg-emerald-700 text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Cleaning</span>
-              </button>
-            </div>
-
             {/* View Mode Toggle */}
             <div className="flex items-center gap-1 bg-[#F8FAFC] p-1 rounded-xl border border-[#D9E4EC] text-xs font-bold">
               <button
@@ -613,13 +567,13 @@ export default function ClientCalendarPage() {
                 <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
                 <span className="font-bold text-xs">Loading appointments...</span>
               </div>
-            ) : filteredAppointments.length === 0 ? (
+            ) : appointments.length === 0 ? (
               <div className="p-12 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-                No visits found matching the selected filter.
+                No visits scheduled yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredAppointments.map((appt) => {
+                {appointments.map((appt) => {
                   const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
                   const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
                   const Icon = style.icon;

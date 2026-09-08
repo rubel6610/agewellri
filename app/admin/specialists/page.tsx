@@ -23,11 +23,8 @@ import {
   CalendarCheck,
   Check,
   RefreshCw,
-  Power,
-  PowerOff,
 } from "lucide-react";
 import {
-  confirmCriticalAction,
   confirmDelete,
   confirmEdit,
   showSuccessAlert,
@@ -193,38 +190,30 @@ export default function SpecialistsPage() {
     }
   };
 
-  const handleToggleStatus = async (specialist: SpecialistItem) => {
-    const isCurrentlyActive = specialist.status === "ACTIVE";
-    const nextStatus = isCurrentlyActive ? "INACTIVE" : "ACTIVE";
-
-    const confirmed = await confirmCriticalAction({
-      title: isCurrentlyActive
-        ? `Deactivate "${specialist.name}"?`
-        : `Activate "${specialist.name}"?`,
-      text: isCurrentlyActive
-        ? `"${specialist.name}" will be marked inactive and will not appear in assignment dropdowns for new appointments.`
-        : `"${specialist.name}" will be restored to active status and will become available for appointment scheduling.`,
-      confirmButtonText: isCurrentlyActive ? "Yes, Deactivate" : "Yes, Activate Specialist",
-      isDestructive: isCurrentlyActive,
+  const handleDeleteSpecialist = async (specialist: SpecialistItem) => {
+    const confirmed = await confirmDelete({
+      title: `Delete "${specialist.name}"?`,
+      text: `Are you sure you want to delete ${specialist.name}? This specialist will be permanently removed from the active directory.`,
+      confirmButtonText: "Yes, Delete Specialist",
     });
 
     if (!confirmed) return;
 
     try {
-      await updateSpecialist({
-        id: specialist.id,
-        data: { status: nextStatus },
-      }).unwrap();
-
-      showToast(
-        `"${specialist.name}" is now ${nextStatus === "ACTIVE" ? "Active" : "Inactive"}.`,
-        "success"
+      await deleteSpecialist(specialist.id).unwrap();
+      showToast(`"${specialist.name}" has been deleted.`, "success");
+      await showSuccessAlert(
+        "Specialist Deleted",
+        `"${specialist.name}" has been removed from the directory.`
       );
+      if (isModalOpen) {
+        setIsModalOpen(false);
+      }
       await refetch();
     } catch (err: any) {
       showErrorAlert(
-        "Status Change Failed",
-        err?.data?.message || err?.message || "Failed to update specialist status."
+        "Delete Failed",
+        err?.data?.message || err?.message || "Failed to delete specialist."
       );
     }
   };
@@ -447,30 +436,13 @@ export default function SpecialistsPage() {
                           </button>
 
                           <button
-                            onClick={() => handleToggleStatus(specialist)}
-                            disabled={isUpdating}
-                            className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
-                              specialist.status === "ACTIVE"
-                                ? "bg-white border-amber-200 text-amber-800 hover:bg-amber-50"
-                                : "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
-                            }`}
-                            title={
-                              specialist.status === "ACTIVE"
-                                ? "Deactivate Specialist (Mark Inactive)"
-                                : "Activate Specialist (Mark Active)"
-                            }
+                            onClick={() => handleDeleteSpecialist(specialist)}
+                            disabled={isDeleting}
+                            className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:border-rose-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs disabled:opacity-50"
+                            title="Delete Specialist"
                           >
-                            {specialist.status === "ACTIVE" ? (
-                              <>
-                                <PowerOff className="w-3.5 h-3.5 text-amber-600" />
-                                <span>Deactivate</span>
-                              </>
-                            ) : (
-                              <>
-                                <Power className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Activate</span>
-                              </>
-                            )}
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Delete</span>
                           </button>
                         </div>
                       </td>
@@ -651,28 +623,44 @@ export default function SpecialistsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#D9E4EC]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="px-5 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isCreating || isUpdating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <span>{editingSpecialist ? "Update Specialist" : "Create Specialist"}</span>
-                  )}
-                </button>
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-[#D9E4EC]">
+                {editingSpecialist ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSpecialist(editingSpecialist)}
+                    disabled={isDeleting}
+                    className="px-3 py-2 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Delete Specialist</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating || isUpdating}
+                    className="px-5 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isCreating || isUpdating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <span>{editingSpecialist ? "Update Specialist" : "Create Specialist"}</span>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

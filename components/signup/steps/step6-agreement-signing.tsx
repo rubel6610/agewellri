@@ -229,6 +229,7 @@ export function Step6AgreementSigning({
     setErrorMessage(null);
 
     const formData = new FormData();
+    formData.append("file", file);
     formData.append("authorityDocument", file);
 
     try {

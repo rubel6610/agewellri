@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useAppSelector } from "@/redux/hooks";
+import { useRouter } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { logout } from "@/redux/features/auth/authSlice";
 import { useSubmitAgreementMutation } from "@/redux/features/agreement/agreementApi";
 import { useProcessAgreementPaymentMutation } from "@/redux/features/payment/paymentApi";
 
@@ -28,6 +30,7 @@ import {
   CreditCard,
   CheckCircle2,
   Phone,
+  LogOut,
 } from "lucide-react";
 import { showErrorAlert } from "@/lib/alerts/sweetalert";
 
@@ -48,9 +51,16 @@ interface SignupWizardProps {
 }
 
 export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
   const [submitAgreement] = useSubmitAgreementMutation();
   const [processPayment] = useProcessAgreementPaymentMutation();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.replace("/login");
+  };
 
   const [currentStep, setCurrentStep] = useState<number>(skipAccountStep ? 2 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -307,8 +317,8 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8">
-      {/* Top Header / Branding
-      <header className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 mb-4 border-b border-[#D9E4EC]">
+      {/* Top Header / Branding with Logout */}
+      <header className="max-w-5xl mx-auto w-full flex items-center justify-between pb-6 mb-6 border-b border-[#D9E4EC]/80">
         <Link href="/" className="flex items-center gap-2.5">
           <Image
             src="/logo.png"
@@ -316,23 +326,47 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
             width={160}
             height={44}
             priority
-            className="h-20 w-auto object-contain"
+            className="h-8 sm:h-9 w-auto object-contain"
           />
         </Link>
 
-        <div className="flex items-center gap-4 text-xs font-semibold text-[#64748B]">
-          <span className="hidden sm:inline-flex items-center gap-1.5">
-            <Phone className="w-3.5 h-3.5 text-[#294B68]" />
-            Questions? Call <strong>(401) 400-2929</strong>
-          </span>
-          <Link
-            href="/login"
-            className="px-3.5 py-1.5 rounded-xl bg-white border border-[#D9E4EC] text-[#294B68] font-bold hover:bg-[#F0F5F9] transition-colors"
-          >
-            Log In
-          </Link>
+        <div className="flex items-center gap-3 sm:gap-4">
+          {authUser ? (
+            <>
+              <div className="hidden sm:flex flex-col text-right text-xs">
+                <span className="font-bold text-[#243746]">
+                  {authUser.firstName} {authUser.lastName}
+                </span>
+                <span className="text-slate-500 font-medium truncate max-w-[200px]">
+                  {authUser.email}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-3.5 py-2 text-xs font-bold text-slate-600 hover:text-red-600 bg-white hover:bg-red-50/80 rounded-xl border border-[#D9E4EC] transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                title="Sign out of your account"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-4 text-xs font-semibold text-[#64748B]">
+              <span className="hidden sm:inline-flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#294B68]" />
+                Questions? Call <strong>(401) 400-2929</strong>
+              </span>
+              <Link
+                href="/login"
+                className="px-3.5 py-1.5 rounded-xl bg-white border border-[#D9E4EC] text-[#294B68] font-bold hover:bg-[#F0F5F9] transition-colors"
+              >
+                Log In
+              </Link>
+            </div>
+          )}
         </div>
-      </header> */}
+      </header>
 
       {/* Progress Stepper Header (Only show for steps 1 - 8) */}
       {currentStep < 9 && (
