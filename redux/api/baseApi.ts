@@ -9,7 +9,7 @@ import { getAuthToken, getRefreshToken } from "@/lib/auth/token";
 import { setCredentials, logout } from "../features/auth/authSlice";
 
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL,
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || "https://arfanrubel5173.ilmifygroup.com/api/v1",
   prepareHeaders: (headers, { getState }) => {
     const state = getState() as { auth?: { token?: string | null } };
     const token = state.auth?.token || getAuthToken();
@@ -114,6 +114,9 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
+  keepUnusedDataFor: 300, // Retain cache in memory for 5 minutes
+  refetchOnFocus: false, // Prevent redundant refetch when clicking back onto window
+  refetchOnReconnect: true,
   tagTypes: [
     "Auth",
     "User",
@@ -125,7 +128,9 @@ export const baseApi = createApi({
     "Billing",
     "Subscription",
     "Notification",
+    "Plan",
+    "Service",
+    "Specialist",
   ],
   endpoints: () => ({}),
 });
-
