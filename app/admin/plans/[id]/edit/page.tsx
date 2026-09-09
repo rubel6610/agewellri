@@ -77,7 +77,7 @@ export default function EditPlanPage() {
         fullDescription: plan.fullDescription || "",
         price: latestVer?.price ?? plan.price,
         currency: latestVer?.currency || "USD",
-        billingInterval: (latestVer?.billingInterval || plan.billingInterval || "QUARTERLY") as any,
+        billingInterval: (latestVer?.billingInterval || plan.billingInterval || "MONTHLY") as any,
         displayOrder: plan.displayOrder ?? 1,
         supportsAutomaticBilling: true,
         supportsInvoiceBilling: false,

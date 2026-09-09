@@ -78,11 +78,11 @@ export function DashboardSidebar() {
       href: "/dashboard/billing",
       icon: CreditCard,
     },
-    {
-      label: "Family Members",
-      href: "/dashboard/family-members",
-      icon: Users,
-    },
+    // {
+    //   label: "My Family Members",
+    //   href: "/dashboard/family-members",
+    //   icon: Users,
+    // },
     {
       label: "My Profile",
       href: "/dashboard/profile",

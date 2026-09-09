@@ -13,6 +13,7 @@ interface CancelRenewalModalProps {
   isOpen: boolean;
   onClose: () => void;
   nextRenewalDate: string;
+  cancellationCutoffDate?: string;
   onSuccess: () => void;
 }
 
@@ -20,6 +21,7 @@ export function CancelRenewalModal({
   isOpen,
   onClose,
   nextRenewalDate,
+  cancellationCutoffDate,
   onSuccess,
 }: CancelRenewalModalProps) {
   const [reason, setReason] = useState("");
@@ -33,7 +35,7 @@ export function CancelRenewalModal({
 
     const confirmed = await confirmCriticalAction({
       title: "Confirm Cancellation of Renewal?",
-      text: `Your coverage and scheduled safety visits will remain active through ${nextRenewalDate}. You will not be charged again.`,
+      text: `Your coverage and scheduled safety visits will remain active through ${nextRenewalDate}. You will not be charged for future billing periods.`,
       confirmButtonText: "Yes, Cancel Renewal",
       isDestructive: true,
     });
@@ -89,14 +91,19 @@ export function CancelRenewalModal({
           </div>
         )}
 
-        <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2 text-xs text-[#475569] leading-relaxed">
+        <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2.5 text-xs text-[#475569] leading-relaxed">
           <div className="flex items-center gap-2 font-bold text-[#243746]">
             <Calendar className="w-4 h-4 text-[#294B68]" />
             <span>Coverage continues until {nextRenewalDate}</span>
           </div>
           <p>
-            Your current quarterly safety oversight and scheduled visits will remain active through the end of your billing cycle. You will not be charged for the upcoming quarter.
+            Your current safety oversight and scheduled visits will remain fully active through the end of your billing cycle. You will not be charged again for future cycles.
           </p>
+          {cancellationCutoffDate && (
+            <p className="text-[11px] text-[#64748B] pt-1 border-t border-[#D9E4EC]/60">
+              * Note: Auto-renewal cancellation must be submitted at least 10 days before the end of the month (cutoff: <strong>{cancellationCutoffDate}</strong>).
+            </p>
+          )}
         </div>
 
         <div>

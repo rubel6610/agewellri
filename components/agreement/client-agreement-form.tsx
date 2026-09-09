@@ -1205,7 +1205,7 @@ export function ClientAgreementForm() {
                   ${basePrice.toFixed(2)}
                 </div>
                 <div className="text-[11px] text-slate-300 font-medium">
-                  Billed {selectedPlanObj?.billingInterval?.toLowerCase() || "quarterly"} · Cancel anytime
+                  Billed {selectedPlanObj?.billingInterval?.toLowerCase() || "monthly"} · Cancel anytime
                 </div>
               </div>
             </div>
@@ -1239,7 +1239,7 @@ export function ClientAgreementForm() {
                 <strong>Non-Medical Safety Disclaimer:</strong> AgeWellRI provides non-medical home safety assessments, hazard mitigation, fall prevention checks, and safety oversight visits. AgeWellRI is NOT a home health agency, licensed medical provider, or 911 emergency dispatch service.
               </p>
               <p>
-                <strong>Billing & Payment Terms:</strong> Membership services renew automatically at the contracted rate of <strong>${totalPrice} / {selectedPlanObj?.billingInterval.toLowerCase() || "quarter"}</strong>. You may update billing methods or cancel renewal at any time from your member portal.
+                <strong>Billing & Payment Terms:</strong> Membership services renew automatically at the contracted rate of <strong>${totalPrice} / {selectedPlanObj?.billingInterval?.toLowerCase() || "month"}</strong>. You may update billing methods or cancel renewal at any time from your member portal.
               </p>
             </div>
           </div>

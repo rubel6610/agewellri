@@ -242,12 +242,12 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...lightNavy);
   doc.text(`SELECTED PLAN: ${planName.toUpperCase()}`, margin + 3.5, y + 4.5);
-  doc.text(`QUARTERLY BILLING: $${planPrice}/Quarter`, margin + 115, y + 4.5);
+  doc.text(`MONTHLY BILLING: $${planPrice}/Month`, margin + 115, y + 4.5);
 
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkText);
-  doc.text(`• Safety & Hazard Mitigation Visits: 12 Dedicated Home Visits per Year (3 Visits per Quarter)`, margin + 3.5, y + 9.5);
+  doc.text(`• Safety & Hazard Mitigation Visits: Dedicated Monthly Home Visits & Safety Oversight`, margin + 3.5, y + 9.5);
   doc.text(`• Add-On Light Cleaning Assistance: ${hasCleaning ? "Included (+6 Visits / Year)" : "Not Enrolled"}`, margin + 3.5, y + 14);
   doc.text(`• Comprehensive Digital Safety Reports: Uploaded after every visit with photographic documentation`, margin + 3.5, y + 18.5);
 
@@ -298,7 +298,7 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
 
   const term1 = "1. SCOPE: AgeWellRI specialists provide non-medical home safety evaluations, proactive hazard mitigation, and designated companion home care.";
   const term2 = "2. ACCESS: The client agrees to provide safe entry and access to the premises during scheduled visit windows.";
-  const term3 = "3. BILLING & RENEWALS: Quarterly subscriptions renew automatically unless notice of cancellation is provided prior to billing period rollover.";
+  const term3 = "3. BILLING & RENEWALS: Monthly subscriptions renew automatically on the 1st of each month unless notice of cancellation is provided prior to the 10-day cutoff deadline.";
   const term4 = "4. LIABILITY LIMITATION: AgeWellRI maintains professional general liability coverage. Specialist recommendations aim to minimize environmental risks.";
 
   doc.text(doc.splitTextToSize(term1, contentWidth - 6), margin + 3, y + 4.5);

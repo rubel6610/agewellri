@@ -213,7 +213,7 @@ export function AdminScheduleModal({
       } else if (!hasRemainingVisits) {
         showErrorAlert(
           "No Remaining Visits",
-          "This client has 0 remaining visits in their current quarterly cycle. Cannot schedule visit."
+          "This client has 0 remaining visits in their current monthly cycle. Cannot schedule visit."
         );
       }
       return;
@@ -315,7 +315,7 @@ export function AdminScheduleModal({
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold text-rose-950">No Remaining Visits for Client (0 Remaining)</strong>
-                  <span>This client has utilized all {selectedClient?.totalVisitsAllowed || 0} visits allocated for their active subscription period. Additional visits cannot be scheduled until next quarterly renewal.</span>
+                  <span>This client has utilized all {selectedClient?.totalVisitsAllowed || 0} visits allocated for their active subscription period. Additional visits cannot be scheduled until next monthly renewal.</span>
                 </div>
               </div>
             ) : null}

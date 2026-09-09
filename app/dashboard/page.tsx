@@ -204,10 +204,10 @@ export default function DashboardHomePage() {
           </div>
           <div>
             <h4 className="font-bold text-[#243746] text-base">
-              Quarterly Renewal Notice
+              Monthly Renewal Notice
             </h4>
             <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-              Your next AgeWellRI quarter begins on{" "}
+              Your next AgeWellRI monthly period begins on{" "}
               {isEntitlementsLoading ? (
                 <span className="inline-block h-3 bg-[#E2E8F0] rounded w-20 align-middle animate-pulse" />
               ) : (

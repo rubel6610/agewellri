@@ -232,15 +232,15 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFontSize(7);
       doc.setTextColor(...mutedText);
       const planDesc = isGuardianPlus
-        ? "8 comprehensive visits / quarter • Bi-weekly audits • Specialized safety coaching & priority dispatch"
-        : "4 quarterly safety visits • Seasonal auditing, fall prevention pathways, and life safety checks";
+        ? "Dedicated safety & cleaning visits / month • Bi-weekly audits • Specialized safety coaching & priority dispatch"
+        : "Monthly safety visits • Seasonal auditing, fall prevention pathways, and life safety checks";
       doc.text(planDesc, margin + 4, y + 9.5);
 
       if (agreement.hasCleaningAddon) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(6.5);
         doc.setTextColor(...greenText);
-        doc.text("✓ Includes Cleaning Add-On ($50/quarter)", margin + 4, y + 13.5);
+        doc.text("✓ Includes Cleaning Add-On ($50/month)", margin + 4, y + 13.5);
       }
 
       // Price Callout Box
@@ -253,10 +253,10 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.text("TOTAL FEE", pageWidth - margin - 37, y + 5.5);
       doc.setFontSize(11);
       doc.setTextColor(...lightNavy);
-      doc.text(`$${agreement.planPrice || (isGuardianPlus ? 1800 : 99)}`, pageWidth - margin - 37, y + 10.5);
+      doc.text(`$${agreement.planPrice || (isGuardianPlus ? 495 : 295)}`, pageWidth - margin - 37, y + 10.5);
       doc.setFontSize(6);
       doc.setTextColor(...mutedText);
-      doc.text("/ quarter", pageWidth - margin - 18, y + 10.5);
+      doc.text("/ month", pageWidth - margin - 18, y + 10.5);
 
       y += 18;
 
@@ -310,8 +310,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...darkText);
-      const bill1 = "• Billing & Payment: Billed quarterly via check, ACH, or credit card. Payments overdue 14+ days will incur a reminder notice and potential service hold.";
-      const bill2 = "• Cancellation: Cancel at any time with 30 days written notice, effective at the end of the billing quarter. Non-refundable except for certified emergency hospitalization or residential care transitions.";
+      const bill1 = "• Billing & Payment: Billed monthly via credit card, ACH, or check on the 1st of each month. Payments overdue 14+ days will incur a reminder notice and potential service hold.";
+      const bill2 = "• Cancellation: Cancel at any time with notice prior to the 10-day cutoff, effective at the end of the billing month. Non-refundable except for certified emergency hospitalization or residential care transitions.";
       const bLines1 = doc.splitTextToSize(bill1, contentWidth - 7);
       const bLines2 = doc.splitTextToSize(bill2, contentWidth - 7);
 
@@ -339,7 +339,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...darkText);
-      const liab1 = "• Limitation of Liability: AgeWellRI is a home safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, or emergency dispatch. Total liability is limited strictly to fees paid in the active quarter.";
+      const liab1 = "• Limitation of Liability: AgeWellRI is a home safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, or emergency dispatch. Total liability is limited strictly to fees paid in the active billing month.";
       const liab2 = "• Privacy & Confidentiality: Safety assessments and client information are confidential and accessed exclusively by the client and designated authorized representatives.";
       const lLines1 = doc.splitTextToSize(liab1, contentWidth - 7);
       const lLines2 = doc.splitTextToSize(liab2, contentWidth - 7);
@@ -684,24 +684,24 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               </div>
               <p className="text-xs text-[#64748B]">
                 {isGuardianPlus
-                  ? "8 comprehensive visits / quarter • Bi-weekly audits • Priority dispatch"
-                  : "4 standard visits / quarter • Seasonal safety auditing & oversight"}
+                  ? "4 comprehensive visits / month • Bi-weekly audits • Priority dispatch"
+                  : "2 standard visits / month • Monthly safety auditing & oversight"}
               </p>
               {agreement.hasCleaningAddon && (
                 <span className="inline-flex items-center gap-1 text-xs font-bold text-[#3F8F6B] bg-white px-2.5 py-0.5 rounded-md border border-[#3F8F6B]/30 mt-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Includes Cleaning Add-On ($50/quarter)</span>
+                  <span>Includes Cleaning Add-On ($50/month)</span>
                 </span>
               )}
             </div>
 
             <div className="text-right sm:border-l sm:border-[#D9E4EC] sm:pl-6">
               <span className="text-xs text-[#64748B] block font-semibold">
-                Quarterly Fee
+                Monthly Fee
               </span>
               <span className="text-2xl font-black text-[#294B68]">
-                ${agreement.planPrice || (isGuardianPlus ? 1800 : 99)}
-                <span className="text-xs font-normal text-[#64748B]">/quarter</span>
+                ${agreement.planPrice || (isGuardianPlus ? 495 : 295)}
+                <span className="text-xs font-normal text-[#64748B]">/month</span>
               </span>
             </div>
           </div>
@@ -742,10 +742,10 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               </h4>
               <div className="space-y-2 leading-relaxed">
                 <p>
-                  <strong className="text-[#243746]">Billing and Payment:</strong> Billed quarterly via check, ACH, or credit/debit card. Invoices are generated at the commencement of each cycle. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
+                  <strong className="text-[#243746]">Billing and Payment:</strong> Billed monthly via credit/debit card, ACH, or check. Invoices are generated at the commencement of each monthly cycle on the 1st. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
                 </p>
                 <p>
-                  <strong className="text-[#243746]">Cancellation by Client:</strong> Cancel at any time with 30 days written notice. Cancellation takes effect at the end of the current billing quarter. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
+                  <strong className="text-[#243746]">Cancellation by Client:</strong> Cancel at any time prior to the 10-day cutoff. Cancellation takes effect at the end of the current billing month. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
                 </p>
               </div>
             </div>
@@ -757,7 +757,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               </h4>
               <div className="space-y-2 leading-relaxed">
                 <p>
-                  <strong className="text-[#243746]">Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the quarter a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
+                  <strong className="text-[#243746]">Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the month a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
                 </p>
                 <p>
                   <strong className="text-[#243746]">Privacy and Confidentiality:</strong> Client safety data, contact info, and home assessment results are collected solely to deliver and coordinate services. Reports are confidential and accessible only to the client and designated authorized representatives.

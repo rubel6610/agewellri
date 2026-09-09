@@ -79,7 +79,7 @@ export function InvoiceTable({ invoices }: InvoiceTableProps) {
           <FileText className="w-8 h-8 text-[#5E8FB2] mx-auto opacity-50" />
           <p className="text-sm font-bold text-[#243746]">No statements or invoices yet</p>
           <p className="text-xs text-[#64748B]">
-            Your quarterly statements and payment receipts will appear here automatically.
+            Your monthly statements and payment receipts will appear here automatically.
           </p>
         </div>
       ) : (

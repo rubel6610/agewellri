@@ -86,6 +86,8 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold self-start sm:self-auto border ${
               isCancelled
                 ? "bg-amber-50 text-amber-800 border-amber-200"
+                : billing.isPendingFirstBilling
+                ? "bg-sky-50 text-sky-800 border-sky-200"
                 : billing.subscriptionStatus === "ACTIVE"
                 ? "bg-[#EAF3F8] text-[#3F8F6B] border-[#3F8F6B]/20"
                 : "bg-slate-100 text-slate-700 border-slate-200"
@@ -96,6 +98,11 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
                 <Clock className="w-3.5 h-3.5 text-amber-600" />
                 <span>Ending Period</span>
               </>
+            ) : billing.isPendingFirstBilling ? (
+              <>
+                <Clock className="w-3.5 h-3.5 text-sky-600" />
+                <span>Scheduled for 1st of Month</span>
+              </>
             ) : (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5" />
@@ -105,13 +112,32 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
           </span>
         </div>
 
+        {/* Informational Banner for New Signups (First Billing Scheduled on 1st of Next Month) */}
+        {billing.isPendingFirstBilling && (
+          <div className="p-4 bg-sky-50 rounded-2xl border border-sky-200 flex items-start gap-3 text-xs text-sky-900 leading-relaxed">
+            <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-sm text-[#243746]">Zero-Charge Enrollment Confirmed</p>
+              <p className="mt-0.5 text-sky-950">
+                You were not charged today. Your payment method is securely saved and your first charge of{" "}
+                <strong>{billing.nextPaymentAmount}</strong> will occur on{" "}
+                <strong>{billing.firstBillingDate || billing.nextPaymentDate}</strong>, which is also your official Service Commencement Date. After that, billing recurs automatically on the 1st of each month.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* 3-Column Key Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Current Period */}
+          {/* Current Period / Service Commencement */}
           <div className="p-4 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC]">
-            <span className="text-xs text-[#64748B] font-semibold block">Current Period</span>
+            <span className="text-xs text-[#64748B] font-semibold block">
+              {billing.isPendingFirstBilling ? "Service Commencement" : "Current Period"}
+            </span>
             <span className="text-base font-bold text-[#243746] mt-1 block">
-              {billing.currentPeriod || "Active Quarter"}
+              {billing.isPendingFirstBilling
+                ? (billing.serviceCommencementDate || billing.nextPaymentDate)
+                : (billing.currentPeriod || "Active Month")}
             </span>
             <span className="text-[11px] text-[#64748B]">Frequency: {billing.billingFrequency}</span>
           </div>
@@ -139,10 +165,14 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </button>
           </div>
 
-          {/* Next Renewal */}
+          {/* Next Renewal / First Billing */}
           <div className="p-4 bg-[#EAF3F8]/60 rounded-2xl border border-[#5E8FB2]/30">
             <span className="text-xs text-[#294B68] font-bold block">
-              {isCancelled ? "Service End Date" : "Next Renewal Date"}
+              {isCancelled
+                ? "Service End Date"
+                : billing.isPendingFirstBilling
+                ? "First Billing Date"
+                : "Next Renewal Date"}
             </span>
             <div className="flex items-center gap-2 mt-1">
               <Calendar className="w-4 h-4 text-[#294B68]" />
@@ -191,9 +221,16 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
           <div className="p-4.5 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <ShieldCheck className="w-5 h-5 text-[#3F8F6B] shrink-0" />
-              <p className="text-xs sm:text-sm text-[#243746]">
-                Automatic quarterly renewal is <strong>active</strong> for {billing.nextPaymentDate}.
-              </p>
+              <div className="text-xs sm:text-sm text-[#243746]">
+                <p>
+                  Automatic renewal is <strong>active</strong> for {billing.nextPaymentDate}.
+                </p>
+                {billing.cancellationCutoffDate && (
+                  <p className="text-xs text-[#64748B] mt-0.5">
+                    Cancellation cutoff for upcoming renewal: <strong>{billing.cancellationCutoffDate}</strong> (10 days before month end).
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -227,6 +264,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
         nextRenewalDate={billing.nextPaymentDate}
+        cancellationCutoffDate={billing.cancellationCutoffDate}
         onSuccess={() => {
           if (onRefresh) onRefresh();
         }}

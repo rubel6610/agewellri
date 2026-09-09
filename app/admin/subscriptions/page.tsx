@@ -90,7 +90,7 @@ export default function SubscriptionsAdminPage() {
   const handleReactivate = async (sub: AdminSubscriptionItem) => {
     const confirmed = await confirmCriticalAction({
       title: `Reactivate Subscription for ${sub.clientName}?`,
-      text: `This will resume automatic quarterly renewal and restore active membership coverage for "${sub.planName}".`,
+      text: `This will resume automatic monthly renewal and restore active membership coverage for "${sub.planName}".`,
       confirmButtonText: "Yes, Reactivate Subscription",
       isDestructive: false,
     });
@@ -420,7 +420,7 @@ export default function SubscriptionsAdminPage() {
         )}
       </div>
 
-      {/* Schedule Next Quarter Visits Modal */}
+      {/* Schedule Next Month Visits Modal */}
       <AdminScheduleModal
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}

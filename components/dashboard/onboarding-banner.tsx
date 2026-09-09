@@ -50,7 +50,7 @@ export function OnboardingBanner({ status }: OnboardingBannerProps) {
               Action Required: Complete your first payment
             </h4>
             <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-              Your AgeWellRI service is ready to begin once your initial quarterly payment is processed.
+              Your AgeWellRI service is ready to begin once your initial monthly payment is scheduled.
             </p>
           </div>
         </div>

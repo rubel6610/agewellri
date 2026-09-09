@@ -14,6 +14,8 @@ import {
   Loader2,
   Edit3,
   RotateCcw,
+  Lock,
+  Key,
 } from "lucide-react";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
@@ -246,6 +248,27 @@ export function AcceptVisitRequestModal({
                 Client Instructions:
               </strong>
               &quot;{appointment.notes}&quot;
+            </div>
+          )}
+
+          {(appointment.accessMethodTitle || appointment.accessMethodInstructions || appointment.accessMethodCode) && (
+            <div className="p-2.5 bg-[#EAF3F8]/80 rounded-xl border border-[#5E8FB2]/30 text-xs text-[#243746]">
+              <div className="flex items-center justify-between">
+                <strong className="text-[10px] uppercase font-bold text-[#294B68] flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-[#294B68]" />
+                  Specialist Entry: {appointment.accessMethodTitle || "Designated Access"}
+                </strong>
+                {appointment.accessMethodCode && (
+                  <span className="font-mono font-bold text-[11px] text-[#294B68] bg-white px-1.5 py-0.5 rounded border border-[#D9E4EC]">
+                    Code: {appointment.accessMethodCode}
+                  </span>
+                )}
+              </div>
+              {appointment.accessMethodInstructions && (
+                <p className="text-[11px] text-[#64748B] mt-1 leading-relaxed">
+                  {appointment.accessMethodInstructions}
+                </p>
+              )}
             </div>
           )}
         </div>

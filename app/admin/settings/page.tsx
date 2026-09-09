@@ -26,7 +26,7 @@ export default function SettingsAdminPage() {
             <h3 className="text-base font-bold text-[#243746]">Plan &amp; Service Controls</h3>
           </div>
           <p className="text-xs text-[#64748B]">
-            Configure quarterly visit limits (Guardian Plus: 12, Essential Guard: 6) and allowed booking lead times.
+            Configure monthly visit limits and allowed booking lead times.
           </p>
           <button
             onClick={() => showToast("Plan configuration settings synced", "success")}

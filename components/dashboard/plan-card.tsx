@@ -77,7 +77,7 @@ export function PlanCard({ plan, isLoading = false }: PlanCardProps) {
       {/* Progress Bar & Breakdown */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between text-sm font-bold text-[#243746]">
-          <span className="font-extrabold">Quarterly Visit Allowance</span>
+          <span className="font-extrabold">Monthly Visit Allowance</span>
           <span className="text-[#294B68] font-black">
             {isLoading ? (
               <span className="inline-block h-4 bg-[#E2E8F0] rounded w-28 align-middle animate-pulse" />

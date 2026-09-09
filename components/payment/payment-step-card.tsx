@@ -64,7 +64,7 @@ export function PaymentStepCard({
   const planBasePrice = planObj?.price ?? (selectedPlan === "GUARDIAN_PLUS" ? 1892 : 995);
   const addonPrice = hasCleaningAddon ? 60 : 0;
   const totalDueToday = planBasePrice + addonPrice;
-  const billingInterval = planObj?.billingInterval || "QUARTERLY";
+  const billingInterval = planObj?.billingInterval || "MONTHLY";
   const isOneTime = billingInterval === "ONE_TIME";
 
   // Create SetupIntent on mount or when plan changes

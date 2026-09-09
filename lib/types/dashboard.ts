@@ -21,6 +21,7 @@ export interface ServicePlan {
   safetyVisitsTotal: number;
   safetyVisitsCompleted: number;
   autoRenew?: boolean;
+  pricePerMonth?: string;
   pricePerQuarter?: string;
 }
 
@@ -79,7 +80,7 @@ export interface Invoice {
 
 export interface BillingInfo {
   currentPlanName: ServicePlanType;
-  billingFrequency: "Quarterly" | "Monthly" | "Annual";
+  billingFrequency: "Monthly" | "Quarterly" | "Annual";
   paymentMethod: {
     brand: string;
     last4: string;

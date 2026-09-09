@@ -44,6 +44,7 @@ export const MOCK_PLAN: ServicePlan = {
   safetyVisitsTotal: 6,
   safetyVisitsCompleted: 4,
   autoRenew: true,
+  pricePerMonth: "$495.00",
   pricePerQuarter: "$495.00",
 };
 
@@ -57,7 +58,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
     technicianName: "Marcus Vance",
     technicianTitle: "Certified Home Safety Specialist",
     bookedBy: "AgeWellRI Team",
-    notes: "Quarterly fall prevention and grab-bar integrity check.",
+    notes: "Monthly fall prevention and grab-bar integrity check.",
   },
   {
     id: "appt_102",
@@ -133,7 +134,7 @@ export const MOCK_AGREEMENT: Agreement = {
 
 export const MOCK_BILLING: BillingInfo = {
   currentPlanName: "Guardian Plus",
-  billingFrequency: "Quarterly",
+  billingFrequency: "Monthly",
   paymentMethod: {
     brand: "Visa",
     last4: "4242",

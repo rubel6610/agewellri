@@ -1,10 +1,30 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
-import { X, Calendar, Clock, CheckCircle2, ShieldCheck, Sparkles, Loader2, UserCheck, AlertCircle } from "lucide-react";
+import {
+  X,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  ShieldCheck,
+  Sparkles,
+  Loader2,
+  UserCheck,
+  AlertCircle,
+  Key,
+  Hash,
+  Bell,
+  HelpCircle,
+  Plus,
+  Star,
+  Lock,
+} from "lucide-react";
 import { ServicePlan } from "@/lib/types/dashboard";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { useScheduleAppointmentMutation } from "@/redux/features/appointment/appointmentApi";
+import {
+  useGetClientAccessMethodsQuery,
+  ClientAccessMethod,
+} from "@/redux/features/client/clientApi";
+import { AccessMethodModal } from "./access-method-modal";
 import {
   confirmCriticalAction,
   showSuccessAlert,
@@ -19,15 +39,19 @@ interface ScheduleVisitModalProps {
 
 export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModalProps) {
   const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
+  const { data: accessMethodsRes, isLoading: isAccessMethodsLoading, refetch: refetchAccessMethods } = useGetClientAccessMethodsQuery(undefined, { skip: !isOpen });
   const [scheduleAppointmentMutation, { isLoading: isSubmitting }] = useScheduleAppointmentMutation();
 
   const entitlements = entitlementsRes?.data?.entitlements || [];
+  const accessMethods = accessMethodsRes?.data || [];
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("");
+  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("" );
   const [selectedServiceName, setSelectedServiceName] = useState<string>("Safety Oversight");
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("10:00 AM – 12:00 PM");
+  const [selectedAccessMethodId, setSelectedAccessMethodId] = useState<string>("");
+  const [isNewAccessModalOpen, setIsNewAccessModalOpen] = useState(false);
   const [notes, setNotes] = useState("");
 
   // Generate the next 5 business days for realistic date selection
@@ -68,6 +92,13 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     }
   }, [entitlements, selectedServiceTypeId]);
 
+  useEffect(() => {
+    if (accessMethods.length > 0 && !selectedAccessMethodId) {
+      const def = accessMethods.find((m) => m.isDefault) || accessMethods[0];
+      if (def) setSelectedAccessMethodId(def.id);
+    }
+  }, [accessMethods, selectedAccessMethodId]);
+
   if (!isOpen) return null;
 
   const timeSlots = [
@@ -84,18 +115,20 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     ? entitlements.every((e) => e.remaining <= 0)
     : (plan ? plan.remainingVisits <= 0 : false);
 
+  const selectedAccessMethod = accessMethods.find((m) => m.id === selectedAccessMethodId);
+
   const handleConfirm = async () => {
     if (isCurrentServiceExhausted) {
       showErrorAlert(
         "No Remaining Visits",
-        `You have 0 remaining visits available for ${selectedServiceName} in your current quarterly plan.`
+        `You have 0 remaining visits available for ${selectedServiceName} in your current monthly plan.`
       );
       return;
     }
 
     const confirmed = await confirmCriticalAction({
       title: `Submit ${selectedServiceName} Visit Request?`,
-      text: `Request safety visit for ${selectedDate} at ${selectedTimeSlot}? Admin will review and assign your specialist.`,
+      text: `Request safety visit for ${selectedDate} at ${selectedTimeSlot}? Access info: ${selectedAccessMethod ? selectedAccessMethod.title : "Standard access"}.`,
       confirmButtonText: "Yes, Submit Request",
       isDestructive: false,
     });
@@ -108,7 +141,12 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         serviceType: selectedServiceName,
         date: selectedDate,
         timeSlot: selectedTimeSlot,
-        notes,
+        notes: notes.trim() || undefined,
+        accessMethodId: selectedAccessMethod?.id,
+        accessMethodType: selectedAccessMethod?.type,
+        accessMethodTitle: selectedAccessMethod?.title,
+        accessMethodCode: selectedAccessMethod?.code || undefined,
+        accessMethodInstructions: selectedAccessMethod?.instructions || undefined,
       }).unwrap();
 
       setStep(5);
@@ -182,8 +220,8 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block font-bold text-rose-950">Quarterly Visit Quota Fully Utilized</strong>
-                  <span>You have used all included visits for your current quarter. Your visit quota will automatically renew on your next billing cycle.</span>
+                  <strong className="block font-bold text-rose-950">Monthly Visit Quota Fully Utilized</strong>
+                  <span>You have used all included visits for your current month. Your visit quota will automatically renew on your next billing cycle.</span>
                 </div>
               </div>
             ) : isCurrentServiceExhausted ? (
@@ -244,7 +282,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         </span>
                       </div>
                       <p className="text-xs text-[#64748B] mt-1.5 font-medium">
-                        {srv.durationMinutes} min session • {srv.allocated} total included in quarter
+                        {srv.durationMinutes} min session • {srv.allocated} total included in monthly cycle
                       </p>
                     </div>
                   );
@@ -325,7 +363,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               }`}
             >
               {areAllServicesExhausted ? (
-                <span>All Quarterly Visits Utilized (0 Remaining)</span>
+                <span>All Monthly Visits Utilized (0 Remaining)</span>
               ) : isCurrentServiceExhausted ? (
                 <span>0 Remaining Visits for {selectedServiceName} — Cannot Schedule</span>
               ) : (
@@ -423,8 +461,10 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         {/* Step 4: Review & Confirm */}
         {step === 4 && (
           <div className="space-y-4 py-2">
-            <h4 className="font-bold text-[#243746] text-base">Review Visit Request</h4>
-            <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5 text-sm">
+            <h4 className="font-bold text-[#243746] text-base">Review &amp; Access Details</h4>
+
+            {/* Visit Summary Card */}
+            <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between border-b border-[#D9E4EC]/60 pb-2">
                 <span className="text-[#64748B]">Service:</span>
                 <span className="font-bold text-[#243746]">{selectedServiceName}</span>
@@ -440,40 +480,126 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <div className="flex justify-between">
                 <span className="text-[#64748B]">Specialist Assignment:</span>
                 <span className="font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-xs">
-                  Assigned by Admin upon Confirmation
+                  Assigned upon admin confirmation
                 </span>
               </div>
             </div>
 
+            {/* Home Access Method Selector for Specialist */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#243746] flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#294B68]" />
+                  <span>Choose Home Access Method</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsNewAccessModalOpen(true)}
+                  className="text-xs font-bold text-[#294B68] hover:text-[#1E374D] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add New Method</span>
+                </button>
+              </div>
+
+              {isAccessMethodsLoading ? (
+                <div className="p-4 bg-[#F8FAFC] rounded-xl text-center text-xs text-[#64748B] flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#294B68]" />
+                  <span>Loading your access methods...</span>
+                </div>
+              ) : accessMethods.length > 0 ? (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {accessMethods.map((m) => {
+                    const isSelected = selectedAccessMethodId === m.id;
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => setSelectedAccessMethodId(m.id)}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                          isSelected
+                            ? "border-[#294B68] bg-[#EAF3F8]/80 shadow-xs"
+                            : "border-[#D9E4EC] bg-white hover:border-[#5E8FB2] hover:bg-[#F8FAFC]"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="accessMethodSelect"
+                          checked={isSelected}
+                          onChange={() => setSelectedAccessMethodId(m.id)}
+                          className="mt-1 text-[#294B68] focus:ring-[#294B68] cursor-pointer accent-[#294B68]"
+                        />
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-xs sm:text-sm text-[#243746]">
+                              {m.title}
+                            </span>
+                            {m.isDefault && (
+                              <span className="text-[10px] font-black uppercase tracking-wider bg-[#294B68] text-white px-2 py-0.5 rounded-full flex items-center gap-0.5">
+                                <Star className="w-2.5 h-2.5 fill-white" />
+                                Default
+                              </span>
+                            )}
+                            {m.code && (
+                              <span className="text-[11px] font-mono font-bold text-[#294B68] bg-white px-1.5 py-0.2 rounded border border-[#D9E4EC]">
+                                Code: {m.code}
+                              </span>
+                            )}
+                          </div>
+                          {m.instructions && (
+                            <p className="text-[11px] text-[#64748B] truncate mt-0.5">
+                              {m.instructions}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between gap-2">
+                  <span>No saved access methods. Specialist will ring front door.</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsNewAccessModalOpen(true)}
+                    className="px-2.5 py-1 bg-[#294B68] text-white font-bold rounded-lg shrink-0 cursor-pointer"
+                  >
+                    + Add Lockbox / Code
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Special Instructions */}
             <div>
               <label className="block text-xs font-bold text-[#243746] mb-1">
-                Special Safety Notes / Access Instructions (Optional)
+                Additional Specialist Instructions (Optional)
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Side entrance code is #1234, please knock gently..."
+                placeholder="e.g. Please ring doorbell twice, friendly dog is inside..."
                 rows={2}
-                className="w-full p-3 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                className="w-full p-3 text-xs sm:text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
               />
             </div>
 
-            <div className="flex gap-3 pt-3">
+            <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setStep(3)}
-                className="w-1/3 py-3 border border-[#D9E4EC] text-[#243746] font-semibold rounded-xl cursor-pointer hover:bg-[#F8FAFC]"
+                className="w-1/3 py-3 border border-[#D9E4EC] text-[#243746] font-semibold rounded-xl cursor-pointer hover:bg-[#F8FAFC] text-sm"
               >
                 Back
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={isSubmitting}
-                className="w-2/3 py-3.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-70"
+                className="w-2/3 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-70 text-sm"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Submitting Request...</span>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Submitting...</span>
                   </>
                 ) : (
                   <span>Submit Visit Request</span>
@@ -495,7 +621,12 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               </h4>
               <p className="text-sm text-[#64748B] mt-2 max-w-sm mx-auto font-medium leading-relaxed">
                 Your request for a <strong>{selectedServiceName}</strong> visit on{" "}
-                <strong className="text-[#243746]">{selectedDate}</strong> ({selectedTimeSlot}) has been received. Our administrative team will review and assign a certified specialist shortly.
+                <strong className="text-[#243746]">{selectedDate}</strong> ({selectedTimeSlot}) has been received.
+                {selectedAccessMethod && (
+                  <span className="block mt-1 text-xs text-[#294B68] font-bold">
+                    Specialist Entry: {selectedAccessMethod.title}
+                  </span>
+                )}
               </p>
             </div>
 
@@ -508,6 +639,19 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
           </div>
         )}
       </div>
+
+      {/* Access Method Modal (for on-the-fly adding) */}
+      <AccessMethodModal
+        isOpen={isNewAccessModalOpen}
+        onClose={() => setIsNewAccessModalOpen(false)}
+        onSuccess={async () => {
+          const res = await refetchAccessMethods();
+          if (res?.data?.data && res.data.data.length > 0) {
+            const newlyAdded = res.data.data[res.data.data.length - 1];
+            setSelectedAccessMethodId(newlyAdded.id);
+          }
+        }}
+      />
     </div>
   );
 }

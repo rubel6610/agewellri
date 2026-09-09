@@ -103,6 +103,33 @@ export interface AdminAgreementRecord {
   clientSignature?: string;
 }
 
+export interface ClientAccessMethod {
+  id: string;
+  type: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title: string;
+  code?: string | null;
+  instructions?: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateAccessMethodPayload {
+  type: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title: string;
+  code?: string;
+  instructions?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateAccessMethodPayload {
+  type?: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title?: string;
+  code?: string | null;
+  instructions?: string | null;
+  isDefault?: boolean;
+}
+
 export interface SendInvitationPayload {
   email: string;
   firstName?: string;
@@ -244,6 +271,48 @@ export const clientApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Agreement", "Client"],
     }),
+
+    getClientAccessMethods: builder.query<ApiResponse<ClientAccessMethod[]>, void>({
+      query: () => "/clients/access-methods",
+      providesTags: ["Client"],
+    }),
+
+    addClientAccessMethod: builder.mutation<ApiResponse<ClientAccessMethod>, CreateAccessMethodPayload>({
+      query: (body) => ({
+        url: "/clients/access-methods",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    updateClientAccessMethod: builder.mutation<
+      ApiResponse<ClientAccessMethod>,
+      { id: string; body: UpdateAccessMethodPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/clients/access-methods/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    deleteClientAccessMethod: builder.mutation<ApiResponse<{ success: boolean; message: string }>, string>({
+      query: (id) => ({
+        url: `/clients/access-methods/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    setDefaultClientAccessMethod: builder.mutation<ApiResponse<ClientAccessMethod>, string>({
+      query: (id) => ({
+        url: `/clients/access-methods/${id}/default`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Client"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -256,4 +325,9 @@ export const {
   useGetAdminAgreementsQuery,
   useSendAgreementReminderMutation,
   useDeleteAdminAgreementMutation,
+  useGetClientAccessMethodsQuery,
+  useAddClientAccessMethodMutation,
+  useUpdateClientAccessMethodMutation,
+  useDeleteClientAccessMethodMutation,
+  useSetDefaultClientAccessMethodMutation,
 } = clientApi;

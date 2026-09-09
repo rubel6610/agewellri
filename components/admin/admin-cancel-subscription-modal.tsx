@@ -90,7 +90,7 @@ export function AdminCancelSubscriptionModal({
               <strong className="text-[#243746]">{subscription.planName}</strong>
             </div>
             <div className="flex justify-between items-center text-[#64748B]">
-              <span>Quarterly Rate:</span>
+              <span>Monthly Rate:</span>
               <strong className="text-[#243746]">{subscription.planPrice}</strong>
             </div>
             <div className="flex justify-between items-center text-[#64748B]">

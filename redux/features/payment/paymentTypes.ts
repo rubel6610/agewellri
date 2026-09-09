@@ -133,6 +133,10 @@ export interface BillingOverviewData {
   currentPeriod: string;
   nextPaymentDate: string;
   nextPaymentAmount: string;
+  firstBillingDate?: string;
+  serviceCommencementDate?: string;
+  cancellationCutoffDate?: string;
+  isPendingFirstBilling?: boolean;
   paymentMethod: {
     brand: string;
     last4: string;

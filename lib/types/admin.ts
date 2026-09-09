@@ -102,7 +102,7 @@ export interface AdminInvoice {
   invoiceNumber: string;
   amount: string;
   planName: string;
-  billingFrequency: "Quarterly" | "Monthly" | "Annual";
+  billingFrequency: "Monthly" | "Quarterly" | "Annual";
   status: "paid" | "pending" | "failed" | "refunded";
   date: string;
   dueDate: string;
@@ -114,7 +114,7 @@ export interface AdminSubscription {
   clientId: string;
   clientName: string;
   planName: string;
-  billingFrequency: "Quarterly" | "Monthly";
+  billingFrequency: "Monthly" | "Quarterly";
   currentPeriod: string;
   renewalDate: string;
   autoRenew: boolean;

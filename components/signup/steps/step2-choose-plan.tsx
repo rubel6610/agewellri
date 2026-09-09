@@ -33,7 +33,7 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
       billingInterval: "MONTHLY",
       totalVisits: 12,
       services: [
-        { serviceTypeId: "srv_safety", serviceName: "Quarterly Safety & Upkeep Visits", allocatedVisits: 4, unit: "VISITS" },
+        { serviceTypeId: "srv_safety", serviceName: "Monthly Safety & Upkeep Visits", allocatedVisits: 4, unit: "VISITS" },
         { serviceTypeId: "srv_seasonal", serviceName: "Seasonal Transition Check-Ins", allocatedVisits: 4, unit: "VISITS" },
         { serviceTypeId: "srv_hazard", serviceName: "Home Hazard Prevention & Testing", allocatedVisits: 4, unit: "VISITS" },
       ],
@@ -140,7 +140,7 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
                         ${plan.price}
                       </span>
                       <span className="text-sm font-bold text-[#64748B]">
-                        / {plan.billingInterval?.toLowerCase() === "quarterly" ? "quarter" : "month"}
+                        / {plan.billingInterval?.toLowerCase() === "annual" ? "year" : plan.billingInterval?.toLowerCase() === "quarterly" ? "quarter" : "month"}
                       </span>
                     </div>
                     <span className="text-xs font-semibold text-[#3F8F6B] mt-1 block">

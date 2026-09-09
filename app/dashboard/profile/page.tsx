@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ChangePasswordModal } from "@/components/auth/change-password-modal";
 import { EditProfileModal } from "@/components/auth/edit-profile-modal";
+import { AccessMethodsCard } from "@/components/dashboard/access-methods-card";
 import { Edit3 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -158,6 +159,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Home Access Methods Card */}
+      <AccessMethodsCard />
 
       {/* Edit Profile Modal */}
       <EditProfileModal

@@ -36,7 +36,7 @@ export function VisitEntitlementsCard() {
         day: "numeric",
         year: "numeric",
       })}`
-    : "Current Quarter";
+    : "Current Month";
 
   return (
     <div className="p-6 sm:p-7 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs space-y-5 text-[#243746]">

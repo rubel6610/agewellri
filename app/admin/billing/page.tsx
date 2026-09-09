@@ -119,7 +119,7 @@ export default function BillingAdminPage() {
   const handleManualTriggerReminders = async () => {
     const confirmed = await confirmCriticalAction({
       title: "Evaluate Renewal Reminders?",
-      text: "This will run an immediate scan for all active subscriptions approaching renewal (7-day monthly, 14-day quarterly, 30-day annual) and dispatch Nodemailer notices.",
+      text: "This will run an immediate scan for all active subscriptions approaching renewal (15-day reminder notice) and dispatch Nodemailer notices.",
       confirmButtonText: "Run Reminder Scan",
       isDestructive: false,
     });
@@ -404,9 +404,9 @@ export default function BillingAdminPage() {
                 className="px-2.5 py-1.5 text-xs font-semibold bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
               >
                 <option value="ALL">All Intervals</option>
-                <option value="MONTHLY">Monthly (7-day alert)</option>
-                <option value="QUARTERLY">Quarterly (14-day alert)</option>
-                <option value="ANNUAL">Annual (30-day alert)</option>
+                <option value="MONTHLY">Monthly (15-day alert)</option>
+                <option value="QUARTERLY">Quarterly (15-day alert)</option>
+                <option value="ANNUAL">Annual (15-day alert)</option>
               </select>
             )}
           </div>

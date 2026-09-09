@@ -257,7 +257,7 @@ export default function ClientCalendarPage() {
       setSelectedAppointment(null);
       await showSuccessAlert(
         "Visit Cancelled",
-        "Your visit has been successfully cancelled and your quarterly entitlement quota has been restored."
+        "Your visit has been successfully cancelled and your visit entitlement quota has been restored."
       );
       refetchAppointments();
     } catch (err: any) {
@@ -358,11 +358,11 @@ export default function ClientCalendarPage() {
           </button>
         </div>
 
-        {/* Dynamic Quarterly Quotas Breakdown */}
+        {/* Dynamic Monthly Quotas Breakdown */}
         <div className="p-5 rounded-2xl bg-white border border-[#D9E4EC] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-[#5E8FB2]">
-              Quarterly Visit Quotas
+              Monthly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
               {totalRemaining} of {totalAllocated} Remaining

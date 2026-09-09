@@ -256,15 +256,18 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(7.5);
     doc.setTextColor(110, 125, 140);
     doc.text(
-      inv.description || "Scheduled safety inspections, fall prevention audits & safety allocations",
+      inv.description || "Scheduled monthly safety inspections, fall prevention audits & safety allocations",
       margin + 4,
       y + 11.5
     );
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(90, 110, 130);
-    doc.text(inv.billingFrequency || "Quarterly Care Cycle", margin + 95, y + 9);
+    const cycleText =
+      !inv.billingFrequency ||
+      inv.billingFrequency.toLowerCase() === "monthly" ||
+      inv.billingFrequency.toLowerCase().includes("monthly")
+        ? "Monthly Safety Cycle"
+        : inv.billingFrequency;
+    doc.text(cycleText, margin + 95, y + 9);
     doc.text(normalizedStatus, margin + 140, y + 9);
 
     doc.setFont("helvetica", "bold");
