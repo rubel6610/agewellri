@@ -490,7 +490,7 @@ export function ClientAgreementForm() {
           "Agreement Executed Successfully!",
           "Your service agreement has been executed and membership activated. Welcome to AgeWellRI!"
         );
-        router.push("/dashboard/calendar");
+        router.push("/dashboard");
       }
     } catch (err: any) {
       const msg = err?.data?.message || err?.message || "Failed to finalize membership activation.";

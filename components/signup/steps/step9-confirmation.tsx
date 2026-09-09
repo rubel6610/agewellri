@@ -44,7 +44,7 @@ export function Step9Confirmation({
           Welcome to AgeWellRI!
         </h2>
         <p className="text-sm text-[#5E8FB2] max-w-md mx-auto">
-          Your membership account and service agreement have been successfully executed. We look forward to caring for your home.
+        Your account and service agreement have been successfully completed. We look forward to helping keep your home safe.
         </p>
       </div>
 
