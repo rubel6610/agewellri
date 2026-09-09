@@ -10,10 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  Sparkles,
   ShieldCheck,
-  ClipboardCheck,
-  HeartPulse,
   RefreshCw,
   Search,
   SlidersHorizontal,
@@ -46,30 +43,6 @@ const CATEGORY_CONFIG: Record<
     icon: ShieldCheck,
     colorClass: "text-[#294B68]",
     bgClass: "bg-[#EAF3F8]",
-  },
-  CLEANING: {
-    label: "Cleaning",
-    icon: Sparkles,
-    colorClass: "text-amber-700",
-    bgClass: "bg-amber-50",
-  },
-  ASSESSMENT: {
-    label: "Assessment",
-    icon: ClipboardCheck,
-    colorClass: "text-purple-700",
-    bgClass: "bg-purple-50",
-  },
-  WELLNESS: {
-    label: "Wellness",
-    icon: HeartPulse,
-    colorClass: "text-emerald-700",
-    bgClass: "bg-emerald-50",
-  },
-  OTHER: {
-    label: "Other Support",
-    icon: Layers,
-    colorClass: "text-slate-700",
-    bgClass: "bg-slate-100",
   },
 };
 
@@ -469,7 +442,7 @@ export default function AdminServicesPage() {
                 </tr>
               ) : (
                 paginatedServices.map((service) => {
-                  const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
+                  const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.SAFETY_OVERSIGHT;
                   const CategoryIcon = config.icon;
 
                   return (
@@ -615,7 +588,7 @@ export default function AdminServicesPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Safety Oversight Visit, HEPA Home Cleaning"
+                  placeholder="e.g. Safety Oversight Visit"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
@@ -646,10 +619,6 @@ export default function AdminServicesPage() {
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746]"
                   >
                     <option value="SAFETY_OVERSIGHT">Safety Oversight</option>
-                    <option value="CLEANING">Cleaning</option>
-                    <option value="ASSESSMENT">Assessment</option>
-                    <option value="WELLNESS">Wellness</option>
-                    <option value="OTHER">Other Support</option>
                   </select>
                 </div>
               </div>

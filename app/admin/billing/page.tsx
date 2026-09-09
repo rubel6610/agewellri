@@ -204,7 +204,7 @@ export default function BillingAdminPage() {
             Financial &amp; Subscription Operations
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            Live revenue tracking, Stripe billing management, and scheduled renewal monitoring.
+            <strong>Monthly billing:</strong> Auto-renews on the 1st of each month · 15-day notice · 10-day cancellation window · Visits scheduled per client each month.
           </p>
         </div>
 

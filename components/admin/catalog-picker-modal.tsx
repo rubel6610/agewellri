@@ -9,10 +9,7 @@ import {
   Plus,
   X,
   Clock,
-  Sparkles,
   ShieldCheck,
-  ClipboardCheck,
-  HeartPulse,
   ExternalLink,
   CheckCircle2,
   RefreshCw,
@@ -37,30 +34,6 @@ const CATEGORY_CONFIG: Record<
     icon: ShieldCheck,
     colorClass: "text-[#294B68]",
     bgClass: "bg-[#EAF3F8]",
-  },
-  CLEANING: {
-    label: "Cleaning",
-    icon: Sparkles,
-    colorClass: "text-amber-700",
-    bgClass: "bg-amber-50",
-  },
-  ASSESSMENT: {
-    label: "Assessment",
-    icon: ClipboardCheck,
-    colorClass: "text-purple-700",
-    bgClass: "bg-purple-50",
-  },
-  WELLNESS: {
-    label: "Wellness",
-    icon: HeartPulse,
-    colorClass: "text-emerald-700",
-    bgClass: "bg-emerald-50",
-  },
-  OTHER: {
-    label: "Other Support",
-    icon: Layers,
-    colorClass: "text-slate-700",
-    bgClass: "bg-slate-100",
   },
 };
 
@@ -219,7 +192,7 @@ export function CatalogPickerModal({
               const isAllocated = allocatedMap.has(service.id);
               const currentQuota = allocatedMap.get(service.id);
               const inputQuota = quotaInputs[service.id] ?? currentQuota ?? 6;
-              const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.OTHER;
+              const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.SAFETY_OVERSIGHT;
               const CategoryIcon = config.icon;
 
               return (

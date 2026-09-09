@@ -142,7 +142,7 @@ export default function SubscriptionsAdminPage() {
             Client Subscriptions &amp; Renewal Lifecycle
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Manage client subscriptions, oversee quarterly renewal billing, process cancellations, and schedule next-quarter visits.
+          	Manage client subscriptions, oversee monthly renewal billing, process cancellations, and schedule each month's visits.
           </p>
         </div>
 
@@ -173,13 +173,13 @@ export default function SubscriptionsAdminPage() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0" />
           <span>
-            <strong>Quarterly Billing Separation:</strong> Subscription billing renews automatically every 90 days. Safety visit scheduling for incoming quarters must be coordinated separately per client.
+            <strong>Monthly Billing Management:</strong> Subscriptions auto-renew monthly. 15-day renewal notices and cancellation processing are coordinated per client.
           </span>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#D9E4EC] shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="relative w-full md:w-80">
           <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#5E8FB2]" />
           <input
@@ -194,7 +194,7 @@ export default function SubscriptionsAdminPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
           {filterTabs.map((tab) => (
             <button
               key={tab.value}
@@ -217,43 +217,43 @@ export default function SubscriptionsAdminPage() {
       {/* Subscriptions Table */}
       <div className="bg-white rounded-2xl border border-[#D9E4EC] shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[850px] xl:min-w-0">
             <thead>
               <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
-                <th className="py-3.5 px-4">Client</th>
-                <th className="py-3.5 px-4">Plan &amp; Rate</th>
-                <th className="py-3.5 px-4">Current Cycle</th>
-                <th className="py-3.5 px-4">Next Renewal</th>
-                <th className="py-3.5 px-4">Auto-Renew Policy</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Subscription Actions</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Client</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Plan &amp; Rate</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Current Cycle</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Next Renewal</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Auto-Renew Policy</th>
+                <th className="py-4 px-4 sm:px-6 whitespace-nowrap">Status</th>
+                <th className="py-4 px-4 sm:px-6 text-right whitespace-nowrap">Subscription Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC] text-sm">
               {isLoading ? (
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="py-4 px-4 space-y-1.5">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5 space-y-1.5">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
                       <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
                     </td>
-                    <td className="py-4 px-4 space-y-1.5">
-                      <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
-                      <div className="h-3 bg-[#F1F5F9] rounded-md w-16"></div>
-                    </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5 space-y-1.5">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+                    </td>
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-24"></div>
+                    </td>
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5">
                       <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
-                    </td>
-                    <td className="py-4 px-4 text-right">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-right">
                       <div className="h-8 bg-[#E2E8F0] rounded-xl w-28 ml-auto"></div>
                     </td>
                   </tr>
@@ -278,32 +278,34 @@ export default function SubscriptionsAdminPage() {
                   return (
                     <tr key={sub.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
                       {/* Client */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 whitespace-nowrap">
                         <Link
                           href={`/admin/clients/${sub.clientId}`}
-                          className="font-extrabold text-[#243746] hover:text-[#294B68] hover:underline flex items-center gap-1.5"
+                          className="font-extrabold text-sm text-[#243746] hover:text-[#294B68] hover:underline inline-flex items-center gap-1.5"
                         >
                           <span>{sub.clientName}</span>
-                          <ExternalLink className="w-3 h-3 text-[#5E8FB2] opacity-70" />
+                          <ExternalLink className="w-3.5 h-3.5 text-[#5E8FB2] opacity-70" />
                         </Link>
-                        <div className="text-xs font-mono font-bold text-[#5E8FB2]">{sub.clientNumber}</div>
+                        <div className="text-xs font-mono font-bold text-[#5E8FB2] mt-0.5">{sub.clientNumber}</div>
                       </td>
 
                       {/* Plan & Rate */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-[#243746]">{sub.planName}</div>
-                        <div className="text-xs font-semibold text-[#5E8FB2]">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 whitespace-nowrap">
+                        <div className="font-bold text-sm text-[#243746] leading-snug">
+                          {sub.planName}
+                        </div>
+                        <div className="text-xs font-semibold text-[#5E8FB2] mt-0.5">
                           {sub.planPrice} • {sub.billingMethod === "AUTOMATIC" ? "Card Auto" : "Invoice"}
                         </div>
                       </td>
 
                       {/* Current Cycle */}
-                      <td className="py-4 px-4 text-xs font-semibold text-[#64748B]">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 text-xs font-semibold text-[#64748B] whitespace-nowrap">
                         {sub.currentPeriod}
                       </td>
 
                       {/* Next Renewal */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 whitespace-nowrap">
                         {isCancelled ? (
                           <span className="text-xs font-medium text-slate-400">Terminated</span>
                         ) : (
@@ -314,60 +316,60 @@ export default function SubscriptionsAdminPage() {
                       </td>
 
                       {/* Auto-Renew Policy */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 whitespace-nowrap">
                         {isCancelled ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                             Cancelled
                           </span>
                         ) : isPendingCancel ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                            <Clock className="w-3 h-3 text-amber-600" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
                             Cancels at Period End
                           </span>
                         ) : sub.autoRenew ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                             Auto-Renew ON
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
                             Auto-Renew OFF
                           </span>
                         )}
                       </td>
 
                       {/* Status */}
-                      <td className="py-4 px-4">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 whitespace-nowrap">
                         {isActive ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">
                             ACTIVE
                           </span>
                         ) : isPendingCancel ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">
                             PENDING CANCEL
                           </span>
                         ) : isCancelled ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-black bg-rose-50 text-rose-700 border border-rose-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black bg-rose-50 text-rose-700 border border-rose-200">
                             CANCELLED
                           </span>
                         ) : isPaymentFailed ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-black bg-red-50 text-red-700 border border-red-200">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black bg-red-50 text-red-700 border border-red-200">
                             PAYMENT FAILED
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-black bg-slate-100 text-slate-700">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-black bg-slate-100 text-slate-700">
                             {sub.status}
                           </span>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-6 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-2">
                           {/* Schedule Visits */}
                           <button
                             onClick={() => handleOpenScheduleModal(sub.clientId, sub.clientName)}
-                            className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                            className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                             title="Schedule visits for active period"
                           >
                             <Calendar className="w-3.5 h-3.5" />
@@ -379,7 +381,7 @@ export default function SubscriptionsAdminPage() {
                             <button
                               onClick={() => handleReactivate(sub)}
                               disabled={isReactivating}
-                              className="px-3 py-1.5 bg-white border border-[#D9E4EC] hover:bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                              className="px-3 py-1.5 bg-white border border-[#D9E4EC] hover:bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                               title="Reactivate auto-renewal"
                             >
                               <RotateCcw className="w-3.5 h-3.5 text-emerald-600" />
@@ -388,7 +390,7 @@ export default function SubscriptionsAdminPage() {
                           ) : (
                             <button
                               onClick={() => handleOpenCancelModal(sub)}
-                              className="px-3 py-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+                              className="px-3 py-1.5 bg-white border border-rose-200 hover:bg-rose-50 text-rose-700 font-bold text-xs rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                               title="Cancel subscription (immediate or end of period)"
                             >
                               <Ban className="w-3.5 h-3.5 text-rose-600" />

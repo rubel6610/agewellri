@@ -24,14 +24,21 @@ import {
 import { useGetAdminDashboardStatsQuery } from "@/redux/features/client/clientApi";
 import { useAppSelector } from "@/redux/hooks";
 import { StatKpiCard } from "@/components/admin/stat-kpi-card";
-import { AttentionPanel, AttentionItem } from "@/components/admin/attention-panel";
+import {
+  AttentionPanel,
+  AttentionItem,
+} from "@/components/admin/attention-panel";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
 import { AddClientModal } from "@/components/admin/add-client-modal";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 
 export default function AdminOverviewPage() {
   const authUser = useAppSelector((state) => state.auth.user);
-  const { data: statsResponse, isLoading, refetch } = useGetAdminDashboardStatsQuery();
+  const {
+    data: statsResponse,
+    isLoading,
+    refetch,
+  } = useGetAdminDashboardStatsQuery();
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -244,7 +251,10 @@ export default function AdminOverviewPage() {
             </div>
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="p-3 rounded-xl border border-[#D9E4EC]/70 bg-[#F7FAFC] space-y-2">
+                <div
+                  key={i}
+                  className="p-3 rounded-xl border border-[#D9E4EC]/70 bg-[#F7FAFC] space-y-2"
+                >
                   <div className="flex justify-between">
                     <div className="h-3 bg-[#E2E8F0] rounded-md w-24"></div>
                     <div className="h-3 bg-[#F1F5F9] rounded-md w-12"></div>
@@ -261,20 +271,24 @@ export default function AdminOverviewPage() {
   }
 
   // Convert attention items to AttentionItem type
-  const formattedAttentionItems: AttentionItem[] = (stats.attentionItems || []).map((item) => ({
+  const formattedAttentionItems: AttentionItem[] = (
+    stats.attentionItems || []
+  ).map((item) => ({
     id: item.id,
     title: item.title,
     count: 1,
     description: item.description,
-    href: item.actionHref || (item.type === "REPORT" ? "/admin/appointments?tab=COMPLETED" : "/admin"),
+    href:
+      item.actionHref ||
+      (item.type === "REPORT" ? "/admin/appointments?tab=COMPLETED" : "/admin"),
     type:
       item.type === "AGREEMENT"
         ? "agreement"
         : item.type === "REPORT"
-        ? "report"
-        : item.type === "BILLING"
-        ? "payment"
-        : "onboarding",
+          ? "report"
+          : item.type === "BILLING"
+            ? "payment"
+            : "onboarding",
     urgency: item.urgency,
   }));
 
@@ -288,7 +302,8 @@ export default function AdminOverviewPage() {
             <Sparkles className="w-6 h-6 text-[#5E8FB2]" />
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] mt-1">
-            Real-time operations &amp; safety oversight overview for <strong>{todayFormatted}</strong>.
+            Real-time operations &amp; safety oversight overview for{" "}
+            <strong>{todayFormatted}</strong>.
           </p>
         </div>
 
@@ -360,7 +375,7 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Renewals in 30d"
           value={kpis?.renewalsUpcomingCount ?? 0}
-          subtitle="Quarterly cycles"
+          subtitle="Monthly cycles"
           icon={<RefreshCw className="w-5 h-5 text-[#5E8FB2]" />}
           href="/admin/subscriptions"
         />
@@ -379,7 +394,9 @@ export default function AdminOverviewPage() {
                 <Calendar className="w-5 h-5 text-[#294B68]" />
                 <span>Upcoming Field Visits (Next 7 Days)</span>
               </h3>
-              <p className="text-xs text-[#64748B]">Scheduled safety oversight and home upkeep visits</p>
+              <p className="text-xs text-[#64748B]">
+                Scheduled safety oversight and hazard-mitigation visits
+              </p>
             </div>
             <Link
               href="/admin/appointments"
@@ -393,27 +410,49 @@ export default function AdminOverviewPage() {
           {stats.upcomingSchedule.length === 0 ? (
             <div className="p-8 text-center text-[#64748B] bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
               <CalendarCheck className="w-8 h-8 text-[#94A3B8] mx-auto" />
-              <p className="font-bold text-xs text-[#243746]">No Upcoming Visits in the Next 7 Days</p>
-              <p className="text-[11px] text-[#64748B]">Click &ldquo;Schedule Visit&rdquo; to assign a specialist to a member.</p>
+              <p className="font-bold text-xs text-[#243746]">
+                No Upcoming Visits in the Next 7 Days
+              </p>
+              <p className="text-[11px] text-[#64748B]">
+                Click &ldquo;Schedule Visit&rdquo; to assign a specialist to a
+                member.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-[#D9E4EC] bg-[#F7FAFC]">
-                    <th className="py-3 px-3.5 font-bold text-[#64748B]">Date &amp; Time</th>
-                    <th className="py-3 px-3.5 font-bold text-[#64748B]">Client &amp; Address</th>
-                    <th className="py-3 px-3.5 font-bold text-[#64748B]">Service</th>
-                    <th className="py-3 px-3.5 font-bold text-[#64748B]">Specialist</th>
-                    <th className="py-3 px-3.5 font-bold text-[#64748B]">Status</th>
-                    <th className="py-3 px-3.5 font-bold text-[#64748B] text-right">Action</th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                      Date &amp; Time
+                    </th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                      Client &amp; Address
+                    </th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                      Service
+                    </th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                      Specialist
+                    </th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                      Status
+                    </th>
+                    <th className="py-3 px-3.5 font-bold text-[#64748B] text-right">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9E4EC]/60">
                   {stats.upcomingSchedule.map((appt) => (
-                    <tr key={appt.id} className="hover:bg-[#F7FAFC] transition-colors">
+                    <tr
+                      key={appt.id}
+                      className="hover:bg-[#F7FAFC] transition-colors"
+                    >
                       <td className="py-3 px-3.5 whitespace-nowrap">
-                        <span className="font-bold text-[#243746] block">{appt.dateFormatted}</span>
+                        <span className="font-bold text-[#243746] block">
+                          {appt.dateFormatted}
+                        </span>
                         <span className="text-[11px] text-[#64748B] flex items-center gap-1 mt-0.5">
                           <Clock className="w-3 h-3 text-[#5E8FB2]" />
                           {appt.timeSlot}
@@ -421,7 +460,9 @@ export default function AdminOverviewPage() {
                       </td>
 
                       <td className="py-3 px-3.5">
-                        <span className="font-bold text-[#243746] block">{appt.clientName}</span>
+                        <span className="font-bold text-[#243746] block">
+                          {appt.clientName}
+                        </span>
                         <span className="text-[11px] text-[#64748B] flex items-center gap-1 truncate max-w-[180px]">
                           <MapPin className="w-3 h-3 text-[#94A3B8] shrink-0" />
                           {appt.address}
@@ -438,7 +479,10 @@ export default function AdminOverviewPage() {
                         <div className="flex items-center gap-1.5">
                           <span
                             className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: appt.specialistColor || "#294B68" }}
+                            style={{
+                              backgroundColor:
+                                appt.specialistColor || "#294B68",
+                            }}
                           />
                           <span className="font-semibold text-[#243746]">
                             {appt.specialistName}
@@ -476,7 +520,9 @@ export default function AdminOverviewPage() {
                 <Layers className="w-4 h-4 text-[#294B68]" />
                 <span>Service Regional Distribution</span>
               </h3>
-              <p className="text-xs text-[#64748B]">Active state jurisdictions &amp; service plans</p>
+              <p className="text-xs text-[#64748B]">
+                Active state jurisdictions &amp; service plans
+              </p>
             </div>
 
             {/* Service Jurisdiction */}
@@ -489,7 +535,10 @@ export default function AdminOverviewPage() {
                   {
                     state: "Rhode Island",
                     code: "RI",
-                    count: stats.stateDistribution?.RI || kpis?.totalClientsCount || 0,
+                    count:
+                      stats.stateDistribution?.RI ||
+                      kpis?.totalClientsCount ||
+                      0,
                     color: "bg-[#294B68]",
                   },
                 ].map((item) => {
@@ -523,17 +572,19 @@ export default function AdminOverviewPage() {
                 Active Plan Tiers
               </span>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(stats.planDistribution || {}).map(([planName, count]) => (
-                  <div
-                    key={planName}
-                    className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
-                  >
-                    <span>{planName}:</span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px]">
-                      {count}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(stats.planDistribution || {}).map(
+                  ([planName, count]) => (
+                    <div
+                      key={planName}
+                      className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
+                    >
+                      <span>{planName}:</span>
+                      <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px]">
+                        {count}
+                      </span>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -545,8 +596,12 @@ export default function AdminOverviewPage() {
                 <DollarSign className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-[10px] uppercase font-bold text-emerald-800">Total Revenue Collected</div>
-                <div className="text-base font-extrabold text-emerald-900">{kpis?.totalRevenueCollected || "$0.00"}</div>
+                <div className="text-[10px] uppercase font-bold text-emerald-800">
+                  Total Revenue Collected
+                </div>
+                <div className="text-base font-extrabold text-emerald-900">
+                  {kpis?.totalRevenueCollected || "$0.00"}
+                </div>
               </div>
             </div>
             <Link
@@ -569,7 +624,9 @@ export default function AdminOverviewPage() {
                 <Users className="w-5 h-5 text-[#294B68]" />
                 <span>Recent Clients Directory</span>
               </h3>
-              <p className="text-xs text-[#64748B]">Newly registered and enrolled AgeWellRI members</p>
+              <p className="text-xs text-[#64748B]">
+                Newly registered and enrolled AgeWellRI members
+              </p>
             </div>
             <Link
               href="/admin/clients"
@@ -584,12 +641,22 @@ export default function AdminOverviewPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#D9E4EC] bg-[#F7FAFC]">
-                  <th className="py-3 px-3.5 font-bold text-[#64748B]">Client ID</th>
-                  <th className="py-3 px-3.5 font-bold text-[#64748B]">Client Name</th>
-                  <th className="py-3 px-3.5 font-bold text-[#64748B]">State</th>
+                  <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                    Client ID
+                  </th>
+                  <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                    Client Name
+                  </th>
+                  <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                    State
+                  </th>
                   <th className="py-3 px-3.5 font-bold text-[#64748B]">Plan</th>
-                  <th className="py-3 px-3.5 font-bold text-[#64748B]">Status</th>
-                  <th className="py-3 px-3.5 font-bold text-[#64748B] text-right">Action</th>
+                  <th className="py-3 px-3.5 font-bold text-[#64748B]">
+                    Status
+                  </th>
+                  <th className="py-3 px-3.5 font-bold text-[#64748B] text-right">
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D9E4EC]/60">
@@ -601,14 +668,27 @@ export default function AdminOverviewPage() {
                   </tr>
                 ) : (
                   stats.recentClients.map((client) => (
-                    <tr key={client.id} className="hover:bg-[#F7FAFC] transition-colors">
-                      <td className="py-3 px-3.5 font-mono font-bold text-[#294B68]">{client.id}</td>
-                      <td className="py-3 px-3.5">
-                        <span className="font-bold text-[#243746] block">{client.name}</span>
-                        <span className="text-[11px] text-[#64748B]">{client.email}</span>
+                    <tr
+                      key={client.id}
+                      className="hover:bg-[#F7FAFC] transition-colors"
+                    >
+                      <td className="py-3 px-3.5 font-mono font-bold text-[#294B68]">
+                        {client.id}
                       </td>
-                      <td className="py-3 px-3.5 font-semibold text-[#243746]">{client.state}</td>
-                      <td className="py-3 px-3.5 font-medium text-[#64748B]">{client.planName}</td>
+                      <td className="py-3 px-3.5">
+                        <span className="font-bold text-[#243746] block">
+                          {client.name}
+                        </span>
+                        <span className="text-[11px] text-[#64748B]">
+                          {client.email}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3.5 font-semibold text-[#243746]">
+                        {client.state}
+                      </td>
+                      <td className="py-3 px-3.5 font-medium text-[#64748B]">
+                        {client.planName}
+                      </td>
                       <td className="py-3 px-3.5">
                         <ClientStatusBadge status={client.status} />
                       </td>
@@ -635,7 +715,9 @@ export default function AdminOverviewPage() {
               <Activity className="w-4 h-4 text-[#294B68]" />
               <span>Live Activity Stream</span>
             </h3>
-            <p className="text-xs text-[#64748B]">Real-time operational audit log</p>
+            <p className="text-xs text-[#64748B]">
+              Real-time operational audit log
+            </p>
           </div>
 
           <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
@@ -650,14 +732,19 @@ export default function AdminOverviewPage() {
                   className="p-3 rounded-xl border border-[#D9E4EC]/70 bg-[#F7FAFC] space-y-1 text-xs"
                 >
                   <div className="flex items-center justify-between text-[10px] text-[#64748B]">
-                    <span className="font-bold text-[#294B68] capitalize">{act.action}</span>
+                    <span className="font-bold text-[#294B68] capitalize">
+                      {act.action}
+                    </span>
                     <span>{act.time}</span>
                   </div>
                   <p className="text-[#243746] font-medium text-[11px] leading-relaxed">
                     {act.details}
                   </p>
                   <div className="text-[10px] text-[#64748B] pt-0.5">
-                    Actor: <strong className="text-[#243746]">{act.performedBy}</strong>
+                    Actor:{" "}
+                    <strong className="text-[#243746]">
+                      {act.performedBy}
+                    </strong>
                   </div>
                 </div>
               ))
@@ -667,8 +754,14 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Modals */}
-      <AddClientModal isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} />
-      <AdminScheduleModal isOpen={scheduleModalOpen} onClose={() => setScheduleModalOpen(false)} />
+      <AddClientModal
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+      />
+      <AdminScheduleModal
+        isOpen={scheduleModalOpen}
+        onClose={() => setScheduleModalOpen(false)}
+      />
     </div>
   );
 }

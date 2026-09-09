@@ -82,6 +82,10 @@ export interface AdminAgreementRecord {
   clientNumber: string;
   clientName: string;
   clientEmail: string;
+  primaryContactName?: string;
+  primaryContactPhone?: string | null;
+  primaryContactEmail?: string;
+  primaryContactRelation?: string;
   title: string;
   state: string;
   version: string;
@@ -232,6 +236,14 @@ export const clientApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Agreement"],
     }),
+
+    deleteAdminAgreement: builder.mutation<ApiResponse<{ success: boolean; message: string }>, string>({
+      query: (agreementId) => ({
+        url: `/agreements/admin/${agreementId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Agreement", "Client"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -243,4 +255,5 @@ export const {
   useSendInvitationMutation,
   useGetAdminAgreementsQuery,
   useSendAgreementReminderMutation,
+  useDeleteAdminAgreementMutation,
 } = clientApi;

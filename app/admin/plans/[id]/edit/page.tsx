@@ -53,7 +53,7 @@ export default function EditPlanPage() {
     fullDescription: "",
     price: 995,
     currency: "USD",
-    billingInterval: "QUARTERLY" as "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME",
+    billingInterval: "MONTHLY" as "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME",
     displayOrder: 1,
     supportsAutomaticBilling: true,
     supportsInvoiceBilling: false,
@@ -362,7 +362,7 @@ export default function EditPlanPage() {
             Pricing & Intervals
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
                 Active Price (USD) <span className="text-red-500">*</span>
@@ -390,23 +390,8 @@ export default function EditPlanPage() {
                 onChange={(e: any) => setForm({ ...form, billingInterval: e.target.value })}
                 className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
               >
-                <option value="QUARTERLY">Quarterly (Every 3 Months)</option>
                 <option value="MONTHLY">Monthly (Every Month)</option>
-                <option value="ANNUAL">Annual (Every Year)</option>
-                <option value="ONE_TIME">One-Time Charge</option>
               </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                Display Order
-              </label>
-              <input
-                type="number"
-                value={form.displayOrder}
-                onChange={(e) => setForm({ ...form, displayOrder: parseInt(e.target.value) || 0 })}
-                className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-              />
             </div>
           </div>
         </div>

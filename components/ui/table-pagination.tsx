@@ -63,7 +63,7 @@ export function TablePagination({
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[#D9E4EC] text-xs font-medium text-[#64748B] ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6 py-4 border-t border-[#D9E4EC] text-xs font-medium text-[#64748B] ${className}`}
     >
       {/* Left: Summary & Rows per page selector */}
       <div className="flex flex-wrap items-center gap-4">

@@ -34,22 +34,14 @@ import {
 import { TablePagination } from "@/components/ui/table-pagination";
 
 const PRESET_SPECIALTIES = [
-  "Home Safety Audits",
-  "Fall Hazard Mitigation",
-  "Grab Bar Positioning",
-  "HEPA Allergen Cleaning",
-  "Pathway Clearance & Sanitization",
-  "Lighting & Rug Safety",
-  "Bathroom Safety Assessments",
-  "Safety Check-ins",
-];
-
-const PRESET_COLORS = [
-  { name: "Navy Blue", value: "#294B68" },
-  { name: "Slate Teal", value: "#5E8FB2" },
-  { name: "Emerald Green", value: "#3F8F6B" },
-  { name: "Deep Amber", value: "#D97706" },
-  { name: "Plum Purple", value: "#7C3AED" },
+  "Senior Home Safety Specialist (SHSS) Certification",
+  "Fall-Risk & Hazard Identification",
+  "CPR & AED Certification",
+  "Emergency Preparedness & Response Protocols",
+  "Digital Reporting & Documentation",
+  "Scam, Fraud & Financial-Exploitation Awareness",
+  "Respectful Client Communication & Dignity-Centered Service",
+  "Minor Non-Structural Safety Adjustments"
 ];
 
 export default function SpecialistsPage() {
@@ -73,14 +65,13 @@ export default function SpecialistsPage() {
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    title: "Senior Home Safety Specialist",
+    title: "",
     email: "",
     phone: "",
-    specialties: ["Home Safety Audits", "Fall Hazard Mitigation"] as string[],
+    specialties: [] as string[],
     color: "#294B68",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
     notes: "",
-    displayOrder: 1,
   });
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -89,14 +80,13 @@ export default function SpecialistsPage() {
     setEditingSpecialist(null);
     setFormData({
       name: "",
-      title: "Senior Home Safety Specialist",
+      title: "",
       email: "",
       phone: "",
-      specialties: ["Home Safety Audits", "Fall Hazard Mitigation"],
+      specialties: [],
       color: "#294B68",
       status: "ACTIVE",
-      notes: "",
-      displayOrder: specialists.length + 1,
+      notes: ""
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -113,7 +103,6 @@ export default function SpecialistsPage() {
       color: specialist.color || "#294B68",
       status: specialist.status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
       notes: specialist.notes || "",
-      displayOrder: specialist.displayOrder || 1,
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -162,7 +151,6 @@ export default function SpecialistsPage() {
             color: formData.color,
             status: formData.status,
             notes: formData.notes.trim() || null,
-            displayOrder: Number(formData.displayOrder),
           },
         }).unwrap();
         await showSuccessAlert("Specialist Updated", `"${formData.name}" profile has been updated.`);
@@ -176,7 +164,6 @@ export default function SpecialistsPage() {
           color: formData.color,
           status: formData.status,
           notes: formData.notes.trim() || null,
-          displayOrder: Number(formData.displayOrder),
         }).unwrap();
         await showSuccessAlert("Specialist Added", `"${formData.name}" has been added to the specialist roster.`);
       }
@@ -584,29 +571,6 @@ export default function SpecialistsPage() {
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Color Theme Selector */}
-              <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-2">
-                  Calendar Badge Color
-                </label>
-                <div className="flex items-center gap-3">
-                  {PRESET_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: c.value })}
-                      className={`w-8 h-8 rounded-full transition-transform cursor-pointer border-2 ${
-                        formData.color === c.value
-                          ? "scale-110 border-[#243746] shadow-md"
-                          : "border-transparent"
-                      }`}
-                      style={{ backgroundColor: c.value }}
-                      title={c.name}
-                    />
-                  ))}
                 </div>
               </div>
 

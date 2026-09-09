@@ -124,7 +124,7 @@ export default function AdminPlansPage() {
             Dynamic Service Plans
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Configure service tiers, interval pricing, visit quotas, and commercial versioning rules.
+           Configure service, monthly pricing, visit quotas, and agreement versioning rules.
           </p>
         </div>
         <div className="flex items-center gap-3">
