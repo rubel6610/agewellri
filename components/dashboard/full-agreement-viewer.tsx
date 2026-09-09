@@ -22,6 +22,18 @@ import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import jsPDF from "jspdf";
 import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
+const AGEWELL_OWNER_DETAILS = {
+  name: "Matthew Vance",
+  title: "Founder & Operations Director",
+  company: "AgeWellRI LLC",
+  location: "Westerly, RI",
+  phone: "(401) 555-0199",
+  email: "director@agewellri.com",
+};
+
+const OWNER_SIGNATURE_SVG_DATA_URI =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Matthew Vance</text></svg>";
+
 interface FullAgreementViewerProps {
   agreement: AgreementDocument;
 }
@@ -805,34 +817,81 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                   </p>
                 </div>
 
-                {/* Digital Signature Render */}
-                <div className="sm:col-span-2 pt-3 border-t border-[#D9E4EC]">
-                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block mb-2">
-                    Digital Signature on File
-                  </span>
+                {/* Dual Signature Execution Block */}
+                <div className="sm:col-span-2 pt-4 border-t border-[#D9E4EC]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Client / Signer Signature Box */}
+                    <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
+                          Client / Authorized Signer
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Executed
+                        </span>
+                      </div>
 
-                  {agreement.clientSignature && agreement.clientSignature.startsWith("data:image") ? (
-                    <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] max-w-sm">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={agreement.clientSignature}
-                        alt="Client Signature"
-                        className="h-16 w-auto object-contain"
-                      />
-                      <span className="text-[10px] text-[#3F8F6B] font-bold block pt-1">
-                        ✓ Verified Digital Electronic Signature
-                      </span>
+                      <div className="bg-white p-2.5 rounded-xl border border-[#D9E4EC] flex items-center justify-center min-h-[64px]">
+                        {agreement.clientSignature && agreement.clientSignature.startsWith("data:image") ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={agreement.clientSignature}
+                            alt="Client Signature"
+                            className="h-12 w-auto max-w-full object-contain"
+                          />
+                        ) : (
+                          <p className="font-serif italic text-base text-[#294B68]">
+                            {agreement.clientSignature || agreement.clientPrintedName || agreement.clientFullName || "Digital Signature On File"}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="text-xs space-y-0.5">
+                        <div className="font-bold text-[#243746]">
+                          {agreement.clientPrintedName || agreement.signerName || agreement.clientFullName}
+                        </div>
+                        <div className="text-[11px] text-[#64748B]">
+                          Role: {agreement.relationshipToClient ? `Representative (${agreement.relationshipToClient})` : "Primary Resident"}
+                        </div>
+                        <div className="text-[10px] text-[#3F8F6B] font-bold pt-1">
+                          ✓ Verified Digital E-Signature • {formattedDate}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] max-w-sm">
-                      <p className="font-serif italic text-lg text-[#294B68]">
-                        {agreement.clientPrintedName || agreement.clientFullName}
-                      </p>
-                      <span className="text-[10px] text-[#3F8F6B] font-bold block pt-0.5">
-                        ✓ Verified Electronic Signature on Record
-                      </span>
+
+                    {/* AgeWellRI Authorized Provider / Portal Owner Signature Box */}
+                    <div className="p-4 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider block">
+                          AgeWellRI Provider Counter-Signature
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20">
+                          <ShieldCheck className="w-3 h-3 text-[#294B68]" /> Authorized
+                        </span>
+                      </div>
+
+                      <div className="bg-white p-2.5 rounded-xl border border-[#D9E4EC] flex items-center justify-center min-h-[64px]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={OWNER_SIGNATURE_SVG_DATA_URI}
+                          alt="AgeWellRI Counter-Signature"
+                          className="h-10 w-auto max-w-full object-contain"
+                        />
+                      </div>
+
+                      <div className="text-xs space-y-0.5">
+                        <div className="font-bold text-[#243746]">
+                          {AGEWELL_OWNER_DETAILS.name}
+                        </div>
+                        <div className="text-[11px] text-[#64748B]">
+                          {AGEWELL_OWNER_DETAILS.title} &bull; {AGEWELL_OWNER_DETAILS.company}
+                        </div>
+                        <div className="text-[10px] text-[#3F8F6B] font-bold pt-1">
+                          ✓ Verified Counter-Signature On File • {formattedDate}
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>

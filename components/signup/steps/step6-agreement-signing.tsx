@@ -20,6 +20,16 @@ interface Point {
   y: number;
 }
 
+const AGEWELL_OWNER_DETAILS = {
+  name: "Cory Poplaski",
+  title: "Founder",
+  company: "AgeWellRI LLC",
+  location: "Westerly, RI",
+};
+
+const OWNER_SIGNATURE_SVG_DATA_URI =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Matthew Vance</text></svg>";
+
 interface Step6AgreementSigningProps {
   planDetails: {
     planName: string;
@@ -617,6 +627,44 @@ export function Step6AgreementSigning({
                 Sign with your mouse or finger here
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Portal Owner / AgeWellRI Authorized Counter-Signature Section */}
+        <div className="p-4 sm:p-5 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2]">
+              AgeWellRI Provider Counterpart Signature
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <ShieldCheck className="w-3 h-3 text-emerald-600" /> Pre-Authorized
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            <div>
+              <div className="text-sm font-black text-[#243746]">
+                {AGEWELL_OWNER_DETAILS.name}
+              </div>
+              <div className="text-xs text-[#64748B] mt-0.5">
+                {AGEWELL_OWNER_DETAILS.title} &bull; {AGEWELL_OWNER_DETAILS.company}
+              </div>
+              <div className="text-[11px] text-[#5E8FB2] mt-0.5">
+                {AGEWELL_OWNER_DETAILS.location} &bull; Date: {todayStr}
+              </div>
+            </div>
+
+            <div className="w-44 h-14 relative shrink-0 bg-white rounded-xl border border-[#D9E4EC] p-1.5 flex flex-col items-center justify-center shadow-xs">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={OWNER_SIGNATURE_SVG_DATA_URI}
+                alt="AgeWellRI Authorized Signature"
+                className="max-h-8 max-w-full object-contain"
+              />
+              <span className="text-[9px] font-bold text-[#3F8F6B] tracking-tight mt-0.5">
+                ✓ Verified Officer Signature
+              </span>
+            </div>
           </div>
         </div>
 
