@@ -20,7 +20,7 @@ const AGEWELL_OWNER_DETAILS = {
   title: "Founder & Operations Director",
   company: "AgeWellRI LLC",
   location: "Westerly, RI",
-  phone: "(401) 555-0199",
+  phone: "(401) 212-3002",
   email: "director@agewellri.com",
 };
 
@@ -38,8 +38,6 @@ function formatPlanName(plan?: string | null): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-
-
 export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
@@ -54,7 +52,6 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
     statusUpper === "COMPLETED" ||
     Boolean(agreement.signedAt) ||
     Boolean(agreement.executedAt);
-
 
   const rawDate =
     agreement.agreementDate ||
@@ -290,7 +287,11 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.text("TOTAL FEE", pageWidth - margin - 37, y + 5.5);
       doc.setFontSize(11);
       doc.setTextColor(...lightNavy);
-      doc.text(`$${agreement.planPrice ?? 0}`, pageWidth - margin - 37, y + 10.5);
+      doc.text(
+        `$${agreement.planPrice ?? 0}`,
+        pageWidth - margin - 37,
+        y + 10.5,
+      );
       doc.setFontSize(6);
       doc.setTextColor(...mutedText);
       doc.text("/ month", pageWidth - margin - 18, y + 10.5);
@@ -800,7 +801,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                     {formattedPlan}
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    {agreement.planSnapshot?.description || "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits"}
+                    {agreement.planSnapshot?.description ||
+                      "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits"}
                   </p>
                 </div>
               </div>

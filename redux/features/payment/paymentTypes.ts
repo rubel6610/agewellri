@@ -67,6 +67,12 @@ export interface PaymentMethodsData {
 export interface InvoiceItem {
   id: string;
   invoiceNumber: string;
+  clientName?: string;
+  clientNumber?: string;
+  clientEmail?: string;
+  planName?: string;
+  billingFrequency?: string;
+  paymentMethod?: string;
   date: string;
   description: string;
   amount: string;
@@ -121,6 +127,9 @@ export interface ClientVisitEntitlementsResponse {
 }
 
 export interface BillingOverviewData {
+  clientName?: string;
+  clientNumber?: string;
+  clientEmail?: string;
   currentPlanName: string;
   selectedPlanCode: string;
   hasCleaningAddon: boolean;

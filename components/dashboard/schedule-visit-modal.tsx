@@ -18,6 +18,7 @@ import {
   Lock,
 } from "lucide-react";
 import { ServicePlan } from "@/lib/types/dashboard";
+import { formatDuration } from "@/lib/utils";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { useScheduleAppointmentMutation } from "@/redux/features/appointment/appointmentApi";
 import {
@@ -282,7 +283,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         </span>
                       </div>
                       <p className="text-xs text-[#64748B] mt-1.5 font-medium">
-                        {srv.durationMinutes} min session • {srv.allocated} total included in monthly cycle
+                        {formatDuration(srv.durationMinutes)} session • {srv.allocated} total included in monthly cycle
                       </p>
                     </div>
                   );

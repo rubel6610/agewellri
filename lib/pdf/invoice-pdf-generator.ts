@@ -53,16 +53,23 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
       typeof inv.amount === "number"
         ? `$${inv.amount.toFixed(2)}`
         : inv.amount.startsWith("$")
-        ? inv.amount
-        : `$${inv.amount}`;
+          ? inv.amount
+          : `$${inv.amount}`;
 
-    const invoiceDate = inv.date || inv.paidAt || inv.dueDate || new Date().toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const invoiceDate =
+      inv.date ||
+      inv.paidAt ||
+      inv.dueDate ||
+      new Date().toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
 
-    const planTitle = inv.planName || inv.description || "Membership Plan";
+    const rawPlanTitle = inv.planName || inv.description || "Membership Plan";
+    const planTitle = rawPlanTitle
+      .replace(/ (Membership Statement|Manual Invoice)$/i, "")
+      .trim();
     const paymentChannel = inv.paymentMethod || "Credit Card (Auto-Pay)";
 
     // ==========================================
@@ -80,18 +87,25 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
-    doc.text("Comprehensive Senior Home Safety & Upkeep Services", margin + 6, y + 17);
+    doc.text("Comprehensive Senior Home Safety Services", margin + 6, y + 17);
 
     // Document Title & Number (Right aligned)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(255, 255, 255);
-    doc.text("PAYMENT INVOICE RECEIPT", pageWidth - margin - 6, y + 10, { align: "right" });
+    doc.text("PAYMENT INVOICE RECEIPT", pageWidth - margin - 6, y + 10, {
+      align: "right",
+    });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
-    doc.text(`Statement #${inv.invoiceNumber}`, pageWidth - margin - 6, y + 17, { align: "right" });
+    doc.text(
+      `Statement #${inv.invoiceNumber}`,
+      pageWidth - margin - 6,
+      y + 17,
+      { align: "right" },
+    );
 
     y += 30;
 
@@ -99,11 +113,12 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     // 2. BILLED BY & BILLED TO SECTIONS
     // ==========================================
     const colWidth = (contentWidth - 6) / 2;
+    const boxHeight = 44;
 
     // Left Box: Billed By (Service Provider)
     doc.setFillColor(...paleBg);
     doc.setDrawColor(...borderColor);
-    doc.roundedRect(margin, y, colWidth, 42, 2, 2, "FD");
+    doc.roundedRect(margin, y, colWidth, boxHeight, 2, 2, "FD");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
@@ -113,21 +128,22 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...primaryNavy);
-    doc.text("AgeWellRI Care Management LLC", margin + 5, y + 14);
+    doc.text("AgeWellRI Care Management LLC", margin + 5, y + 13.5, {
+      maxWidth: colWidth - 10,
+    });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(90, 110, 130);
-    doc.text("100 Westminster Street, Suite 400", margin + 5, y + 20);
-    doc.text("Providence, RI 02903", margin + 5, y + 25);
-    doc.text("Phone: (401) 555-0199", margin + 5, y + 30);
-    doc.text("Email: billing@agewellri.com", margin + 5, y + 35);
+    doc.text("Westerly, RI 02903", margin + 5, y + 19.5);
+    doc.text("Phone: (401) 212-3002", margin + 5, y + 24.5);
+    doc.text("Email: agewellri@gmail.com", margin + 5, y + 29.5);
 
     // Right Box: Billed To (Client Member)
     const rightColX = margin + colWidth + 6;
     doc.setFillColor(...paleBg);
     doc.setDrawColor(...borderColor);
-    doc.roundedRect(rightColX, y, colWidth, 42, 2, 2, "FD");
+    doc.roundedRect(rightColX, y, colWidth, boxHeight, 2, 2, "FD");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
@@ -137,24 +153,42 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...navy);
-    doc.text(inv.clientName || "Valued Client", rightColX + 5, y + 14);
+    const clientDisplayName = inv.clientName || "Valued Client";
+    doc.text(clientDisplayName, rightColX + 5, y + 13.5, {
+      maxWidth: colWidth - 10,
+    });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(90, 110, 130);
+
+    let rightY = y + 19.5;
     if (inv.clientNumber) {
-      doc.text(`Member ID: ${inv.clientNumber}`, rightColX + 5, y + 20);
+      doc.text(`Member ID: ${inv.clientNumber}`, rightColX + 5, rightY, {
+        maxWidth: colWidth - 10,
+      });
+      rightY += 5;
     }
     if (inv.clientEmail) {
-      doc.text(`Email: ${inv.clientEmail}`, rightColX + 5, y + 25);
+      doc.text(`Email: ${inv.clientEmail}`, rightColX + 5, rightY, {
+        maxWidth: colWidth - 10,
+      });
+      rightY += 5;
+    } else if (inv.clientId && !inv.clientNumber) {
+      doc.text(`Account ID: ${inv.clientId}`, rightColX + 5, rightY, {
+        maxWidth: colWidth - 10,
+      });
+      rightY += 5;
     }
-    if (inv.clientId && !inv.clientNumber) {
-      doc.text(`Account ID: ${inv.clientId}`, rightColX + 5, y + 25);
-    }
-    doc.text(`Service Region: Rhode Island / Connecticut`, rightColX + 5, y + 30);
-    doc.text(`Service Plan: ${planTitle}`, rightColX + 5, y + 35);
+    doc.text(`Service Region: Rhode Island`, rightColX + 5, rightY, {
+      maxWidth: colWidth - 10,
+    });
+    rightY += 5;
+    doc.text(`Service Plan: ${planTitle}`, rightColX + 5, rightY, {
+      maxWidth: colWidth - 10,
+    });
 
-    y += 48;
+    y += 50;
 
     // ==========================================
     // 3. STATEMENT SUMMARY INFO BAR
@@ -196,7 +230,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(110, 130, 150);
-    doc.text("STATUS", margin + sectionW * 3 + 4, y + 6);
+    doc.text("PAYMENT STATUS", margin + sectionW * 3 + 4, y + 6);
 
     const statusX = margin + sectionW * 3 + 4;
     const statusY = y + 8;
@@ -207,7 +241,10 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
       doc.setTextColor(...greenText);
       doc.setFontSize(8);
       doc.text("PAID ✓", statusX + 12, statusY + 4.2, { align: "center" });
-    } else if (normalizedStatus === "OVERDUE" || normalizedStatus === "FAILED") {
+    } else if (
+      normalizedStatus === "OVERDUE" ||
+      normalizedStatus === "FAILED"
+    ) {
       doc.setFillColor(254, 242, 242);
       doc.setDrawColor(254, 202, 202);
       doc.roundedRect(statusX, statusY, 24, 6, 1, 1, "FD");
@@ -238,7 +275,9 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.text("ITEM DESCRIPTION", margin + 4, y + 5.5);
     doc.text("CYCLE / PERIOD", margin + 95, y + 5.5);
     doc.text("STATUS", margin + 140, y + 5.5);
-    doc.text("AMOUNT (USD)", pageWidth - margin - 4, y + 5.5, { align: "right" });
+    doc.text("AMOUNT (USD)", pageWidth - margin - 4, y + 5.5, {
+      align: "right",
+    });
 
     y += 8;
 
@@ -250,15 +289,16 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
     doc.setTextColor(...navy);
-    doc.text(planTitle, margin + 4, y + 6);
+    doc.text(planTitle, margin + 4, y + 6, { maxWidth: 85 });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(110, 125, 140);
     doc.text(
-      inv.description || "Scheduled monthly safety inspections, fall prevention audits & safety allocations",
+      inv.description ||
+        "Scheduled monthly safety inspections, fall prevention audits & safety allocations",
       margin + 4,
-      y + 11.5
+      y + 11.5,
     );
 
     const cycleText =
@@ -273,7 +313,9 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...navy);
-    doc.text(formattedAmount, pageWidth - margin - 4, y + 9, { align: "right" });
+    doc.text(formattedAmount, pageWidth - margin - 4, y + 9, {
+      align: "right",
+    });
 
     y += 22;
 
@@ -291,7 +333,9 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(8);
     doc.setTextColor(90, 110, 130);
     doc.text("Subtotal:", summaryX + 4, y + 6.5);
-    doc.text(formattedAmount, pageWidth - margin - 4, y + 6.5, { align: "right" });
+    doc.text(formattedAmount, pageWidth - margin - 4, y + 6.5, {
+      align: "right",
+    });
 
     doc.text("State Sales Tax (0.0%):", summaryX + 4, y + 12.5);
     doc.text("$0.00", pageWidth - margin - 4, y + 12.5, { align: "right" });
@@ -302,7 +346,11 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(...navy);
-    doc.text(normalizedStatus === "PAID" ? "Total Paid (Settled):" : "Total Due:", summaryX + 4, y + 23);
+    doc.text(
+      normalizedStatus === "PAID" ? "Total Paid (Settled):" : "Total Due:",
+      summaryX + 4,
+      y + 23,
+    );
 
     doc.setFontSize(10);
     if (normalizedStatus === "PAID") {
@@ -310,7 +358,9 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     } else {
       doc.setTextColor(...navy);
     }
-    doc.text(formattedAmount, pageWidth - margin - 4, y + 23, { align: "right" });
+    doc.text(formattedAmount, pageWidth - margin - 4, y + 23, {
+      align: "right",
+    });
 
     y += 38;
 
@@ -330,19 +380,19 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(7);
     doc.setTextColor(130, 145, 160);
     doc.text(
-      "This electronic statement represents an official record of contracted services provided by AgeWellRI Care Management LLC.",
+      "This electronic statement represents an official record of contracted services provided by AgeWellRI LLC.",
       margin,
-      y + 4.5
+      y + 4.5,
     );
     doc.text(
-      "AgeWellRI provides senior safety oversight, non-medical home evaluations, and preventative maintenance support.",
+      "AgeWellRI provides senior safety oversight, non-medical home safety evaluations, and proactive hazard mitigation.",
       margin,
-      y + 8.5
+      y + 8.5,
     );
     doc.text(
-      "For questions regarding this statement, renewal dates, or payment methods, please email billing@agewellri.com or call (401) 555-0199.",
+      "For questions regarding this statement, renewal dates, or payment methods, please email agewellri@gmail.com or call (401) 212-3002.",
       margin,
-      y + 12.5
+      y + 12.5,
     );
 
     // Save File with clean filename

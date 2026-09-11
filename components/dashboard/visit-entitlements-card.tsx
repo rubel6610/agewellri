@@ -3,6 +3,7 @@
 import React from "react";
 import { Sparkles, CalendarCheck, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { formatDuration } from "@/lib/utils";
 
 export function VisitEntitlementsCard() {
   const { data: entitlementsRes, isLoading, isError } = useGetVisitEntitlementsQuery();
@@ -83,7 +84,7 @@ export function VisitEntitlementsCard() {
                     {item.serviceName}
                   </h4>
                   <span className="text-xs font-semibold text-[#5E8FB2]">
-                    {item.durationMinutes} min / visit
+                    {formatDuration(item.durationMinutes)} / visit
                   </span>
                 </div>
 

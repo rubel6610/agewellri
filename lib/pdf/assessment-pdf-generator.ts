@@ -32,7 +32,8 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
 
     const score = report.score ?? 45;
     const maxScore = report.maxScore ?? 50;
-    const percentage = report.percentage ?? Math.round((score / maxScore) * 100);
+    const percentage =
+      report.percentage ?? Math.round((score / maxScore) * 100);
 
     // ==========================================
     // 1. HEADER BANNER
@@ -48,17 +49,28 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
-    doc.text("Comprehensive Senior Home Safety & Care Coordination", margin + 6, y + 17);
+    doc.text(
+      "Comprehensive Senior Home Safety & Care Coordination",
+      margin + 6,
+      y + 17,
+    );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(255, 255, 255);
-    doc.text("AGE SAFE® HOME SCORE™", pageWidth - margin - 6, y + 10, { align: "right" });
+    doc.text("AGE SAFE® HOME SCORE™", pageWidth - margin - 6, y + 10, {
+      align: "right",
+    });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
-    doc.text(`Report #${report.reportNumber || "RPT-1001"}`, pageWidth - margin - 6, y + 17, { align: "right" });
+    doc.text(
+      `Report #${report.reportNumber || "RPT-1001"}`,
+      pageWidth - margin - 6,
+      y + 17,
+      { align: "right" },
+    );
 
     y += 30;
 
@@ -81,14 +93,38 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setTextColor(...navy);
 
     // Left column
-    doc.text(`Member Name: ${report.clientName || "Valued Client"}`, margin + 6, y + 14);
-    doc.text(`Client ID: ${report.clientNumber || "AW-1001"}`, margin + 6, y + 20);
-    doc.text(`Residence: ${report.clientAddress || "Rhode Island"}`, margin + 6, y + 26);
+    doc.text(
+      `Member Name: ${report.clientName || "Valued Client"}`,
+      margin + 6,
+      y + 14,
+    );
+    doc.text(
+      `Client ID: ${report.clientNumber || "AW-1001"}`,
+      margin + 6,
+      y + 20,
+    );
+    doc.text(
+      `Residence: ${report.clientAddress || "Rhode Island"}`,
+      margin + 6,
+      y + 26,
+    );
 
     // Right column
-    doc.text(`Inspection Date: ${report.formattedVisitDate || "Recent Visit"}`, margin + contentWidth / 2 + 6, y + 14);
-    doc.text(`Care Specialist: ${report.specialistName || "Mark Johnson"}`, margin + contentWidth / 2 + 6, y + 20);
-    doc.text(`Service Type: ${report.serviceType || "Home Safety Oversight"}`, margin + contentWidth / 2 + 6, y + 26);
+    doc.text(
+      `Inspection Date: ${report.formattedVisitDate || "Recent Visit"}`,
+      margin + contentWidth / 2 + 6,
+      y + 14,
+    );
+    doc.text(
+      `Care Specialist: ${report.specialistName || "Mark Johnson"}`,
+      margin + contentWidth / 2 + 6,
+      y + 20,
+    );
+    doc.text(
+      `Service Type: ${report.serviceType || "Home Safety Oversight"}`,
+      margin + contentWidth / 2 + 6,
+      y + 26,
+    );
 
     y += 38;
 
@@ -102,14 +138,14 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     const badgeBg: [number, number, number] = isExcellent
       ? greenBg
       : isGood
-      ? [234, 243, 248]
-      : [254, 243, 199];
+        ? [234, 243, 248]
+        : [254, 243, 199];
 
     const badgeColor: [number, number, number] = isExcellent
       ? greenText
       : isGood
-      ? primaryNavy
-      : amberText;
+        ? primaryNavy
+        : amberText;
 
     doc.setFillColor(...badgeBg);
     doc.setDrawColor(...borderColor);
@@ -128,10 +164,10 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     const tierLabel = isExcellent
       ? "AGE SAFE CERTIFIED™ — EXCELLENT SAFETY RATING"
       : isGood
-      ? "GOOD HOME SAFETY — MINOR RECOMMENDATIONS"
-      : isModerate
-      ? "MODERATE RISK — ACTION RECOMMENDED"
-      : "ELEVATED RISK — IMMEDIATE ACTION REQUIRED";
+        ? "GOOD HOME SAFETY — MINOR RECOMMENDATIONS"
+        : isModerate
+          ? "MODERATE RISK — ACTION RECOMMENDED"
+          : "ELEVATED RISK — IMMEDIATE ACTION REQUIRED";
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
@@ -145,7 +181,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
       "Comprehensive evaluation of entrance/exit, corridors, bathroom grab bars, lighting, and fire alarms.",
       margin + 65,
       y + 19,
-      { maxWidth: contentWidth - 70 }
+      { maxWidth: contentWidth - 70 },
     );
 
     y += 36;
@@ -169,16 +205,38 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.text("Inspection Area", margin + 4, y + 5.5);
     doc.text("Items Evaluated", margin + 80, y + 5.5);
     doc.text("Points Earned", margin + 125, y + 5.5);
-    doc.text("Category Status", pageWidth - margin - 4, y + 5.5, { align: "right" });
+    doc.text("Category Status", pageWidth - margin - 4, y + 5.5, {
+      align: "right",
+    });
 
     y += 8;
 
     const categories = [
-      { key: "ENTRANCE_EXIT", label: "1. Entrance & Exit Walkways", defaultScore: 10 },
-      { key: "HALLWAYS_WALKWAYS", label: "2. Hallways & Living Areas", defaultScore: 10 },
-      { key: "BATHROOMS", label: "3. Bathroom Safety & Grab Bars", defaultScore: 8 },
-      { key: "LIGHTING_VISIBILITY", label: "4. Lighting & Nighttime Visibility", defaultScore: 9 },
-      { key: "FIRE_EMERGENCY", label: "5. Fire Safety & Emergency Plan", defaultScore: 9 },
+      {
+        key: "ENTRANCE_EXIT",
+        label: "1. Entrance & Exit Walkways",
+        defaultScore: 10,
+      },
+      {
+        key: "HALLWAYS_WALKWAYS",
+        label: "2. Hallways & Living Areas",
+        defaultScore: 10,
+      },
+      {
+        key: "BATHROOMS",
+        label: "3. Bathroom Safety & Grab Bars",
+        defaultScore: 8,
+      },
+      {
+        key: "LIGHTING_VISIBILITY",
+        label: "4. Lighting & Nighttime Visibility",
+        defaultScore: 9,
+      },
+      {
+        key: "FIRE_EMERGENCY",
+        label: "5. Fire Safety & Emergency Plan",
+        defaultScore: 9,
+      },
     ];
 
     doc.setFontSize(8.5);
@@ -206,9 +264,14 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
       doc.text(`${catScore} / ${catMax} pts`, margin + 125, y + 5.5);
 
       doc.setTextColor(...(isPass ? greenText : amberText));
-      doc.text(isPass ? "PASSED (Safe)" : "ATTENTION NEEDED", pageWidth - margin - 4, y + 5.5, {
-        align: "right",
-      });
+      doc.text(
+        isPass ? "PASSED (Safe)" : "ATTENTION NEEDED",
+        pageWidth - margin - 4,
+        y + 5.5,
+        {
+          align: "right",
+        },
+      );
 
       // Bottom border
       doc.setDrawColor(...borderColor);
@@ -289,17 +352,17 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
       "DISCLAIMER: AgeWellRI provides non-medical senior home safety checks, hazard mitigation, and safety oversight coordination. AgeWellRI is not a licensed medical provider or emergency 911 dispatch service. This assessment evaluates home environmental safety at the time of inspection.",
       margin,
       footerY,
-      { maxWidth: contentWidth, align: "center", lineHeightFactor: 1.3 }
+      { maxWidth: contentWidth, align: "center", lineHeightFactor: 1.3 },
     );
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...primaryNavy);
     doc.text(
-      `AgeWellRI Safety Coordination • (401) 555-0199 • support@agewellri.com • Westerly, Rhode Island`,
+      `AgeWellRI Safety Coordination • (401) 212-3002 • support@agewellri.com • Westerly, Rhode Island`,
       pageWidth / 2,
       footerY + 11,
-      { align: "center" }
+      { align: "center" },
     );
 
     // Save & trigger download

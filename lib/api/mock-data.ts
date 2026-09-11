@@ -13,7 +13,7 @@ export const MOCK_USER: UserProfile = {
   firstName: "John",
   lastName: "Miller",
   email: "john.miller@example.com",
-  phone: "(401) 555-0199",
+  phone: "(401) 212-3002",
   address: {
     street: "142 Wayland Avenue",
     city: "Providence",
@@ -82,7 +82,8 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
     bookedBy: "Client",
     reportId: "rep_201",
     reportTitle: "Home Care & Cleaning Summary",
-    notes: "Standard cleaning and walkway clutter inspection completed cleanly.",
+    notes:
+      "Standard cleaning and walkway clutter inspection completed cleanly.",
   },
   {
     id: "appt_089",
@@ -107,7 +108,8 @@ export const MOCK_REPORTS: Report[] = [
     score: 92,
     status: "available",
     pdfUrl: "#",
-    summary: "Overall home safety is excellent. Minor lighting recommendation for hallway stairs.",
+    summary:
+      "Overall home safety is excellent. Minor lighting recommendation for hallway stairs.",
     recommendationsCount: 2,
   },
   {
@@ -117,7 +119,8 @@ export const MOCK_REPORTS: Report[] = [
     score: 98,
     status: "available",
     pdfUrl: "#",
-    summary: "Completed deep cleaning of high-traffic zones. No physical hazards identified.",
+    summary:
+      "Completed deep cleaning of high-traffic zones. No physical hazards identified.",
     recommendationsCount: 0,
   },
 ];
@@ -169,7 +172,8 @@ export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "notif_1",
     title: "Upcoming Visit Scheduled",
-    message: "Your Safety Oversight visit is scheduled for Sept 15 at 10:00 AM.",
+    message:
+      "Your Safety Oversight visit is scheduled for Sept 15 at 10:00 AM.",
     timestamp: "2 hours ago",
     read: false,
     type: "visit",

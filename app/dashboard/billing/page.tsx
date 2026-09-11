@@ -146,7 +146,19 @@ export default function BillingPage() {
           <BillingCard billing={billing} onRefresh={refetch} />
 
           {/* Invoices & Statements Table */}
-          <InvoiceTable invoices={billing.invoices || []} />
+          <InvoiceTable
+            invoices={billing.invoices || []}
+            clientName={billing.clientName}
+            clientNumber={billing.clientNumber}
+            clientEmail={billing.clientEmail}
+            planName={billing.currentPlanName}
+            billingFrequency={billing.billingFrequency}
+            paymentMethod={
+              billing.billingMethod === "INVOICE"
+                ? "Pay by Invoice"
+                : "Credit Card (Auto-Pay)"
+            }
+          />
 
           {/* Trust Badges */}
           <TrustBadges />

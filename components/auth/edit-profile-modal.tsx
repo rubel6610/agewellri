@@ -16,7 +16,11 @@ import {
 import { AuthInput } from "./auth-input";
 import { useUpdateProfileMutation } from "@/redux/features/auth/authApi";
 import { AuthUser } from "@/redux/features/auth/authTypes";
-import { confirmEdit, showSuccessAlert, showErrorAlert } from "@/lib/alerts/sweetalert";
+import {
+  confirmEdit,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -120,12 +124,16 @@ export function EditProfileModal({
         postalCode: formData.postalCode.trim(),
         emergencyContactName: formData.emergencyContactName.trim() || null,
         emergencyContactPhone: formData.emergencyContactPhone.trim() || null,
-        emergencyContactRelation: formData.emergencyContactRelation.trim() || null,
+        emergencyContactRelation:
+          formData.emergencyContactRelation.trim() || null,
       }).unwrap();
 
       if (response.success) {
         setSuccessMessage("Profile updated successfully!");
-        await showSuccessAlert("Profile Updated", "Your member details have been updated.");
+        await showSuccessAlert(
+          "Profile Updated",
+          "Your member details have been updated.",
+        );
         onClose();
       } else {
         const msg = response.message || "Failed to update profile.";
@@ -144,9 +152,12 @@ export function EditProfileModal({
 
       if (errorData?.errors && typeof errorData.errors === "object") {
         const fieldErrors: typeof errors = {};
-        if (errorData.errors.firstName?.[0]) fieldErrors.firstName = errorData.errors.firstName[0];
-        if (errorData.errors.lastName?.[0]) fieldErrors.lastName = errorData.errors.lastName[0];
-        if (errorData.errors.phone?.[0]) fieldErrors.phone = errorData.errors.phone[0];
+        if (errorData.errors.firstName?.[0])
+          fieldErrors.firstName = errorData.errors.firstName[0];
+        if (errorData.errors.lastName?.[0])
+          fieldErrors.lastName = errorData.errors.lastName[0];
+        if (errorData.errors.phone?.[0])
+          fieldErrors.phone = errorData.errors.phone[0];
         const genMsg = errorData.message || "Please check highlighted fields.";
         fieldErrors.general = genMsg;
         setErrors(fieldErrors);
@@ -281,7 +292,7 @@ export function EditProfileModal({
                   name="phone"
                   type="tel"
                   label="Phone Number"
-                  placeholder="(401) 555-0199"
+                  placeholder="(401) 212-3002"
                   value={formData.phone}
                   onChange={handleChange}
                   error={errors.phone}
