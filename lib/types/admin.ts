@@ -24,7 +24,7 @@ export interface MasterClientRecord {
     state: string;
     zip: string;
   };
-  planName: "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning";
+  planName: string;
   status: ClientStatus;
   agreementStatus: "pending_signature" | "signed" | "executed";
   agreementSignedDate?: string;
@@ -102,7 +102,7 @@ export interface AdminInvoice {
   invoiceNumber: string;
   amount: string;
   planName: string;
-  billingFrequency: "Monthly" | "Quarterly" | "Annual";
+  billingFrequency: "Monthly" | "MONTHLY" | "Annual";
   status: "paid" | "pending" | "failed" | "refunded";
   date: string;
   dueDate: string;
@@ -114,12 +114,17 @@ export interface AdminSubscription {
   clientId: string;
   clientName: string;
   planName: string;
-  billingFrequency: "Monthly" | "Quarterly";
+  billingFrequency: "Monthly" | "MONTHLY";
   currentPeriod: string;
   renewalDate: string;
   autoRenew: boolean;
   paymentMethod: string;
-  status: "active" | "renewing_soon" | "payment_failed" | "cancelled" | "expired";
+  status:
+    | "active"
+    | "renewing_soon"
+    | "payment_failed"
+    | "cancelled"
+    | "expired";
   billingStatus: "ready" | "paid" | "failed";
   visitSchedulingStatus: "scheduled" | "partially_scheduled" | "not_scheduled";
 }

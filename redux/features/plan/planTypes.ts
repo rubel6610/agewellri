@@ -19,7 +19,7 @@ export interface ActivePlan {
   description?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
@@ -40,7 +40,7 @@ export interface AdminPlan {
   currentPrice: number;
   price?: number;
   currency: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
   displayOrder: number;
   isActive: boolean;
   isArchived: boolean;
@@ -133,7 +133,12 @@ export interface ServiceItem {
   id: string;
   name: string;
   code?: string;
-  category: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
+  category:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
   description?: string;
   durationMinutes: number;
   defaultPrice?: number;
@@ -150,7 +155,7 @@ export interface CreatePlanPayload {
   fullDescription?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
@@ -172,7 +177,7 @@ export interface UpdatePlanPayload {
   fullDescription?: string;
   price?: number;
   currency?: string;
-  billingInterval?: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval?: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
@@ -196,7 +201,12 @@ export interface ChangePlanStatusPayload {
 export interface CreateServicePayload {
   name: string;
   code?: string;
-  category: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
+  category:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
   description?: string;
   durationMinutes?: number;
   defaultPrice?: number;
@@ -207,7 +217,12 @@ export interface CreateServicePayload {
 export interface UpdateServicePayload {
   name?: string;
   code?: string;
-  category?: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
+  category?:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
   description?: string;
   durationMinutes?: number;
   defaultPrice?: number;

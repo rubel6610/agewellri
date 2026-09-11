@@ -131,8 +131,12 @@ export function AgreementPreviewModal({
                 className="h-8 w-auto brightness-0 invert object-contain"
               />
               <div className="border-l border-white/20 pl-3">
-                <h3 className="text-sm font-bold text-white">Client Service Agreement</h3>
-                <p className="text-xs text-[#9EC8E2]">{agreement.state} Statutory Master Copy</p>
+                <h3 className="text-sm font-bold text-white">
+                  Client Service Agreement
+                </h3>
+                <p className="text-xs text-[#9EC8E2]">
+                  {agreement.state} Statutory Master Copy
+                </p>
               </div>
             </div>
 
@@ -158,29 +162,51 @@ export function AgreementPreviewModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <span className="text-[#64748B] block font-semibold">Client Name:</span>
-                <strong className="text-sm text-[#243746]">{agreement.clientName}</strong>
+                <span className="text-[#64748B] block font-semibold">
+                  Client Name:
+                </span>
+                <strong className="text-sm text-[#243746]">
+                  {agreement.clientName}
+                </strong>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Client ID / Number:</span>
-                <strong className="text-sm text-[#243746]">{agreement.clientNumber}</strong>
+                <span className="text-[#64748B] block font-semibold">
+                  Client ID / Number:
+                </span>
+                <strong className="text-sm text-[#243746]">
+                  {agreement.clientNumber}
+                </strong>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Primary Contact Email:</span>
-                <span className="text-[#243746] font-medium">{agreement.clientEmail}</span>
+                <span className="text-[#64748B] block font-semibold">
+                  Primary Contact Email:
+                </span>
+                <span className="text-[#243746] font-medium">
+                  {agreement.clientEmail}
+                </span>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Jurisdiction State:</span>
-                <span className="text-[#243746] font-medium">{agreement.state}</span>
+                <span className="text-[#64748B] block font-semibold">
+                  Jurisdiction State:
+                </span>
+                <span className="text-[#243746] font-medium">
+                  {agreement.state}
+                </span>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Selected Service Plan:</span>
+                <span className="text-[#64748B] block font-semibold">
+                  Selected Service Plan:
+                </span>
                 <strong className="text-[#294B68]">{agreement.planName}</strong>
               </div>
               <div>
-                <span className="text-[#64748B] block font-semibold">Light Cleaning Add-on:</span>
+                <span className="text-[#64748B] block font-semibold">
+                  Light Cleaning Add-on:
+                </span>
                 <span className="text-[#243746] font-medium">
-                  {agreement.hasCleaningAddon ? "Enrolled (+6 visits/yr)" : "Not Enrolled"}
+                  {agreement.hasCleaningAddon
+                    ? "Enrolled (+6 visits/yr)"
+                    : "Not Enrolled"}
                 </span>
               </div>
             </div>
@@ -190,14 +216,20 @@ export function AgreementPreviewModal({
           <div className="border border-rose-200 bg-rose-50/60 rounded-2xl p-5 space-y-2">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
               <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-              <span>2. State Statutory Consumer Rights ({agreement.state})</span>
+              <span>
+                2. State Statutory Consumer Rights ({agreement.state})
+              </span>
             </h4>
             <p className="text-xs text-rose-900 leading-relaxed">
-              Under {agreement.state} Consumer Protection Regulations, you may cancel this agreement at any time prior to midnight of the third business day after the date of this transaction without any penalty or obligation.
+              Under {agreement.state} Consumer Protection Regulations, you may
+              cancel this agreement at any time prior to midnight of the third
+              business day after the date of this transaction without any
+              penalty or obligation.
             </p>
             {agreement.cancellationDeadline && (
               <div className="text-xs font-bold text-rose-950 pt-1">
-                Statutory Cancellation Deadline: {agreement.cancellationDeadline}
+                Statutory Cancellation Deadline:{" "}
+                {agreement.cancellationDeadline}
               </div>
             )}
           </div>
@@ -209,7 +241,9 @@ export function AgreementPreviewModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 bg-white rounded-xl border border-[#D9E4EC] space-y-2">
-                <div className="text-[11px] font-bold text-[#64748B] uppercase">Client / Representative Signature</div>
+                <div className="text-[11px] font-bold text-[#64748B] uppercase">
+                  Client / Representative Signature
+                </div>
                 <div className="h-14 flex items-center border-b border-dashed border-[#D9E4EC]">
                   {agreement.clientSignature ? (
                     agreement.clientSignature.startsWith("data:image") ? (
@@ -224,25 +258,39 @@ export function AgreementPreviewModal({
                       </span>
                     )
                   ) : (
-                    <span className="text-xs italic text-[#64748B]">Pending Signature</span>
+                    <span className="text-xs italic text-[#64748B]">
+                      Pending Signature
+                    </span>
                   )}
                 </div>
                 <div className="text-[11px] text-[#64748B] space-y-0.5">
-                  <div><strong>Signer:</strong> {agreement.signerName} ({agreement.signerRole})</div>
-                  <div><strong>Date:</strong> {agreement.signedDate || "Awaiting Signature"}</div>
+                  <div>
+                    <strong>Signer:</strong> {agreement.signerName} (
+                    {agreement.signerRole})
+                  </div>
+                  <div>
+                    <strong>Date:</strong>{" "}
+                    {agreement.signedDate || "Awaiting Signature"}
+                  </div>
                 </div>
               </div>
 
               <div className="p-4 bg-white rounded-xl border border-[#D9E4EC] space-y-2">
-                <div className="text-[11px] font-bold text-[#64748B] uppercase">AgeWellRI Authorized Officer</div>
+                <div className="text-[11px] font-bold text-[#64748B] uppercase">
+                  AgeWellRI Authorized Officer
+                </div>
                 <div className="h-14 flex items-center border-b border-dashed border-[#D9E4EC]">
                   <span className="font-serif italic text-lg text-[#294B68]">
                     Sarah Jenkins, Director of Operations
                   </span>
                 </div>
                 <div className="text-[11px] text-[#64748B] space-y-0.5">
-                  <div><strong>Officer:</strong> Sarah Jenkins</div>
-                  <div><strong>Status:</strong> Verified AgeWellRI Safety Oversight</div>
+                  <div>
+                    <strong>Officer:</strong> Sarah Jenkins
+                  </div>
+                  <div>
+                    <strong>Status:</strong> Verified AgeWellRI Safety Oversight
+                  </div>
                 </div>
               </div>
             </div>

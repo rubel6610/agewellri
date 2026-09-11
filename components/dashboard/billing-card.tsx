@@ -243,9 +243,9 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(true)}
-                className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-red-200"
               >
-                Cancel Renewal
+                Cancel Plan
               </button>
             </div>
           </div>
@@ -263,7 +263,8 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
       <CancelRenewalModal
         isOpen={isCancelModalOpen}
         onClose={() => setIsCancelModalOpen(false)}
-        nextRenewalDate={billing.nextPaymentDate}
+        planName={billing.currentPlanName}
+        endDate={billing.cancellationEffectiveAt || billing.nextPaymentDate}
         cancellationCutoffDate={billing.cancellationCutoffDate}
         onSuccess={() => {
           if (onRefresh) onRefresh();

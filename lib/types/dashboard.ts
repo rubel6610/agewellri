@@ -5,7 +5,7 @@ export type AccountStatus =
   | "suspended"
   | "cancelled";
 
-export type ServicePlanType = "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning" | string;
+export type ServicePlanType = string;
 
 export interface ServicePlan {
   id?: string;
@@ -80,7 +80,7 @@ export interface Invoice {
 
 export interface BillingInfo {
   currentPlanName: ServicePlanType;
-  billingFrequency: "Monthly" | "Quarterly" | "Annual";
+  billingFrequency: "Monthly" | "MONTHLY" | "Annual";
   paymentMethod: {
     brand: string;
     last4: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
@@ -26,14 +26,26 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
   const [registerUser, { isLoading }] = useRegisterMutation();
 
   const [formData, setFormData] = useState({
-    firstName: initialData?.firstName || authUser?.firstName || "",
-    lastName: initialData?.lastName || authUser?.lastName || "",
-    phone: initialData?.phone || authUser?.phone || "",
-    email: initialData?.email || authUser?.email || "",
+    firstName: initialData?.firstName || "",
+    lastName: initialData?.lastName || "",
+    phone: initialData?.phone || "",
+    email: initialData?.email || "",
     password: "",
     confirmPassword: "",
     agreedToLegal: false,
   });
+
+  useEffect(() => {
+    if (initialData?.email || authUser?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        firstName: prev.firstName || initialData?.firstName || authUser?.firstName || "",
+        lastName: prev.lastName || initialData?.lastName || authUser?.lastName || "",
+        phone: prev.phone || initialData?.phone || authUser?.phone || "",
+        email: prev.email || initialData?.email || authUser?.email || "",
+      }));
+    }
+  }, [initialData, authUser]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

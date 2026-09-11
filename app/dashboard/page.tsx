@@ -6,7 +6,7 @@ import { ArrowRight, Clock, Sparkles, FileCheck2, CalendarCheck } from "lucide-r
 import { ServicePlan } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
-import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { useGetVisitEntitlementsQuery, useGetBillingOverviewQuery } from "@/redux/features/payment/paymentApi";
 import { useGetMyReportsQuery } from "@/redux/features/report/reportApi";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { NextVisitCard } from "@/components/dashboard/next-visit-card";
@@ -19,7 +19,8 @@ export default function DashboardHomePage() {
   const authUser = useAppSelector((state) => state.auth.user);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
-  const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery();
+  const { data: entitlementsRes, isLoading: isEntitlementsLoading, refetch: refetchEntitlements } = useGetVisitEntitlementsQuery();
+  const { data: billingRes, isLoading: isBillingLoading, refetch: refetchBilling } = useGetBillingOverviewQuery();
   const { data: apptsRes, isLoading: isApptsLoading } = useGetMyAppointmentsQuery();
   const { data: reportsRes, isLoading: isReportsLoading } = useGetMyReportsQuery();
 
@@ -56,19 +57,17 @@ export default function DashboardHomePage() {
       e.serviceName?.toLowerCase().includes("clean") || e.category === "CLEANING_SUPPORT"
   );
 
-  const rawPlanName = entitlementsData?.planName || authUser?.client?.selectedPlan || "Guardian Plus Plan";
+  const rawPlanName = entitlementsData?.planName || authUser?.client?.selectedPlan || "Member Service Plan";
   let formattedPlanName = rawPlanName;
-  if (rawPlanName === "GUARDIAN_PLUS" || rawPlanName.toLowerCase().includes("guardian")) {
-    formattedPlanName = "Guardian Plus Plan";
-  } else if (rawPlanName === "ESSENTIAL_GUARD" || rawPlanName.toLowerCase().includes("essential")) {
-    formattedPlanName = "Essential Guard Plan";
-  } else if (rawPlanName === "STANDALONE_CLEANING" || rawPlanName.toLowerCase().includes("clean")) {
-    formattedPlanName = "Safety Oversight & Cleaning Plan";
+  if (formattedPlanName.includes("_") || formattedPlanName.includes("-")) {
+    formattedPlanName = formattedPlanName
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
-  const safetyTotal = safetyEntitlement?.allocated ?? 6;
+  const safetyTotal = safetyEntitlement?.allocated ?? 0;
   const safetyCompleted = safetyEntitlement?.completed ?? 0;
-  const cleaningTotal = cleaningEntitlement?.allocated ?? (formattedPlanName.includes("Guardian") ? 6 : 0);
+  const cleaningTotal = cleaningEntitlement?.allocated ?? 0;
   const cleaningCompleted = cleaningEntitlement?.completed ?? 0;
 
   const totalVisits =
@@ -123,7 +122,7 @@ export default function DashboardHomePage() {
         <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#294B68] bg-[#EAF3F8] px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 shrink-0">
           <Clock className="w-4 h-4 text-[#5E8FB2]" />
           <span>
-            Next Quarter Renewal:{" "}
+            Next Monthly Renewal:{" "}
             {isEntitlementsLoading ? (
               <span className="inline-block h-3 bg-[#5E8FB2]/30 rounded w-16 align-middle animate-pulse ml-1" />
             ) : (
@@ -185,7 +184,15 @@ export default function DashboardHomePage() {
 
       {/* Level 1: Plan & Next Visit Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-        <PlanCard plan={dynamicPlan} isLoading={isEntitlementsLoading} />
+        <PlanCard
+          plan={dynamicPlan}
+          isLoading={isEntitlementsLoading || isBillingLoading}
+          billing={billingRes?.data}
+          onRefresh={() => {
+            refetchBilling();
+            refetchEntitlements();
+          }}
+        />
         <NextVisitCard
           appointment={nextVisit}
           isLoading={isApptsLoading}

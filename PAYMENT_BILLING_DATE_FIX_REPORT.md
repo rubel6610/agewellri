@@ -1,4 +1,5 @@
 # PAYMENT_BILLING_DATE_FIX_REPORT.md
+
 **Authoritative Technical Audit & Implementation Report: First Billing Date & Early Stripe Charge Prevention**
 
 **Date:** September 9, 2026  
@@ -28,7 +29,9 @@ During our audit of the AgeWellRI codebase across backend and frontend, the onbo
 ## 2. Exact Reason Payment Was Occurring on the 30th
 
 ### The Core Root Cause: UTC Midnight Offset vs. `America/New_York` Timezone
+
 When creating the first billing date for a September 9 signup:
+
 1. **JavaScript Midnight UTC Generation**:
    The date calculation created a date representing the 1st of the following month at `00:00:00.000` UTC:
    ```ts
@@ -45,6 +48,7 @@ When creating the first billing date for a September 9 signup:
      - Frontend date formatters in US Eastern Time rendered `September 30, 2026`.
 
 ### Root Cause Comparison:
+
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ BEFORE (The September 30 Bug):                                                          │
@@ -97,6 +101,7 @@ When creating the first billing date for a September 9 signup:
 ## 6. Date Calculation Before vs. After
 
 ### BEFORE:
+
 ```ts
 // Local JavaScript Date Constructor (unanchored):
 const nextMonthFirst = new Date(year, month + 1, 1, 0, 0, 0, 0);
@@ -104,6 +109,7 @@ const nextMonthFirst = new Date(year, month + 1, 1, 0, 0, 0, 0);
 ```
 
 ### AFTER:
+
 ```ts
 // Authoritative Timezone-Aware Eastern Date Calculation:
 export function getFirstBillingDate(referenceDate: Date = new Date()): Date {
@@ -127,14 +133,16 @@ export function getFirstBillingDate(referenceDate: Date = new Date()): Date {
 ## 7. Stripe Billing Configuration Before vs. After
 
 ### BEFORE:
+
 ```ts
-trial_end: Math.floor(new Date(year, month + 1, 1).getTime() / 1000)
+trial_end: Math.floor(new Date(year, month + 1, 1).getTime() / 1000);
 // Evaluated to Sep 30 8:00 PM EDT in Stripe
 ```
 
 ### AFTER:
+
 ```ts
-trial_end: getStripeTrialEndTimestamp(now)
+trial_end: getStripeTrialEndTimestamp(now);
 // Evaluates to Oct 1 8:00 AM EDT (12:00:00 UTC) in Stripe
 ```
 
@@ -143,6 +151,7 @@ trial_end: getStripeTrialEndTimestamp(now)
 ## 8. Files Changed
 
 ### Backend:
+
 1. `src/utils/billing-dates.util.ts`:
    - Authoritative date calculation utility with `America/New_York` timezone normalization.
    - Functions: `getEasternDateParts`, `getFirstBillingDate`, `getServiceCommencementDate`, `getStripeTrialEndTimestamp`, `isChargeAllowed`, `calculatePeriodEndDate`, `getReminderDate`, `getCancellationCutoffDate`, `isWithinCancellationCutoff`, `formatBillingDate`.
@@ -163,6 +172,7 @@ trial_end: getStripeTrialEndTimestamp(now)
    - Added validation blocking appointment booking if subscription is `PENDING` or appointment date is prior to `serviceCommencementDate`.
 
 ### Frontend:
+
 1. `redux/features/payment/paymentTypes.ts`:
    - Added `firstBillingDate`, `serviceCommencementDate`, `cancellationCutoffDate`, `isPendingFirstBilling` to `BillingOverviewData`.
 2. `components/dashboard/billing-card.tsx`:
@@ -278,7 +288,7 @@ OCTOBER 1 ARRIVES
 ✅ [PASS] TEST 12: Cancellation cutoff for Nov 1 renewal -> Oct 22
 ✅ [PASS] TEST 13: Client cancels on Oct 15 for Nov 1 renewal -> Allowed
 ✅ [PASS] TEST 14: Client cancels on Oct 25 for Nov 1 renewal -> Rejected
-✅ [PASS] TEST 15: Quarterly period end for Oct 1, 2026 -> Jan 1, 2027
+✅ [PASS] TEST 15: MONTHLY period end for Oct 1, 2026 -> Jan 1, 2027
 ==================================================
 📊 TEST RESULTS: 15 / 15 PASSED (100% SUCCESS)
 ==================================================

@@ -38,10 +38,18 @@ export default function EditPlanPage() {
   const planId = params?.id as string;
   const router = useRouter();
 
-  const { data: plan, isLoading: isPlanLoading, refetch } = useGetAdminPlanByIdQuery(planId, {
+  const {
+    data: plan,
+    isLoading: isPlanLoading,
+    refetch,
+  } = useGetAdminPlanByIdQuery(planId, {
     skip: !planId,
   });
-  const { data: servicesList = [], isLoading: isServicesLoading, refetch: refetchServices } = useGetAllServicesQuery({ includeInactive: true });
+  const {
+    data: servicesList = [],
+    isLoading: isServicesLoading,
+    refetch: refetchServices,
+  } = useGetAllServicesQuery({ includeInactive: true });
   const availableServices = servicesList;
 
   const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
@@ -53,7 +61,7 @@ export default function EditPlanPage() {
     fullDescription: "",
     price: 995,
     currency: "USD",
-    billingInterval: "MONTHLY" as "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME",
+    billingInterval: "MONTHLY" as "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME",
     displayOrder: 1,
     supportsAutomaticBilling: true,
     supportsInvoiceBilling: false,
@@ -77,7 +85,9 @@ export default function EditPlanPage() {
         fullDescription: plan.fullDescription || "",
         price: latestVer?.price ?? plan.price,
         currency: latestVer?.currency || "USD",
-        billingInterval: (latestVer?.billingInterval || plan.billingInterval || "MONTHLY") as any,
+        billingInterval: (latestVer?.billingInterval ||
+          plan.billingInterval ||
+          "MONTHLY") as any,
         displayOrder: plan.displayOrder ?? 1,
         supportsAutomaticBilling: true,
         supportsInvoiceBilling: false,
@@ -128,9 +138,14 @@ export default function EditPlanPage() {
     }
   };
 
-  const handleSelectCatalogService = (serviceTypeId: string, allocatedVisits: number) => {
+  const handleSelectCatalogService = (
+    serviceTypeId: string,
+    allocatedVisits: number,
+  ) => {
     setServiceAllocations((prev) => {
-      const existingIndex = prev.findIndex((s) => s.serviceTypeId === serviceTypeId);
+      const existingIndex = prev.findIndex(
+        (s) => s.serviceTypeId === serviceTypeId,
+      );
       if (existingIndex >= 0) {
         const updated = [...prev];
         updated[existingIndex] = { ...updated[existingIndex], allocatedVisits };
@@ -144,7 +159,7 @@ export default function EditPlanPage() {
   const handleUpdateServiceAllocation = (
     index: number,
     field: "serviceTypeId" | "allocatedVisits" | "unit",
-    value: any
+    value: any,
   ) => {
     const updated = [...serviceAllocations];
     updated[index] = { ...updated[index], [field]: value };
@@ -189,7 +204,7 @@ export default function EditPlanPage() {
 
       await showSuccessAlert(
         "Plan Updated Successfully",
-        `Changes to "${form.name}" have been applied.`
+        `Changes to "${form.name}" have been applied.`,
       );
       refetch();
       router.push("/admin/plans");
@@ -212,10 +227,16 @@ export default function EditPlanPage() {
 
     try {
       const res = await deletePlan(plan.id).unwrap();
-      showSuccessAlert("Plan Deleted", res.message || `"${plan.name}" has been permanently deleted.`);
+      showSuccessAlert(
+        "Plan Deleted",
+        res.message || `"${plan.name}" has been permanently deleted.`,
+      );
       router.push("/admin/plans");
     } catch (err: any) {
-      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete plan.");
+      showErrorAlert(
+        "Delete Failed",
+        err?.data?.message || "Failed to delete plan.",
+      );
     }
   };
 
@@ -223,7 +244,9 @@ export default function EditPlanPage() {
     return (
       <div className="py-24 text-center text-[#5E8FB2] flex flex-col items-center gap-3">
         <RefreshCw className="w-8 h-8 animate-spin text-[#294B68]" />
-        <span className="font-bold text-base">Loading plan details & versions...</span>
+        <span className="font-bold text-base">
+          Loading plan details & versions...
+        </span>
       </div>
     );
   }
@@ -232,7 +255,10 @@ export default function EditPlanPage() {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-[#D9E4EC]">
         <div className="text-lg font-bold text-[#243746]">Plan not found</div>
-        <Link href="/admin/plans" className="text-sm text-[#294B68] underline font-bold mt-2 inline-block">
+        <Link
+          href="/admin/plans"
+          className="text-sm text-[#294B68] underline font-bold mt-2 inline-block"
+        >
           Return to Plans
         </Link>
       </div>
@@ -243,7 +269,10 @@ export default function EditPlanPage() {
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Top Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-[#5E8FB2] font-semibold">
-        <Link href="/admin/plans" className="hover:text-[#294B68] flex items-center gap-1">
+        <Link
+          href="/admin/plans"
+          className="hover:text-[#294B68] flex items-center gap-1"
+        >
           <ArrowLeft className="w-4 h-4" /> Back to Plans
         </Link>
       </div>
@@ -283,7 +312,12 @@ export default function EditPlanPage() {
             Automatic Versioning & Historical Price Protection Active
           </div>
           <p className="text-xs text-blue-800 leading-relaxed font-medium">
-            This plan currently has <strong>{activeSubscribersCount} active subscribers</strong>. Changing the price or visit quotas will automatically create <strong>Version {(latestVersion?.versionNumber || 1) + 1}.0</strong> for all incoming clients, while protecting existing subscribers at their contracted ${latestVersion?.price} rate.
+            This plan currently has{" "}
+            <strong>{activeSubscribersCount} active subscribers</strong>.
+            Changing the price or visit quotas will automatically create{" "}
+            <strong>Version {(latestVersion?.versionNumber || 1) + 1}.0</strong>{" "}
+            for all incoming clients, while protecting existing subscribers at
+            their contracted ${latestVersion?.price} rate.
           </p>
         </div>
       )}
@@ -337,7 +371,9 @@ export default function EditPlanPage() {
             <input
               type="text"
               value={form.shortDescription}
-              onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, shortDescription: e.target.value })
+              }
               className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
           </div>
@@ -349,7 +385,9 @@ export default function EditPlanPage() {
             <textarea
               rows={2}
               value={form.fullDescription}
-              onChange={(e) => setForm({ ...form, fullDescription: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, fullDescription: e.target.value })
+              }
               className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
           </div>
@@ -368,14 +406,18 @@ export default function EditPlanPage() {
                 Active Price (USD) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3.5 top-2.5 text-[#5E8FB2] font-bold">$</span>
+                <span className="absolute left-3.5 top-2.5 text-[#5E8FB2] font-bold">
+                  $
+                </span>
                 <input
                   type="number"
                   required
                   min={1}
                   step="any"
                   value={form.price}
-                  onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setForm({ ...form, price: parseFloat(e.target.value) || 0 })
+                  }
                   className="w-full pl-8 pr-4 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-base font-black text-[#243746] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
               </div>
@@ -387,7 +429,9 @@ export default function EditPlanPage() {
               </label>
               <select
                 value={form.billingInterval}
-                onChange={(e: any) => setForm({ ...form, billingInterval: e.target.value })}
+                onChange={(e: any) =>
+                  setForm({ ...form, billingInterval: e.target.value })
+                }
                 className="w-full px-3.5 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
               >
                 <option value="MONTHLY">Monthly (Every Month)</option>
@@ -405,12 +449,18 @@ export default function EditPlanPage() {
                 Included Services &amp; Visit Quotas
               </h2>
               <p className="text-xs text-[#64748B] mt-0.5">
-                Allocate quantities of individual service catalog items per billing cycle.
+                Allocate quantities of individual service catalog items per
+                billing cycle.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold bg-[#EAF3F8] text-[#294B68] px-2.5 py-1 rounded-lg">
-                Total: {serviceAllocations.reduce((sum, s) => sum + (Number(s.allocatedVisits) || 0), 0)} visits / cycle
+                Total:{" "}
+                {serviceAllocations.reduce(
+                  (sum, s) => sum + (Number(s.allocatedVisits) || 0),
+                  0,
+                )}{" "}
+                visits / cycle
               </span>
               <button
                 type="button"
@@ -426,9 +476,12 @@ export default function EditPlanPage() {
           {serviceAllocations.length === 0 ? (
             <div className="p-6 bg-[#F0F5F9] rounded-2xl text-center flex flex-col items-center gap-2">
               <Layers className="w-7 h-7 text-[#5E8FB2]" />
-              <p className="text-xs text-[#243746] font-bold">No services attached yet.</p>
+              <p className="text-xs text-[#243746] font-bold">
+                No services attached yet.
+              </p>
               <p className="text-xs text-[#64748B] max-w-sm">
-                Click &quot;Browse Catalog&quot; to pick dynamic services and assign visit quotas per billing cycle.
+                Click &quot;Browse Catalog&quot; to pick dynamic services and
+                assign visit quotas per billing cycle.
               </p>
               <button
                 type="button"
@@ -440,43 +493,64 @@ export default function EditPlanPage() {
             </div>
           ) : (
             <div className="space-y-3">
-            {serviceAllocations.map((item, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-[#F0F5F9]/50 rounded-xl border border-[#D9E4EC]">
-                <div className="flex-1">
-                  <select
-                    value={item.serviceTypeId}
-                    onChange={(e) => handleUpdateServiceAllocation(index, "serviceTypeId", e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-[#243746]"
-                  >
-                    {availableServices.map((srv) => (
-                      <option key={srv.id} value={srv.id}>
-                        {srv.name} ({srv.category ? srv.category.replace(/_/g, " ") : "Service"})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="w-32">
-                  <input
-                    type="number"
-                    min={1}
-                    value={item.allocatedVisits}
-                    onChange={(e) => handleUpdateServiceAllocation(index, "allocatedVisits", parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-center"
-                  />
-                </div>
-                <div className="text-xs font-bold text-[#5E8FB2]">visits / cycle</div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveServiceAllocation(index)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+              {serviceAllocations.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-[#F0F5F9]/50 rounded-xl border border-[#D9E4EC]"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                  <div className="flex-1">
+                    <select
+                      value={item.serviceTypeId}
+                      onChange={(e) =>
+                        handleUpdateServiceAllocation(
+                          index,
+                          "serviceTypeId",
+                          e.target.value,
+                        )
+                      }
+                      className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-[#243746]"
+                    >
+                      {availableServices.map((srv) => (
+                        <option key={srv.id} value={srv.id}>
+                          {srv.name} (
+                          {srv.category
+                            ? srv.category.replace(/_/g, " ")
+                            : "Service"}
+                          )
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="w-32">
+                    <input
+                      type="number"
+                      min={1}
+                      value={item.allocatedVisits}
+                      onChange={(e) =>
+                        handleUpdateServiceAllocation(
+                          index,
+                          "allocatedVisits",
+                          parseInt(e.target.value) || 0,
+                        )
+                      }
+                      className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-lg text-sm font-bold text-center"
+                    />
+                  </div>
+                  <div className="text-xs font-bold text-[#5E8FB2]">
+                    visits / cycle
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveServiceAllocation(index)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Feature List */}
         <div className="bg-white p-6 rounded-2xl border border-[#D9E4EC] shadow-xs space-y-4">
@@ -510,7 +584,10 @@ export default function EditPlanPage() {
 
           <div className="space-y-2">
             {features.map((feature, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 bg-[#F0F5F9] rounded-xl text-sm font-semibold text-[#243746]">
+              <div
+                key={i}
+                className="flex items-center justify-between p-2.5 bg-[#F0F5F9] rounded-xl text-sm font-semibold text-[#243746]"
+              >
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   {feature}
@@ -549,12 +626,26 @@ export default function EditPlanPage() {
               <tbody className="divide-y divide-[#D9E4EC]">
                 {(plan.versions || []).map((ver) => (
                   <tr key={ver.id} className="hover:bg-[#F0F5F9]/50">
-                    <td className="p-2.5 font-mono font-bold">v{ver.versionNumber}.0</td>
-                    <td className="p-2.5 font-black text-[#243746]">${ver.price}</td>
-                    <td className="p-2.5 capitalize">{ver.billingInterval.toLowerCase()}</td>
-                    <td className="p-2.5">{new Date(ver.effectiveFrom).toLocaleDateString()}</td>
-                    <td className="p-2.5">{ver.effectiveTo ? new Date(ver.effectiveTo).toLocaleDateString() : "Current"}</td>
-                    <td className="p-2.5 font-bold text-emerald-700">{ver.status}</td>
+                    <td className="p-2.5 font-mono font-bold">
+                      v{ver.versionNumber}.0
+                    </td>
+                    <td className="p-2.5 font-black text-[#243746]">
+                      ${ver.price}
+                    </td>
+                    <td className="p-2.5 capitalize">
+                      {ver.billingInterval.toLowerCase()}
+                    </td>
+                    <td className="p-2.5">
+                      {new Date(ver.effectiveFrom).toLocaleDateString()}
+                    </td>
+                    <td className="p-2.5">
+                      {ver.effectiveTo
+                        ? new Date(ver.effectiveTo).toLocaleDateString()
+                        : "Current"}
+                    </td>
+                    <td className="p-2.5 font-bold text-emerald-700">
+                      {ver.status}
+                    </td>
                   </tr>
                 ))}
               </tbody>

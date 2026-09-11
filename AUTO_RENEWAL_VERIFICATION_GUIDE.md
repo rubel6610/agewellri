@@ -1,6 +1,6 @@
-# AgeWellRI — How to Immediately Test Quarterly Auto-Renewal
+# AgeWellRI — How to Immediately Test MONTHLY Auto-Renewal
 
-This guide provides 3 quick methods to immediately test and verify the **Quarterly Renewal & Next Quarter Visit Scheduling** flow without waiting 3 months.
+This guide provides 3 quick methods to immediately test and verify the **MONTHLY Renewal & Next Quarter Visit Scheduling** flow without waiting 3 months.
 
 ---
 
@@ -9,19 +9,22 @@ This guide provides 3 quick methods to immediately test and verify the **Quarter
 The backend includes a comprehensive 20-scenario test suite that tests the entire renewal lifecycle, visit allocation rollover, unscheduled count calculation, and email dispatch.
 
 ### Run Command:
+
 Open a terminal and run:
+
 ```powershell
 cd c:\Rubel\age-well-ri-backend
-npx tsx src/modules/payment/quarterly-renewal.test.ts
+npx tsx src/modules/payment/MONTHLY-renewal.test.ts
 ```
 
 ### What It Tests:
+
 - ✅ **Scenario 1**: Provisions Quarter 2 period with correct visit allocations (6 Safety + 6 Cleaning).
 - ✅ **Scenario 2**: Confirms **0 random appointments are auto-scheduled** upon renewal (visits stay unscheduled until client/admin books them).
 - ✅ **Scenario 3**: Verifies scheduling against the new quarter decreases remaining count accurately.
 - ✅ **Scenario 4**: Verifies unscheduled visit count is correctly calculated for the client scheduling banner.
 - ✅ **Scenario 5**: Confirms Quarter 1 historical records are preserved untouched.
-- ✅ **Scenario 6**: Dispatches the official **Quarterly Renewal Active Email** to the member.
+- ✅ **Scenario 6**: Dispatches the official **MONTHLY Renewal Active Email** to the member.
 
 ---
 
@@ -30,7 +33,9 @@ npx tsx src/modules/payment/quarterly-renewal.test.ts
 To simulate renewal for a real client in your database and verify it immediately on the UI:
 
 ### 1. Run the Renewal Simulation Script:
+
 Run the following command in your backend directory:
+
 ```powershell
 cd c:\Rubel\age-well-ri-backend
 npx tsx -e "
@@ -47,7 +52,7 @@ async function testRenewal() {
     return;
   }
   console.log('Testing renewal for client:', sub.client?.user?.email);
-  
+
   // Simulate Stripe invoice.paid renewal webhook
   await handleStripeInvoicePaid({
     id: 'in_test_renewal_' + Date.now(),
@@ -77,6 +82,7 @@ testRenewal();
 If you are using Stripe CLI locally:
 
 1. **Start Stripe Webhook Forwarding**:
+
    ```powershell
    stripe listen --forward-to localhost:5173/api/v1/payments/stripe-webhook
    ```
@@ -104,5 +110,5 @@ If you are using Stripe CLI locally:
 3. **Email Logs**:
    - Check the terminal console for:
      ```
-     🎉 [EMAIL SERVICE] Quarterly Renewal Active Email dispatched to: member@example.com
+     🎉 [EMAIL SERVICE] MONTHLY Renewal Active Email dispatched to: member@example.com
      ```

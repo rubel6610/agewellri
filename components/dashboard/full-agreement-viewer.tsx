@@ -7,16 +7,9 @@ import {
   Download,
   Printer,
   ShieldCheck,
-  Calendar,
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Heart,
-  Shield,
   CheckCircle2,
-  AlertTriangle,
   Loader2,
+  Shield,
 } from "lucide-react";
 import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import jsPDF from "jspdf";
@@ -38,8 +31,19 @@ interface FullAgreementViewerProps {
   agreement: AgreementDocument;
 }
 
+function formatPlanName(plan?: string | null): string {
+  if (!plan) return "Member Service Plan";
+  return plan
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+
+
 export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const formattedPlan = formatPlanName(agreement.selectedPlan);
 
   const statusUpper = (agreement.status || "").toUpperCase();
   const isExecuted =
@@ -51,7 +55,6 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
     Boolean(agreement.signedAt) ||
     Boolean(agreement.executedAt);
 
-  const isGuardianPlus = agreement.selectedPlan === "GUARDIAN_PLUS";
 
   const rawDate =
     agreement.agreementDate ||
@@ -66,8 +69,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
         day: "numeric",
       })
     : isExecuted
-    ? "Executed & Active"
-    : "Pending Execution";
+      ? "Executed & Active"
+      : "Pending Execution";
 
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
@@ -143,7 +146,11 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(5.5);
       doc.setTextColor(...mutedText);
-      doc.text(`Doc Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`, pageWidth - margin - 45, y + 9.8);
+      doc.text(
+        `Doc Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`,
+        pageWidth - margin - 45,
+        y + 9.8,
+      );
 
       y += 16;
 
@@ -154,8 +161,16 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       doc.setTextColor(...darkText);
-      doc.text(`Client Number: ${agreement.clientNumber || "N/A"}`, margin + 3.5, y + 4.2);
-      doc.text(`Version: ${agreement.templateVersion || "v1.0"}`, margin + 65, y + 4.2);
+      doc.text(
+        `Client Number: ${agreement.clientNumber || "N/A"}`,
+        margin + 3.5,
+        y + 4.2,
+      );
+      doc.text(
+        `Version: ${agreement.templateVersion || "v1.0"}`,
+        margin + 65,
+        y + 4.2,
+      );
       doc.text(`Effective Date: ${formattedDate}`, margin + 115, y + 4.2);
 
       y += 8.5;
@@ -180,7 +195,13 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setTextColor(...darkText);
       doc.text(agreement.clientFullName || "N/A", margin + 3.5, y + 7.8);
       const fullAddress = `${agreement.address || ""}${agreement.city ? `, ${agreement.city}` : ""}${agreement.state ? `, ${agreement.state}` : ""} ${agreement.postalCode || ""}`;
-      doc.text(fullAddress.length > 45 ? fullAddress.slice(0, 45) + "..." : fullAddress, margin + 95, y + 7.8);
+      doc.text(
+        fullAddress.length > 45
+          ? fullAddress.slice(0, 45) + "..."
+          : fullAddress,
+        margin + 95,
+        y + 7.8,
+      );
 
       doc.setFontSize(6.5);
       doc.setFont("helvetica", "bold");
@@ -207,8 +228,20 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setTextColor(...darkText);
       const primaryDesc = `${agreement.primaryContactName || agreement.authorizedRepName || "None"} (${agreement.primaryContactRelation || agreement.relationshipToClient || "Self"})${agreement.primaryContactPhone ? ` - ${agreement.primaryContactPhone}` : ""}`;
       const emergencyDesc = `${agreement.emergencyContactName || "N/A"} (${agreement.emergencyContactRelation || "Family"})${agreement.emergencyContactPhone ? ` - ${agreement.emergencyContactPhone}` : ""}`;
-      doc.text(primaryDesc.length > 55 ? primaryDesc.slice(0, 55) + "..." : primaryDesc, margin + 3.5, y + 25);
-      doc.text(emergencyDesc.length > 55 ? emergencyDesc.slice(0, 55) + "..." : emergencyDesc, margin + 95, y + 25);
+      doc.text(
+        primaryDesc.length > 55
+          ? primaryDesc.slice(0, 55) + "..."
+          : primaryDesc,
+        margin + 3.5,
+        y + 25,
+      );
+      doc.text(
+        emergencyDesc.length > 55
+          ? emergencyDesc.slice(0, 55) + "..."
+          : emergencyDesc,
+        margin + 95,
+        y + 25,
+      );
 
       y += 29;
 
@@ -225,22 +258,26 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       doc.setTextColor(...lightNavy);
-      const planTitle = isGuardianPlus ? "Guardian Plus Plan" : "Essential Guard Plan";
-      doc.text(planTitle, margin + 4, y + 5.5);
+      doc.text(formattedPlan, margin + 4, y + 5.5);
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7);
       doc.setTextColor(...mutedText);
-      const planDesc = isGuardianPlus
-        ? "Dedicated safety & cleaning visits / month • Bi-weekly audits • Specialized safety coaching & priority dispatch"
-        : "Monthly safety visits • Seasonal auditing, fall prevention pathways, and life safety checks";
-      doc.text(planDesc, margin + 4, y + 9.5);
+      const planDesc =
+        agreement.planSnapshot?.description ||
+        "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits";
+      const planDescLines = doc.splitTextToSize(planDesc, contentWidth - 45);
+      doc.text(planDescLines, margin + 4, y + 9.5);
 
       if (agreement.hasCleaningAddon) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(6.5);
         doc.setTextColor(...greenText);
-        doc.text("✓ Includes Cleaning Add-On ($50/month)", margin + 4, y + 13.5);
+        doc.text(
+          "✓ Includes Cleaning Add-On ($50/month)",
+          margin + 4,
+          y + 13.5,
+        );
       }
 
       // Price Callout Box
@@ -253,7 +290,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.text("TOTAL FEE", pageWidth - margin - 37, y + 5.5);
       doc.setFontSize(11);
       doc.setTextColor(...lightNavy);
-      doc.text(`$${agreement.planPrice || (isGuardianPlus ? 495 : 295)}`, pageWidth - margin - 37, y + 10.5);
+      doc.text(`$${agreement.planPrice ?? 0}`, pageWidth - margin - 37, y + 10.5);
       doc.setFontSize(6);
       doc.setTextColor(...mutedText);
       doc.text("/ month", pageWidth - margin - 18, y + 10.5);
@@ -276,9 +313,12 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFontSize(6.5);
       doc.setTextColor(...darkText);
 
-      const scope1 = "• Bedrooms & Living Areas: Audit pathways, clear electrical cords, ensure bedside lighting and phones are easily reachable, secure throw rugs, and perform HEPA vacuuming/dusting to reduce respiratory allergens.";
-      const scope2 = "• Life Safety Systems: Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert devices; checks water heater temperature and emergency exit planning.";
-      const scope3 = "• Kitchen & Laundry: Reorganizes heavy items to lower shelves for safe reach, inspects appliances for hazards, clears dryer lint pathways, and audits moisture/mold concerns.";
+      const scope1 =
+        "• Bedrooms & Living Areas: Audit pathways, clear electrical cords, ensure bedside lighting and phones are easily reachable, secure throw rugs, and perform HEPA vacuuming/dusting to reduce respiratory allergens.";
+      const scope2 =
+        "• Life Safety Systems: Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert devices; checks water heater temperature and emergency exit planning.";
+      const scope3 =
+        "• Kitchen & Laundry: Reorganizes heavy items to lower shelves for safe reach, inspects appliances for hazards, clears dryer lint pathways, and audits moisture/mold concerns.";
 
       const lines1 = doc.splitTextToSize(scope1, contentWidth - 7);
       const lines2 = doc.splitTextToSize(scope2, contentWidth - 7);
@@ -310,8 +350,10 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...darkText);
-      const bill1 = "• Billing & Payment: Billed monthly via credit card, ACH, or check on the 1st of each month. Payments overdue 14+ days will incur a reminder notice and potential service hold.";
-      const bill2 = "• Cancellation: Cancel at any time with notice prior to the 10-day cutoff, effective at the end of the billing month. Non-refundable except for certified emergency hospitalization or residential care transitions.";
+      const bill1 =
+        "• Billing & Payment: Billed monthly via credit card, ACH, or check on the 1st of each month. Payments overdue 14+ days will incur a reminder notice and potential service hold.";
+      const bill2 =
+        "• Cancellation: Cancel at any time with notice prior to the 10-day cutoff, effective at the end of the billing month. Non-refundable except for certified emergency hospitalization or residential care transitions.";
       const bLines1 = doc.splitTextToSize(bill1, contentWidth - 7);
       const bLines2 = doc.splitTextToSize(bill2, contentWidth - 7);
 
@@ -334,13 +376,19 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...lightNavy);
-      doc.text("5. Liability, Privacy & Dispute Resolution", margin + 3.5, y + 3.5);
+      doc.text(
+        "5. Liability, Privacy & Dispute Resolution",
+        margin + 3.5,
+        y + 3.5,
+      );
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...darkText);
-      const liab1 = "• Limitation of Liability: AgeWellRI is a home safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, or emergency dispatch. Total liability is limited strictly to fees paid in the active billing month.";
-      const liab2 = "• Privacy & Confidentiality: Safety assessments and client information are confidential and accessed exclusively by the client and designated authorized representatives.";
+      const liab1 =
+        "• Limitation of Liability: AgeWellRI is a home safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, or emergency dispatch. Total liability is limited strictly to fees paid in the active billing month.";
+      const liab2 =
+        "• Privacy & Confidentiality: Safety assessments and client information are confidential and accessed exclusively by the client and designated authorized representatives.";
       const lLines1 = doc.splitTextToSize(liab1, contentWidth - 7);
       const lLines2 = doc.splitTextToSize(liab2, contentWidth - 7);
 
@@ -373,14 +421,18 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(6.5);
       doc.setTextColor(...greenText);
-      doc.text("✓ Terms & Conditions Acknowledged and Agreed", margin + 3.5, y + 3.5);
+      doc.text(
+        "✓ Terms & Conditions Acknowledged and Agreed",
+        margin + 3.5,
+        y + 3.5,
+      );
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
       doc.setTextColor(...darkText);
       doc.text(
         "The client and authorized representative confirm they have read, understood, and agreed to all terms of this Client Service Agreement.",
         margin + 3.5,
-        y + 6.2
+        y + 6.2,
       );
 
       y += 10;
@@ -398,8 +450,16 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
 
       doc.setFontSize(7.5);
       doc.setTextColor(...darkText);
-      doc.text(agreement.clientPrintedName || agreement.clientFullName || "N/A", margin + 3.5, y + 7.8);
-      doc.text(agreement.authorizedRepName || "N/A (Signed by Client)", margin + 95, y + 7.8);
+      doc.text(
+        agreement.clientPrintedName || agreement.clientFullName || "N/A",
+        margin + 3.5,
+        y + 7.8,
+      );
+      doc.text(
+        agreement.authorizedRepName || "N/A (Signed by Client)",
+        margin + 95,
+        y + 7.8,
+      );
 
       doc.setFontSize(6.5);
       doc.setFont("helvetica", "bold");
@@ -422,20 +482,38 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.text("DIGITAL SIGNATURE ON FILE:", margin + 3.5, y + 23.5);
 
       // Render digital signature if base64 image or text
-      if (agreement.clientSignature && agreement.clientSignature.startsWith("data:image")) {
+      if (
+        agreement.clientSignature &&
+        agreement.clientSignature.startsWith("data:image")
+      ) {
         try {
-          doc.addImage(agreement.clientSignature, "PNG", margin + 3.5, y + 24.5, 36, 7);
+          doc.addImage(
+            agreement.clientSignature,
+            "PNG",
+            margin + 3.5,
+            y + 24.5,
+            36,
+            7,
+          );
         } catch {
           doc.setFont("times", "italic");
           doc.setFontSize(11);
           doc.setTextColor(...lightNavy);
-          doc.text(agreement.clientPrintedName || agreement.clientFullName, margin + 3.5, y + 29);
+          doc.text(
+            agreement.clientPrintedName || agreement.clientFullName,
+            margin + 3.5,
+            y + 29,
+          );
         }
       } else {
         doc.setFont("times", "italic");
         doc.setFontSize(11);
         doc.setTextColor(...lightNavy);
-        doc.text(agreement.clientPrintedName || agreement.clientFullName, margin + 3.5, y + 29);
+        doc.text(
+          agreement.clientPrintedName || agreement.clientFullName,
+          margin + 3.5,
+          y + 29,
+        );
       }
 
       // Digital Verification Stamp
@@ -449,7 +527,11 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(5.5);
       doc.setTextColor(...mutedText);
-      doc.text(`Signed: ${formattedDate} • Legally Binding`, pageWidth - margin - 55, y + 28.5);
+      doc.text(
+        `Signed: ${formattedDate} • Legally Binding`,
+        pageWidth - margin - 55,
+        y + 28.5,
+      );
 
       y += 34;
 
@@ -463,24 +545,26 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.text(
         "AgeWellRI Client Service Agreement • Westerly, RI • (401) 712-3012 • agewellri@gmail.com",
         margin,
-        pageHeight - 6
+        pageHeight - 6,
       );
       doc.text(
         `Document Ref: ${agreement.id || "AW-AG"}`,
         pageWidth - margin - 35,
-        pageHeight - 6
+        pageHeight - 6,
       );
 
       // Save PDF directly to user's device
-      const clientNameSafe = (agreement.clientFullName || "Client")
-        .replace(/[^a-zA-Z0-9]/g, "_");
+      const clientNameSafe = (agreement.clientFullName || "Client").replace(
+        /[^a-zA-Z0-9]/g,
+        "_",
+      );
       doc.save(`AgeWellRI_Service_Agreement_${clientNameSafe}.pdf`);
       showToast("Agreement PDF downloaded successfully");
     } catch (error) {
       console.error("Failed to generate PDF:", error);
       showErrorAlert(
         "PDF Generation Error",
-        "Unable to generate PDF directly. You can also use the Print button to Save as PDF."
+        "Unable to generate PDF directly. You can also use the Print button to Save as PDF.",
       );
     } finally {
       setIsGeneratingPdf(false);
@@ -512,13 +596,16 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{isExecuted ? "Executed & Active" : "Pending Signature"}</span>
+                <span>
+                  {isExecuted ? "Executed & Active" : "Pending Signature"}
+                </span>
               </span>
             </div>
             <p className="text-xs text-[#64748B] mt-0.5">
-              Client ID: <strong>{agreement.clientNumber || "AW-MEMBER"}</strong> • Version:{" "}
-              <strong>{agreement.templateVersion || "v1.0"}</strong> • Executed:{" "}
-              <strong>{formattedDate}</strong>
+              Client ID:{" "}
+              <strong>{agreement.clientNumber || "AW-MEMBER"}</strong> •
+              Version: <strong>{agreement.templateVersion || "v1.0"}</strong> •
+              Executed: <strong>{formattedDate}</strong>
             </p>
           </div>
         </div>
@@ -575,11 +662,21 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
             Client Service Agreement
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-[#64748B] pt-1">
-            <span>Agreement ID: <strong>{agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}</strong></span>
+            <span>
+              Agreement ID:{" "}
+              <strong>
+                {agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}
+              </strong>
+            </span>
             <span>•</span>
-            <span>Client Number: <strong>{agreement.clientNumber || "AW-MEMBER"}</strong></span>
+            <span>
+              Client Number:{" "}
+              <strong>{agreement.clientNumber || "AW-MEMBER"}</strong>
+            </span>
             <span>•</span>
-            <span>Effective Date: <strong>{formattedDate}</strong></span>
+            <span>
+              Effective Date: <strong>{formattedDate}</strong>
+            </span>
           </div>
         </div>
 
@@ -604,7 +701,10 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 Home Address
               </span>
               <p className="font-bold text-[#243746] mt-0.5">
-                {agreement.address || ""}{agreement.city ? `, ${agreement.city}` : ""}{agreement.state ? `, ${agreement.state}` : ""} {agreement.postalCode || ""}
+                {agreement.address || ""}
+                {agreement.city ? `, ${agreement.city}` : ""}
+                {agreement.state ? `, ${agreement.state}` : ""}{" "}
+                {agreement.postalCode || ""}
               </p>
             </div>
 
@@ -612,21 +712,27 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
                 Phone Number
               </span>
-              <p className="font-bold text-[#243746] mt-0.5">{agreement.phone || "N/A"}</p>
+              <p className="font-bold text-[#243746] mt-0.5">
+                {agreement.phone || "N/A"}
+              </p>
             </div>
 
             <div>
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
                 Date of Birth
               </span>
-              <p className="font-bold text-[#243746] mt-0.5">{agreement.dob || "N/A"}</p>
+              <p className="font-bold text-[#243746] mt-0.5">
+                {agreement.dob || "N/A"}
+              </p>
             </div>
 
             <div className="sm:col-span-2">
               <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
                 Email Address
               </span>
-              <p className="font-bold text-[#243746] mt-0.5">{agreement.email}</p>
+              <p className="font-bold text-[#243746] mt-0.5">
+                {agreement.email}
+              </p>
             </div>
           </div>
 
@@ -637,13 +743,22 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 Primary Contact / Authorized Rep
               </span>
               <p className="font-bold text-[#243746] text-sm">
-                {agreement.primaryContactName || agreement.authorizedRepName || "None designated"}
+                {agreement.primaryContactName ||
+                  agreement.authorizedRepName ||
+                  "None designated"}
               </p>
               <p className="text-[#64748B]">
-                Relationship: <strong>{agreement.primaryContactRelation || agreement.relationshipToClient || "Self"}</strong>
+                Relationship:{" "}
+                <strong>
+                  {agreement.primaryContactRelation ||
+                    agreement.relationshipToClient ||
+                    "Self"}
+                </strong>
               </p>
               {agreement.primaryContactPhone && (
-                <p className="text-[#64748B]">Phone: {agreement.primaryContactPhone}</p>
+                <p className="text-[#64748B]">
+                  Phone: {agreement.primaryContactPhone}
+                </p>
               )}
             </div>
 
@@ -655,10 +770,14 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 {agreement.emergencyContactName || "N/A"}
               </p>
               <p className="text-[#64748B]">
-                Phone: <strong>{agreement.emergencyContactPhone || "N/A"}</strong>
+                Phone:{" "}
+                <strong>{agreement.emergencyContactPhone || "N/A"}</strong>
               </p>
               <p className="text-[#64748B]">
-                Relationship: <strong>{agreement.emergencyContactRelation || "Family"}</strong>
+                Relationship:{" "}
+                <strong>
+                  {agreement.emergencyContactRelation || "Family"}
+                </strong>
               </p>
             </div>
           </div>
@@ -671,37 +790,39 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
           </div>
 
           <div className="p-5 bg-[#EAF3F8] rounded-2xl border border-[#5E8FB2]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                {isGuardianPlus ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#294B68]/10 text-[#294B68] flex items-center justify-center shrink-0 border border-[#294B68]/15">
                   <Shield className="w-5 h-5 text-[#294B68]" />
-                ) : (
-                  <Heart className="w-5 h-5 text-[#294B68]" />
-                )}
-                <h3 className="font-black text-lg text-[#243746]">
-                  {isGuardianPlus ? "Guardian Plus Plan" : "Essential Guard Plan"}
-                </h3>
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-[#243746] tracking-tight">
+                    {formattedPlan}
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    {agreement.planSnapshot?.description || "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits"}
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-[#64748B]">
-                {isGuardianPlus
-                  ? "4 comprehensive visits / month • Bi-weekly audits • Priority dispatch"
-                  : "2 standard visits / month • Monthly safety auditing & oversight"}
-              </p>
               {agreement.hasCleaningAddon && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#3F8F6B] bg-white px-2.5 py-0.5 rounded-md border border-[#3F8F6B]/30 mt-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Includes Cleaning Add-On ($50/month)</span>
-                </span>
+                <div className="pl-11.5 pt-0.5">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3F8F6B] bg-white px-2.5 py-0.5 rounded-md border border-[#3F8F6B]/30 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B]" />
+                    <span>Includes Cleaning Add-On ($50/month)</span>
+                  </span>
+                </div>
               )}
             </div>
 
-            <div className="text-right sm:border-l sm:border-[#D9E4EC] sm:pl-6">
+            <div className="text-left sm:text-right sm:border-l sm:border-[#D9E4EC] sm:pl-6 shrink-0">
               <span className="text-xs text-[#64748B] block font-semibold">
                 Monthly Fee
               </span>
               <span className="text-2xl font-black text-[#294B68]">
-                ${agreement.planPrice || (isGuardianPlus ? 495 : 295)}
-                <span className="text-xs font-normal text-[#64748B]">/month</span>
+                ${agreement.planPrice ?? 0}
+                <span className="text-xs font-normal text-[#64748B]">
+                  /month
+                </span>
               </span>
             </div>
           </div>
@@ -720,17 +841,36 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 3. Scope of Services
               </h4>
               <p className="font-bold text-[#243746]">
-                AgeWellRI provides home safety oversight, organization, fall-prevention coaching, and safety system audits as outlined below:
+                AgeWellRI provides home safety oversight, organization,
+                fall-prevention coaching, and safety system audits as outlined
+                below:
               </p>
               <div className="space-y-2 leading-relaxed">
                 <p>
-                  <strong className="text-[#243746]">Bedrooms &amp; Living Areas:</strong> Walk pathways, clear indoor electrical cords, ensure bedside lighting and emergency phones are easily reachable, secure throw rugs with non-skid backing, and perform HEPA vacuuming and dusting to reduce respiratory allergens.
+                  <strong className="text-[#243746]">
+                    Bedrooms &amp; Living Areas:
+                  </strong>{" "}
+                  Walk pathways, clear indoor electrical cords, ensure bedside
+                  lighting and emergency phones are easily reachable, secure
+                  throw rugs with non-skid backing, and perform HEPA vacuuming
+                  and dusting to reduce respiratory allergens.
                 </p>
                 <p>
-                  <strong className="text-[#243746]">Life Safety Systems:</strong> Routinely tests and cleans smoke detectors, carbon monoxide alarms, fire extinguishers, and medical alert systems; checks water heater temperature to prevent accidental scalding, and reviews emergency exit pathways.
+                  <strong className="text-[#243746]">
+                    Life Safety Systems:
+                  </strong>{" "}
+                  Routinely tests and cleans smoke detectors, carbon monoxide
+                  alarms, fire extinguishers, and medical alert systems; checks
+                  water heater temperature to prevent accidental scalding, and
+                  reviews emergency exit pathways.
                 </p>
                 <p>
-                  <strong className="text-[#243746]">Kitchen &amp; Laundry:</strong> Reorganizes heavy or daily items to lower-level shelves for easy, safe reach; inspects appliances for potential hazards, clears dryer lint pathways, and audits moisture/mold concerns.
+                  <strong className="text-[#243746]">
+                    Kitchen &amp; Laundry:
+                  </strong>{" "}
+                  Reorganizes heavy or daily items to lower-level shelves for
+                  easy, safe reach; inspects appliances for potential hazards,
+                  clears dryer lint pathways, and audits moisture/mold concerns.
                 </p>
               </div>
             </div>
@@ -742,10 +882,23 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               </h4>
               <div className="space-y-2 leading-relaxed">
                 <p>
-                  <strong className="text-[#243746]">Billing and Payment:</strong> Billed monthly via credit/debit card, ACH, or check. Invoices are generated at the commencement of each monthly cycle on the 1st. Payments overdue 14+ days will incur a grace reminder and potential temporary service hold.
+                  <strong className="text-[#243746]">
+                    Billing and Payment:
+                  </strong>{" "}
+                  Billed monthly via credit/debit card, ACH, or check. Invoices
+                  are generated at the commencement of each monthly cycle on the
+                  1st. Payments overdue 14+ days will incur a grace reminder and
+                  potential temporary service hold.
                 </p>
                 <p>
-                  <strong className="text-[#243746]">Cancellation by Client:</strong> Cancel at any time prior to the 10-day cutoff. Cancellation takes effect at the end of the current billing month. Fees are non-refundable except in certified cases of emergency hospitalization or relocation to a residential medical facility.
+                  <strong className="text-[#243746]">
+                    Cancellation by Client:
+                  </strong>{" "}
+                  Cancel at any time prior to the 10-day cutoff. Cancellation
+                  takes effect at the end of the current billing month. Fees are
+                  non-refundable except in certified cases of emergency
+                  hospitalization or relocation to a residential medical
+                  facility.
                 </p>
               </div>
             </div>
@@ -757,10 +910,24 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               </h4>
               <div className="space-y-2 leading-relaxed">
                 <p>
-                  <strong className="text-[#243746]">Limitation of Liability:</strong> AgeWellRI is a safety inspection, coaching, and oversight service. It does not provide medical care, skilled nursing, physical therapy, continuous monitoring, or emergency dispatch services. Total liability is limited strictly to fees paid in the month a claim arises. AgeWellRI is not liable for incidents occurring outside scheduled visit times.
+                  <strong className="text-[#243746]">
+                    Limitation of Liability:
+                  </strong>{" "}
+                  AgeWellRI is a safety inspection, coaching, and oversight
+                  service. It does not provide medical care, skilled nursing,
+                  physical therapy, continuous monitoring, or emergency dispatch
+                  services. Total liability is limited strictly to fees paid in
+                  the month a claim arises. AgeWellRI is not liable for
+                  incidents occurring outside scheduled visit times.
                 </p>
                 <p>
-                  <strong className="text-[#243746]">Privacy and Confidentiality:</strong> Client safety data, contact info, and home assessment results are collected solely to deliver and coordinate services. Reports are confidential and accessible only to the client and designated authorized representatives.
+                  <strong className="text-[#243746]">
+                    Privacy and Confidentiality:
+                  </strong>{" "}
+                  Client safety data, contact info, and home assessment results
+                  are collected solely to deliver and coordinate services.
+                  Reports are confidential and accessible only to the client and
+                  designated authorized representatives.
                 </p>
               </div>
             </div>
@@ -777,7 +944,9 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                   <span>Terms &amp; Conditions Acknowledged and Accepted</span>
                 </div>
                 <p className="text-[#243746] leading-relaxed">
-                  The client and authorized representative confirm they have read, understood, and agreed to all terms of this Client Service Agreement.
+                  The client and authorized representative confirm they have
+                  read, understood, and agreed to all terms of this Client
+                  Service Agreement.
                 </p>
               </div>
 
@@ -805,7 +974,9 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                   <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
                     Execution Date
                   </span>
-                  <p className="font-bold text-[#243746] mt-0.5">{formattedDate}</p>
+                  <p className="font-bold text-[#243746] mt-0.5">
+                    {formattedDate}
+                  </p>
                 </div>
 
                 <div>
@@ -827,12 +998,14 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                           Client / Authorized Signer
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Executed
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />{" "}
+                          Executed
                         </span>
                       </div>
 
                       <div className="bg-white p-2.5 rounded-xl border border-[#D9E4EC] flex items-center justify-center min-h-[64px]">
-                        {agreement.clientSignature && agreement.clientSignature.startsWith("data:image") ? (
+                        {agreement.clientSignature &&
+                        agreement.clientSignature.startsWith("data:image") ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={agreement.clientSignature}
@@ -841,17 +1014,25 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                           />
                         ) : (
                           <p className="font-serif italic text-base text-[#294B68]">
-                            {agreement.clientSignature || agreement.clientPrintedName || agreement.clientFullName || "Digital Signature On File"}
+                            {agreement.clientSignature ||
+                              agreement.clientPrintedName ||
+                              agreement.clientFullName ||
+                              "Digital Signature On File"}
                           </p>
                         )}
                       </div>
 
                       <div className="text-xs space-y-0.5">
                         <div className="font-bold text-[#243746]">
-                          {agreement.clientPrintedName || agreement.signerName || agreement.clientFullName}
+                          {agreement.clientPrintedName ||
+                            agreement.signerName ||
+                            agreement.clientFullName}
                         </div>
                         <div className="text-[11px] text-[#64748B]">
-                          Role: {agreement.relationshipToClient ? `Representative (${agreement.relationshipToClient})` : "Primary Resident"}
+                          Role:{" "}
+                          {agreement.relationshipToClient
+                            ? `Representative (${agreement.relationshipToClient})`
+                            : "Primary Resident"}
                         </div>
                         <div className="text-[10px] text-[#3F8F6B] font-bold pt-1">
                           ✓ Verified Digital E-Signature • {formattedDate}
@@ -866,7 +1047,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                           AgeWellRI Provider Counter-Signature
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20">
-                          <ShieldCheck className="w-3 h-3 text-[#294B68]" /> Authorized
+                          <ShieldCheck className="w-3 h-3 text-[#294B68]" />{" "}
+                          Authorized
                         </span>
                       </div>
 
@@ -884,7 +1066,8 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                           {AGEWELL_OWNER_DETAILS.name}
                         </div>
                         <div className="text-[11px] text-[#64748B]">
-                          {AGEWELL_OWNER_DETAILS.title} &bull; {AGEWELL_OWNER_DETAILS.company}
+                          {AGEWELL_OWNER_DETAILS.title} &bull;{" "}
+                          {AGEWELL_OWNER_DETAILS.company}
                         </div>
                         <div className="text-[10px] text-[#3F8F6B] font-bold pt-1">
                           ✓ Verified Counter-Signature On File • {formattedDate}
@@ -900,9 +1083,9 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
 
         {/* Document Footer Disclaimer */}
         <div className="pt-6 border-t border-[#D9E4EC] text-center space-y-2">
-       
           <p className="text-[10px] text-[#CBD5E1]">
-            &copy; 2026 AgeWellRI. All rights reserved. Document Ref: {agreement.id || "AW-AG"}
+            &copy; 2026 AgeWellRI. All rights reserved. Document Ref:{" "}
+            {agreement.id || "AW-AG"}
           </p>
         </div>
       </div>

@@ -163,7 +163,11 @@ export interface SubmitAgreementRequest {
   email?: string;
   signingTrack?: "TRACK_A" | "TRACK_B";
   signerRole?: SignerRole;
-  representativeCapacity?: "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR" | null;
+  representativeCapacity?:
+    | "ATTORNEY_IN_FACT"
+    | "GUARDIAN"
+    | "CONSERVATOR"
+    | null;
   authorityDocumentUrl?: string | null;
   signerName?: string | null;
   signerEmail?: string | null;

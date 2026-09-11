@@ -60,8 +60,14 @@ export function PaymentStepCard({
     activePlans[0] ||
     null;
 
-  const planName = planObj?.name || (selectedPlan === "GUARDIAN_PLUS" ? "Guardian Plus" : "Essential Guard");
-  const planBasePrice = planObj?.price ?? (selectedPlan === "GUARDIAN_PLUS" ? 1892 : 995);
+  const planName =
+    planObj?.name ||
+    (selectedPlan
+      ? selectedPlan
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase())
+      : "Selected Plan");
+  const planBasePrice = planObj?.price ?? 0;
   const addonPrice = hasCleaningAddon ? 60 : 0;
   const totalDueToday = planBasePrice + addonPrice;
   const billingInterval = planObj?.billingInterval || "MONTHLY";

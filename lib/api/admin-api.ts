@@ -87,7 +87,7 @@ export async function createClientAccount(data: {
   city: string;
   state: string;
   zip: string;
-  planName: "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning";
+  planName: string;
 }): Promise<MasterClientRecord> {
   await new Promise((res) => setTimeout(res, 350));
   const newClient: MasterClientRecord = {
@@ -107,9 +107,9 @@ export async function createClientAccount(data: {
     agreementStatus: "pending_signature",
     paymentStatus: "pending",
     renewalDate: "2026-09-01",
-    totalVisitsAllowed: data.planName === "Guardian Plus" ? 12 : 6,
+    totalVisitsAllowed: 4,
     completedVisitsCount: 0,
-    remainingVisitsCount: data.planName === "Guardian Plus" ? 12 : 6,
+    remainingVisitsCount: 4,
     createdAt: new Date().toISOString().split("T")[0],
   };
 

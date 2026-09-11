@@ -268,9 +268,9 @@ export default function ClientCalendarPage() {
     }
   };
 
-  const planName = entitlementData?.planName || "Guardian Plus";
+  const planName = entitlementData?.planName || "Service Plan";
   const totalRemaining = entitlementData?.totalRemaining ?? 0;
-  const totalAllocated = entitlementData?.totalAllocated ?? 12;
+  const totalAllocated = entitlementData?.totalAllocated ?? totalRemaining;
   const entitlementsList = entitlementData?.entitlements || [];
 
   return (

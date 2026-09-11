@@ -57,6 +57,12 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
   const [submitAgreement] = useSubmitAgreementMutation();
   const [processPayment] = useProcessAgreementPaymentMutation();
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleLogout = () => {
     dispatch(logout());
     router.replace("/login");
@@ -95,6 +101,23 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
     phone: authUser?.phone || "",
     email: authUser?.email || "",
   });
+
+  useEffect(() => {
+    if (authUser) {
+      setAccountData((prev) => ({
+        firstName: prev.firstName || authUser.firstName || "",
+        lastName: prev.lastName || authUser.lastName || "",
+        phone: prev.phone || authUser.phone || "",
+        email: prev.email || authUser.email || "",
+      }));
+      setResidentData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || `${authUser.firstName || ""} ${authUser.lastName || ""}`.trim(),
+        phone: prev.phone || authUser.phone || "",
+        email: prev.email || authUser.email || "",
+      }));
+    }
+  }, [authUser]);
 
   const [authorizedRecipients, setAuthorizedRecipients] = useState<AuthorizedRecipient[]>([]);
 
@@ -331,7 +354,7 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          {authUser ? (
+          {mounted && authUser ? (
             <>
               <div className="hidden sm:flex flex-col text-right text-xs">
                 <span className="font-bold text-[#243746]">

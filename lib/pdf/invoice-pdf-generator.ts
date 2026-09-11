@@ -62,7 +62,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
       year: "numeric",
     });
 
-    const planTitle = inv.planName || inv.description || "Guardian Plus Plan";
+    const planTitle = inv.planName || inv.description || "Membership Plan";
     const paymentChannel = inv.paymentMethod || "Credit Card (Auto-Pay)";
 
     // ==========================================

@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, CheckCircle2, ArrowRight, ArrowLeft, Loader2, Star } from "lucide-react";
+import {
+  Shield,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Loader2,
+  Star,
+} from "lucide-react";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { ActivePlan } from "@/redux/features/plan/planTypes";
 
@@ -19,52 +26,92 @@ interface Step2ChoosePlanProps {
   onBack?: () => void;
 }
 
-export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2ChoosePlanProps) {
+export function Step2ChoosePlan({
+  selectedPlanId,
+  onSelectPlan,
+  onBack,
+}: Step2ChoosePlanProps) {
   const { data: plans = [], isLoading } = useGetActivePlansQuery();
 
   // Fallback plans if database has not returned yet or during loading
-  const displayPlans: ActivePlan[] = plans.length > 0 ? plans : [
-    {
-      id: "premium_safety_safeguard",
-      code: "PREMIUM_SAFETY_SAFEGUARD",
-      name: "Premium Safety Safeguard",
-      description: "Comprehensive home safety maintenance, seasonal check-ins, and proactive senior independence support.",
-      price: 295,
-      billingInterval: "MONTHLY",
-      totalVisits: 12,
-      services: [
-        { serviceTypeId: "srv_safety", serviceName: "Monthly Safety & Upkeep Visits", allocatedVisits: 4, unit: "VISITS" },
-        { serviceTypeId: "srv_seasonal", serviceName: "Seasonal Transition Check-Ins", allocatedVisits: 4, unit: "VISITS" },
-        { serviceTypeId: "srv_hazard", serviceName: "Home Hazard Prevention & Testing", allocatedVisits: 4, unit: "VISITS" },
-      ],
-      isActive: true,
-      subscribersCount: 0,
-    },
-    {
-      id: "independence_upkeep_plan",
-      code: "INDEPENDENCE_UPKEEP_PLAN",
-      name: "Independence & Upkeep Plan",
-      description: "Our premier safety oversight and home upkeep service for total peace of mind and complete home preservation.",
-      price: 495,
-      billingInterval: "MONTHLY",
-      totalVisits: 24,
-      services: [
-        { serviceTypeId: "srv_upkeep", serviceName: "Monthly Dedicated Upkeep & Safety Visits", allocatedVisits: 12, unit: "VISITS" },
-        { serviceTypeId: "srv_audit", serviceName: "Comprehensive Mechanical & Plumbing Audits", allocatedVisits: 6, unit: "VISITS" },
-        { serviceTypeId: "srv_priority", serviceName: "Priority Rapid Technician Response", allocatedVisits: 6, unit: "VISITS" },
-      ],
-      isActive: true,
-      subscribersCount: 0,
-    },
-  ];
+  const displayPlans: ActivePlan[] =
+    plans.length > 0
+      ? plans
+      : [
+          {
+            id: "premium_safety_safeguard",
+            code: "PREMIUM_SAFETY_SAFEGUARD",
+            name: "Premium Safety Safeguard",
+            description:
+              "Comprehensive home safety maintenance, seasonal check-ins, and proactive senior independence support.",
+            price: 295,
+            billingInterval: "MONTHLY",
+            totalVisits: 12,
+            services: [
+              {
+                serviceTypeId: "srv_safety",
+                serviceName: "Monthly Safety & Upkeep Visits",
+                allocatedVisits: 4,
+                unit: "VISITS",
+              },
+              {
+                serviceTypeId: "srv_seasonal",
+                serviceName: "Seasonal Transition Check-Ins",
+                allocatedVisits: 4,
+                unit: "VISITS",
+              },
+              {
+                serviceTypeId: "srv_hazard",
+                serviceName: "Home Hazard Prevention & Testing",
+                allocatedVisits: 4,
+                unit: "VISITS",
+              },
+            ],
+            isActive: true,
+            subscribersCount: 0,
+          },
+          {
+            id: "independence_upkeep_plan",
+            code: "INDEPENDENCE_UPKEEP_PLAN",
+            name: "Independence & Upkeep Plan",
+            description:
+              "Our premier safety oversight and home upkeep service for total peace of mind and complete home preservation.",
+            price: 495,
+            billingInterval: "MONTHLY",
+            totalVisits: 24,
+            services: [
+              {
+                serviceTypeId: "srv_upkeep",
+                serviceName: "Monthly Dedicated Upkeep & Safety Visits",
+                allocatedVisits: 12,
+                unit: "VISITS",
+              },
+              {
+                serviceTypeId: "srv_audit",
+                serviceName: "Comprehensive Mechanical & Plumbing Audits",
+                allocatedVisits: 6,
+                unit: "VISITS",
+              },
+              {
+                serviceTypeId: "srv_priority",
+                serviceName: "Priority Rapid Technician Response",
+                allocatedVisits: 6,
+                unit: "VISITS",
+              },
+            ],
+            isActive: true,
+            subscribersCount: 0,
+          },
+        ];
 
   const [currentSelectedId, setCurrentSelectedId] = useState<string>(
-    selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code
+    selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code,
   );
 
   const selectedPlan =
-    displayPlans.find((p) => p.id === currentSelectedId || p.code === currentSelectedId) ||
-    displayPlans[0];
+    displayPlans.find(
+      (p) => p.id === currentSelectedId || p.code === currentSelectedId,
+    ) || displayPlans[0];
 
   const handleContinue = () => {
     if (selectedPlan) {
@@ -91,20 +138,27 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
           Choose Your Service Plan
         </h2>
         <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
-          Select the membership plan tailored to your household. Plans include dedicated home visits, safety inspections, and authorized family updates.
+          Select the membership plan tailored to your household. Plans include
+          dedicated home visits, safety inspections, and authorized family
+          updates.
         </p>
       </div>
 
       {isLoading ? (
         <div className="py-16 text-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#294B68] mx-auto" />
-          <p className="text-sm font-semibold text-[#64748B]">Loading available service plans...</p>
+          <p className="text-sm font-semibold text-[#64748B]">
+            Loading available service plans...
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayPlans.map((plan) => {
-            const isSelected = plan.id === currentSelectedId || plan.code === currentSelectedId;
-            const isPopular = plan.code.includes("INDEPENDENCE") || plan.name.includes("Independence");
+            const isSelected =
+              plan.id === currentSelectedId || plan.code === currentSelectedId;
+            const isPopular =
+              plan.code.includes("INDEPENDENCE") ||
+              plan.name.includes("Independence");
 
             return (
               <div
@@ -126,9 +180,12 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-xl font-black text-[#243746]">{plan.name}</h3>
+                      <h3 className="text-xl font-black text-[#243746]">
+                        {plan.name}
+                      </h3>
                       <p className="text-xs text-[#64748B] mt-1 leading-relaxed line-clamp-2">
-                        {plan.description || "Proactive residential aging-in-place maintenance."}
+                        {plan.description ||
+                          "Proactive residential aging-in-place maintenance."}
                       </p>
                     </div>
                   </div>
@@ -140,7 +197,12 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
                         ${plan.price}
                       </span>
                       <span className="text-sm font-bold text-[#64748B]">
-                        / {plan.billingInterval?.toLowerCase() === "annual" ? "year" : plan.billingInterval?.toLowerCase() === "quarterly" ? "quarter" : "month"}
+                        /{" "}
+                        {plan.billingInterval?.toLowerCase() === "annual"
+                          ? "year"
+                          : plan.billingInterval?.toLowerCase() === "MONTHLY"
+                            ? "quarter"
+                            : "month"}
                       </span>
                     </div>
                     <span className="text-xs font-semibold text-[#3F8F6B] mt-1 block">
@@ -154,10 +216,14 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
                       Plan Inclusions:
                     </span>
                     {(plan.services || []).map((svc, sIdx) => (
-                      <div key={sIdx} className="flex items-start gap-2.5 text-xs text-[#475569]">
+                      <div
+                        key={sIdx}
+                        className="flex items-start gap-2.5 text-xs text-[#475569]"
+                      >
                         <CheckCircle2 className="w-4 h-4 text-[#3F8F6B] shrink-0 mt-0.5" />
                         <span>
-                          <strong>{svc.allocatedVisits} visits</strong> &bull; {svc.serviceName}
+                          <strong>{svc.allocatedVisits} visits</strong> &bull;{" "}
+                          {svc.serviceName}
                         </span>
                       </div>
                     ))}
@@ -176,7 +242,9 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
                         : "border-2 border-[#CBD5E1] bg-white"
                     }`}
                   >
-                    {isSelected && <CheckCircle2 className="w-4 h-4 fill-[#294B68] text-white" />}
+                    {isSelected && (
+                      <CheckCircle2 className="w-4 h-4 fill-[#294B68] text-white" />
+                    )}
                   </div>
                 </div>
               </div>
@@ -186,7 +254,9 @@ export function Step2ChoosePlan({ selectedPlanId, onSelectPlan, onBack }: Step2C
       )}
 
       {/* Navigation Buttons */}
-      <div className={`flex items-center ${onBack ? "justify-between" : "justify-end"} pt-4`}>
+      <div
+        className={`flex items-center ${onBack ? "justify-between" : "justify-end"} pt-4`}
+      >
         {onBack && (
           <button
             type="button"

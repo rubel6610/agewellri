@@ -49,7 +49,9 @@ export interface AgreementPdfData {
 /**
  * Generates and downloads a vector-based, high-fidelity PDF of the AgeWellRI Client Service Agreement.
  */
-export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise<void> {
+export async function downloadAgreementPdf(
+  agreement: AgreementPdfData,
+): Promise<void> {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -115,8 +117,8 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
         day: "numeric",
       })
     : isExecuted
-    ? "Executed & Active"
-    : "Pending Execution";
+      ? "Executed & Active"
+      : "Pending Execution";
 
   const clientName =
     agreement.clientFullName ||
@@ -127,7 +129,8 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
 
   const clientEmail = agreement.email || agreement.clientEmail || "N/A";
   const stateCode = agreement.state || "RI";
-  const clientNumber = agreement.clientNumber || agreement.clientId || "AW-MEMBER";
+  const clientNumber =
+    agreement.clientNumber || agreement.clientId || "AW-MEMBER";
 
   // ==========================================
   // DOCUMENT HEADER
@@ -151,11 +154,19 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...(isExecuted ? greenText : mutedText));
-  doc.text(isExecuted ? "✓ EXECUTED & ACTIVE" : "⏳ PENDING SIGNATURE", pageWidth - margin - 45, y + 6.5);
+  doc.text(
+    isExecuted ? "✓ EXECUTED & ACTIVE" : "⏳ PENDING SIGNATURE",
+    pageWidth - margin - 45,
+    y + 6.5,
+  );
   doc.setFont("helvetica", "normal");
   doc.setFontSize(5.5);
   doc.setTextColor(...mutedText);
-  doc.text(`Doc Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`, pageWidth - margin - 45, y + 9.8);
+  doc.text(
+    `Doc Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`,
+    pageWidth - margin - 45,
+    y + 9.8,
+  );
 
   y += 16;
 
@@ -167,7 +178,11 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(7);
   doc.setTextColor(...darkText);
   doc.text(`Client ID: ${clientNumber}`, margin + 3.5, y + 4.2);
-  doc.text(`Version: ${agreement.templateVersion || agreement.version || "v2.0"}`, margin + 65, y + 4.2);
+  doc.text(
+    `Version: ${agreement.templateVersion || agreement.version || "v2.0"}`,
+    margin + 65,
+    y + 4.2,
+  );
   doc.text(`Effective Date: ${formattedDate}`, margin + 115, y + 4.2);
 
   y += 8.5;
@@ -191,8 +206,14 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(8);
   doc.setTextColor(...darkText);
   doc.text(clientName, margin + 3.5, y + 7.8);
-  const fullAddress = `${agreement.address || ""}${agreement.city ? `, ${agreement.city}` : ""}${agreement.state ? `, ${agreement.state}` : ""} ${agreement.postalCode || ""}`.trim() || `${stateCode}, USA`;
-  doc.text(fullAddress.length > 45 ? fullAddress.slice(0, 45) + "..." : fullAddress, margin + 95, y + 7.8);
+  const fullAddress =
+    `${agreement.address || ""}${agreement.city ? `, ${agreement.city}` : ""}${agreement.state ? `, ${agreement.state}` : ""} ${agreement.postalCode || ""}`.trim() ||
+    `${stateCode}, USA`;
+  doc.text(
+    fullAddress.length > 45 ? fullAddress.slice(0, 45) + "..." : fullAddress,
+    margin + 95,
+    y + 7.8,
+  );
 
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
@@ -204,7 +225,11 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(7.5);
   doc.setTextColor(...darkText);
   doc.text(agreement.phone || "(401) 555-0100", margin + 3.5, y + 16.5);
-  doc.text(agreement.dob || agreement.dateOfBirth || "On File", margin + 50, y + 16.5);
+  doc.text(
+    agreement.dob || agreement.dateOfBirth || "On File",
+    margin + 50,
+    y + 16.5,
+  );
   doc.text(clientEmail, margin + 95, y + 16.5);
 
   // Contact Subgrid
@@ -219,8 +244,18 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setTextColor(...darkText);
   const primaryDesc = `${agreement.signerName || agreement.authorizedRepName || clientName} (${agreement.signerRole || "Resident"})`;
   const emergencyDesc = `${agreement.emergencyContactName || "Designated Emergency Contact"} (${agreement.emergencyContactRelation || "Family"})${agreement.emergencyContactPhone ? ` - ${agreement.emergencyContactPhone}` : ""}`;
-  doc.text(primaryDesc.length > 55 ? primaryDesc.slice(0, 55) + "..." : primaryDesc, margin + 3.5, y + 25);
-  doc.text(emergencyDesc.length > 55 ? emergencyDesc.slice(0, 55) + "..." : emergencyDesc, margin + 95, y + 25);
+  doc.text(
+    primaryDesc.length > 55 ? primaryDesc.slice(0, 55) + "..." : primaryDesc,
+    margin + 3.5,
+    y + 25,
+  );
+  doc.text(
+    emergencyDesc.length > 55
+      ? emergencyDesc.slice(0, 55) + "..."
+      : emergencyDesc,
+    margin + 95,
+    y + 25,
+  );
 
   y += 29;
 
@@ -234,8 +269,12 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setDrawColor(...borderColor);
   doc.roundedRect(margin, y, contentWidth, 23, 1, 1, "FD");
 
-  const planName = agreement.planName || agreement.selectedPlan || "Guardian Plus";
-  const planPrice = agreement.planPrice || 249;
+  const rawPlanName =
+    agreement.planName || agreement.selectedPlan || "Member Service Plan";
+  const planName = rawPlanName
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+  const planPrice = agreement.planPrice ?? 0;
   const hasCleaning = agreement.hasCleaningAddon || false;
 
   doc.setFontSize(7);
@@ -247,9 +286,21 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkText);
-  doc.text(`• Safety & Hazard Mitigation Visits: Dedicated Monthly Home Visits & Safety Oversight`, margin + 3.5, y + 9.5);
-  doc.text(`• Add-On Light Cleaning Assistance: ${hasCleaning ? "Included (+6 Visits / Year)" : "Not Enrolled"}`, margin + 3.5, y + 14);
-  doc.text(`• Comprehensive Digital Safety Reports: Uploaded after every visit with photographic documentation`, margin + 3.5, y + 18.5);
+  doc.text(
+    `• Safety & Hazard Mitigation Visits: Dedicated Monthly Home Visits & Safety Oversight`,
+    margin + 3.5,
+    y + 9.5,
+  );
+  doc.text(
+    `• Add-On Light Cleaning Assistance: ${hasCleaning ? "Included (+6 Visits / Year)" : "Not Enrolled"}`,
+    margin + 3.5,
+    y + 14,
+  );
+  doc.text(
+    `• Comprehensive Digital Safety Reports: Uploaded after every visit with photographic documentation`,
+    margin + 3.5,
+    y + 18.5,
+  );
 
   y += 25.5;
 
@@ -277,7 +328,11 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
 
   if (agreement.cancellationDeadline) {
     doc.setFont("helvetica", "bold");
-    doc.text(`Statutory Cancellation Deadline: ${agreement.cancellationDeadline}`, margin + 3.5, y + 21);
+    doc.text(
+      `Statutory Cancellation Deadline: ${agreement.cancellationDeadline}`,
+      margin + 3.5,
+      y + 21,
+    );
   }
 
   y += 28.5;
@@ -296,10 +351,14 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...darkText);
 
-  const term1 = "1. SCOPE: AgeWellRI specialists provide non-medical home safety evaluations, proactive hazard mitigation, and designated companion home care.";
-  const term2 = "2. ACCESS: The client agrees to provide safe entry and access to the premises during scheduled visit windows.";
-  const term3 = "3. BILLING & RENEWALS: Monthly subscriptions renew automatically on the 1st of each month unless notice of cancellation is provided prior to the 10-day cutoff deadline.";
-  const term4 = "4. LIABILITY LIMITATION: AgeWellRI maintains professional general liability coverage. Specialist recommendations aim to minimize environmental risks.";
+  const term1 =
+    "1. SCOPE: AgeWellRI specialists provide non-medical home safety evaluations, proactive hazard mitigation, and designated companion home care.";
+  const term2 =
+    "2. ACCESS: The client agrees to provide safe entry and access to the premises during scheduled visit windows.";
+  const term3 =
+    "3. BILLING & RENEWALS: Monthly subscriptions renew automatically on the 1st of each month unless notice of cancellation is provided prior to the 10-day cutoff deadline.";
+  const term4 =
+    "4. LIABILITY LIMITATION: AgeWellRI maintains professional general liability coverage. Specialist recommendations aim to minimize environmental risks.";
 
   doc.text(doc.splitTextToSize(term1, contentWidth - 6), margin + 3, y + 4.5);
   doc.text(doc.splitTextToSize(term2, contentWidth - 6), margin + 3, y + 10.5);
@@ -327,7 +386,14 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   if (agreement.clientSignature) {
     if (agreement.clientSignature.startsWith("data:image")) {
       try {
-        doc.addImage(agreement.clientSignature, "PNG", margin + 4, y + 6.5, 45, 12);
+        doc.addImage(
+          agreement.clientSignature,
+          "PNG",
+          margin + 4,
+          y + 6.5,
+          45,
+          12,
+        );
       } catch {
         doc.setFont("courier", "bolditalic");
         doc.setFontSize(10);
@@ -351,8 +417,16 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(6.5);
   doc.setTextColor(...darkText);
   doc.text(`Signer: ${agreement.signerName || clientName}`, margin + 3, y + 23);
-  doc.text(`Date Signed: ${agreement.signedDate || formattedDate}`, margin + 3, y + 28);
-  doc.text(`Verification: Signed via AgeWellRI Secure E-Sign Portal`, margin + 3, y + 32);
+  doc.text(
+    `Date Signed: ${agreement.signedDate || formattedDate}`,
+    margin + 3,
+    y + 28,
+  );
+  doc.text(
+    `Verification: Signed via AgeWellRI Secure E-Sign Portal`,
+    margin + 3,
+    y + 32,
+  );
 
   // AgeWellRI Authorized Officer Signature Box
   const agewellX = margin + contentWidth / 2 + 2;
@@ -374,8 +448,16 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
   doc.setFontSize(6.5);
   doc.setTextColor(...darkText);
   doc.text("Officer: Sarah Jenkins", agewellX + 3, y + 23);
-  doc.text("Title: Director of Care Operations, AgeWellRI LLC", agewellX + 3, y + 28);
-  doc.text(`Official Stamp: Verified AgeWellRI Care Management`, agewellX + 3, y + 32);
+  doc.text(
+    "Title: Director of Care Operations, AgeWellRI LLC",
+    agewellX + 3,
+    y + 28,
+  );
+  doc.text(
+    `Official Stamp: Verified AgeWellRI Care Management`,
+    agewellX + 3,
+    y + 32,
+  );
 
   y += 38;
 
@@ -387,7 +469,7 @@ export async function downloadAgreementPdf(agreement: AgreementPdfData): Promise
     "AgeWellRI LLC • 100 Westminster St, Providence, RI 02903 • (401) 712-3012 • support@agewellri.com • Confidential Legal Document",
     pageWidth / 2,
     pageHeight - 6,
-    { align: "center" }
+    { align: "center" },
   );
 
   // Save File
