@@ -262,7 +262,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       doc.setTextColor(...mutedText);
       const planDesc =
         agreement.planSnapshot?.description ||
-        "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits";
+        "Dedicated safety oversight visits, fall-prevention checks, and routine life-safety reviews.";
       const planDescLines = doc.splitTextToSize(planDesc, contentWidth - 45);
       doc.text(planDescLines, margin + 4, y + 9.5);
 

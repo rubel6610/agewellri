@@ -18,6 +18,7 @@ import {
   Loader2,
   Trash2,
   AlertCircle,
+  Clock,
 } from "lucide-react";
 import {
   useGetNotificationsQuery,
@@ -28,7 +29,7 @@ import {
 import { NotificationItem } from "@/redux/features/notification/notificationTypes";
 import { formatTimeAgo } from "@/lib/utils";
 
-export default function NotificationsAdminPage() {
+export default function ClientNotificationsPage() {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [page, setPage] = useState(1);
@@ -136,13 +137,13 @@ export default function NotificationsAdminPage() {
       case "CRITICAL":
         return (
           <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-[#C95C5C]/15 text-[#C95C5C] rounded-md border border-[#C95C5C]/30">
-            Critical
+            Action Required
           </span>
         );
       case "HIGH":
         return (
           <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-[#C28A3A]/15 text-[#C28A3A] rounded-md border border-[#C28A3A]/30">
-            High Priority
+            Important
           </span>
         );
       default:
@@ -151,13 +152,13 @@ export default function NotificationsAdminPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/80">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
-              Operational Notification Center
+              Notifications
             </h1>
             {unreadCount > 0 && (
               <span className="px-2.5 py-0.5 text-xs font-black bg-[#C95C5C] text-white rounded-full">
@@ -166,8 +167,8 @@ export default function NotificationsAdminPage() {
             )}
           </div>
           <p className="text-sm text-[#64748B] mt-1">
-            Real-time business and system alerts across registrations,
-            agreements, billing, and care dispatch.
+            Stay updated with your care visits, assessments, membership, and
+            billing notices.
           </p>
         </div>
 
@@ -199,7 +200,7 @@ export default function NotificationsAdminPage() {
                 : "text-[#64748B] hover:bg-[#F7FAFC]"
             }`}
           >
-            All Notifications
+            All
           </button>
           <button
             onClick={() => {
@@ -229,7 +230,7 @@ export default function NotificationsAdminPage() {
 
         <div className="text-xs text-[#64748B] px-3 font-medium">
           {isFetching
-            ? "Refreshing..."
+            ? "Updating..."
             : `Showing ${notifications.length} of ${total}`}
         </div>
       </div>
@@ -240,7 +241,7 @@ export default function NotificationsAdminPage() {
           <div className="p-16 text-center text-[#64748B] flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-6 h-6 animate-spin text-[#5E8FB2]" />
             <span className="text-sm font-medium">
-              Loading operational notifications...
+              Loading notifications...
             </span>
           </div>
         ) : notifications.length === 0 ? (
@@ -249,12 +250,12 @@ export default function NotificationsAdminPage() {
               <Bell className="w-7 h-7" />
             </div>
             <h3 className="text-base font-bold text-[#243746]">
-              No notifications found
+              No notifications to display
             </h3>
             <p className="text-xs text-[#64748B] mt-1 max-w-sm">
               {filter === "unread"
                 ? "You have marked all notifications as read."
-                : "No operational alerts have been recorded yet."}
+                : "You don't have any notifications right now."}
             </p>
           </div>
         ) : (
@@ -298,20 +299,21 @@ export default function NotificationsAdminPage() {
                       </h4>
                       {getPriorityBadge(n.priority)}
                     </div>
-                    <span className="text-xs text-[#64748B] shrink-0 font-medium">
+                    <span className="text-xs text-[#64748B] shrink-0 font-medium flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-[#94A3B8]" />
                       {formatTimeAgo(n.createdAt)}
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-[#475569] mt-1 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-[#475569] mt-1.5 leading-relaxed">
                     {n.message}
                   </p>
 
                   <div className="flex items-center justify-between gap-3 mt-3 pt-2 border-t border-[#D9E4EC]/40">
-                    <div className="flex items-center gap-3">
+                    <div>
                       {n.link && (
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] transition-colors">
-                          <span>View Operational Record</span>
+                          <span>View Details</span>
                           <ExternalLink className="w-3.5 h-3.5" />
                         </span>
                       )}
@@ -324,7 +326,7 @@ export default function NotificationsAdminPage() {
                             e.stopPropagation();
                             markRead(n.id);
                           }}
-                          className="text-xs font-semibold text-[#5E8FB2] hover:text-[#294B68] px-2 py-1 rounded-lg hover:bg-white transition-colors"
+                          className="text-xs font-semibold text-[#5E8FB2] hover:text-[#294B68] px-2.5 py-1 rounded-lg hover:bg-white transition-colors"
                         >
                           Mark as read
                         </button>

@@ -1,10 +1,7 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { Bell, Plus, Menu, UserCheck, Shield } from "lucide-react";
+import { Plus, Menu } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
-import { MOCK_NOTIFICATIONS } from "@/lib/api/mock-data";
 import { useAppSelector } from "@/redux/hooks";
 
 interface AdminHeaderProps {
@@ -68,7 +65,7 @@ export function AdminHeader({
 
         {/* Notifications */}
         <div className="shrink-0">
-          <NotificationMenu notifications={MOCK_NOTIFICATIONS} />
+          <NotificationMenu />
         </div>
 
         {/* Admin Profile */}

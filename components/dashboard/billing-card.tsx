@@ -66,7 +66,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                Subscription &amp; Membership
+                Subscription 
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-[#EAF3F8] text-[#294B68] border-[#5E8FB2]/30">
                 Stripe Card Payment

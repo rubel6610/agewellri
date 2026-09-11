@@ -128,6 +128,7 @@ export const baseApi = createApi({
     "Billing",
     "Subscription",
     "Notification",
+    "NotificationUnreadCount",
     "Plan",
     "Service",
     "Specialist",

@@ -51,7 +51,7 @@ export default function AppointmentsPage() {
             My Safety Visits
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            Manage scheduled Safety Oversight, Cleaning visits, and review past visits for your residence.
+            Manage your scheduled safety oversight and hazard-mitigation visits, and review past visits for your residence.
           </p>
         </div>
 
