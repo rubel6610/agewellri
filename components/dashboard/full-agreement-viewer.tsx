@@ -16,16 +16,16 @@ import jsPDF from "jspdf";
 import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
 const AGEWELL_OWNER_DETAILS = {
-  name: "Matthew Vance",
-  title: "Founder & Operations Director",
-  company: "AgeWellRI LLC",
+  name: "Cory Poplaski",
+  title: "Founder",
+  company: "AgeWellRI Care Management LLC",
   location: "Westerly, RI",
   phone: "(401) 212-3002",
-  email: "director@agewellri.com",
+  email: "agewellri@gmail.com",
 };
 
 const OWNER_SIGNATURE_SVG_DATA_URI =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Matthew Vance</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Cory Poplaski</text></svg>";
 
 interface FullAgreementViewerProps {
   agreement: AgreementDocument;
@@ -605,7 +605,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
             <p className="text-xs text-[#64748B] mt-0.5">
               Client ID:{" "}
               <strong>{agreement.clientNumber || "AW-MEMBER"}</strong> •
-              Version: <strong>{agreement.templateVersion || "v1.0"}</strong> •
+              {/* Version: <strong>{agreement.templateVersion || "v1.0"}</strong> • */}
               Executed: <strong>{formattedDate}</strong>
             </p>
           </div>

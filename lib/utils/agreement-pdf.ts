@@ -449,7 +449,7 @@ export async function downloadAgreementPdf(
   doc.setTextColor(...darkText);
   doc.text("Officer: Sarah Jenkins", agewellX + 3, y + 23);
   doc.text(
-    "Title: Director of Care Operations, AgeWellRI LLC",
+    "Title: Director of Care Operations, AgeWellRI Care Management LLC",
     agewellX + 3,
     y + 28,
   );
@@ -466,7 +466,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...mutedText);
   doc.text(
-    "AgeWellRI LLC • 100 Westminster St, Providence, RI 02903 • (401) 712-3012 • support@agewellri.com • Confidential Legal Document",
+    "AgeWellRI Care Management LLC • 100 Westminster St, Providence, RI 02903 • (401) 712-3012 • support@agewellri.com • Confidential Legal Document",
     pageWidth / 2,
     pageHeight - 6,
     { align: "center" },

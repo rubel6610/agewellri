@@ -23,12 +23,12 @@ interface Point {
 const AGEWELL_OWNER_DETAILS = {
   name: "Cory Poplaski",
   title: "Founder",
-  company: "AgeWellRI LLC",
+  company: "AgeWellRI Care Management LLC",
   location: "Westerly, RI",
 };
 
 const OWNER_SIGNATURE_SVG_DATA_URI =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Matthew Vance</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Cory Poplaski</text></svg>";
 
 interface Step6AgreementSigningProps {
   planDetails: {
@@ -93,37 +93,38 @@ export function Step6AgreementSigning({
   const todayStr = new Date().toISOString().split("T")[0];
 
   const [signingTrack, setSigningTrack] = useState<"TRACK_A" | "TRACK_B">(
-    initialData?.signingTrack || "TRACK_A"
+    initialData?.signingTrack || "TRACK_A",
   );
 
   // Track A states
   const [residentPrintedName, setResidentPrintedName] = useState(
-    initialData?.residentPrintedName || residentDetails.fullName
+    initialData?.residentPrintedName || residentDetails.fullName,
   );
 
   // Track B states
   const [repFullName, setRepFullName] = useState(
-    initialData?.repFullName || `${accountHolder.firstName} ${accountHolder.lastName}`.trim()
+    initialData?.repFullName ||
+      `${accountHolder.firstName} ${accountHolder.lastName}`.trim(),
   );
   const [repCapacity, setRepCapacity] = useState<
     "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR"
   >(initialData?.repCapacity || "ATTORNEY_IN_FACT");
   const [repRelationship, setRepRelationship] = useState(
-    initialData?.repRelationship || "Power of Attorney / Family Member"
+    initialData?.repRelationship || "Power of Attorney / Family Member",
   );
-  const [authorityDocumentUrl, setAuthorityDocumentUrl] = useState<string | null>(
-    initialData?.authorityDocumentUrl || null
-  );
-  const [authorityDocumentName, setAuthorityDocumentName] = useState<string | null>(
-    initialData?.authorityDocumentName || null
-  );
+  const [authorityDocumentUrl, setAuthorityDocumentUrl] = useState<
+    string | null
+  >(initialData?.authorityDocumentUrl || null);
+  const [authorityDocumentName, setAuthorityDocumentName] = useState<
+    string | null
+  >(initialData?.authorityDocumentName || null);
 
   // Common signing states
   const [agreementDate, setAgreementDate] = useState(
-    initialData?.agreementDate || todayStr
+    initialData?.agreementDate || todayStr,
   );
   const [consentElectronicSignature, setConsentElectronicSignature] = useState(
-    initialData?.consentElectronicSignature ?? false
+    initialData?.consentElectronicSignature ?? false,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -131,7 +132,7 @@ export function Step6AgreementSigning({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(
-    !!initialData?.signatureDataUrl
+    !!initialData?.signatureDataUrl,
   );
   const lastPointRef = useRef<Point | null>(null);
 
@@ -164,7 +165,9 @@ export function Step6AgreementSigning({
     }
   }, [initialData?.signatureDataUrl]);
 
-  const getCanvasCoordinates = (e: React.MouseEvent | React.TouchEvent): Point | null => {
+  const getCanvasCoordinates = (
+    e: React.MouseEvent | React.TouchEvent,
+  ): Point | null => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
@@ -252,7 +255,9 @@ export function Step6AgreementSigning({
       }
     } catch (err: any) {
       setErrorMessage(
-        err?.data?.message || err?.message || "Error uploading authority document."
+        err?.data?.message ||
+          err?.message ||
+          "Error uploading authority document.",
       );
     }
   };
@@ -262,7 +267,9 @@ export function Step6AgreementSigning({
     setErrorMessage(null);
 
     const printedName =
-      signingTrack === "TRACK_A" ? residentPrintedName.trim() : repFullName.trim();
+      signingTrack === "TRACK_A"
+        ? residentPrintedName.trim()
+        : repFullName.trim();
 
     if (!printedName) {
       setErrorMessage("Please enter the printed legal name.");
@@ -272,7 +279,7 @@ export function Step6AgreementSigning({
     if (signingTrack === "TRACK_B") {
       if (!authorityDocumentUrl) {
         setErrorMessage(
-          "Representative / Power of Attorney signing requires uploading a legal authority document (DPOA, Guardianship, or Conservatorship order)."
+          "Representative / Power of Attorney signing requires uploading a legal authority document (DPOA, Guardianship, or Conservatorship order).",
         );
         return;
       }
@@ -285,7 +292,7 @@ export function Step6AgreementSigning({
 
     if (!consentElectronicSignature) {
       setErrorMessage(
-        "Please acknowledge the electronic signature consent checkbox before proceeding."
+        "Please acknowledge the electronic signature consent checkbox before proceeding.",
       );
       return;
     }
@@ -297,9 +304,12 @@ export function Step6AgreementSigning({
       residentPrintedName: printedName,
       repFullName: signingTrack === "TRACK_B" ? repFullName.trim() : undefined,
       repCapacity: signingTrack === "TRACK_B" ? repCapacity : null,
-      repRelationship: signingTrack === "TRACK_B" ? repRelationship.trim() : undefined,
-      authorityDocumentUrl: signingTrack === "TRACK_B" ? authorityDocumentUrl : null,
-      authorityDocumentName: signingTrack === "TRACK_B" ? authorityDocumentName : null,
+      repRelationship:
+        signingTrack === "TRACK_B" ? repRelationship.trim() : undefined,
+      authorityDocumentUrl:
+        signingTrack === "TRACK_B" ? authorityDocumentUrl : null,
+      authorityDocumentName:
+        signingTrack === "TRACK_B" ? authorityDocumentName : null,
       agreementDate: todayStr,
       signatureDataUrl,
       consentElectronicSignature,
@@ -317,7 +327,8 @@ export function Step6AgreementSigning({
           Review &amp; Sign Service Agreement
         </h2>
         <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
-          Please review the AgeWellRI Service Agreement terms below and execute the agreement with your digital signature.
+          Please review the AgeWellRI Service Agreement terms below and execute
+          the agreement with your digital signature.
         </p>
       </div>
 
@@ -336,7 +347,8 @@ export function Step6AgreementSigning({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
-              <FileText className="w-4 h-4 text-[#294B68]" /> Service Agreement Document ({residentDetails.state || "RI"})
+              <FileText className="w-4 h-4 text-[#294B68]" /> Service Agreement
+              Document ({residentDetails.state || "RI"})
             </span>
             <span className="text-[11px] text-[#5E8FB2] font-semibold">
               Scroll to read full terms
@@ -349,42 +361,81 @@ export function Step6AgreementSigning({
                 AGEWELLRI CLIENT SERVICE &amp; MAINTENANCE AGREEMENT
               </h4>
               <p className="text-[11px] text-[#64748B]">
-                Jurisdiction: State of {residentDetails.state === "RI" ? "Rhode Island" : residentDetails.state} &bull; Active Version 2.0
+                Jurisdiction: State of{" "}
+                {residentDetails.state === "RI"
+                  ? "Rhode Island"
+                  : residentDetails.state}{" "}
+                &bull; Active Version 2.0
               </p>
             </div>
 
             <div>
-              <strong className="text-[#243746]">1. PARTIES &amp; PREMISES:</strong>
+              <strong className="text-[#243746]">
+                1. PARTIES &amp; PREMISES:
+              </strong>
               <p>
-                This Service Agreement is entered into by AgeWellRI LLC (&quot;Provider&quot;) and the Resident: <strong>{residentDetails.fullName || "Primary Resident"}</strong> (&quot;Client&quot;), residing at <strong>{residentDetails.address || "Residence Address"}, {residentDetails.city}, {residentDetails.state} {residentDetails.postalCode}</strong>.
+                This Service Agreement is entered into by AgeWellRI Care
+                Management LLC (&quot;Provider&quot;) and the Resident:{" "}
+                <strong>
+                  {residentDetails.fullName || "Primary Resident"}
+                </strong>{" "}
+                (&quot;Client&quot;), residing at{" "}
+                <strong>
+                  {residentDetails.address || "Residence Address"},{" "}
+                  {residentDetails.city}, {residentDetails.state}{" "}
+                  {residentDetails.postalCode}
+                </strong>
+                .
               </p>
             </div>
 
             <div>
-              <strong className="text-[#243746]">2. CONTRACTED PLAN &amp; SCOPE OF SERVICES:</strong>
+              <strong className="text-[#243746]">
+                2. CONTRACTED PLAN &amp; SCOPE OF SERVICES:
+              </strong>
               <p>
-                Client selects the <strong>{planDetails.planName}</strong> (${planDetails.planPrice}.00 per {planDetails.billingInterval.toLowerCase()}). Provider shall perform {planDetails.totalVisits} scheduled annual maintenance and safety upkeep visits. Services encompass preventative home checks, fixture maintenance, smoke/CO detector inspections, accessibility upkeep, and environmental safety assessments.
+                Client selects the <strong>{planDetails.planName}</strong> ($
+                {planDetails.planPrice}.00 per{" "}
+                {planDetails.billingInterval.toLowerCase()}). Provider shall
+                perform {planDetails.totalVisits} scheduled annual maintenance
+                and safety upkeep visits. Services encompass preventative home
+                checks, fixture maintenance, smoke/CO detector inspections,
+                accessibility upkeep, and environmental safety assessments.
               </p>
             </div>
 
             <div>
-              <strong className="text-[#243746]">3. NON-MEDICAL SCOPE &amp; RESIDENT AUTONOMY:</strong>
+              <strong className="text-[#243746]">
+                3. NON-MEDICAL SCOPE &amp; RESIDENT AUTONOMY:
+              </strong>
               <p>
-                Provider is a non-medical residential maintenance and aging-in-place service. Specialists do not provide clinical healthcare, nursing, physical assistance, or emergency triage.
+                Provider is a non-medical residential maintenance and
+                aging-in-place service. Specialists do not provide clinical
+                healthcare, nursing, physical assistance, or emergency triage.
               </p>
             </div>
 
             <div>
-              <strong className="text-[#243746]">4. BILLING &amp; FIRST PAYMENT:</strong>
+              <strong className="text-[#243746]">
+                4. BILLING &amp; FIRST PAYMENT:
+              </strong>
               <p>
-                <strong>$0.00 is charged at signup.</strong> Client authorizes automatic recurring charges to the saved payment method on the 1st day of each month, beginning on the first day of the following calendar month (Commencement Date).
+                <strong>$0.00 is charged at signup.</strong> Client authorizes
+                automatic recurring charges to the saved payment method on the
+                1st day of each month, beginning on the first day of the
+                following calendar month (Commencement Date).
               </p>
             </div>
 
             <div>
-              <strong className="text-[#243746]">5. CANCELLATION &amp; STATUTORY RIGHT:</strong>
+              <strong className="text-[#243746]">
+                5. CANCELLATION &amp; STATUTORY RIGHT:
+              </strong>
               <p>
-                Client may cancel this agreement at any time with 30 days written notice via the client portal. Under applicable state consumer protection laws, Client may also cancel within three (3) business days of execution without penalty.
+                Client may cancel this agreement at any time with 30 days
+                written notice via the client portal. Under applicable state
+                consumer protection laws, Client may also cancel within three
+                (3) business days of execution without penalty.
               </p>
             </div>
           </div>
@@ -419,11 +470,14 @@ export function Step6AgreementSigning({
                       : "border-[#CBD5E1]"
                   }`}
                 >
-                  {signingTrack === "TRACK_A" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  {signingTrack === "TRACK_A" && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  )}
                 </div>
               </div>
               <p className="text-xs text-[#64748B] mt-2">
-                I am the resident residing at the property and signing on my own behalf.
+                I am the resident residing at the property and signing on my own
+                behalf.
               </p>
             </div>
 
@@ -450,11 +504,14 @@ export function Step6AgreementSigning({
                       : "border-[#CBD5E1]"
                   }`}
                 >
-                  {signingTrack === "TRACK_B" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  {signingTrack === "TRACK_B" && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  )}
                 </div>
               </div>
               <p className="text-xs text-[#64748B] mt-2">
-                I am signing as an authorized Representative (Power of Attorney, Guardian, Conservator).
+                I am signing as an authorized Representative (Power of Attorney,
+                Guardian, Conservator).
               </p>
             </div>
           </div>
@@ -472,14 +529,23 @@ export function Step6AgreementSigning({
                   value={repCapacity}
                   onChange={(e) =>
                     setRepCapacity(
-                      e.target.value as "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR"
+                      e.target.value as
+                        | "ATTORNEY_IN_FACT"
+                        | "GUARDIAN"
+                        | "CONSERVATOR",
                     )
                   }
                   className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
                 >
-                  <option value="ATTORNEY_IN_FACT">Attorney-in-Fact (DPOA)</option>
-                  <option value="GUARDIAN">Court-Appointed Legal Guardian</option>
-                  <option value="CONSERVATOR">Court-Appointed Conservator</option>
+                  <option value="ATTORNEY_IN_FACT">
+                    Attorney-in-Fact (DPOA)
+                  </option>
+                  <option value="GUARDIAN">
+                    Court-Appointed Legal Guardian
+                  </option>
+                  <option value="CONSERVATOR">
+                    Court-Appointed Conservator
+                  </option>
                 </select>
               </div>
 
@@ -501,7 +567,8 @@ export function Step6AgreementSigning({
             {/* Authority Document Upload Card */}
             <div className="space-y-1.5 pt-2">
               <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                Upload Legal Authority Document * (.PDF, .PNG, .JPG &bull; Max 15MB)
+                Upload Legal Authority Document * (.PDF, .PNG, .JPG &bull; Max
+                15MB)
               </label>
 
               {authorityDocumentUrl ? (
@@ -510,7 +577,8 @@ export function Step6AgreementSigning({
                     <FileCheck className="w-6 h-6 text-emerald-600" />
                     <div>
                       <h5 className="font-bold text-xs text-emerald-900">
-                        {authorityDocumentName || "Legal Authority Document Attached"}
+                        {authorityDocumentName ||
+                          "Legal Authority Document Attached"}
                       </h5>
                       <span className="text-[11px] text-emerald-700">
                         Verified &bull; Ready for agreement execution
@@ -544,7 +612,8 @@ export function Step6AgreementSigning({
                     <>
                       <UploadCloud className="w-8 h-8 text-[#5E8FB2]" />
                       <span className="text-xs font-extrabold text-[#294B68]">
-                        Click to upload Power of Attorney or Guardianship Document
+                        Click to upload Power of Attorney or Guardianship
+                        Document
                       </span>
                       <span className="text-[11px] text-[#94A3B8]">
                         PDF or clear photo / scanned image up to 15MB
@@ -566,7 +635,9 @@ export function Step6AgreementSigning({
             <input
               type="text"
               required
-              value={signingTrack === "TRACK_A" ? residentPrintedName : repFullName}
+              value={
+                signingTrack === "TRACK_A" ? residentPrintedName : repFullName
+              }
               onChange={(e) => {
                 if (signingTrack === "TRACK_A") {
                   setResidentPrintedName(e.target.value);
@@ -582,7 +653,9 @@ export function Step6AgreementSigning({
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center justify-between">
               <span>Agreement Execution Date *</span>
-              <span className="text-[11px] font-normal text-[#94A3B8] normal-case">(Today)</span>
+              <span className="text-[11px] font-normal text-[#94A3B8] normal-case">
+                (Today)
+              </span>
             </label>
             <input
               type="date"
@@ -637,7 +710,8 @@ export function Step6AgreementSigning({
               AgeWellRI Provider Counterpart Signature
             </span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" /> Pre-Authorized
+              <ShieldCheck className="w-3 h-3 text-emerald-600" />{" "}
+              Pre-Authorized
             </span>
           </div>
 
@@ -647,7 +721,8 @@ export function Step6AgreementSigning({
                 {AGEWELL_OWNER_DETAILS.name}
               </div>
               <div className="text-xs text-[#64748B] mt-0.5">
-                {AGEWELL_OWNER_DETAILS.title} &bull; {AGEWELL_OWNER_DETAILS.company}
+                {AGEWELL_OWNER_DETAILS.title} &bull;{" "}
+                {AGEWELL_OWNER_DETAILS.company}
               </div>
               <div className="text-[11px] text-[#5E8FB2] mt-0.5">
                 {AGEWELL_OWNER_DETAILS.location} &bull; Date: {todayStr}
@@ -679,7 +754,11 @@ export function Step6AgreementSigning({
               className="mt-1 w-5 h-5 rounded border-[#D9E4EC] text-[#294B68] focus:ring-[#5E8FB2] cursor-pointer"
             />
             <span className="text-xs text-[#475569] leading-relaxed">
-              <strong>Electronic Signature Consent:</strong> I acknowledge and agree that my electronic signature above is legally binding and equivalent to a handwritten signature under the Electronic Signatures in Global and National Commerce Act (E-SIGN) and the Uniform Electronic Transactions Act (UETA).
+              <strong>Electronic Signature Consent:</strong> I acknowledge and
+              agree that my electronic signature above is legally binding and
+              equivalent to a handwritten signature under the Electronic
+              Signatures in Global and National Commerce Act (E-SIGN) and the
+              Uniform Electronic Transactions Act (UETA).
             </span>
           </label>
         </div>

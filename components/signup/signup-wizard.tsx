@@ -535,7 +535,7 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
             support@agewellri.com
           </a>
         </div>
-        <p>&copy; {new Date().getFullYear()} AgeWellRI LLC. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} AgeWellRI Care Management LLC. All rights reserved.</p>
       </footer>
     </div>
   );

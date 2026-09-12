@@ -42,9 +42,8 @@ export default function ClientNotificationsPage() {
       unreadOnly: filter === "unread",
     },
     {
-      pollingInterval: 8000,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
     },
   );
 
@@ -132,24 +131,7 @@ export default function ClientNotificationsPage() {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case "CRITICAL":
-        return (
-          <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-[#C95C5C]/15 text-[#C95C5C] rounded-md border border-[#C95C5C]/30">
-            Action Required
-          </span>
-        );
-      case "HIGH":
-        return (
-          <span className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-[#C28A3A]/15 text-[#C28A3A] rounded-md border border-[#C28A3A]/30">
-            Important
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
@@ -297,7 +279,6 @@ export default function ClientNotificationsPage() {
                       >
                         {n.title}
                       </h4>
-                      {getPriorityBadge(n.priority)}
                     </div>
                     <span className="text-xs text-[#64748B] shrink-0 font-medium flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-[#94A3B8]" />
