@@ -55,31 +55,49 @@ export function Step9Confirmation({
             Service Summary
           </span>
           <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-            Active Agreement
+            Active Subscription
           </span>
         </div>
 
+        {/* Detailed Agreement Signed Notice Box */}
+        <div className="p-5 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] space-y-4">
+          <p className="text-sm font-bold text-[#243746]">
+            Your service agreement is complete and your subscription is active.
+          </p>
+
+          <ul className="space-y-2 text-xs text-[#334155]">
+            <li className="flex items-start gap-2">
+              <span className="text-[#294B68] font-bold">&bull;</span>
+              <span>
+                <strong>Your plan:</strong> {planDetails.planName} &mdash; ${planDetails.planPrice}/month
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#294B68] font-bold">&bull;</span>
+              <span>
+                <strong>Service begins:</strong> {commencementDateFormatted}
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#294B68] font-bold">&bull;</span>
+              <span>
+                <strong>First billing:</strong> {commencementDateFormatted} &mdash; <span className="text-emerald-700 font-bold">you won't be charged today</span>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-[#294B68] font-bold">&bull;</span>
+              <span>
+                A copy of your signed agreement has been emailed to <strong>{userEmail}</strong> for your records.
+              </span>
+            </li>
+          </ul>
+
+          <div className="pt-2 border-t border-[#D9E4EC] text-xs font-semibold text-[#294B68]">
+            We'll be in touch shortly to schedule your first visit. Questions? Call us anytime at <strong>(401) 212-3002</strong>.
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Plan Card */}
-          <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1">
-            <span className="text-[11px] font-bold text-[#64748B] uppercase">Plan</span>
-            <div className="text-sm font-black text-[#243746]">{planDetails.planName}</div>
-            <div className="text-xs text-[#294B68] font-bold">
-              ${planDetails.planPrice}.00 / month &bull; {planDetails.totalVisits} visits/year
-            </div>
-          </div>
-
-          {/* Service Commencement */}
-          <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1">
-            <span className="text-[11px] font-bold text-[#64748B] uppercase">Service Commencement</span>
-            <div className="text-sm font-black text-[#243746]">
-              {commencementDateFormatted}
-            </div>
-            <div className="text-xs text-[#3F8F6B] font-semibold">
-              First monthly billing on {commencementDateFormatted}
-            </div>
-          </div>
-
           {/* Resident Address */}
           <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1 sm:col-span-2">
             <span className="text-[11px] font-bold text-[#64748B] uppercase">Service Address</span>
@@ -91,17 +109,6 @@ export function Step9Confirmation({
               {residentDetails.postalCode}
             </div>
           </div>
-        </div>
-
-        {/* Email & Report Notice */}
-        <div className="p-4 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#294B68]">
-            <Mail className="w-4 h-4 text-[#294B68]" />
-            <span>Executed Agreement Sent to {userEmail}</span>
-          </div>
-          <p className="text-xs text-[#475569] leading-relaxed">
-            A copy of your signed service agreement and cancellation rights has been emailed to your account. {recipientCount > 0 ? `${recipientCount} authorized contact${recipientCount > 1 ? "s" : ""} will receive visit reports and photos.` : "You can add report recipients anytime in your dashboard."}
-          </p>
         </div>
 
         {/* Action Button */}

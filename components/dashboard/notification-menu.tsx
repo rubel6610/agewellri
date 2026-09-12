@@ -30,45 +30,49 @@ interface NotificationMenuProps {
   notifications?: any[]; // For backwards-compatibility with existing props
 }
 
+const DROPDOWN_NOTIF_PARAMS = { limit: 10 };
+
 export function NotificationMenu({}: NotificationMenuProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const authUser = useAppSelector((state) => state.auth.user);
   const isAdmin = authUser?.role === "ADMIN";
 
-  // 1. Fetch unread count for bell badge (polls periodically and refetches on focus/reconnect)
+  // 1. Fetch unread count for bell badge (only when authenticated, no automatic polling or focus refetching)
   const {
     data: unreadRes,
     refetch: refetchUnread,
     isFetching: isFetchingUnread,
   } = useGetUnreadCountQuery(undefined, {
-    pollingInterval: 10000,
-    refetchOnFocus: true,
-    refetchOnReconnect: true,
+    skip: !authUser,
+    refetchOnFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMountOrArgChange: false,
   });
 
-  // 2. Fetch latest 10 notifications on-demand when dropdown is open
+  // 2. Fetch latest 10 notifications on-demand ONLY when dropdown is open and user is logged in
   const {
     data: notifRes,
     isLoading,
     refetch: refetchNotifs,
     isFetching: isFetchingNotifs,
   } = useGetNotificationsQuery(
-    { limit: 10 },
+    DROPDOWN_NOTIF_PARAMS,
     {
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-      skip: !isOpen,
-    }
+      skip: !isOpen || !authUser,
+      refetchOnFocus: false,
+      refetchOnReconnect: false,
+      refetchOnMountOrArgChange: false,
+    },
   );
   const notifications: NotificationItem[] = notifRes?.data?.notifications || [];
 
   const unreadCount = Number(
     unreadRes?.data?.unreadCount ??
-    (unreadRes as any)?.unreadCount ??
-    (unreadRes as any)?.data?.data?.unreadCount ??
-    notifications.filter((n) => !n.isRead).length ??
-    0
+      (unreadRes as any)?.unreadCount ??
+      (unreadRes as any)?.data?.data?.unreadCount ??
+      notifications.filter((n) => !n.isRead).length ??
+      0,
   );
 
   const [markRead] = useMarkNotificationReadMutation();

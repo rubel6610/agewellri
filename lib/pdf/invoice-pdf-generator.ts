@@ -380,7 +380,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(7);
     doc.setTextColor(130, 145, 160);
     doc.text(
-      "This electronic statement represents an official record of contracted services provided by AgeWellRI LLC.",
+      "This electronic statement represents an official record of contracted services provided by AgeWellRI Care Management LLC.",
       margin,
       y + 4.5,
     );

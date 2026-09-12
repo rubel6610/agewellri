@@ -486,9 +486,20 @@ export function ClientAgreementForm() {
 
       if (response.success) {
         setIsSuccess(true);
+
+        const now = new Date();
+        const nextMonthFirst = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        const commencementDateFormatted = nextMonthFirst.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+        const planName = selectedPlanObj?.name || formData.selectedPlanCode || "AgeWellRI Membership Plan";
+        const priceText = selectedPlanObj?.price ? `$${selectedPlanObj.price}/month` : "$295/month";
+
         await showSuccessAlert(
-          "Agreement Executed Successfully!",
-          "Your service agreement has been executed and membership activated. Welcome to AgeWellRI!"
+          "Agreement Signed — Welcome to AgeWellRI!",
+          `Your service agreement is complete and your subscription is active.\n\n• Your plan: ${planName} — ${priceText}\n• Service begins: ${commencementDateFormatted}\n• First billing: ${commencementDateFormatted} — you won't be charged today\n• A copy of your signed agreement has been emailed to you for your records.\n\nWe'll be in touch shortly to schedule your first visit. Questions? Call us anytime at (401) 212-3002.`
         );
         router.push("/dashboard");
       }
