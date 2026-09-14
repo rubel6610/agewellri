@@ -801,8 +801,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                     {formattedPlan}
                   </h3>
                   <p className="text-xs text-[#64748B]">
-                    {agreement.planSnapshot?.description ||
-                      "Dedicated safety & wellness oversight visits, fall prevention pathways, and routine life safety audits"}
+                    Comprehensive Home Safety Oversight & Proactive Hazard Removal
                   </p>
                 </div>
               </div>

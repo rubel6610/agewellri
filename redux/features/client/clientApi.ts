@@ -313,6 +313,24 @@ export const clientApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Client"],
     }),
+
+    deleteAdminClient: builder.mutation<
+      ApiResponse<{ id: string; clientNumber: string; email: string }>,
+      string
+    >({
+      query: (clientId) => ({
+        url: `/clients/admin/${clientId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [
+        "Client",
+        "Agreement",
+        "Appointment",
+        "Report",
+        "Billing",
+        "Subscription",
+      ],
+    }),
   }),
   overrideExisting: true,
 });
@@ -330,4 +348,5 @@ export const {
   useUpdateClientAccessMethodMutation,
   useDeleteClientAccessMethodMutation,
   useSetDefaultClientAccessMethodMutation,
+  useDeleteAdminClientMutation,
 } = clientApi;

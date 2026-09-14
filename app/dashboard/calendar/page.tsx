@@ -287,7 +287,7 @@ export default function ClientCalendarPage() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium mt-1">
-            View upcoming and past safety check-ins, home deep cleanings, and manage your scheduled visits.
+            View upcoming and past safety check-ins and manage your scheduled visits
           </p>
         </div>
 

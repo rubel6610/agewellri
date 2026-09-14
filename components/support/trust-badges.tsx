@@ -9,7 +9,7 @@ export function TrustBadges({ className = "" }: TrustBadgesProps) {
   const badges = [
     {
       icon: ShieldCheck,
-      title: "Certified and Insured NOT Licensed",
+      title: "Certified and Insured ",
       subtitle: "Certified Rhode Island In-Home Safety Experts",
     },
     {

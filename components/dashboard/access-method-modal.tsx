@@ -191,7 +191,7 @@ export function AccessMethodModal({
                 {isEditing ? "Edit Home Access Method" : "Add New Home Access Method"}
               </h3>
               <p className="text-xs text-[#64748B] font-medium">
-                Entry instructions for AgeWellRI visiting specialists
+                Entry instructions for AgeWellRI safety specialists
               </p>
             </div>
           </div>

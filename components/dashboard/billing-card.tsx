@@ -227,7 +227,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
                 </p>
                 {billing.cancellationCutoffDate && (
                   <p className="text-xs text-[#64748B] mt-0.5">
-                    Cancellation cutoff for upcoming renewal: <strong>{billing.cancellationCutoffDate}</strong> (10 days before month end).
+                    Cancellation deadline for upcoming renewal: <strong>{billing.cancellationCutoffDate}</strong> (10 days before month end).
                   </p>
                 )}
               </div>

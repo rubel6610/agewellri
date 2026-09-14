@@ -2,6 +2,7 @@
 
 import React, { useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -27,14 +28,23 @@ import {
   UserCheck,
   FileUp,
   Eye,
+  Trash2,
 } from "lucide-react";
-import { useGetAdminClientByIdQuery } from "@/redux/features/client/clientApi";
+import {
+  useGetAdminClientByIdQuery,
+  useDeleteAdminClientMutation,
+} from "@/redux/features/client/clientApi";
 import { useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
 import { FullAgreementViewer } from "@/components/dashboard/full-agreement-viewer";
 import { downloadReportPdf } from "@/lib/api/report-download";
+import {
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 function formatAuditDetails(action: string, details: any): string {
   if (!details) {
@@ -228,9 +238,12 @@ export default function ClientDetailPage({
 }) {
   const resolvedParams = use(params);
   const clientId = resolvedParams.id;
+  const router = useRouter();
 
   const { data: clientRes, isLoading, isError } = useGetAdminClientByIdQuery(clientId);
   const { data: clientApptsRes } = useGetAdminAppointmentsQuery({ clientId });
+  const [deleteAdminClient, { isLoading: isDeleting }] = useDeleteAdminClientMutation();
+
   const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "visits" | "agreement" | "billing" | "activity">("overview");
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
@@ -238,6 +251,34 @@ export default function ClientDetailPage({
 
   const client = clientRes?.data;
   const clientAppointments = clientApptsRes?.data || [];
+
+  const handleDeleteClient = async () => {
+    if (!client) return;
+    const clientFullName = `${client.firstName} ${client.lastName}`.trim();
+    const confirmed = await confirmDelete({
+      title: `Delete Client "${clientFullName}"?`,
+      text: `This will permanently delete ${clientFullName} (${client.clientNumber || client.id}), including all their agreements, active subscriptions, invoices, appointments, and portal access. If they wish to return, they will need to be re-registered.`,
+      confirmButtonText: "Yes, Permanently Delete",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const idToDelete = client.internalId || client.id || client.clientNumber || clientId;
+      const res = await deleteAdminClient(idToDelete).unwrap();
+      showSuccessAlert(
+        "Client Deleted",
+        res.message || `Client "${clientFullName}" has been permanently deleted.`
+      );
+      router.push("/admin/clients");
+    } catch (err: any) {
+      showErrorAlert(
+        "Deletion Failed",
+        err?.data?.message || err?.message || "Failed to delete client. Please try again."
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -313,14 +354,29 @@ export default function ClientDetailPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <ClientStatusBadge status={client.status} />
             <button
+              type="button"
               onClick={() => setScheduleModalOpen(true)}
               className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Schedule Visit</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteClient}
+              disabled={isDeleting}
+              className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title={`Permanently Delete Client ${client.firstName} ${client.lastName}`}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+              ) : (
+                <Trash2 className="w-4 h-4 text-rose-600" />
+              )}
+              <span>Delete Client</span>
             </button>
           </div>
         </div>
@@ -453,6 +509,34 @@ export default function ClientDetailPage({
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Danger Zone: Permanent Client Deletion */}
+            <div className="p-5 bg-rose-50/50 rounded-2xl border border-rose-200 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                    <Trash2 className="w-4 h-4 text-rose-600" /> Permanent Client Deletion
+                  </h4>
+                  <p className="text-xs text-rose-700 mt-1 max-w-2xl">
+                    Permanently deletes this client record, user credentials, agreements, active subscriptions, and appointments. The client will immediately lose portal access and will need to be re-registered if they return.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteClient}
+                  disabled={isDeleting}
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                  title="Permanently Delete Client Account"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  <span>Delete Client Account</span>
+                </button>
               </div>
             </div>
           </div>
