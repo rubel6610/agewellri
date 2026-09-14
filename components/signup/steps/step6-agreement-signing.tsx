@@ -395,10 +395,8 @@ export function Step6AgreementSigning({
               </strong>
               <p>
                 Client selects the <strong>{planDetails.planName}</strong> ($
-                {planDetails.planPrice}.00 per{" "}
-                {planDetails.billingInterval.toLowerCase()}). Provider shall
-                perform {planDetails.totalVisits} scheduled annual maintenance
-                and safety upkeep visits. Services encompass preventative home
+                {planDetails.planPrice}.00 per month). Provider shall
+                perform scheduled maintenance and safety upkeep visits. Services encompass preventative home
                 checks, fixture maintenance, smoke/CO detector inspections,
                 accessibility upkeep, and environmental safety assessments.
               </p>

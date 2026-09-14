@@ -57,7 +57,7 @@ export default function AppointmentsPage() {
 
         <div className="flex items-center gap-4">
           <div className="text-right text-xs font-semibold text-[#64748B] hidden sm:block">
-            <span>Visits remaining this quarter:</span>
+            <span>Visits remaining this month:</span>
             {isEntLoading ? (
               <span className="block h-5 bg-[#E2E8F0] rounded w-16 ml-auto animate-pulse mt-0.5" />
             ) : (

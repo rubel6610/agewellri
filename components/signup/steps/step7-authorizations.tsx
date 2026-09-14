@@ -4,6 +4,10 @@ import React, { useState } from "react";
 import { AlertTriangle, CreditCard, HeartHandshake, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Step7AuthorizationsProps {
+  planDetails?: {
+    planName?: string;
+    planPrice?: number;
+  };
   initialAuthorizations?: {
     emergencyRightOfEntry: boolean;
     residentAutonomyAcknowledgment: boolean;
@@ -18,6 +22,7 @@ interface Step7AuthorizationsProps {
 }
 
 export function Step7Authorizations({
+  planDetails,
   initialAuthorizations,
   onSave,
   onBack,
@@ -121,7 +126,7 @@ export function Step7Authorizations({
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-                I authorize AgeWellRI specialists and technicians to enter the residence or alert emergency services (911 / family contacts) if an urgent safety hazard or unresponsive resident emergency is identified during a scheduled visit.
+               I authorize AgeWellRI to enter the home during a scheduled visit if a technician has a reasonable belief that a medical emergency or safety crisis is occurring inside. I authorize the use of any available key/code, contacting emergency services (911), and following instructions from designated family contacts. AgeWellRI and its technicians are held harmless for property damage (such as forced entry) or liabilities resulting from a good-faith emergency response — except in cases of gross negligence, recklessness, or willful misconduct.
               </p>
             </div>
           </label>
@@ -146,11 +151,11 @@ export function Step7Authorizations({
               <div className="flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-[#294B68]" />
                 <h4 className="text-sm font-extrabold text-[#243746]">
-                  2. Resident Autonomy &amp; Non-Medical Scope (Section 12.3) *
+                  2. Resident Autonomy & Refusal (Section 12.3) *
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-                I acknowledge and agree that AgeWellRI is a residential home upkeep and safety maintenance service, and does not provide clinical care, medical diagnosis, medication management, or medical triage.
+               I acknowledge that AgeWellRI technicians respect the dignity, comfort, and personal boundaries of all residents. If a resident refuses entry, objects to a checklist item, or asks a technician to leave an area, the technician will immediately respect that and stop that part of the service. I understand this refusal is not a breach of contract by AgeWellRI, the standard visit fee still applies, and AgeWellRI is not liable for accidents caused by a hazard left in place because the resident declined to have it addressed — except in cases of gross negligence, recklessness, or willful misconduct.
               </p>
             </div>
           </label>
@@ -175,11 +180,11 @@ export function Step7Authorizations({
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-[#3F8F6B]" />
                 <h4 className="text-sm font-extrabold text-[#243746]">
-                  3. Automatic Recurring Billing Authorization (Section 12.4) *
+                  3. Automatic Billing Authorization (Section 12.4) *
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-                I authorize AgeWellRI to securely store my payment method with Stripe and charge the contracted monthly rate on the 1st of each calendar month, starting on the first day of next month (Commencement Date).
+             I authorize AgeWellRI to automatically charge my saved payment method (or process my check payment) the flat monthly fee for my selected plan ($495 for Plan 1 / $295 for Plan 2) on a recurring basis. I understand I can cancel anytime by emailing <strong className="text-agewell-green">agewellri@gmail.com</strong> or using my secure client dashboard.
               </p>
             </div>
           </label>

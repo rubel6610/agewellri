@@ -24,6 +24,11 @@ interface Step1CreateAccountProps {
 export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccountProps) {
   const authUser = useAppSelector((state) => state.auth.user);
   const [registerUser, { isLoading }] = useRegisterMutation();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [formData, setFormData] = useState({
     firstName: initialData?.firstName || "",
@@ -152,7 +157,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
           </div>
         )}
 
-        {authUser && (
+        {mounted && authUser && (
           <div className="p-4 bg-[#EAF3F8] border border-[#5E8FB2]/30 text-[#294B68] rounded-2xl text-xs sm:text-sm flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-[#3F8F6B]" />

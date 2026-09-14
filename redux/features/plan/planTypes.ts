@@ -19,7 +19,7 @@ export interface ActivePlan {
   description?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "ONE_TIME";
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
@@ -40,7 +40,7 @@ export interface AdminPlan {
   currentPrice: number;
   price?: number;
   currency: string;
-  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "ONE_TIME";
   displayOrder: number;
   isActive: boolean;
   isArchived: boolean;
@@ -155,7 +155,7 @@ export interface CreatePlanPayload {
   fullDescription?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval: "MONTHLY" | "ONE_TIME";
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
@@ -177,7 +177,7 @@ export interface UpdatePlanPayload {
   fullDescription?: string;
   price?: number;
   currency?: string;
-  billingInterval?: "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval?: "MONTHLY" | "ONE_TIME";
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;

@@ -23,8 +23,8 @@ export default function Error({
   const homeHref = !isAuthenticated
     ? "/login"
     : user?.role === "ADMIN"
-    ? "/admin"
-    : "/dashboard";
+      ? "/admin"
+      : "/dashboard";
 
   return (
     <main className="min-h-screen bg-[#F7FAFC] flex flex-col items-center justify-center p-4 sm:p-6 text-[#243746]">
@@ -56,7 +56,8 @@ export default function Error({
             Something Went Wrong
           </h1>
           <p className="text-xs sm:text-sm text-[#64748B] max-w-sm mx-auto leading-relaxed">
-            An unexpected error occurred while loading this page. Our team has been notified and we are working to resolve it.
+            An unexpected error occurred while loading this page. Our team has
+            been notified and we are working to resolve it.
           </p>
 
           {process.env.NODE_ENV === "development" && error?.message && (
@@ -89,7 +90,10 @@ export default function Error({
         {/* Helpful Support Footer */}
         <div className="pt-4 border-t border-[#D9E4EC]/60 text-xs text-[#64748B] flex items-center justify-center gap-1.5">
           <HelpCircle className="w-3.5 h-3.5 text-[#5E8FB2]" />
-          <span>If this persists, please contact <strong className="text-[#243746]">support@agewellri.com</strong></span>
+          <span>
+            If this persists, please contact{" "}
+            <strong className="text-[#243746]">agewellri@gmail.com</strong>
+          </span>
         </div>
       </div>
     </main>

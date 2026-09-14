@@ -184,8 +184,8 @@ export function Step2ChoosePlan({
                         {plan.name}
                       </h3>
                       <p className="text-xs text-[#64748B] mt-1 leading-relaxed line-clamp-2">
-                        {plan.description ||
-                          "Proactive residential aging-in-place maintenance."}
+                        {plan.shortDescription ||
+                          "Comprehensive Home Safety Oversight & Proactive Hazard Removal."}
                       </p>
                     </div>
                   </div>
@@ -197,16 +197,11 @@ export function Step2ChoosePlan({
                         ${plan.price}
                       </span>
                       <span className="text-sm font-bold text-[#64748B]">
-                        /{" "}
-                        {plan.billingInterval?.toLowerCase() === "annual"
-                          ? "year"
-                          : plan.billingInterval?.toLowerCase() === "MONTHLY"
-                            ? "quarter"
-                            : "month"}
+                        / month
                       </span>
                     </div>
                     <span className="text-xs font-semibold text-[#3F8F6B] mt-1 block">
-                      {plan.totalVisits || 12} Dedicated Home Visits / Year
+                      {plan.totalVisits} Dedicated Home Visits / month
                     </span>
                   </div>
 

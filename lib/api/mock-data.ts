@@ -34,7 +34,7 @@ export const MOCK_PLAN: ServicePlan = {
   id: "plan_gplus",
   name: "Guardian Plus",
   status: "active",
-  currentPeriod: "June 1, 2026 – August 31, 2026",
+  currentPeriod: "June 1, 2026 – June 30, 2026",
   renewalDate: "September 1, 2026",
   totalVisits: 12,
   completedVisits: 8,
@@ -45,7 +45,7 @@ export const MOCK_PLAN: ServicePlan = {
   safetyVisitsCompleted: 4,
   autoRenew: true,
   pricePerMonth: "$495.00",
-  pricePerQuarter: "$495.00",
+  pricePerPeriod: "$495.00",
 };
 
 export const MOCK_APPOINTMENTS: Appointment[] = [
@@ -151,7 +151,7 @@ export const MOCK_BILLING: BillingInfo = {
       id: "inv_301",
       invoiceNumber: "INV-2026-0601",
       date: "June 1, 2026",
-      description: "Guardian Plus - Q3 2026 Membership",
+      description: "Guardian Plus - June 2026 Monthly Membership",
       amount: "$495.00",
       status: "paid",
       pdfUrl: "#",
@@ -160,7 +160,7 @@ export const MOCK_BILLING: BillingInfo = {
       id: "inv_300",
       invoiceNumber: "INV-2026-0301",
       date: "March 1, 2026",
-      description: "Guardian Plus - Q2 2026 Membership",
+      description: "Guardian Plus - May 2026 Monthly Membership",
       amount: "$495.00",
       status: "paid",
       pdfUrl: "#",

@@ -169,8 +169,8 @@ export function Step8BillingSetup({
               </div>
             </div>
 
-            <div className="p-3.5 bg-white rounded-xl border border-[#D9E4EC] text-[11px] text-[#64748B] leading-relaxed">
-              Automatic recurring monthly billing begins on <strong>{commencementDateFormatted}</strong>. You may cancel anytime with 30 days notice in your member portal.
+            <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-[11px] text-[#64748B] leading-relaxed">
+              You won't be charged today. Your first charge and your first visit will both be on <strong>{commencementDateFormatted}</strong>. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
             </div>
           </div>
         </div>

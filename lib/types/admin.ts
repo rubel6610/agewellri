@@ -102,7 +102,7 @@ export interface AdminInvoice {
   invoiceNumber: string;
   amount: string;
   planName: string;
-  billingFrequency: "Monthly" | "MONTHLY" | "Annual";
+  billingFrequency: "Monthly";
   status: "paid" | "pending" | "failed" | "refunded";
   date: string;
   dueDate: string;

@@ -46,7 +46,7 @@ export default function CreatePlanPage() {
     fullDescription: "",
     price: 995,
     currency: "USD",
-    billingInterval: "MONTHLY" as "MONTHLY" | "MONTHLY" | "ANNUAL" | "ONE_TIME",
+    billingInterval: "MONTHLY" as "MONTHLY" | "ONE_TIME",
     displayOrder: 1,
     supportsAutomaticBilling: true,
     supportsInvoiceBilling: false,

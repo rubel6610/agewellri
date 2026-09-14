@@ -12,7 +12,10 @@ import { useProcessAgreementPaymentMutation } from "@/redux/features/payment/pay
 import { Step1CreateAccount } from "./steps/step1-create-account";
 import { Step2ChoosePlan } from "./steps/step2-choose-plan";
 import { Step3ResidentDetails } from "./steps/step3-resident-details";
-import { Step4AuthorizedRecipients, AuthorizedRecipient } from "./steps/step4-authorized-recipients";
+import {
+  Step4AuthorizedRecipients,
+  AuthorizedRecipient,
+} from "./steps/step4-authorized-recipients";
 import { Step5HomeAccess } from "./steps/step5-home-access";
 import { Step6AgreementSigning } from "./steps/step6-agreement-signing";
 import { Step7Authorizations } from "./steps/step7-authorizations";
@@ -50,7 +53,9 @@ interface SignupWizardProps {
   skipAccountStep?: boolean;
 }
 
-export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}) {
+export function SignupWizard({
+  skipAccountStep = false,
+}: SignupWizardProps = {}) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
@@ -68,10 +73,14 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
     router.replace("/login");
   };
 
-  const [currentStep, setCurrentStep] = useState<number>(skipAccountStep ? 2 : 1);
+  const [currentStep, setCurrentStep] = useState<number>(
+    skipAccountStep ? 2 : 1,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const visibleSteps = skipAccountStep ? STEPS.filter((s) => s.id !== 1) : STEPS;
+  const visibleSteps = skipAccountStep
+    ? STEPS.filter((s) => s.id !== 1)
+    : STEPS;
 
   // Master Wizard State
   const [accountData, setAccountData] = useState({
@@ -91,9 +100,12 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
     services: [] as Array<{ serviceName: string; allocatedVisits: number }>,
   });
 
+
   const [residentData, setResidentData] = useState({
     isSameAsAccountHolder: true,
-    fullName: authUser ? `${authUser.firstName} ${authUser.lastName}`.trim() : "",
+    fullName: authUser
+      ? `${authUser.firstName} ${authUser.lastName}`.trim()
+      : "",
     address: "",
     city: "Providence",
     state: "RI",
@@ -112,14 +124,18 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
       }));
       setResidentData((prev) => ({
         ...prev,
-        fullName: prev.fullName || `${authUser.firstName || ""} ${authUser.lastName || ""}`.trim(),
+        fullName:
+          prev.fullName ||
+          `${authUser.firstName || ""} ${authUser.lastName || ""}`.trim(),
         phone: prev.phone || authUser.phone || "",
         email: prev.email || authUser.email || "",
       }));
     }
   }, [authUser]);
 
-  const [authorizedRecipients, setAuthorizedRecipients] = useState<AuthorizedRecipient[]>([]);
+  const [authorizedRecipients, setAuthorizedRecipients] = useState<
+    AuthorizedRecipient[]
+  >([]);
 
   const [homeAccessData, setHomeAccessData] = useState({
     accessType: "RESIDENT_ANSWERS" as "RESIDENT_ANSWERS" | "DIGITAL_CODE",
@@ -179,13 +195,22 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
 
       setResidentData((prev) => ({
         ...prev,
-        fullName: prev.fullName || `${authUser.firstName} ${authUser.lastName}`.trim(),
+        fullName:
+          prev.fullName || `${authUser.firstName} ${authUser.lastName}`.trim(),
         address: prev.address || authUser.client?.address || "",
         city: prev.city || authUser.client?.city || "Providence",
         state: prev.state || authUser.client?.state || "RI",
         postalCode: prev.postalCode || authUser.client?.postalCode || "02906",
-        phone: prev.phone || authUser.client?.primaryContactPhone || authUser.phone || "",
-        email: prev.email || authUser.client?.primaryContactEmail || authUser.email || "",
+        phone:
+          prev.phone ||
+          authUser.client?.primaryContactPhone ||
+          authUser.phone ||
+          "",
+        email:
+          prev.email ||
+          authUser.client?.primaryContactEmail ||
+          authUser.email ||
+          "",
       }));
 
       if (skipAccountStep && currentStep === 1) {
@@ -245,7 +270,10 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleStep8PaymentSuccess = async (setupIntentId: string, paymentMethodId: string) => {
+  const handleStep8PaymentSuccess = async (
+    setupIntentId: string,
+    paymentMethodId: string,
+  ) => {
     setIsSubmitting(true);
     try {
       const agreementPayload = {
@@ -258,15 +286,26 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
         email: residentData.email || accountData.email,
 
         signingTrack: signingData.signingTrack,
-        signerRole: signingData.signingTrack === "TRACK_A" ? "RESIDENT" : "AUTHORIZED_REPRESENTATIVE",
+        signerRole:
+          signingData.signingTrack === "TRACK_A"
+            ? "RESIDENT"
+            : "AUTHORIZED_REPRESENTATIVE",
         representativeCapacity:
-          signingData.signingTrack === "TRACK_B" ? signingData.repCapacity : null,
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repCapacity
+            : null,
         authorityDocumentUrl:
-          signingData.signingTrack === "TRACK_B" ? signingData.authorityDocumentUrl : null,
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.authorityDocumentUrl
+            : null,
         signerName:
-          signingData.signingTrack === "TRACK_B" ? signingData.repFullName : residentData.fullName,
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repFullName
+            : residentData.fullName,
         relationshipToClient:
-          signingData.signingTrack === "TRACK_B" ? signingData.repRelationship : "Self",
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repRelationship
+            : "Self",
 
         authorizedRecipients: authorizedRecipients.map((r) => ({
           name: r.name,
@@ -276,14 +315,18 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
 
         homeAccessType: homeAccessData.accessType,
         homeAccessCode:
-          homeAccessData.accessType === "DIGITAL_CODE" ? homeAccessData.entryCode : null,
+          homeAccessData.accessType === "DIGITAL_CODE"
+            ? homeAccessData.entryCode
+            : null,
         homeAccessInstructions: homeAccessData.specialInstructions || null,
         homeAccessAuthorized: homeAccessData.isAuthorized,
 
         authorizations: {
           emergencyRightOfEntry: authorizationsData.emergencyRightOfEntry,
-          residentAutonomyAcknowledgment: authorizationsData.residentAutonomyAcknowledgment,
-          automaticBillingAuthorization: authorizationsData.automaticBillingAuthorization,
+          residentAutonomyAcknowledgment:
+            authorizationsData.residentAutonomyAcknowledgment,
+          automaticBillingAuthorization:
+            authorizationsData.automaticBillingAuthorization,
         },
 
         planId: planData.planId,
@@ -296,7 +339,9 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
         clientPrintedName:
           (signingData.signingTrack === "TRACK_A"
             ? signingData.residentPrintedName || residentData.fullName
-            : signingData.repFullName || residentData.fullName) || residentData.fullName || "Primary Resident",
+            : signingData.repFullName || residentData.fullName) ||
+          residentData.fullName ||
+          "Primary Resident",
         agreementDate: signingData.agreementDate,
         clientSignature: signingData.signatureDataUrl,
         agreedToTerms: true,
@@ -305,7 +350,10 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
       try {
         await submitAgreement(agreementPayload).unwrap();
       } catch (submitErr: any) {
-        if (submitErr?.originalStatus !== 200 && submitErr?.originalStatus !== 201) {
+        if (
+          submitErr?.originalStatus !== 200 &&
+          submitErr?.originalStatus !== 201
+        ) {
           throw submitErr;
         }
       }
@@ -410,8 +458,8 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
                       isCompleted
                         ? "bg-[#3F8F6B] text-white shadow-sm"
                         : isCurrent
-                        ? "bg-[#294B68] text-white shadow-md ring-4 ring-[#294B68]/15"
-                        : "bg-white border border-[#D9E4EC] text-[#94A3B8]"
+                          ? "bg-[#294B68] text-white shadow-md ring-4 ring-[#294B68]/15"
+                          : "bg-white border border-[#D9E4EC] text-[#94A3B8]"
                     }`}
                   >
                     {isCompleted ? (
@@ -425,8 +473,8 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
                       isCurrent
                         ? "text-[#294B68]"
                         : isCompleted
-                        ? "text-[#3F8F6B]"
-                        : "text-[#94A3B8]"
+                          ? "text-[#3F8F6B]"
+                          : "text-[#94A3B8]"
                     }`}
                   >
                     {step.label}
@@ -523,7 +571,10 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
       {/* Footer */}
       <footer className="max-w-5xl mx-auto w-full pt-8 mt-12 border-t border-[#D9E4EC] text-center text-xs text-[#64748B] space-y-2">
         <div className="flex items-center justify-center gap-4 font-semibold">
-          <Link href="/privacy-policy" className="hover:text-[#294B68] underline">
+          <Link
+            href="/privacy-policy"
+            className="hover:text-[#294B68] underline"
+          >
             Privacy Policy
           </Link>
           <span>&bull;</span>
@@ -531,11 +582,13 @@ export function SignupWizard({ skipAccountStep = false }: SignupWizardProps = {}
             Terms of Use
           </Link>
           <span>&bull;</span>
-          <a href="mailto:support@agewellri.com" className="hover:text-[#294B68]">
-            support@agewellri.com
+          <a href="mailto:agewellri@gmail.com" className="hover:text-[#294B68]">
+            agewellri@gmail.com
           </a>
         </div>
-        <p>&copy; {new Date().getFullYear()} AgeWellRI Care Management LLC. All rights reserved.</p>
+        <p>
+          AgeWellRI LLC
+        </p>
       </footer>
     </div>
   );

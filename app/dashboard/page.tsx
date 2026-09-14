@@ -46,7 +46,7 @@ export default function DashboardHomePage() {
         month: "short",
         day: "numeric",
       })} – ${renewalDateFormatted}`
-    : "Current Quarter";
+    : "Current Period";
 
   const safetyEntitlement = entitlementsData?.entitlements?.find(
     (e: any) =>
@@ -132,7 +132,7 @@ export default function DashboardHomePage() {
         </div>
       </div>
 
-      {/* Active Service Quarter Renewal & Scheduling Action Banner */}
+      {/* Active Service Monthly Renewal & Scheduling Action Banner */}
       {isEntitlementsLoading ? (
         <div className="p-6 bg-gradient-to-r from-[#294B68]/30 to-[#1E374D]/30 rounded-2xl sm:rounded-3xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-pulse">
           <div className="flex items-start gap-3.5 flex-1">
@@ -154,7 +154,7 @@ export default function DashboardHomePage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  New Service Quarter Active
+                  New Service Active
                 </span>
                 <span className="text-xs text-white/70 font-semibold">{periodFormatted}</span>
               </div>
@@ -162,7 +162,7 @@ export default function DashboardHomePage() {
                 Your Safety Visits Are Ready to Schedule
               </h3>
               <p className="text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
-                You have <strong>{entitlementsData.totalRemaining} visit{entitlementsData.totalRemaining > 1 ? "s" : ""}</strong> available this quarter (
+                You have <strong>{entitlementsData.totalRemaining} visit{entitlementsData.totalRemaining > 1 ? "s" : ""}</strong> available this month (
                 {entitlementsData.entitlements
                   ?.filter((e: any) => e.remaining > 0)
                   .map((e: any) => `${e.serviceName}: ${e.remaining}`)

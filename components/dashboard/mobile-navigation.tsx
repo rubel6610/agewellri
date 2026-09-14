@@ -20,7 +20,10 @@ import {
 } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
-import { confirmCriticalAction, showSuccessAlert } from "@/lib/alerts/sweetalert";
+import {
+  confirmCriticalAction,
+  showSuccessAlert,
+} from "@/lib/alerts/sweetalert";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -28,7 +31,11 @@ interface MobileNavigationProps {
   onOpenScheduleModal: () => void;
 }
 
-export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: MobileNavigationProps) {
+export function MobileNavigation({
+  isOpen,
+  onClose,
+  onOpenScheduleModal,
+}: MobileNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -54,14 +61,18 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
     e.preventDefault();
     showSuccessAlert(
       "AgeWellRI Member Concierge",
-      "24/7 Safety Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: support@agewellri.com\nDedicated Rhode Island Staff"
+      "24/7 Safety Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: agewellri@gmail.com\nDedicated Rhode Island Staff",
     );
   };
 
   const navItems = [
     { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { label: "My Calendar", href: "/dashboard/calendar", icon: CalendarDays },
-    { label: "My Safety Visits", href: "/dashboard/appointments", icon: CalendarCheck },
+    {
+      label: "My Safety Visits",
+      href: "/dashboard/appointments",
+      icon: CalendarCheck,
+    },
     { label: "My Reports", href: "/dashboard/reports", icon: FileCheck2 },
     { label: "My Agreements", href: "/dashboard/agreements", icon: FileText },
     { label: "My Billings", href: "/dashboard/billing", icon: CreditCard },
@@ -125,12 +136,15 @@ export function MobileNavigation({ isOpen, onClose, onOpenScheduleModal }: Mobil
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-base transition-colors ${isActive
+                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-base transition-colors ${
+                    isActive
                       ? "bg-[#294B68] text-white"
                       : "text-[#243746] hover:bg-[#EAF3F8]"
-                    }`}
+                  }`}
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? "text-white" : "text-[#5E8FB2]"}`} />
+                  <Icon
+                    className={`w-5 h-5 ${isActive ? "text-white" : "text-[#5E8FB2]"}`}
+                  />
                   <span>{item.label}</span>
                 </Link>
               );

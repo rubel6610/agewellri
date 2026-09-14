@@ -224,10 +224,10 @@ export default function ReportDetailPage({
             Have questions about this visit report? Contact AgeWellRI Safety
             Support at{" "}
             <a
-              href="mailto:support@agewellri.com"
+              href="mailto:agewellri@gmail.com"
               className="font-bold text-[#294B68] underline"
             >
-              support@agewellri.com
+              agewellri@gmail.com
             </a>{" "}
             or (401) 212-3002.
           </div>

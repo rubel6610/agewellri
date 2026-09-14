@@ -22,7 +22,7 @@ export interface ServicePlan {
   safetyVisitsCompleted: number;
   autoRenew?: boolean;
   pricePerMonth?: string;
-  pricePerQuarter?: string;
+  pricePerPeriod?: string;
 }
 
 export type VisitType = "Safety Oversight" | "Cleaning";
@@ -80,7 +80,7 @@ export interface Invoice {
 
 export interface BillingInfo {
   currentPlanName: ServicePlanType;
-  billingFrequency: "Monthly" | "MONTHLY" | "Annual";
+  billingFrequency: "Monthly";
   paymentMethod: {
     brand: string;
     last4: string;

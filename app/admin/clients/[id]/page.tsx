@@ -645,12 +645,12 @@ export default function ClientDetailPage({
         {/* TAB: VISITS & REPORTS */}
         {activeTab === "visits" && (
           <div className="space-y-5 pt-2">
-            {/* Active Quarter Entitlement Summary */}
+            {/* Active Month Entitlement Summary */}
             <div className="p-5 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#294B68] text-white">
-                    Current Active Quarter
+                    Current Active Month
                   </span>
                   {client.renewalDate && (
                     <span className="text-xs text-[#64748B] font-semibold">

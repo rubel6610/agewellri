@@ -172,7 +172,7 @@ export function PaymentStepCard({
                       {planName}
                     </h3>
                     <span className="text-[11px] text-[#64748B] font-semibold">
-                      {planObj?.totalVisits || (selectedPlan === "GUARDIAN_PLUS" ? 12 : 6)} Visits / {billingInterval.toLowerCase()}
+                      {planObj?.totalVisits || (selectedPlan === "GUARDIAN_PLUS" ? 12 : 6)} Visits / month
                     </span>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export function PaymentStepCard({
               <p className="text-[11px] text-[#94A3B8] text-right">
                 {isOneTime
                   ? "One-time charge. No recurring subscription."
-                  : `Contracted rate billed ${billingInterval.toLowerCase()}. Cancel anytime.`}
+                  : "Contracted rate billed monthly. Cancel anytime."}
               </p>
             </div>
           </div>

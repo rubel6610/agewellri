@@ -450,10 +450,8 @@ export default function BillingAdminPage() {
                 }}
                 className="px-2.5 py-1.5 text-xs font-semibold bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
               >
-                <option value="ALL">All Intervals</option>
+                <option value="ALL">All Renewals</option>
                 <option value="MONTHLY">Monthly (15-day alert)</option>
-                <option value="MONTHLY">MONTHLY (15-day alert)</option>
-                <option value="ANNUAL">Annual (15-day alert)</option>
               </select>
             )}
           </div>

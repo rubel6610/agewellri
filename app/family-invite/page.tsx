@@ -28,7 +28,11 @@ import {
 } from "@/redux/features/family/familyApi";
 import { useAppDispatch } from "@/redux/hooks";
 import { setCredentials } from "@/redux/features/auth/authSlice";
-import { showSuccessAlert, showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showToast,
+} from "@/lib/alerts/sweetalert";
 
 function FamilyInviteForm() {
   const router = useRouter();
@@ -46,7 +50,8 @@ function FamilyInviteForm() {
     skip: !token,
   });
 
-  const [acceptInvite, { isLoading: isSubmitting }] = useAcceptFamilyInviteMutation();
+  const [acceptInvite, { isLoading: isSubmitting }] =
+    useAcceptFamilyInviteMutation();
 
   const inviteData = verifyRes?.data;
 
@@ -83,9 +88,12 @@ function FamilyInviteForm() {
         <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
           <AlertCircle className="w-7 h-7" />
         </div>
-        <h2 className="text-xl font-bold text-[#243746]">Missing Invitation Token</h2>
+        <h2 className="text-xl font-bold text-[#243746]">
+          Missing Invitation Token
+        </h2>
         <p className="text-sm text-[#64748B]">
-          Please check your email and click the official invitation link provided by AgeWellRI.
+          Please check your email and click the official invitation link
+          provided by AgeWellRI.
         </p>
         <Link
           href="/login"
@@ -121,7 +129,9 @@ function FamilyInviteForm() {
         <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
           <AlertCircle className="w-7 h-7" />
         </div>
-        <h2 className="text-xl font-bold text-[#243746]">Invitation Link Invalid</h2>
+        <h2 className="text-xl font-bold text-[#243746]">
+          Invitation Link Invalid
+        </h2>
         <p className="text-sm text-[#64748B] leading-relaxed">{errorMsg}</p>
         <div className="pt-2 flex flex-col gap-2">
           <Link
@@ -132,7 +142,7 @@ function FamilyInviteForm() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <p className="text-[11px] text-[#94A3B8]">
-            Need help? Contact support@agewellri.com
+            Need help? Contact agewellri@gmail.com
           </p>
         </div>
       </div>
@@ -188,14 +198,16 @@ function FamilyInviteForm() {
         showToast("Welcome to AgeWellRI!", "success");
         await showSuccessAlert(
           "Account Activated!",
-          `Welcome to AgeWellRI, ${user.firstName}. Your family portal account is ready.`
+          `Welcome to AgeWellRI, ${user.firstName}. Your family portal account is ready.`,
         );
 
         router.push("/dashboard");
       }
     } catch (err: any) {
       const message =
-        err?.data?.message || err?.message || "Failed to activate your account.";
+        err?.data?.message ||
+        err?.message ||
+        "Failed to activate your account.";
       showErrorAlert("Activation Error", message);
     }
   };
@@ -212,8 +224,8 @@ function FamilyInviteForm() {
         </h1>
         <p className="text-xs sm:text-sm text-[#64748B]">
           You have been invited by{" "}
-          <strong className="text-[#243746]">{inviteData.clientName}</strong> to join their
-          AgeWellRI safety network as their{" "}
+          <strong className="text-[#243746]">{inviteData.clientName}</strong> to
+          join their AgeWellRI safety network as their{" "}
           <strong className="text-[#294B68]">{inviteData.relationship}</strong>.
         </p>
       </div>
@@ -259,7 +271,9 @@ function FamilyInviteForm() {
                   setFormData({ ...formData, firstName: e.target.value })
                 }
                 className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                  errors.firstName ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                  errors.firstName
+                    ? "border-rose-400 bg-rose-50/20"
+                    : "border-[#D9E4EC]"
                 }`}
               />
             </div>
@@ -283,7 +297,9 @@ function FamilyInviteForm() {
                   setFormData({ ...formData, lastName: e.target.value })
                 }
                 className={`w-full pl-9 pr-3 py-2 rounded-xl border text-sm text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                  errors.lastName ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                  errors.lastName
+                    ? "border-rose-400 bg-rose-50/20"
+                    : "border-[#D9E4EC]"
                 }`}
               />
             </div>
@@ -314,7 +330,10 @@ function FamilyInviteForm() {
         {/* Phone Field */}
         <div>
           <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
-            Phone Number <span className="text-[11px] font-normal text-[#64748B]">(Optional)</span>
+            Phone Number{" "}
+            <span className="text-[11px] font-normal text-[#64748B]">
+              (Optional)
+            </span>
           </label>
           <div className="relative">
             <Phone className="w-4 h-4 text-[#64748B] absolute left-3 top-3" />
@@ -345,7 +364,9 @@ function FamilyInviteForm() {
                 setFormData({ ...formData, password: e.target.value })
               }
               className={`w-full pl-9 pr-10 py-2 rounded-xl border text-sm text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                errors.password ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                errors.password
+                  ? "border-rose-400 bg-rose-50/20"
+                  : "border-[#D9E4EC]"
               }`}
             />
             <button
@@ -353,7 +374,11 @@ function FamilyInviteForm() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-2.5 text-[#64748B] hover:text-[#243746] cursor-pointer"
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
             </button>
           </div>
           {errors.password && (
@@ -415,11 +440,17 @@ function FamilyInviteForm() {
             />
             <span className="text-xs text-[#64748B] leading-tight">
               I agree to the AgeWellRI{" "}
-              <Link href="/terms-of-use" className="text-[#294B68] font-bold underline">
+              <Link
+                href="/terms-of-use"
+                className="text-[#294B68] font-bold underline"
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy-policy" className="text-[#294B68] font-bold underline">
+              <Link
+                href="/privacy-policy"
+                className="text-[#294B68] font-bold underline"
+              >
                 Privacy Policy
               </Link>
               .

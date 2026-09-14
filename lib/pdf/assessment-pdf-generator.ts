@@ -359,7 +359,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setFontSize(7.5);
     doc.setTextColor(...primaryNavy);
     doc.text(
-      `AgeWellRI Safety Coordination • (401) 212-3002 • support@agewellri.com • Westerly, Rhode Island`,
+      `AgeWellRI Safety Coordination • (401) 212-3002 • agewellri@gmail.com • Westerly, Rhode Island`,
       pageWidth / 2,
       footerY + 11,
       { align: "center" },
