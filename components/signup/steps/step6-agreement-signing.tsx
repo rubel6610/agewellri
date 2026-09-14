@@ -28,7 +28,7 @@ const AGEWELL_OWNER_DETAILS = {
 };
 
 const OWNER_SIGNATURE_SVG_DATA_URI =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.5' fill='none' stroke-linecap='round'/><text x='25' y='60' font-family='cursive' font-size='18' fill='%23294B68'>Cory Poplaski</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M 45 42 Q 85 58 140 48' stroke='%23294B68' stroke-width='1.8' fill='none' stroke-linecap='round'/></svg>";
 
 interface Step6AgreementSigningProps {
   planDetails: {

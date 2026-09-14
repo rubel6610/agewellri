@@ -5,6 +5,12 @@ export interface SpecialistItem {
   phone?: string | null;
   title: string;
   specialties: string[];
+  shssCertified?: boolean;
+  shssRenewalDate?: string | null;
+  cprCertified?: boolean;
+  aedCertified?: boolean;
+  backgroundChecked?: boolean;
+  bilingualSpanish?: boolean;
   color: string;
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
   notes?: string | null;
@@ -20,6 +26,12 @@ export interface CreateSpecialistPayload {
   phone?: string | null;
   title?: string;
   specialties?: string[];
+  shssCertified?: boolean;
+  shssRenewalDate?: string | null;
+  cprCertified?: boolean;
+  aedCertified?: boolean;
+  backgroundChecked?: boolean;
+  bilingualSpanish?: boolean;
   color?: string;
   notes?: string | null;
   displayOrder?: number;
@@ -32,6 +44,12 @@ export interface UpdateSpecialistPayload {
   phone?: string | null;
   title?: string;
   specialties?: string[];
+  shssCertified?: boolean;
+  shssRenewalDate?: string | null;
+  cprCertified?: boolean;
+  aedCertified?: boolean;
+  backgroundChecked?: boolean;
+  bilingualSpanish?: boolean;
   color?: string;
   notes?: string | null;
   displayOrder?: number;

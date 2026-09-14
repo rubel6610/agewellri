@@ -81,26 +81,79 @@ export interface AdminAgreementRecord {
   clientId: string;
   clientNumber: string;
   clientName: string;
+  clientFullName?: string;
+  clientPrintedName?: string;
   clientEmail: string;
+  email?: string;
+  phone?: string | null;
+  dob?: string | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state: string;
+  postalCode?: string | null;
+
   primaryContactName?: string;
   primaryContactPhone?: string | null;
   primaryContactEmail?: string;
   primaryContactRelation?: string;
+  primaryBillingContact?: string;
+
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactEmail?: string | null;
+  emergencyContactRelation?: string | null;
+
+  authorizedRecipients?: Array<{
+    name: string;
+    relationship: string;
+    email: string;
+    phone?: string | null;
+  }>;
+
+  homeAccessType?: string;
+  homeAccessInstructions?: string | null;
+  homeAccessCode?: string | null;
+  homeAccessAuthorized?: boolean;
+
+  authorizations?: {
+    emergencyRightOfEntry?: boolean;
+    residentAutonomyAcknowledgment?: boolean;
+    automaticBillingAuthorization?: boolean;
+  };
+
+  signingTrack?: "TRACK_A" | "TRACK_B";
+  representativeCapacity?: string | null;
+  repFullName?: string | null;
+  authorizedRepName?: string | null;
+  relationshipToClient?: string | null;
+  authorityDocumentUrl?: string | null;
+  documentUrl?: string | null;
+
   title: string;
-  state: string;
   version: string;
+  templateVersion?: string;
   signerRole: string;
   signerName: string;
+  signerEmail?: string | null;
+  signerPhone?: string | null;
   legalAuthority?: string;
+  legalAuthorityOther?: string | null;
   status: string;
   cancellationDeadline?: string;
   cancellationDeadlineRule?: string;
   planName: string;
+  selectedPlan?: string;
   planPrice: number;
   signedDate?: string | null;
+  signedAt?: string | null;
   executedAt?: string | null;
+  agreementDate?: string | null;
+  stateAddress?: string;
   hasCleaningAddon: boolean;
   clientSignature?: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface ClientAccessMethod {

@@ -239,9 +239,7 @@ export default function BillingAdminPage() {
             Financial &amp; Subscription Operations
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            <strong>Monthly billing:</strong> Auto-renews on the 1st of each
-            month · 15-day notice · 10-day cancellation window · Visits
-            scheduled per client each month.
+            <strong>Monthly billing:</strong> Auto-renews on the 1st of each month · Billing notice sent 15 days before month-end · Cancel at least 10 days before month-end to stop the next charge · Visits scheduled per client each month.
           </p>
         </div>
 

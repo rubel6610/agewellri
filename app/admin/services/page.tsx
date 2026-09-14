@@ -36,7 +36,12 @@ import { TablePagination } from "@/components/ui/table-pagination";
 
 const CATEGORY_CONFIG: Record<
   string,
-  { label: string; icon: React.ElementType; colorClass: string; bgClass: string }
+  {
+    label: string;
+    icon: React.ElementType;
+    colorClass: string;
+    bgClass: string;
+  }
 > = {
   SAFETY_OVERSIGHT: {
     label: "Safety Oversight",
@@ -68,10 +73,13 @@ export default function AdminServicesPage() {
 
   const [createService, { isLoading: isCreating }] = useCreateServiceMutation();
   const [updateService, { isLoading: isUpdating }] = useUpdateServiceMutation();
-  const [changeServiceStatus, { isLoading: isStatusChanging }] = useChangeServiceStatusMutation();
+  const [changeServiceStatus, { isLoading: isStatusChanging }] =
+    useChangeServiceStatusMutation();
   const [deleteService, { isLoading: isDeleting }] = useDeleteServiceMutation();
 
-  const [editingService, setEditingService] = useState<ServiceItem | null>(null);
+  const [editingService, setEditingService] = useState<ServiceItem | null>(
+    null,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -88,9 +96,11 @@ export default function AdminServicesPage() {
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.code && s.code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (s.description && s.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      (s.description &&
+        s.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory = categoryFilter === "ALL" || s.category === categoryFilter;
+    const matchesCategory =
+      categoryFilter === "ALL" || s.category === categoryFilter;
 
     const matchesStatus =
       statusFilter === "ALL" ||
@@ -167,12 +177,21 @@ export default function AdminServicesPage() {
     if (!confirmed) return;
 
     try {
-      await changeServiceStatus({ id: service.id, isActive: nextStatus }).unwrap();
-      showToast(`Service "${service.name}" ${nextStatus ? "activated" : "deactivated"}.`, "success");
+      await changeServiceStatus({
+        id: service.id,
+        isActive: nextStatus,
+      }).unwrap();
+      showToast(
+        `Service "${service.name}" ${nextStatus ? "activated" : "deactivated"}.`,
+        "success",
+      );
       refetch();
       refetchStats();
     } catch (err: any) {
-      showErrorAlert("Status Update Failed", err?.data?.message || "Failed to update service status.");
+      showErrorAlert(
+        "Status Update Failed",
+        err?.data?.message || "Failed to update service status.",
+      );
     }
   };
 
@@ -195,7 +214,10 @@ export default function AdminServicesPage() {
       refetch();
       refetchStats();
     } catch (err: any) {
-      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete service.");
+      showErrorAlert(
+        "Delete Failed",
+        err?.data?.message || "Failed to delete service.",
+      );
     }
   };
 
@@ -222,17 +244,26 @@ export default function AdminServicesPage() {
           id: editingService.id,
           body: formData,
         }).unwrap();
-        await showSuccessAlert("Service Updated", `"${formData.name}" updates have been saved.`);
+        await showSuccessAlert(
+          "Service Updated",
+          `"${formData.name}" updates have been saved.`,
+        );
       } else {
         await createService(formData).unwrap();
-        await showSuccessAlert("Service Created", `"${formData.name}" is now available in the catalog.`);
+        await showSuccessAlert(
+          "Service Created",
+          `"${formData.name}" is now available in the catalog.`,
+        );
       }
       setIsCreateModalOpen(false);
       setEditingService(null);
       refetch();
       refetchStats();
     } catch (err: any) {
-      showErrorAlert("Operation Failed", err?.data?.message || "Failed to save service.");
+      showErrorAlert(
+        "Operation Failed",
+        err?.data?.message || "Failed to save service.",
+      );
     }
   };
 
@@ -246,7 +277,8 @@ export default function AdminServicesPage() {
             Services Catalog
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Master library of individual services, visit durations, and assignable plan components.
+            Master library of individual services, visit durations, and
+            assignable plan components.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -259,7 +291,9 @@ export default function AdminServicesPage() {
             className="p-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-sm font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
             title="Refresh services catalog"
           >
-            <RefreshCw className={`w-4 h-4 ${(isFetching || isStatsLoading) ? "animate-spin text-[#294B68]" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isFetching || isStatsLoading ? "animate-spin text-[#294B68]" : ""}`}
+            />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
@@ -279,7 +313,9 @@ export default function AdminServicesPage() {
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Total Services</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Total Services
+            </div>
             <div className="text-2xl font-black text-[#243746]">
               {stats?.totalServices !== undefined
                 ? `${stats.totalServices} Catalog Items`
@@ -293,11 +329,19 @@ export default function AdminServicesPage() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Services</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Active Services
+            </div>
             <div className="text-2xl font-black text-[#243746]">
-              {stats?.activeServices !== undefined ? stats.activeServices : activeServicesCount}{" "}
+              {stats?.activeServices !== undefined
+                ? stats.activeServices
+                : activeServicesCount}{" "}
               <span className="text-sm font-semibold text-[#64748B]">
-                / {stats?.totalServices !== undefined ? stats.totalServices : services.length} Total
+                /{" "}
+                {stats?.totalServices !== undefined
+                  ? stats.totalServices
+                  : services.length}{" "}
+                Total
               </span>
             </div>
           </div>
@@ -308,7 +352,9 @@ export default function AdminServicesPage() {
             <SlidersHorizontal className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Service Categories</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Service Categories
+            </div>
             <div className="text-2xl font-black text-[#243746]">
               {stats?.totalCategories !== undefined
                 ? `${stats.totalCategories} Categories`
@@ -333,7 +379,9 @@ export default function AdminServicesPage() {
             All Categories ({stats ? stats.totalServices : services.length})
           </button>
           {Object.entries(CATEGORY_CONFIG).map(([key, config]) => {
-            const count = stats?.categoryBreakdown?.[key]?.total ?? services.filter((s) => s.category === key).length;
+            const count =
+              stats?.categoryBreakdown?.[key]?.total ??
+              services.filter((s) => s.category === key).length;
             const Icon = config.icon;
             return (
               <button
@@ -433,24 +481,35 @@ export default function AdminServicesPage() {
                   <td colSpan={6} className="py-16 text-center text-[#5E8FB2]">
                     <div className="flex flex-col items-center gap-2">
                       <Layers className="w-10 h-10 text-[#D9E4EC]" />
-                      <div className="text-base font-bold text-[#243746]">No services found</div>
+                      <div className="text-base font-bold text-[#243746]">
+                        No services found
+                      </div>
                       <p className="text-xs max-w-sm text-[#64748B]">
-                        No catalog items matched your selected filters. Try changing your search or click &quot;Add Service&quot; to create a new one.
+                        No catalog items matched your selected filters. Try
+                        changing your search or click &quot;Add Service&quot; to
+                        create a new one.
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginatedServices.map((service) => {
-                  const config = CATEGORY_CONFIG[service.category] || CATEGORY_CONFIG.SAFETY_OVERSIGHT;
+                  const config =
+                    CATEGORY_CONFIG[service.category] ||
+                    CATEGORY_CONFIG.SAFETY_OVERSIGHT;
                   const CategoryIcon = config.icon;
 
                   return (
-                    <tr key={service.id} className="hover:bg-[#F8FAFC] transition-colors">
+                    <tr
+                      key={service.id}
+                      className="hover:bg-[#F8FAFC] transition-colors"
+                    >
                       {/* Service Details */}
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl ${config.bgClass} ${config.colorClass} flex items-center justify-center font-bold shrink-0`}>
+                          <div
+                            className={`w-10 h-10 rounded-xl ${config.bgClass} ${config.colorClass} flex items-center justify-center font-bold shrink-0`}
+                          >
                             <CategoryIcon className="w-5 h-5" />
                           </div>
                           <div>
@@ -463,7 +522,8 @@ export default function AdminServicesPage() {
                               )}
                             </div>
                             <p className="text-xs text-[#64748B] mt-0.5 line-clamp-1 max-w-md">
-                              {service.description || "In-home safety oversight service component."}
+                              {service.description ||
+                                "In-home safety oversight service component."}
                             </p>
                           </div>
                         </div>
@@ -471,7 +531,9 @@ export default function AdminServicesPage() {
 
                       {/* Category */}
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md ${config.bgClass} ${config.colorClass}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md ${config.bgClass} ${config.colorClass}`}
+                        >
                           <CategoryIcon className="w-3.5 h-3.5" />
                           {config.label}
                         </span>
@@ -488,9 +550,13 @@ export default function AdminServicesPage() {
                       {/* Baseline Price */}
                       <td className="py-4 px-4 whitespace-nowrap text-xs font-bold text-[#243746]">
                         {service.defaultPrice && service.defaultPrice > 0 ? (
-                          <span className="text-[#243746]">${service.defaultPrice} / visit</span>
+                          <span className="text-[#243746]">
+                            ${service.defaultPrice} / visit
+                          </span>
                         ) : (
-                          <span className="text-[#64748B] font-semibold">Included in Plan</span>
+                          <span className="text-[#64748B] font-semibold">
+                            Included in Plan
+                          </span>
                         )}
                       </td>
 
@@ -508,11 +574,13 @@ export default function AdminServicesPage() {
                         >
                           {service.isActive ? (
                             <>
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />{" "}
+                              Active
                             </>
                           ) : (
                             <>
-                              <AlertCircle className="w-3 h-3 text-amber-600" /> Inactive
+                              <AlertCircle className="w-3 h-3 text-amber-600" />{" "}
+                              Inactive
                             </>
                           )}
                         </button>
@@ -566,7 +634,9 @@ export default function AdminServicesPage() {
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#294B68]" />
                 <h2 className="text-lg font-black text-[#243746]">
-                  {editingService ? "Edit Catalog Service" : "Create New Catalog Service"}
+                  {editingService
+                    ? "Edit Catalog Service"
+                    : "Create New Catalog Service"}
                 </h2>
               </div>
               <button
@@ -604,7 +674,12 @@ export default function AdminServicesPage() {
                     type="text"
                     placeholder="e.g. SAFETY_OVERSIGHT"
                     value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        code: e.target.value.toUpperCase(),
+                      })
+                    }
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-xs font-mono font-bold text-[#294B68]"
                   />
                 </div>
@@ -615,7 +690,9 @@ export default function AdminServicesPage() {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e: any) => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746]"
                   >
                     <option value="SAFETY_OVERSIGHT">Safety Oversight</option>
@@ -634,7 +711,10 @@ export default function AdminServicesPage() {
                     step={15}
                     value={formData.durationMinutes}
                     onChange={(e) =>
-                      setFormData({ ...formData, durationMinutes: parseInt(e.target.value) || 60 })
+                      setFormData({
+                        ...formData,
+                        durationMinutes: parseInt(e.target.value) || 60,
+                      })
                     }
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold"
                   />
@@ -650,7 +730,10 @@ export default function AdminServicesPage() {
                     step={1}
                     value={formData.defaultPrice || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, defaultPrice: parseFloat(e.target.value) || 0 })
+                      setFormData({
+                        ...formData,
+                        defaultPrice: parseFloat(e.target.value) || 0,
+                      })
                     }
                     placeholder="0"
                     className="w-full px-3 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-bold"
@@ -666,22 +749,29 @@ export default function AdminServicesPage() {
                   rows={3}
                   placeholder="Describe standard protocol tasks, audits, and checklists executed during this service visit..."
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="w-full px-3.5 py-2 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-medium focus:bg-white text-[#243746]"
                 />
               </div>
 
               <div className="flex items-center justify-between p-3 bg-[#F0F5F9] rounded-xl">
                 <div>
-                  <div className="text-xs font-bold text-[#243746]">Service Active in Catalog</div>
+                  <div className="text-xs font-bold text-[#243746]">
+                    Service Active in Catalog
+                  </div>
                   <div className="text-[11px] text-[#64748B]">
-                    Active services can be bundled into Service Plans and scheduled for visits.
+                    Active services can be assigned to Service Plans and
+                    scheduled for visits.
                   </div>
                 </div>
                 <input
                   type="checkbox"
                   checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isActive: e.target.checked })
+                  }
                   className="w-4 h-4 accent-[#294B68] rounded cursor-pointer"
                 />
               </div>
