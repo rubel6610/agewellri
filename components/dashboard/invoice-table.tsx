@@ -102,6 +102,10 @@ export function InvoiceTable({
         paymentMethod:
           inv.paymentMethod || paymentMethod || "Credit Card (Auto-Pay)",
         date: inv.date,
+        dueDate: inv.dueDate,
+        paidAt: inv.paidAt,
+        billingMonth: inv.billingMonth,
+        billingPeriod: inv.billingPeriod,
         status: inv.status,
         pdfUrl: inv.pdfUrl,
       });

@@ -174,8 +174,11 @@ export default function BillingAdminPage() {
         billingFrequency: inv.billingFrequency,
         paymentMethod: inv.paymentMethod,
         status: inv.status,
+        date: inv.date || inv.paidAt || inv.dueDate,
         dueDate: inv.dueDate,
         paidAt: inv.paidAt,
+        billingMonth: inv.billingMonth,
+        billingPeriod: inv.billingPeriod,
         pdfUrl: inv.pdfUrl,
       });
     } finally {

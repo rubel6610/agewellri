@@ -74,6 +74,10 @@ export interface InvoiceItem {
   billingFrequency?: string;
   paymentMethod?: string;
   date: string;
+  dueDate?: string;
+  paidAt?: string | null;
+  billingMonth?: string;
+  billingPeriod?: string;
   description: string;
   amount: string;
   status: "paid" | "open" | "overdue" | "draft" | "void" | string;
@@ -232,6 +236,9 @@ export interface AdminInvoiceItem {
   status: string;
   dueDate: string;
   paidAt?: string | null;
+  date?: string;
+  billingMonth?: string;
+  billingPeriod?: string;
   pdfUrl: string;
 }
 
