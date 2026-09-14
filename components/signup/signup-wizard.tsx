@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useSubmitAgreementMutation } from "@/redux/features/agreement/agreementApi";
-import { useProcessAgreementPaymentMutation } from "@/redux/features/payment/paymentApi";
 
 import { Step1CreateAccount } from "./steps/step1-create-account";
 import { Step2ChoosePlan } from "./steps/step2-choose-plan";
@@ -60,7 +59,6 @@ export function SignupWizard({
   const dispatch = useAppDispatch();
   const authUser = useAppSelector((state) => state.auth.user);
   const [submitAgreement] = useSubmitAgreementMutation();
-  const [processPayment] = useProcessAgreementPaymentMutation();
 
   const [mounted, setMounted] = useState(false);
 
@@ -355,20 +353,6 @@ export function SignupWizard({
           submitErr?.originalStatus !== 201
         ) {
           throw submitErr;
-        }
-      }
-
-      try {
-        await processPayment({
-          setupIntentId,
-          paymentMethodId,
-          plan: planData.planCode,
-          hasCleaningAddon: false,
-          billingMethod: "AUTOMATIC",
-        }).unwrap();
-      } catch (payErr: any) {
-        if (payErr?.originalStatus !== 200 && payErr?.originalStatus !== 201) {
-          throw payErr;
         }
       }
 

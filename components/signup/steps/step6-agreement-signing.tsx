@@ -693,23 +693,29 @@ export function Step6AgreementSigning({
               onTouchEnd={stopDrawing}
               className="w-full h-36 sm:h-40 cursor-crosshair touch-none bg-white"
             />
+
             {!hasSignature && (
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center text-xs text-[#94A3B8] font-medium">
-                Sign with your mouse or finger here
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center text-[#94A3B8] gap-1">
+                <span className="text-xs font-medium">
+                  Draw your digital signature here using mouse, trackpad, or
+                  finger
+                </span>
+                <span className="text-[10px] text-[#CBD5E1]">
+                  (Legally binding under the ESIGN Act)
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Portal Owner / AgeWellRI Authorized Counter-Signature Section */}
-        <div className="p-4 sm:p-5 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] space-y-3">
+        {/* AgeWellRI Pre-Execution Signature */}
+        <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2]">
-              AgeWellRI Provider Counterpart Signature
+            <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
+              AgeWellRI Authorized Signature (Pre-Executed)
             </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="w-3 h-3 text-emerald-600" />{" "}
-              Pre-Authorized
+            <span className="text-[11px] font-extrabold text-[#3F8F6B] bg-[#EBF8F2] px-2.5 py-0.5 rounded-full">
+              Executed by Provider
             </span>
           </div>
 
