@@ -12,8 +12,10 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
+  Download,
 } from "lucide-react";
 import { useUploadAuthorityDocumentMutation } from "@/redux/features/agreement/agreementApi";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 
 interface Point {
   x: number;
@@ -574,9 +576,9 @@ export function Step6AgreementSigning({
               </label>
 
               {authorityDocumentUrl ? (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <FileCheck className="w-6 h-6 text-emerald-600" />
+                    <FileCheck className="w-6 h-6 text-emerald-600 shrink-0" />
                     <div>
                       <h5 className="font-bold text-xs text-emerald-900">
                         {authorityDocumentName ||
@@ -587,15 +589,32 @@ export function Step6AgreementSigning({
                       </span>
                     </div>
                   </div>
-                  <label className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer">
-                    Replace
-                    <input
-                      type="file"
-                      accept=".pdf,.png,.jpg,.jpeg"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadAuthorityDocument({
+                          url: authorityDocumentUrl,
+                          fileName: authorityDocumentName || "Legal_Authority_Document.pdf",
+                        })
+                      }
+                      className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
+                      title="Download uploaded document to verify"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+                    <span className="text-emerald-300">|</span>
+                    <label className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer">
+                      Replace
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 </div>
               ) : (
                 <label className="p-6 border-2 border-dashed border-[#CBD5E1] hover:border-[#294B68] rounded-2xl bg-white flex flex-col items-center justify-center gap-2 cursor-pointer transition-all">

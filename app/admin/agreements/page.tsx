@@ -8,7 +8,7 @@ import {
   useDeleteAdminAgreementMutation,
   AdminAgreementRecord,
 } from "@/redux/features/client/clientApi";
-import { FileText, ShieldCheck, AlertCircle, Send, Download, Loader2, Search, Trash2, RefreshCw } from "lucide-react";
+import { FileText, ShieldCheck, AlertCircle, Send, Download, Loader2, Search, Trash2, RefreshCw, FileCheck } from "lucide-react";
 import {
   confirmCriticalAction,
   confirmDelete,
@@ -19,6 +19,7 @@ import {
 import { TablePagination } from "@/components/ui/table-pagination";
 import { AgreementPreviewModal } from "@/components/admin/agreement-preview-modal";
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 
 export default function AgreementsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -273,6 +274,26 @@ export default function AgreementsAdminPage() {
                           {agr.signerRole.replace(/_/g, " ").toLowerCase()}{" "}
                           {agr.legalAuthority ? `(${agr.legalAuthority.replace(/_/g, " ")})` : ""}
                         </span>
+                        {(agr.authorityDocumentUrl || agr.documentUrl) ? (
+                          <div className="mt-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadAuthorityDocument({
+                                  url: agr.authorityDocumentUrl || agr.documentUrl,
+                                  agreementId: agr.id,
+                                  customName: `AgeWellRI_Legal_Authority_${agr.clientName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-2xs"
+                              title="Download Uploaded Legal Authority Document (POA / Guardianship)"
+                            >
+                              <FileCheck className="w-3 h-3 text-emerald-600" />
+                              <span>POA Doc</span>
+                              <Download className="w-2.5 h-2.5 text-emerald-700 ml-0.5" />
+                            </button>
+                          </div>
+                        ) : null}
                       </td>
 
                       {/* Status */}

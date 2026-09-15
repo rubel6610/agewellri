@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 import { AgreementDocumentContent } from "./agreement-document-content";
 
@@ -19,6 +20,14 @@ interface FullAgreementViewerProps {
 
 export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  const authDocUrl = agreement.authorityDocumentUrl || agreement.documentUrl;
+  const signerName =
+    agreement.repFullName ||
+    agreement.signerName ||
+    agreement.authorizedRepName ||
+    agreement.clientFullName ||
+    "Signer";
 
   const statusUpper = (agreement.status || "").toUpperCase();
   const isExecuted =
@@ -106,8 +115,28 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center flex-wrap gap-2.5 shrink-0">
+          {/* {authDocUrl ? (
+            <button
+              type="button"
+              onClick={() =>
+                downloadAuthorityDocument({
+                  url: authDocUrl,
+                  agreementId: agreement.id,
+                  customName: `AgeWellRI_Legal_Authority_${signerName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                })
+              }
+              className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs sm:text-sm rounded-xl border border-emerald-300 transition-colors flex items-center gap-2 cursor-pointer shadow-2xs"
+              title="Download Uploaded Legal Authority Document (POA / Guardianship)"
+            >
+              <FileCheck className="w-4 h-4 text-emerald-600" />
+              <span>Authority Doc</span>
+              <Download className="w-3.5 h-3.5 text-emerald-700" />
+            </button>
+          ) : null} */}
+
           <button
+            type="button"
             onClick={handlePrint}
             className="px-4 py-2.5 bg-[#F7FAFC] hover:bg-[#EAF3F8] text-[#243746] font-bold text-xs sm:text-sm rounded-xl border border-[#D9E4EC] transition-colors flex items-center gap-2 cursor-pointer"
             title="Print or Save as PDF"
@@ -117,6 +146,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
           </button>
 
           <button
+            type="button"
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
             className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-75"
@@ -141,3 +171,4 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
     </div>
   );
 }
+

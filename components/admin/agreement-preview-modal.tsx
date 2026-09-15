@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AdminAgreementRecord } from "@/redux/features/client/clientApi";
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 import { showToast, showErrorAlert } from "@/lib/alerts/sweetalert";
 import { AgreementDocumentContent } from "../dashboard/agreement-document-content";
 
@@ -27,6 +28,13 @@ export function AgreementPreviewModal({
   const [isDownloading, setIsDownloading] = useState(false);
 
   if (!isOpen || !agreement) return null;
+
+  const authDocUrl = agreement.authorityDocumentUrl || agreement.documentUrl;
+  const signerName =
+    agreement.signerName ||
+    agreement.clientFullName ||
+    agreement.clientName ||
+    "Signer";
 
   const rawDate =
     agreement.agreementDate ||
@@ -85,7 +93,25 @@ export function AgreementPreviewModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            {authDocUrl ? (
+              <button
+                type="button"
+                onClick={() =>
+                  downloadAuthorityDocument({
+                    url: authDocUrl,
+                    agreementId: agreement.id,
+                    customName: `AgeWellRI_Legal_Authority_${signerName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                  })
+                }
+                className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Download Uploaded Legal Authority Document (POA / Guardianship)"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Authority Doc</span>
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={handleDownload}
@@ -130,6 +156,23 @@ export function AgreementPreviewModal({
             Official legal service agreement record for <strong>{agreement.clientName}</strong>
           </span>
           <div className="flex items-center gap-2">
+            {authDocUrl ? (
+              <button
+                type="button"
+                onClick={() =>
+                  downloadAuthorityDocument({
+                    url: authDocUrl,
+                    agreementId: agreement.id,
+                    customName: `AgeWellRI_Legal_Authority_${signerName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                  })
+                }
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Authority Doc</span>
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={handleDownload}
@@ -157,3 +200,4 @@ export function AgreementPreviewModal({
     </div>
   );
 }
+
