@@ -471,7 +471,7 @@ export function AgreementDocumentContent({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[#D9E4EC]">
+          {/* <div className="pt-2 border-t border-[#D9E4EC]">
             <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider block">
               Special Access Instructions &amp; Security Protocol
             </span>
@@ -479,7 +479,7 @@ export function AgreementDocumentContent({
               {agreement.homeAccessInstructions ||
                 "Standard entry protocol. Specialist will knock and verify identity prior to entering property."}
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -505,7 +505,7 @@ export function AgreementDocumentContent({
                 </p>
               </div>
             </div>
-            {agreement.hasCleaningAddon ? (
+            {/* {agreement.hasCleaningAddon ? (
               <div className="pl-12.5 pt-0.5">
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#166534] bg-white px-2.5 py-0.5 rounded-md border border-[#166534]/30 shadow-2xs">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#166534]" />
@@ -522,7 +522,7 @@ export function AgreementDocumentContent({
                   $0.00 charged today
                 </span>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="text-left sm:text-right sm:border-l sm:border-[#D9E4EC] sm:pl-6 shrink-0">
@@ -610,7 +610,7 @@ export function AgreementDocumentContent({
       </div>
 
       {/* 8. State Statutory Consumer Rights */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4">
         <div className="bg-[#991B1B] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
           <span>
             8. State Statutory Consumer Rights ({agreement.state || "RI"})
@@ -635,13 +635,13 @@ export function AgreementDocumentContent({
             </p>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* 9. Required Contract Authorizations & Legal Consents (Exact Contract Clauses) */}
       <div className="space-y-4">
         <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
           <span>
-            9. Mandatory Legal Authorizations &amp; Consents (Sections 12.2 -
+            8. Mandatory Legal Authorizations &amp; Consents (Sections 12.2 -
             12.4)
           </span>
         </div>
@@ -737,7 +737,7 @@ export function AgreementDocumentContent({
       {/* 10. Dual E-Signatures Execution */}
       <div className="space-y-4">
         <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
-          <span>10. Execution &amp; Dual Electronic Signatures</span>
+          <span>9. Execution Electronic Signatures</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -798,7 +798,7 @@ export function AgreementDocumentContent({
           <div className="p-5 bg-[#EBF8F2] rounded-2xl border border-emerald-200 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#2E7D32] uppercase tracking-wider block">
-                AgeWellRI Provider Counter-Signature
+                AgeWellRI Authorized Signatur
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-emerald-800 border border-emerald-300">
                 <ShieldCheck className="w-3 h-3 text-emerald-600" /> Authorized

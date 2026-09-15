@@ -587,23 +587,23 @@ export async function downloadAgreementPdf(
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...mutedText);
-  doc.text(
-    "SPECIAL ACCESS INSTRUCTIONS & SECURITY PROTOCOL",
-    margin + 3.5,
-    y + 13.5,
-  );
+  // doc.text(
+  //   "SPECIAL ACCESS INSTRUCTIONS & SECURITY PROTOCOL",
+  //   margin + 3.5,
+  //   y + 13.5,
+  // );
 
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...darkText);
-  const instructions =
-    agreement.homeAccessInstructions ||
-    "Standard entry protocol. Specialist will knock and verify identity prior to entering property.";
-  doc.text(
-    instructions.length > 95 ? instructions.slice(0, 95) + "..." : instructions,
-    margin + 3.5,
-    y + 17.5,
-  );
+  // doc.setFontSize(7);
+  // doc.setFont("helvetica", "normal");
+  // doc.setTextColor(...darkText);
+  // const instructions =
+  //   agreement.homeAccessInstructions ||
+  //   "Standard entry protocol. Specialist will knock and verify identity prior to entering property.";
+  // doc.text(
+  //   instructions.length > 95 ? instructions.slice(0, 95) + "..." : instructions,
+  //   margin + 3.5,
+  //   y + 17.5,
+  // );
 
   y += 22.5;
 
@@ -713,51 +713,51 @@ export async function downloadAgreementPdf(
 
   y += 32.5;
 
-  // ==========================================
-  // 8. State Statutory Consumer Rights & Cancellation
-  // ==========================================
-  drawSectionHeader(
-    `8. Statutory Consumer Protection & Cancellation Rights (${stateCode})`,
-  );
-  checkPageBreak(25);
+  // // ==========================================
+  // // 8. State Statutory Consumer Rights & Cancellation
+  // // ==========================================
+  // drawSectionHeader(
+  //   `8. Statutory Consumer Protection & Cancellation Rights (${stateCode})`,
+  // );
+  // checkPageBreak(25);
 
-  doc.setFillColor(254, 242, 242);
-  doc.setDrawColor(252, 165, 165);
-  doc.roundedRect(margin, y, contentWidth, 23, 1, 1, "FD");
+  // doc.setFillColor(254, 242, 242);
+  // doc.setDrawColor(252, 165, 165);
+  // doc.roundedRect(margin, y, contentWidth, 23, 1, 1, "FD");
 
-  doc.setFontSize(7);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(153, 27, 27);
-  doc.text(
-    "NOTICE OF MANDATORY 3-BUSINESS-DAY RIGHT TO CANCEL",
-    margin + 3.5,
-    y + 4.5,
-  );
+  // doc.setFontSize(7);
+  // doc.setFont("helvetica", "bold");
+  // doc.setTextColor(153, 27, 27);
+  // doc.text(
+  //   "NOTICE OF MANDATORY 3-BUSINESS-DAY RIGHT TO CANCEL",
+  //   margin + 3.5,
+  //   y + 4.5,
+  // );
 
-  doc.setFontSize(6.2);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(127, 29, 29);
-  const statutoryText = `Under ${stateCode} Consumer Protection Regulations (R.I. Gen. Laws § 6-28-3), you may cancel this agreement at any time prior to midnight of the third business day after the date of execution without penalty or obligation.`;
-  const splitStat = doc.splitTextToSize(statutoryText, contentWidth - 7);
-  doc.text(splitStat, margin + 3.5, y + 9);
+  // doc.setFontSize(6.2);
+  // doc.setFont("helvetica", "normal");
+  // doc.setTextColor(127, 29, 29);
+  // const statutoryText = `Under ${stateCode} Consumer Protection Regulations (R.I. Gen. Laws § 6-28-3), you may cancel this agreement at any time prior to midnight of the third business day after the date of execution without penalty or obligation.`;
+  // const splitStat = doc.splitTextToSize(statutoryText, contentWidth - 7);
+  // doc.text(splitStat, margin + 3.5, y + 9);
 
-  if (agreement.cancellationDeadline) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.8);
-    doc.text(
-      `Statutory Cancellation Deadline: ${agreement.cancellationDeadline} (${agreement.cancellationDeadlineRule || "3 business days"})`,
-      margin + 3.5,
-      y + 19,
-    );
-  } else {
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6);
-    doc.text(
-      "Regular Cancellation: Cancel at any time with 30-day written notice prior to monthly billing cycle.",
-      margin + 3.5,
-      y + 19,
-    );
-  }
+  // if (agreement.cancellationDeadline) {
+  //   doc.setFont("helvetica", "bold");
+  //   doc.setFontSize(6.8);
+  //   doc.text(
+  //     `Statutory Cancellation Deadline: ${agreement.cancellationDeadline} (${agreement.cancellationDeadlineRule || "3 business days"})`,
+  //     margin + 3.5,
+  //     y + 19,
+  //   );
+  // } else {
+  //   doc.setFont("helvetica", "normal");
+  //   doc.setFontSize(6);
+  //   doc.text(
+  //     "Regular Cancellation: Cancel at any time with 30-day written notice prior to monthly billing cycle.",
+  //     margin + 3.5,
+  //     y + 19,
+  //   );
+  // }
 
   y += 25.5;
 
@@ -791,7 +791,7 @@ export async function downloadAgreementPdf(
     },
   ];
 
-  // Calculate wrapped lines and total height for Section 9
+  // Calculate wrapped lines and total height for Section 8
   doc.setFont("helvetica", "normal");
   doc.setFontSize(5.9);
   const preparedClauses = authClauses.map((clause) => {
@@ -804,7 +804,7 @@ export async function downloadAgreementPdf(
     preparedClauses.reduce((sum, c) => sum + c.itemHeight, 0) + 3;
 
   drawSectionHeader(
-    "9. Mandatory Legal Authorizations & Consents (Sections 12.2 - 12.4)",
+    "8. Mandatory Legal Authorizations & Consents (Sections 12.2 - 12.4)",
   );
   checkPageBreak(totalAuthBoxHeight + 5);
 
@@ -842,9 +842,9 @@ export async function downloadAgreementPdf(
   y += totalAuthBoxHeight + 3.5;
 
   // ==========================================
-  // 10. Execution & Dual Electronic Signatures
+  // 9. Execution  Electronic Signatures
   // ==========================================
-  drawSectionHeader("10. Execution & Dual Electronic Signatures");
+  drawSectionHeader("9. Execution  Electronic Signatures");
   checkPageBreak(48);
 
   const sigBoxW = (contentWidth - 4) / 2;
@@ -957,7 +957,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...greenText);
-  doc.text("AGEWELLRI PROVIDER COUNTER-SIGNATURE", providerX + 3.5, y + 4.5);
+  doc.text("AgeWellRI Authorized Signature", providerX + 3.5, y + 4.5);
   doc.setFontSize(5.5);
   doc.text("✓ AUTHORIZED", providerX + sigBoxW - 3.5, y + 4.5, {
     align: "right",

@@ -279,7 +279,7 @@ export function Step6AgreementSigning({
     if (signingTrack === "TRACK_B") {
       if (!authorityDocumentUrl) {
         setErrorMessage(
-          "Representative / Power of Attorney signing requires uploading a legal authority document (DPOA, Guardianship, or Conservatorship order).",
+          "Representative / Power of Attorney signing requires uploading a legal authority document (POA, Guardianship, or Conservatorship order).",
         );
         return;
       }
@@ -395,10 +395,11 @@ export function Step6AgreementSigning({
               </strong>
               <p>
                 Client selects the <strong>{planDetails.planName}</strong> ($
-                {planDetails.planPrice}.00 per month). Provider shall
-                perform scheduled maintenance and safety upkeep visits. Services encompass preventative home
-                checks, fixture maintenance, smoke/CO detector inspections,
-                accessibility upkeep, and environmental safety assessments.
+                {planDetails.planPrice}.00 per month). Provider shall perform
+                scheduled maintenance and safety upkeep visits. Services
+                encompass preventative home checks, fixture maintenance,
+                smoke/CO detector inspections, accessibility upkeep, and
+                environmental safety assessments.
               </p>
             </div>
 
@@ -474,8 +475,8 @@ export function Step6AgreementSigning({
                 </div>
               </div>
               <p className="text-xs text-[#64748B] mt-2">
-                I am the resident residing at the property and signing on my own
-                behalf.
+                I confirm I am the resident, am at least 18, have read and agree
+                to this Agreement, and am signing on my own behalf.
               </p>
             </div>
 
@@ -492,7 +493,7 @@ export function Step6AgreementSigning({
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-[#5E8FB2]" />
                   <span className="font-extrabold text-sm text-[#243746]">
-                    Representative / POA
+                    Representative
                   </span>
                 </div>
                 <div
@@ -508,8 +509,11 @@ export function Step6AgreementSigning({
                 </div>
               </div>
               <p className="text-xs text-[#64748B] mt-2">
-                I am signing as an authorized Representative (Power of Attorney,
-                Guardian, Conservator).
+                I am signing on behalf of the resident under a durable/general
+                POA, guardianship, or conservatorship, which includes authority
+                to contract and release claims. A healthcare proxy alone does
+                NOT qualify. I agree to indemnify AgeWellRI if I lack actual
+                authority.
               </p>
             </div>
           </div>
@@ -536,13 +540,13 @@ export function Step6AgreementSigning({
                   className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
                 >
                   <option value="ATTORNEY_IN_FACT">
-                    Attorney-in-Fact (DPOA)
+                    Attorney-in-Fact (POA)
                   </option>
                   <option value="GUARDIAN">
-                    Court-Appointed Legal Guardian
+                     Guardian
                   </option>
                   <option value="CONSERVATOR">
-                    Court-Appointed Conservator
+                     Conservator
                   </option>
                 </select>
               </div>
