@@ -89,12 +89,13 @@ export function SignupWizard({
   });
 
   const [planData, setPlanData] = useState({
-    planId: "premium_safety_safeguard",
-    planCode: "PREMIUM_SAFETY_SAFEGUARD",
-    planName: "Premium Safety Safeguard",
-    planPrice: 295,
+    planId: "independence_care",
+    planCode: "INDEPENDENCE_CARE",
+    planName: "Independence & Upkeep",
+    planPrice: 595,
     billingInterval: "MONTHLY",
-    totalVisits: 12,
+    totalVisits: 1,
+    features: [] as string[],
     services: [] as Array<{ serviceName: string; allocatedVisits: number }>,
   });
 
@@ -232,8 +233,26 @@ export function SignupWizard({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleStep2Success = (plan: typeof planData) => {
-    setPlanData(plan);
+  const handleStep2Success = (plan: {
+    planId: string;
+    planCode: string;
+    planName: string;
+    planPrice: number;
+    billingInterval: string;
+    totalVisits: number;
+    features?: string[];
+    services?: Array<{ serviceName: string; allocatedVisits: number }>;
+  }) => {
+    setPlanData({
+      planId: plan.planId,
+      planCode: plan.planCode,
+      planName: plan.planName,
+      planPrice: plan.planPrice,
+      billingInterval: plan.billingInterval,
+      totalVisits: plan.totalVisits,
+      features: plan.features || [],
+      services: plan.services || [],
+    });
     setCurrentStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };

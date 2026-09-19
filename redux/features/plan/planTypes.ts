@@ -1,117 +1,42 @@
-export interface PlanServiceAllocation {
-  serviceTypeId: string;
-  serviceName: string;
-  category?: string;
-  allocatedVisits: number;
-  unit: string;
-  durationMinutes?: number;
-}
-
-export interface ActivePlan {
+export interface ServicePlan {
   id: string;
-  planId?: string;
-  versionId?: string | null;
-  versionNumber?: number;
   name: string;
   code: string;
+  price: number;
+  currency: string;
+  billingInterval: "MONTHLY";
+  totalVisits: number;
+  description?: string;
   shortDescription?: string;
   fullDescription?: string;
-  description?: string;
-  price: number;
-  currency?: string;
-  billingInterval: "MONTHLY" | "ONE_TIME";
+  features: string[];
+  isActive: boolean;
+  isArchived: boolean;
+  displayOrder: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
-  features?: string[];
-  services: PlanServiceAllocation[];
-  totalVisits: number;
-  effectiveFrom?: string;
-  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ActivePlan extends ServicePlan {
   subscribersCount?: number;
 }
 
-export interface AdminPlan {
-  id: string;
-  name: string;
-  code: string;
-  shortDescription?: string;
-  fullDescription?: string;
-  currentPrice: number;
-  price?: number;
-  currency: string;
-  billingInterval: "MONTHLY" | "ONE_TIME";
-  displayOrder: number;
-  isActive: boolean;
-  isArchived: boolean;
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault?: boolean;
+export interface AdminPlan extends ServicePlan {
   activeSubscribersCount: number;
-  totalVersionsCount: number;
-  latestVersionNumber: number;
-  latestVersionStatus: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-  features: string[];
-  services: PlanServiceAllocation[];
-  totalVisits: number;
-  versions?: PlanVersionDetail[];
-  effectiveFrom: string;
-  lastUpdated: string;
+  lastUpdated?: string;
 }
 
-export interface PlanVersionDetail {
-  id: string;
-  versionNumber: number;
-  name: string;
-  description?: string;
-  status: string;
-  price: number;
-  currency: string;
-  billingInterval: string;
-  features: string[];
-  effectiveFrom: string;
-  effectiveTo?: string;
-  planServices: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit: string;
-    serviceType: {
-      id: string;
-      name: string;
-      category: string;
-    };
-  }[];
-}
-
-export interface AdminPlanDetail {
-  id: string;
-  name: string;
-  code: string;
-  shortDescription?: string;
-  fullDescription?: string;
-  price: number;
-  currentPrice?: number;
-  billingInterval: string;
-  displayOrder: number;
-  isActive: boolean;
-  isArchived: boolean;
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault: boolean;
+export interface AdminPlanDetail extends ServicePlan {
   activeSubscribersCount?: number;
-  totalVisits?: number;
-  features?: string[];
-  services?: PlanServiceAllocation[];
-  stripeProductId?: string;
-  versions: PlanVersionDetail[];
-  subscriptions: {
+  subscriptions?: {
     id: string;
     status: string;
-    contractedPrice?: number;
     billingInterval?: string;
     currentPeriodStart?: string;
     currentPeriodEnd?: string;
-    planVersionId?: string;
     client: {
       id: string;
       clientNumber: string;
@@ -121,122 +46,47 @@ export interface AdminPlanDetail {
         email: string;
         phone?: string;
       };
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      phone?: string;
+      primaryContactName?: string;
+      primaryContactEmail?: string;
+      primaryContactPhone?: string;
     };
   }[];
 }
 
-export interface ServiceItem {
-  id: string;
-  name: string;
-  code?: string;
-  category:
-    | "CLEANING"
-    | "SAFETY_OVERSIGHT"
-    | "ASSESSMENT"
-    | "WELLNESS"
-    | "OTHER";
-  description?: string;
-  durationMinutes: number;
-  defaultPrice?: number;
-  isActive: boolean;
-  displayOrder: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface CreatePlanPayload {
   name: string;
-  code: string;
-  shortDescription?: string;
-  fullDescription?: string;
+  code?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "ONE_TIME";
+  billingInterval?: "MONTHLY";
+  totalVisits: number;
+  description?: string;
+  shortDescription?: string;
+  features: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
-  features: string[];
-  services: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit?: string;
-    durationMinutes?: number;
-  }[];
   isActive?: boolean;
-  effectiveDate?: string;
 }
 
 export interface UpdatePlanPayload {
   name?: string;
-  shortDescription?: string;
-  fullDescription?: string;
+  code?: string;
   price?: number;
   currency?: string;
-  billingInterval?: "MONTHLY" | "ONE_TIME";
+  billingInterval?: "MONTHLY";
+  totalVisits?: number;
+  description?: string;
+  shortDescription?: string;
+  features?: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
-  features?: string[];
-  services?: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit?: string;
-    durationMinutes?: number;
-  }[];
   isActive?: boolean;
-  effectiveDate?: string;
-  forceNewVersion?: boolean;
 }
 
 export interface ChangePlanStatusPayload {
-  status: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
-}
-
-export interface CreateServicePayload {
-  name: string;
-  code?: string;
-  category:
-    | "CLEANING"
-    | "SAFETY_OVERSIGHT"
-    | "ASSESSMENT"
-    | "WELLNESS"
-    | "OTHER";
-  description?: string;
-  durationMinutes?: number;
-  defaultPrice?: number;
-  displayOrder?: number;
-  isActive?: boolean;
-}
-
-export interface UpdateServicePayload {
-  name?: string;
-  code?: string;
-  category?:
-    | "CLEANING"
-    | "SAFETY_OVERSIGHT"
-    | "ASSESSMENT"
-    | "WELLNESS"
-    | "OTHER";
-  description?: string;
-  durationMinutes?: number;
-  defaultPrice?: number;
-  displayOrder?: number;
-  isActive?: boolean;
-}
-
-export interface ServiceCatalogStats {
-  totalServices: number;
-  activeServices: number;
-  inactiveServices: number;
-  totalCategories: number;
-  activeCategoriesCount: number;
-  categoryBreakdown: Record<string, { total: number; active: number }>;
-  totalPlanAllocations: number;
-  totalScheduledAppointments: number;
+  status: "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
 }

@@ -70,8 +70,7 @@ export function PaymentStepCard({
   const planBasePrice = planObj?.price ?? 0;
   const addonPrice = hasCleaningAddon ? 60 : 0;
   const totalDueToday = planBasePrice + addonPrice;
-  const billingInterval = planObj?.billingInterval || "MONTHLY";
-  const isOneTime = billingInterval === "ONE_TIME";
+  const isOneTime = false;
 
   // Create SetupIntent on mount or when plan changes
   useEffect(() => {
@@ -180,12 +179,10 @@ export function PaymentStepCard({
 
               {/* Service Features Included */}
               <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2 text-[11px] text-[#475569]">
-                {(planObj?.services || []).map((srv, idx) => (
+                {(planObj?.features || []).map((feat: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B] shrink-0" />
-                    <span>
-                      {srv.allocatedVisits} {srv.serviceName} visits
-                    </span>
+                    <span>{feat}</span>
                   </div>
                 ))}
                 {hasCleaningAddon && (

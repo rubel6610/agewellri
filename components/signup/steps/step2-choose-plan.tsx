@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import {
-  Shield,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
   Loader2,
   Star,
+  Package,
 } from "lucide-react";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { ActivePlan } from "@/redux/features/plan/planTypes";
@@ -21,7 +21,8 @@ interface Step2ChoosePlanProps {
     planPrice: number;
     billingInterval: string;
     totalVisits: number;
-    services: Array<{ serviceName: string; allocatedVisits: number }>;
+    features?: string[];
+    services?: Array<{ serviceName: string; allocatedVisits: number }>;
   }) => void;
   onBack?: () => void;
 }
@@ -33,14 +34,10 @@ export function Step2ChoosePlan({
 }: Step2ChoosePlanProps) {
   const { data: plans = [], isLoading } = useGetActivePlansQuery();
 
-  // Fallback plans if database has not returned yet or during loading
-  const displayPlans: ActivePlan[] =
-    plans.length > 0
-      ? plans
-      : [];
+  const displayPlans: ActivePlan[] = plans.length > 0 ? plans : [];
 
   const [currentSelectedId, setCurrentSelectedId] = useState<string>(
-    selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code,
+    selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code || "",
   );
 
   const selectedPlan =
@@ -56,8 +53,9 @@ export function Step2ChoosePlan({
         planName: selectedPlan.name,
         planPrice: selectedPlan.price,
         billingInterval: selectedPlan.billingInterval || "MONTHLY",
-        totalVisits: selectedPlan.totalVisits || 12,
-        services: selectedPlan.services || [],
+        totalVisits: selectedPlan.totalVisits || 1,
+        features: selectedPlan.features || [],
+        services: [],
       });
     }
   };
@@ -86,14 +84,21 @@ export function Step2ChoosePlan({
             Loading available service plans...
           </p>
         </div>
+      ) : displayPlans.length === 0 ? (
+        <div className="py-16 text-center space-y-3 bg-[#F8FAFC] rounded-3xl border border-[#D9E4EC]">
+          <Package className="w-10 h-10 text-[#5E8FB2] mx-auto" />
+          <h3 className="text-base font-bold text-[#243746]">No Service Plans Available</h3>
+          <p className="text-xs text-[#64748B]">Please contact support or check back shortly.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {displayPlans.map((plan) => {
             const isSelected =
-              plan.id === currentSelectedId || plan.code === currentSelectedId;
+              plan.id === (selectedPlan?.id || currentSelectedId) ||
+              plan.code === (selectedPlan?.code || currentSelectedId);
             const isPopular =
-              plan.code.includes("INDEPENDENCE") ||
-              plan.name.includes("Independence");
+              plan.code.includes("PEACE_OF_MIND") ||
+              plan.name.includes("Peace of Mind");
 
             return (
               <div
@@ -118,9 +123,11 @@ export function Step2ChoosePlan({
                       <h3 className="text-xl font-black text-[#243746]">
                         {plan.name}
                       </h3>
-                      <p className="text-xs text-[#64748B] mt-1 leading-relaxed line-clamp-2">
-                        {plan.shortDescription}
-                      </p>
+                      {plan.shortDescription && (
+                        <p className="text-xs text-[#64748B] mt-1 leading-relaxed line-clamp-2">
+                          {plan.shortDescription}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -131,29 +138,26 @@ export function Step2ChoosePlan({
                         ${plan.price}
                       </span>
                       <span className="text-sm font-bold text-[#64748B]">
-                        / month
+                        / {plan.billingInterval?.toLowerCase() || "month"}
                       </span>
                     </div>
                     <span className="text-xs font-semibold text-[#3F8F6B] mt-1 block">
-                      {plan.totalVisits} Dedicated Home Visits / month
+                      {plan.totalVisits || 1} {plan.totalVisits === 1 ? "Dedicated Home Visit" : "Dedicated Home Visits"} / month
                     </span>
                   </div>
 
-                  {/* Services / Inclusions */}
+                  {/* Features / Inclusions Bullet Points */}
                   <div className="space-y-2.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-[#64748B] block">
-                      Plan Inclusions:
+                      Plan Inclusions &amp; Features:
                     </span>
-                    {(plan.services || []).map((svc, sIdx) => (
+                    {(plan.features || []).map((feat, fIdx) => (
                       <div
-                        key={sIdx}
+                        key={fIdx}
                         className="flex items-start gap-2.5 text-xs text-[#475569]"
                       >
                         <CheckCircle2 className="w-4 h-4 text-[#3F8F6B] shrink-0 mt-0.5" />
-                        <span>
-                          <strong>{svc.allocatedVisits} visits</strong> 
-                        
-                        </span>
+                        <span>{feat}</span>
                       </div>
                     ))}
                   </div>
@@ -200,7 +204,8 @@ export function Step2ChoosePlan({
         <button
           type="button"
           onClick={handleContinue}
-          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[#294B68] hover:bg-[#1E374D] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer group"
+          disabled={!selectedPlan}
+          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-[#294B68] hover:bg-[#1E374D] text-white text-sm font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer group disabled:opacity-50"
         >
           <span>Continue to Resident Details</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
