@@ -769,7 +769,7 @@ export default function ClientDetailPage({
               <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
                 <Calendar className="w-8 h-8 mx-auto text-[#94A3B8]" />
                 <p className="font-bold text-sm text-[#243746]">No Visits Scheduled</p>
-                <p className="text-xs text-[#64748B]">Book a visit to assign a caregiver or technician.</p>
+                <p className="text-xs text-[#64748B]">Book a visit to assign a technician.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">

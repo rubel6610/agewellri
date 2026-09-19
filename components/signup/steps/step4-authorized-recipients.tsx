@@ -19,7 +19,6 @@ const RELATIONSHIP_OPTIONS = [
   "Daughter",
   "Son",
   "Spouse",
-  "Caregiver",
   "Power of Attorney",
   "Case Manager / Social Worker",
   "Sibling",
@@ -94,7 +93,7 @@ export function Step4AuthorizedRecipients({
           Authorized Report Recipients
         </h2>
         <p className="text-sm text-[#5E8FB2] max-w-md mx-auto">
-          Add family members, caregivers, or advocates who should receive digital visit reports, photos, and safety notes after each technician visit.
+          Add family members or advocates who should receive digital visit reports, photos, and safety notes after each technician visit.
         </p>
       </div>
 

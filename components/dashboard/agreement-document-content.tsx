@@ -27,7 +27,7 @@ import {
 const AGEWELL_OWNER_DETAILS = {
   name: "Cory Poplaski",
   title: "Founder & Director of Care Management",
-  company: "AgeWellRI Care Management LLC",
+  company: "AgeWellRI LLC",
   location: "Westerly, RI",
   phone: "(401) 212-3002",
   email: "agewellri@gmail.com",
@@ -863,8 +863,7 @@ export function AgreementDocumentContent({
       {/* Document Footer Disclaimer */}
       <div className="pt-6 border-t border-[#D9E4EC] text-center space-y-2">
         <p className="text-[11px] text-[#94A3B8]">
-          &copy; 2026 AgeWellRI Care Management LLC • 100 Westminster St,
-          Providence, RI 02903 • (401) 212-3002 • agewellri@gmail.com
+          &copy; 2026 AgeWellRI LLC • (401) 212-3002 • agewellri@gmail.com
         </p>
         <p className="text-[10px] text-[#CBD5E1]">
           Document Ref: {agreement.id || "AW-AG"} • Confidential Legal Record

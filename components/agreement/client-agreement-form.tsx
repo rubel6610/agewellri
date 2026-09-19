@@ -102,7 +102,6 @@ export function ClientAgreementForm() {
     signerRole: "RESIDENT" as
       | "RESIDENT"
       | "FAMILY_MEMBER"
-      | "CAREGIVER"
       | "POWER_OF_ATTORNEY"
       | "AUTHORIZED_REPRESENTATIVE",
     signerName: "",
@@ -710,7 +709,7 @@ export function ClientAgreementForm() {
                   />
                   <div>
                     <div className="font-extrabold text-sm text-[#243746]">
-                      Family Member / Caregiver / POA
+                      Family Member / POA
                     </div>
                     <div className="text-xs text-[#5E8FB2] mt-0.5 font-medium leading-relaxed">
                       I am an authorized family member, proxy, or legal

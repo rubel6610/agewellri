@@ -76,9 +76,9 @@ export interface AgreementPdfData {
 
 const AGEWELL_OFFICER_NAME = "Cory Poplaski";
 const AGEWELL_OFFICER_TITLE = "Founder & Director of Care Management";
-const AGEWELL_COMPANY_NAME = "AgeWellRI Care Management LLC";
+const AGEWELL_COMPANY_NAME = "AgeWellRI LLC";
 const AGEWELL_CONTACT_LINE =
-  "AgeWellRI Care Management LLC • Westerly, RI • (401) 212-3002 • agewellri@gmail.com";
+  "AgeWellRI LLC• Westerly, RI • (401) 212-3002 • agewellri@gmail.com";
 
 const OWNER_SIGNATURE_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><path d='M 15 45 Q 35 15 60 40 T 110 35 T 160 45 T 210 30' stroke='%23294B68' stroke-width='2.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M 45 42 Q 85 58 140 48' stroke='%23294B68' stroke-width='1.8' fill='none' stroke-linecap='round'/></svg>";

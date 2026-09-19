@@ -33,7 +33,6 @@ const RELATIONSHIP_OPTIONS = [
   "Daughter",
   "Son",
   "Spouse",
-  "Caregiver",
   "Power of Attorney",
   "Sister",
   "Brother",

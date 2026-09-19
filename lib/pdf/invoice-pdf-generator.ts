@@ -243,7 +243,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(...primaryNavy);
-    doc.text("AgeWellRI Care Management LLC", margin + 5, y + 13.5, {
+    doc.text("AgeWellRI LLC", margin + 5, y + 13.5, {
       maxWidth: colWidth - 10,
     });
 
@@ -620,7 +620,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(6.8);
     doc.setTextColor(130, 145, 160);
     doc.text(
-      `This electronic statement represents an official record of contracted services provided by AgeWellRI Care Management LLC for the month of ${billingMonthName} (${periodRangeText}).`,
+      `This electronic statement represents an official record of contracted services provided by  AgeWellRI LLCfor the month of ${billingMonthName} (${periodRangeText}).`,
       margin,
       y + 4.5,
     );

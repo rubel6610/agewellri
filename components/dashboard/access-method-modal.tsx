@@ -58,7 +58,7 @@ const ACCESS_TYPES: Array<{
   {
     type: "RESIDENT_ANSWERS",
     label: "Resident Answers Door",
-    description: "Resident or caregiver is present and will open the door upon arrival.",
+    description: "Resident  is present and will open the door upon arrival.",
     icon: Bell,
     defaultTitle: "Resident Answers Door",
     placeholderCode: "N/A (optional)",

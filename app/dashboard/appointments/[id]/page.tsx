@@ -222,7 +222,7 @@ export default function AppointmentDetailsPage({
                   Home Safety Report Available
                 </h4>
                 <p className="text-xs text-[#64748B]">
-                  View the completed assessment score and caregiver observations.
+                  View the completed assessment score observations.
                 </p>
               </div>
             </div>

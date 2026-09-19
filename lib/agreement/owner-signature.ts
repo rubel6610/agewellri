@@ -4,7 +4,7 @@ export const OWNER_SIGNATURE_SVG_DATA_URI =
 export const AGEWELL_OWNER_DETAILS = {
   name: "Marcus Vance",
   title: "Managing Director & Operations Lead",
-  company: "AgeWellRI Care Management LLC",
+  company: "AgeWellRI LLC",
   address: "84 High Street, Westerly, RI 02891",
   phone: "(401) 712-3012",
   email: "marcus@agewellri.com",

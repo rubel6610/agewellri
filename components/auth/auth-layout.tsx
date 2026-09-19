@@ -58,7 +58,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
         {/* Bottom footer text */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#64748B]">
-          <p>© {new Date().getFullYear()} AgeWellRI Services. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} AgeWellRI LLC. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <Link
               href="/privacy-policy"

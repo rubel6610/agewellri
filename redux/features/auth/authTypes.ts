@@ -14,7 +14,6 @@ export type OnboardingStatus =
 export type SignerRole =
   | "RESIDENT"
   | "FAMILY_MEMBER"
-  | "CAREGIVER"
   | "POWER_OF_ATTORNEY"
   | "AUTHORIZED_REPRESENTATIVE";
 

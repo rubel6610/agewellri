@@ -25,7 +25,7 @@ interface Point {
 const AGEWELL_OWNER_DETAILS = {
   name: "Cory Poplaski",
   title: "Founder",
-  company: "AgeWellRI Care Management LLC",
+  company: "AgeWellRI LLC",
   location: "Westerly, RI",
 };
 

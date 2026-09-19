@@ -103,7 +103,7 @@ export default function ReportsAdminPage() {
           </button>
 
           <Link
-            href="/admin/appointments"
+            href="/admin/appointments?tab=COMPLETED"
             className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
           >
             <FileUp className="w-4 h-4" />
@@ -182,10 +182,10 @@ export default function ReportsAdminPage() {
               When a visit is marked completed in Appointments, upload the technician&apos;s PDF report to publish it here.
             </p>
             <Link
-              href="/admin/appointments"
+              href="/admin/appointments?tab=COMPLETED"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#294B68] text-white text-xs font-bold rounded-xl"
             >
-              <span>Go to Appointments</span>
+              <span>Go to Completed Visits</span>
             </Link>
           </div>
         ) : (

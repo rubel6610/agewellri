@@ -123,7 +123,7 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul className="space-y-3 text-base sm:text-lg text-[#243746] leading-relaxed list-disc list-outside pl-6 marker:text-[#294B68]">
             <li>
-              <strong>With your Authorized Recipients</strong> — the family members, caregivers, or contacts you designate to
+              <strong>With your Authorized Recipients</strong> — the family members contacts you designate to
               receive your safety reports and photos.
             </li>
             <li>
