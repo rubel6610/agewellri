@@ -37,7 +37,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <p className="text-3xl xl:text-4xl font-bold text-[#243746] leading-12">
               Aging in place is possible. You just need the right support.
               <br />
-              <span className="text-[#294B68]">Confidence that helps you age well.&rdquo;</span>
+              <span className="text-[#294B68]">"Confidence that helps you age well.&rdquo;</span>
             </p>
             <p className="text-base text-[#64748B] leading-relaxed max-w-lg">
               AgeWellRI gives older adults the oversight they need to stay safely at home and gives families the peace of mind they deserve.

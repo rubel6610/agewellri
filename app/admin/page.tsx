@@ -317,14 +317,14 @@ export default function AdminOverviewPage() {
             <span>Invite Client</span>
           </button>
 
-          <button
+          {/* <button
             type="button"
             onClick={() => setScheduleModalOpen(true)}
             className="px-4 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F8FAFC] text-[#243746] font-bold text-xs rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Calendar className="w-4 h-4 text-[#5E8FB2]" />
             <span>Schedule Visit</span>
-          </button>
+          </button> */}
         </div>
       </div>
 

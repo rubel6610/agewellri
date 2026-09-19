@@ -410,7 +410,7 @@ export function SignupWizard({
             <div className="flex items-center gap-4 text-xs font-semibold text-[#64748B]">
               <span className="hidden sm:inline-flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-[#294B68]" />
-                Questions? Call <strong>(401) 400-2929</strong>
+                Questions? Call <strong>(401) 212-3002</strong>
               </span>
               <Link
                 href="/login"
