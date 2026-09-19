@@ -502,7 +502,6 @@ export function ClientAgreementForm() {
         homeAccessInstructions: formData.homeAccessInstructions.trim() || null,
         homeAccessCode: formData.homeAccessCode.trim() || null,
         planId: selectedPlanObj?.id || null,
-        planVersionId: selectedPlanObj?.versionId || null,
         selectedPlan: selectedPlanObj?.code || formData.selectedPlanCode,
         hasCleaningAddon: formData.hasCleaningAddon,
         billingMethod: "AUTOMATIC",
@@ -1301,18 +1300,15 @@ export function ClientAgreementForm() {
                                 </p>
                               )}
 
-                              {/* Included Services Breakdown Badges */}
-                              {plan.services && plan.services.length > 0 && (
+                              {/* Included Features Breakdown Badges */}
+                              {plan.features && plan.features.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
-                                  {plan.services.map((srv, sidx) => (
+                                  {plan.features.slice(0, 3).map((feat: string, sidx: number) => (
                                     <span
                                       key={sidx}
                                       className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-[#F8FAFC] border border-[#D9E4EC] text-[#243746]"
                                     >
-                                      {srv.category === "CLEANING"
-                                        ? "✨"
-                                        : "🛡️"}{" "}
-                                      {srv.allocatedVisits} {srv.serviceName}
+                                      🛡️ {feat}
                                     </span>
                                   ))}
                                 </div>

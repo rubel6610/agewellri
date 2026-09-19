@@ -54,7 +54,6 @@ export function AdminMobileNav({
     { label: "Clients", href: "/admin/clients", icon: Users, },
     { label: "Specialists", href: "/admin/specialists", icon: UserCheck },
     { label: "Service Plans", href: "/admin/plans", icon: Package },
-    { label: "Services Catalog", href: "/admin/services", icon: Layers },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarCheck },
     { label: "Reports", href: "/admin/reports", icon: FileCheck2, },
     { label: "Agreements", href: "/admin/agreements", icon: FileText },
