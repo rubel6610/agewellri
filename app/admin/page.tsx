@@ -29,8 +29,6 @@ import {
   AttentionItem,
 } from "@/components/admin/attention-panel";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
-import { AddClientModal } from "@/components/admin/add-client-modal";
-import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 
 export default function AdminOverviewPage() {
   const authUser = useAppSelector((state) => state.auth.user);
@@ -39,9 +37,6 @@ export default function AdminOverviewPage() {
     isLoading,
     refetch,
   } = useGetAdminDashboardStatsQuery();
-
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
   const stats = statsResponse?.data;
   const kpis = stats?.kpis;
@@ -305,26 +300,6 @@ export default function AdminOverviewPage() {
             Real-time operations &amp; safety oversight overview for{" "}
             <strong>{todayFormatted}</strong>.
           </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setAddModalOpen(true)}
-            className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Invite Client</span>
-          </button>
-
-          {/* <button
-            type="button"
-            onClick={() => setScheduleModalOpen(true)}
-            className="px-4 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F8FAFC] text-[#243746] font-bold text-xs rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
-          >
-            <Calendar className="w-4 h-4 text-[#5E8FB2]" />
-            <span>Schedule Visit</span>
-          </button> */}
         </div>
       </div>
 
@@ -752,16 +727,6 @@ export default function AdminOverviewPage() {
           </div>
         </div>
       </div>
-
-      {/* Modals */}
-      <AddClientModal
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-      />
-      <AdminScheduleModal
-        isOpen={scheduleModalOpen}
-        onClose={() => setScheduleModalOpen(false)}
-      />
     </div>
   );
 }

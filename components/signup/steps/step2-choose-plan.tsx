@@ -37,72 +37,7 @@ export function Step2ChoosePlan({
   const displayPlans: ActivePlan[] =
     plans.length > 0
       ? plans
-      : [
-          {
-            id: "premium_safety_safeguard",
-            code: "PREMIUM_SAFETY_SAFEGUARD",
-            name: "Premium Safety Safeguard",
-            description:
-              "Comprehensive home safety maintenance, seasonal check-ins, and proactive senior independence support.",
-            price: 295,
-            billingInterval: "MONTHLY",
-            totalVisits: 12,
-            services: [
-              {
-                serviceTypeId: "srv_safety",
-                serviceName: "Monthly Safety & Upkeep Visits",
-                allocatedVisits: 4,
-                unit: "VISITS",
-              },
-              {
-                serviceTypeId: "srv_seasonal",
-                serviceName: "Seasonal Transition Check-Ins",
-                allocatedVisits: 4,
-                unit: "VISITS",
-              },
-              {
-                serviceTypeId: "srv_hazard",
-                serviceName: "Home Hazard Prevention & Testing",
-                allocatedVisits: 4,
-                unit: "VISITS",
-              },
-            ],
-            isActive: true,
-            subscribersCount: 0,
-          },
-          {
-            id: "independence_upkeep_plan",
-            code: "INDEPENDENCE_UPKEEP_PLAN",
-            name: "Independence & Upkeep Plan",
-            description:
-              "Our premier safety oversight and home upkeep service for total peace of mind and complete home preservation.",
-            price: 495,
-            billingInterval: "MONTHLY",
-            totalVisits: 24,
-            services: [
-              {
-                serviceTypeId: "srv_upkeep",
-                serviceName: "Monthly Dedicated Upkeep & Safety Visits",
-                allocatedVisits: 12,
-                unit: "VISITS",
-              },
-              {
-                serviceTypeId: "srv_audit",
-                serviceName: "Comprehensive Mechanical & Plumbing Audits",
-                allocatedVisits: 6,
-                unit: "VISITS",
-              },
-              {
-                serviceTypeId: "srv_priority",
-                serviceName: "Priority Rapid Technician Response",
-                allocatedVisits: 6,
-                unit: "VISITS",
-              },
-            ],
-            isActive: true,
-            subscribersCount: 0,
-          },
-        ];
+      : [];
 
   const [currentSelectedId, setCurrentSelectedId] = useState<string>(
     selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code,
@@ -184,8 +119,7 @@ export function Step2ChoosePlan({
                         {plan.name}
                       </h3>
                       <p className="text-xs text-[#64748B] mt-1 leading-relaxed line-clamp-2">
-                        {plan.shortDescription ||
-                          "Comprehensive Home Safety Oversight & Proactive Hazard Removal."}
+                        {plan.shortDescription}
                       </p>
                     </div>
                   </div>
@@ -217,8 +151,8 @@ export function Step2ChoosePlan({
                       >
                         <CheckCircle2 className="w-4 h-4 text-[#3F8F6B] shrink-0 mt-0.5" />
                         <span>
-                          <strong>{svc.allocatedVisits} visits</strong> &bull;{" "}
-                          {svc.serviceName}
+                          <strong>{svc.allocatedVisits} visits</strong> 
+                        
                         </span>
                       </div>
                     ))}

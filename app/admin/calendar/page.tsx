@@ -4,12 +4,10 @@ import React, { useEffect, useState } from "react";
 import { getAdminAppointments } from "@/lib/api/admin-api";
 import { AdminAppointment } from "@/lib/types/admin";
 import { AdminCalendarView } from "@/components/admin/admin-calendar-view";
-import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 
 export default function CalendarAdminPage() {
   const [appointments, setAppointments] = useState<AdminAppointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
 
   useEffect(() => {
     getAdminAppointments().then((data) => {
@@ -38,12 +36,7 @@ export default function CalendarAdminPage() {
         </p>
       </div>
 
-      <AdminCalendarView
-        appointments={appointments}
-        onOpenScheduleModal={() => setScheduleModalOpen(true)}
-      />
-
-      <AdminScheduleModal isOpen={scheduleModalOpen} onClose={() => setScheduleModalOpen(false)} />
+      <AdminCalendarView appointments={appointments} />
     </div>
   );
 }

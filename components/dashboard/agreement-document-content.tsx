@@ -563,7 +563,7 @@ export function AgreementDocumentContent({
         </div>
       </div>
 
-      {/* 7. Scope of Services & Operational Provisions */}
+      {/* 7. Scope of Services & Operational Provisions*/}
       <div className="space-y-4">
         <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
           <span>7. Scope of Services &amp; Operational Provisions</span>

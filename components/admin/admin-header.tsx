@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Menu } from "lucide-react";
+import { Plus, Menu, UserPlus } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
 import { useAppSelector } from "@/redux/hooks";
 
@@ -44,13 +44,13 @@ export function AdminHeader({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 shrink-0">
-        {/* Quick actions: Add Client (md+) */}
+        {/* Quick actions: Invite Client (md+) */}
         <button
           onClick={onOpenAddClientModal}
           className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all border border-[#5E8FB2]/30 cursor-pointer shrink-0"
         >
-          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Add Client</span>
+          <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Invite Client</span>
         </button>
 
         {/* Schedule Visit (Responsive text for xs vs sm+) */}

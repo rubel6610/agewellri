@@ -98,17 +98,17 @@ export function AdminMobileNav({
                 onClose();
                 onOpenAddClientModal();
               }}
-              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1 border border-[#5E8FB2]/30 cursor-pointer"
+              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-[#5E8FB2]/30 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Client</span>
+              <span>Invite Client</span>
             </button>
             <button
               onClick={() => {
                 onClose();
                 onOpenScheduleModal();
               }}
-              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Schedule</span>

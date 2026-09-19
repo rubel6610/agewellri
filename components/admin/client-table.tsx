@@ -29,7 +29,7 @@ import { TablePagination } from "@/components/ui/table-pagination";
 interface ClientTableProps {
   clients: MasterClientRecord[];
   isLoading?: boolean;
-  onOpenAddClientModal: () => void;
+  onOpenAddClientModal?: () => void;
   onOpenScheduleModal: (clientId: string) => void;
 }
 
@@ -240,14 +240,6 @@ export function ClientTable({
             </select>
           </div>
         </div>
-
-        <button
-          onClick={onOpenAddClientModal}
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Client</span>
-        </button>
       </div>
 
       {/* Desktop Table View */}
