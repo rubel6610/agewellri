@@ -173,7 +173,7 @@ export default function SubscriptionsAdminPage() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0" />
           <span>
-            <strong>Monthly Billing Management:</strong> Subscriptions auto-renew monthly. 15-day renewal notices and cancellation processing are coordinated per client.
+            <strong>Monthly Billing Management :</strong> auto-renews on the 1st of each month · 15-day renewal notice · Cancel anytime (10 days before month-end to stop the next charge).
           </span>
         </div>
       </div>

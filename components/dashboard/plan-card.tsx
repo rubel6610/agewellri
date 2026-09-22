@@ -87,7 +87,7 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
               ) : billing?.isPendingFirstBilling ? (
                 <>
                   <Clock className="w-3.5 h-3.5 text-sky-600" />
-                  <span>Scheduled on 1st</span>
+                  <span>Schedule on 1st</span>
                 </>
               ) : (
                 <>

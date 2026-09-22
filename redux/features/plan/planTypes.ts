@@ -6,6 +6,7 @@ export interface ServicePlan {
   currency: string;
   billingInterval: "MONTHLY";
   totalVisits: number;
+  times?: string | null;
   description?: string;
   shortDescription?: string;
   fullDescription?: string;
@@ -60,6 +61,7 @@ export interface CreatePlanPayload {
   currency?: string;
   billingInterval?: "MONTHLY";
   totalVisits: number;
+  times?: string;
   description?: string;
   shortDescription?: string;
   features: string[];
@@ -77,6 +79,7 @@ export interface UpdatePlanPayload {
   currency?: string;
   billingInterval?: "MONTHLY";
   totalVisits?: number;
+  times?: string;
   description?: string;
   shortDescription?: string;
   features?: string[];
@@ -89,4 +92,26 @@ export interface UpdatePlanPayload {
 
 export interface ChangePlanStatusPayload {
   status: "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
+}
+
+export function formatPlanDuration(times?: string | number | null): string {
+  if (!times) return "Up to 2 hours";
+  const str = String(times).trim();
+  if (str.toLowerCase().includes("an hour") || str.toLowerCase().includes("one hour")) {
+    return "Up to an hour";
+  }
+  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
+  if (!isNaN(num) && num > 0) {
+    if (num === 1) return "Up to an hour";
+    return `Up to ${num} hours`;
+  }
+  return str.startsWith("Up to") ? str : `Up to ${str}`;
+}
+
+export function parsePlanDurationHours(times?: string | number | null): number {
+  if (times === undefined || times === null || times === "") return 2;
+  const str = String(times).trim().toLowerCase();
+  if (str.includes("an hour") || str.includes("one hour")) return 1;
+  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
+  return isNaN(num) || num <= 0 ? 2 : num;
 }

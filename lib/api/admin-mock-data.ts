@@ -341,7 +341,7 @@ export const MOCK_ADMIN_REPORTS: AdminReport[] = [
     clientId: "AW-1001",
     clientName: "John Miller",
     visitId: "vst_03",
-    title: "Home Care & Cleaning Summary",
+    title: "Home safety & Cleaning Summary",
     visitDate: "August 12, 2026",
     score: 98,
     status: "uploaded",

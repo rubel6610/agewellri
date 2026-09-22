@@ -149,7 +149,7 @@ export default function NotificationsAdminPage() {
           </div>
           <p className="text-sm text-[#64748B] mt-1">
             Real-time business and system alerts across registrations,
-            agreements, billing, and care dispatch.
+            agreements, billing, and safety dispatch.
           </p>
         </div>
 

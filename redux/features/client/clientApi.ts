@@ -145,6 +145,8 @@ export interface AdminAgreementRecord {
   planName: string;
   selectedPlan?: string;
   planPrice: number;
+  planTimes?: string | null;
+  times?: string | null;
   signedDate?: string | null;
   signedAt?: string | null;
   executedAt?: string | null;

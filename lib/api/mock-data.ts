@@ -22,7 +22,7 @@ export const MOCK_USER: UserProfile = {
   },
   emergencyContact: {
     name: "Sarah Miller (Daughter)",
-    relationship: "Daughter & Primary Care Coordinator",
+    relationship: "Daughter",
     phone: "(401) 555-0842",
     email: "sarah.m@example.com",
   },
@@ -81,7 +81,7 @@ export const MOCK_APPOINTMENTS: Appointment[] = [
     technicianTitle: "Senior Home Safety Specialist",
     bookedBy: "Client",
     reportId: "rep_201",
-    reportTitle: "Home Care & Cleaning Summary",
+    reportTitle: "Home safety & Cleaning Summary",
     notes:
       "Standard cleaning and walkway clutter inspection completed cleanly.",
   },
@@ -114,7 +114,7 @@ export const MOCK_REPORTS: Report[] = [
   },
   {
     id: "rep_201",
-    title: "Home Care & Cleaning Summary",
+    title: "Home safety & Cleaning Summary",
     visitDate: "August 12, 2026",
     score: 98,
     status: "available",

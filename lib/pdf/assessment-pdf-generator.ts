@@ -50,7 +50,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
     doc.setFontSize(8.5);
     doc.setTextColor(215, 235, 250);
     doc.text(
-      "Comprehensive Senior Home Safety & Care Coordination",
+      "Comprehensive Senior Home Safety ",
       margin + 6,
       y + 17,
     );
@@ -116,7 +116,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
       y + 14,
     );
     doc.text(
-      `Care Specialist: ${report.specialistName || "Mark Johnson"}`,
+      `Safety Specialist: ${report.specialistName || "Mark Johnson"}`,
       margin + contentWidth / 2 + 6,
       y + 20,
     );
@@ -300,7 +300,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
 
     const summaryText =
       report.summary ||
-      `Comprehensive 50-point inspection completed by ${report.specialistName || "Care Specialist"}. Residence is well-maintained with clear hallways and active safety coverage.`;
+      `Comprehensive 50-point inspection completed by ${report.specialistName || "Safety Specialist"}. Residence is well-maintained with clear hallways and active safety coverage.`;
 
     doc.text(summaryText, margin + 5, y + 6, {
       maxWidth: contentWidth - 10,

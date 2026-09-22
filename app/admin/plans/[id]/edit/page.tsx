@@ -11,6 +11,7 @@ import {
   Check,
   DollarSign,
   Layers,
+  Clock,
   Sparkles,
   Save,
   Users,
@@ -20,6 +21,10 @@ import {
   useUpdatePlanMutation,
   useDeletePlanMutation,
 } from "@/redux/features/plan/planApi";
+import {
+  formatPlanDuration,
+  parsePlanDurationHours,
+} from "@/redux/features/plan/planTypes";
 import {
   confirmEdit,
   confirmDelete,
@@ -51,6 +56,7 @@ export default function EditPlanPage() {
     currency: "USD",
     billingInterval: "MONTHLY" as const,
     totalVisits: 2,
+    times: 2 as string | number,
     displayOrder: 1,
     supportsAutomaticBilling: true,
     supportsInvoiceBilling: true,
@@ -71,6 +77,7 @@ export default function EditPlanPage() {
         currency: plan.currency || "USD",
         billingInterval: "MONTHLY" as const,
         totalVisits: plan.totalVisits ?? 2,
+        times: parsePlanDurationHours(plan.times),
         displayOrder: plan.displayOrder ?? 1,
         supportsAutomaticBilling: true,
         supportsInvoiceBilling: true,
@@ -121,6 +128,7 @@ export default function EditPlanPage() {
         id: planId,
         body: {
           ...form,
+          times: formatPlanDuration(form.times),
           features,
         },
       }).unwrap();
@@ -235,7 +243,7 @@ export default function EditPlanPage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-[#5E8FB2] mb-1.5">
                 Monthly Price ($ USD) <span className="text-rose-500">*</span>
@@ -271,6 +279,31 @@ export default function EditPlanPage() {
                 />
               </div>
               <p className="text-[11px] text-[#64748B] mt-1">Visits available each monthly cycle</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#5E8FB2] mb-1.5">
+                Time (Hours) <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <Clock className="w-4 h-4 absolute left-3 top-3 text-[#5E8FB2]" />
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.5"
+                  required
+                  placeholder="2"
+                  value={form.times}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      times: e.target.value === "" ? "" : Number(e.target.value),
+                    })
+                  }
+                  className="w-full pl-9 pr-4 py-2.5 bg-[#F0F5F9]/50 border border-[#D9E4EC] rounded-xl text-sm font-black focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                />
+              </div>
+              <p className="text-[11px] text-[#64748B] mt-1">E.g. 1 for &quot;Up to an hour&quot;, 2 for &quot;Up to 2 hours&quot;</p>
             </div>
 
             <div>

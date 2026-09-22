@@ -2,35 +2,42 @@
 
 @layer base {
   :root {
-    --agewell-navy: #294B68;
-    --agewell-blue: #5E8FB2;
-    --agewell-light-blue: #EAF3F8;
-    --agewell-bg: #F7FAFC;
-    --agewell-white: #FFFFFF;
+    --agewell-navy: #294b68;
+    --agewell-blue: #5e8fb2;
+    --agewell-light-blue: #eaf3f8;
+    --agewell-bg: #f7fafc;
+    --agewell-white: #ffffff;
     --agewell-text: #243746;
-    --agewell-muted: #64748B;
-    --agewell-border: #D9E4EC;
-    --agewell-success: #3F8F6B;
-    --agewell-error: #C95C5C;
+    --agewell-muted: #64748b;
+    --agewell-border: #d9e4ec;
+    --agewell-success: #3f8f6b;
+    --agewell-error: #c95c5c;
   }
 }
 
 @theme inline {
-  --color-agewell-navy: #294B68;
-  --color-agewell-blue: #5E8FB2;
-  --color-agewell-light-blue: #EAF3F8;
-  --color-agewell-white: #FFFFFF;
+  --color-agewell-navy: #294b68;
+  --color-agewell-blue: #5e8fb2;
+  --color-agewell-light-blue: #eaf3f8;
+  --color-agewell-white: #ffffff;
   --color-agewell-text: #243746;
-  --color-agewell-muted: #64748B;
-  --color-agewell-border: #D9E4EC;
-  --color-agewell-success: #3F8F6B;
-  --color-agewell-error: #C95C5C;
+  --color-agewell-muted: #64748b;
+  --color-agewell-border: #d9e4ec;
+  --color-agewell-success: #3f8f6b;
+  --color-agewell-error: #c95c5c;
 }
 
 body {
-  background-color: #F7FAFC;
+  background-color: #f7fafc;
   color: #243746;
-  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(
+    --font-sans,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

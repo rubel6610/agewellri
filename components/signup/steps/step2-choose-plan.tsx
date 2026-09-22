@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   CheckCircle2,
   ArrowRight,
@@ -10,7 +10,10 @@ import {
   Package,
 } from "lucide-react";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
-import { ActivePlan } from "@/redux/features/plan/planTypes";
+import {
+  ActivePlan,
+  formatPlanDuration,
+} from "@/redux/features/plan/planTypes";
 
 interface Step2ChoosePlanProps {
   selectedPlanId?: string;
@@ -21,6 +24,7 @@ interface Step2ChoosePlanProps {
     planPrice: number;
     billingInterval: string;
     totalVisits: number;
+    times?: string;
     features?: string[];
     services?: Array<{ serviceName: string; allocatedVisits: number }>;
   }) => void;
@@ -34,11 +38,25 @@ export function Step2ChoosePlan({
 }: Step2ChoosePlanProps) {
   const { data: plans = [], isLoading } = useGetActivePlansQuery();
 
-  const displayPlans: ActivePlan[] = plans.length > 0 ? plans : [];
+  const displayPlans: ActivePlan[] = useMemo(() => {
+    if (!plans || plans.length === 0) return [];
+    return [...plans].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (dateA && dateB && dateA !== dateB) return dateB - dateA;
+      return (b.displayOrder ?? 0) - (a.displayOrder ?? 0);
+    });
+  }, [plans]);
 
   const [currentSelectedId, setCurrentSelectedId] = useState<string>(
     selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code || "",
   );
+
+  useEffect(() => {
+    if (!currentSelectedId && displayPlans.length > 0) {
+      setCurrentSelectedId(displayPlans[0].id || displayPlans[0].code);
+    }
+  }, [displayPlans, currentSelectedId]);
 
   const selectedPlan =
     displayPlans.find(
@@ -54,6 +72,7 @@ export function Step2ChoosePlan({
         planPrice: selectedPlan.price,
         billingInterval: selectedPlan.billingInterval || "MONTHLY",
         totalVisits: selectedPlan.totalVisits || 1,
+        times: formatPlanDuration(selectedPlan.times),
         features: selectedPlan.features || [],
         services: [],
       });
@@ -87,8 +106,12 @@ export function Step2ChoosePlan({
       ) : displayPlans.length === 0 ? (
         <div className="py-16 text-center space-y-3 bg-[#F8FAFC] rounded-3xl border border-[#D9E4EC]">
           <Package className="w-10 h-10 text-[#5E8FB2] mx-auto" />
-          <h3 className="text-base font-bold text-[#243746]">No Service Plans Available</h3>
-          <p className="text-xs text-[#64748B]">Please contact support or check back shortly.</p>
+          <h3 className="text-base font-bold text-[#243746]">
+            No Service Plans Available
+          </h3>
+          <p className="text-xs text-[#64748B]">
+            Please contact support or check back shortly.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,7 +155,7 @@ export function Step2ChoosePlan({
                   </div>
 
                   {/* Price */}
-                  <div className="pt-2 pb-4 border-b border-[#D9E4EC]">
+                  <div className="pt-2 pb-4  border-[#D9E4EC]">
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl sm:text-4xl font-black text-[#243746]">
                         ${plan.price}
@@ -141,16 +164,27 @@ export function Step2ChoosePlan({
                         / {plan.billingInterval?.toLowerCase() || "month"}
                       </span>
                     </div>
-                    <span className="text-xs font-semibold text-[#3F8F6B] mt-1 block">
-                      {plan.totalVisits || 1} {plan.totalVisits === 1 ? "Dedicated Home Visit" : "Dedicated Home Visits"} / month
-                    </span>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span className="text-xs font-bold text-[#3F8F6B]">
+                        {plan.totalVisits || 1}{" "}
+                        {plan.totalVisits === 1
+                          ? "Dedicated Home Visit"
+                          : "Dedicated Home Visits"}{" "}
+                        / mo
+                      </span>
+                      <span className="text-xs font-extrabold text-[#294B68] bg-[#EAF3F8] px-2 py-0.5 rounded-md">
+                        {formatPlanDuration(plan.times)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Features / Inclusions Bullet Points */}
-                  <div className="space-y-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-[#64748B] block">
-                      Plan Inclusions &amp; Features:
-                    </span>
+                  <div className="">
+                    {plan.features && plan.features.length > 0 && (
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#64748B] block">
+                        Plan Inclusions &amp; Features:
+                      </span>
+                    )}
                     {(plan.features || []).map((feat, fIdx) => (
                       <div
                         key={fIdx}
@@ -164,7 +198,7 @@ export function Step2ChoosePlan({
                 </div>
 
                 {/* Selection Check Indicator */}
-                <div className="pt-6 mt-6 border-t border-[#D9E4EC] flex items-center justify-between">
+                <div className="pt-2   border-[#D9E4EC] flex items-center justify-between">
                   <span className="text-xs font-bold text-[#64748B]">
                     {isSelected ? "Plan Selected" : "Click to Select"}
                   </span>

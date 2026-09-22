@@ -176,7 +176,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-lg bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden text-[#243746]">
+      <div className="relative w-full max-w-xl bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl p-6 sm:p-8 z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden text-[#243746]">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#D9E4EC]">
           <div>

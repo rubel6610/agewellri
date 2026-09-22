@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -22,7 +22,7 @@ import {
   useChangePlanStatusMutation,
   useDeletePlanMutation,
 } from "@/redux/features/plan/planApi";
-import { AdminPlan } from "@/redux/features/plan/planTypes";
+import { AdminPlan, formatPlanDuration } from "@/redux/features/plan/planTypes";
 import { PlanVersionsModal } from "@/components/admin/plan-versions-modal";
 import { TablePagination } from "@/components/ui/table-pagination";
 import {
@@ -38,17 +38,34 @@ export default function AdminPlansPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [selectedPlanForDetails, setSelectedPlanForDetails] = useState<AdminPlan | null>(null);
+  const [selectedPlanForDetails, setSelectedPlanForDetails] =
+    useState<AdminPlan | null>(null);
 
-  const { data: plans = [], isLoading, refetch, isFetching } = useGetAdminPlansQuery();
-  const [changePlanStatus, { isLoading: isStatusChanging }] = useChangePlanStatusMutation();
+  const {
+    data: plans = [],
+    isLoading,
+    refetch,
+    isFetching,
+  } = useGetAdminPlansQuery();
+  const [changePlanStatus, { isLoading: isStatusChanging }] =
+    useChangePlanStatusMutation();
   const [deletePlan, { isLoading: isDeleting }] = useDeletePlanMutation();
 
-  const filteredPlans = plans.filter((plan) => {
+  const sortedPlans = useMemo(() => {
+    return [...plans].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (dateA && dateB && dateA !== dateB) return dateB - dateA;
+      return (b.displayOrder ?? 0) - (a.displayOrder ?? 0);
+    });
+  }, [plans]);
+
+  const filteredPlans = sortedPlans.filter((plan) => {
     const matchesSearch =
       plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plan.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (plan.shortDescription && plan.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
+      (plan.shortDescription &&
+        plan.shortDescription.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus =
       statusFilter === "ALL" ||
@@ -65,7 +82,10 @@ export default function AdminPlansPage() {
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   const paginatedPlans = filteredPlans.slice(startIndex, endIndex);
 
-  const totalSubscribers = plans.reduce((sum, p) => sum + (p.activeSubscribersCount || 0), 0);
+  const totalSubscribers = plans.reduce(
+    (sum, p) => sum + (p.activeSubscribersCount || 0),
+    0,
+  );
   const activePlansCount = plans.filter((p) => p.isActive).length;
 
   const handleToggleStatus = async (plan: AdminPlan) => {
@@ -89,9 +109,15 @@ export default function AdminPlansPage() {
         body: { status: nextStatus },
       }).unwrap();
       refetch();
-      showToast(`Plan successfully ${plan.isActive ? "deactivated" : "activated"}.`, "success");
+      showToast(
+        `Plan successfully ${plan.isActive ? "deactivated" : "activated"}.`,
+        "success",
+      );
     } catch (err: any) {
-      showErrorAlert("Status Update Failed", err?.data?.message || "Failed to update plan status.");
+      showErrorAlert(
+        "Status Update Failed",
+        err?.data?.message || "Failed to update plan status.",
+      );
     }
   };
 
@@ -107,9 +133,15 @@ export default function AdminPlansPage() {
     try {
       const res = await deletePlan(plan.id).unwrap();
       refetch();
-      showSuccessAlert("Plan Deleted", res.message || `"${plan.name}" has been permanently deleted.`);
+      showSuccessAlert(
+        "Plan Deleted",
+        res.message || `"${plan.name}" has been permanently deleted.`,
+      );
     } catch (err: any) {
-      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete plan.");
+      showErrorAlert(
+        "Delete Failed",
+        err?.data?.message || "Failed to delete plan.",
+      );
     }
   };
 
@@ -123,7 +155,8 @@ export default function AdminPlansPage() {
             Service Plans
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-            Manage membership tiers, monthly pricing, visit allocations, and service feature bullet points
+            Manage membership tiers, monthly pricing, visit allocations, and
+            service feature bullet points
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -133,7 +166,9 @@ export default function AdminPlansPage() {
             className="p-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-sm font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
             title="Refresh plans"
           >
-            <RefreshCw className={`w-4 h-4 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-4 h-4 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`}
+            />
             <span className="hidden sm:inline">Refresh</span>
           </button>
           <Link
@@ -153,9 +188,14 @@ export default function AdminPlansPage() {
             <Package className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Plans</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Active Plans
+            </div>
             <div className="text-2xl font-black text-[#243746]">
-              {activePlansCount} <span className="text-sm font-semibold text-[#64748B]">/ {plans.length} Total</span>
+              {activePlansCount}{" "}
+              <span className="text-sm font-semibold text-[#64748B]">
+                / {plans.length} Total
+              </span>
             </div>
           </div>
         </div>
@@ -165,9 +205,14 @@ export default function AdminPlansPage() {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Active Subscribers</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Active Subscribers
+            </div>
             <div className="text-2xl font-black text-[#243746]">
-              {totalSubscribers} <span className="text-sm font-semibold text-[#64748B]">{totalSubscribers === 1 ? "Subscriber" : "Subscribers"}</span>
+              {totalSubscribers}{" "}
+              <span className="text-sm font-semibold text-[#64748B]">
+                {totalSubscribers === 1 ? "Subscriber" : "Subscribers"}
+              </span>
             </div>
           </div>
         </div>
@@ -177,7 +222,9 @@ export default function AdminPlansPage() {
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">Subscription Quotas</div>
+            <div className="text-xs font-bold text-[#5E8FB2] uppercase tracking-wider">
+              Subscription Quotas
+            </div>
             <div className="text-2xl font-black text-emerald-700 flex items-center gap-1.5">
               <span>Automatic</span>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
@@ -232,8 +279,8 @@ export default function AdminPlansPage() {
               <tr className="bg-[#F0F5F9] border-b border-[#D9E4EC] text-xs font-black text-[#294B68] uppercase tracking-wider">
                 <th className="py-3.5 px-4">Plan Name &amp; Code</th>
                 <th className="py-3.5 px-4">Price &amp; Interval</th>
-                <th className="py-3.5 px-4">Monthly Visits</th>
-          
+                <th className="py-3.5 px-4">Visits &amp; Time</th>
+
                 <th className="py-3.5 px-4">Subscribers</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -273,14 +320,22 @@ export default function AdminPlansPage() {
                   <td colSpan={7} className="py-16 text-center text-[#5E8FB2]">
                     <div className="flex flex-col items-center gap-2">
                       <Package className="w-10 h-10 text-[#D9E4EC]" />
-                      <div className="text-base font-bold text-[#243746]">No service plans found</div>
-                      <p className="text-xs">Adjust your search or click &quot;Create New Plan&quot; to define a new tier.</p>
+                      <div className="text-base font-bold text-[#243746]">
+                        No service plans found
+                      </div>
+                      <p className="text-xs">
+                        Adjust your search or click &quot;Create New Plan&quot;
+                        to define a new tier.
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginatedPlans.map((plan) => (
-                  <tr key={plan.id} className="hover:bg-[#F0F5F9]/40 transition-colors">
+                  <tr
+                    key={plan.id}
+                    className="hover:bg-[#F0F5F9]/40 transition-colors"
+                  >
                     <td className="py-4 px-4">
                       <button
                         type="button"
@@ -297,17 +352,25 @@ export default function AdminPlansPage() {
                       )}
                     </td>
                     <td className="py-4 px-4">
-                      <div className="font-black text-[#243746]">${plan.price}</div>
+                      <div className="font-black text-[#243746]">
+                        ${plan.price}
+                      </div>
                       <div className="text-xs text-[#5E8FB2] font-semibold capitalize">
                         {plan.billingInterval?.toLowerCase() || "monthly"}
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold bg-[#EAF3F8] text-[#294B68]">
-                        {plan.totalVisits || 1} {plan.totalVisits === 1 ? "visit" : "visits"} / mo
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-extrabold bg-[#EAF3F8] text-[#294B68] w-fit">
+                          {plan.totalVisits || 1}{" "}
+                          {plan.totalVisits === 1 ? "visit" : "visits"} / mo
+                        </span>
+                        <span className="text-[11px] font-semibold text-[#5E8FB2]">
+                          {formatPlanDuration(plan.times)}
+                        </span>
+                      </div>
                     </td>
-               
+
                     <td className="py-4 px-4">
                       <button
                         type="button"

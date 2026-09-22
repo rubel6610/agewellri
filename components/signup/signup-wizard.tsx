@@ -95,10 +95,10 @@ export function SignupWizard({
     planPrice: 595,
     billingInterval: "MONTHLY",
     totalVisits: 1,
+    times: "Up to 2 hours",
     features: [] as string[],
     services: [] as Array<{ serviceName: string; allocatedVisits: number }>,
   });
-
 
   const [residentData, setResidentData] = useState({
     isSameAsAccountHolder: true,
@@ -240,6 +240,7 @@ export function SignupWizard({
     planPrice: number;
     billingInterval: string;
     totalVisits: number;
+    times?: string;
     features?: string[];
     services?: Array<{ serviceName: string; allocatedVisits: number }>;
   }) => {
@@ -250,6 +251,7 @@ export function SignupWizard({
       planPrice: plan.planPrice,
       billingInterval: plan.billingInterval,
       totalVisits: plan.totalVisits,
+      times: plan.times || "Up to 2 hours",
       features: plan.features || [],
       services: plan.services || [],
     });
@@ -572,26 +574,43 @@ export function SignupWizard({
       </main>
 
       {/* Footer */}
-      <footer className="max-w-5xl mx-auto w-full pt-8 mt-12 border-t border-[#D9E4EC] text-center text-xs text-[#64748B] space-y-2">
-        <div className="flex items-center justify-center gap-4 font-semibold">
+      <footer
+        suppressHydrationWarning
+        className="max-w-5xl mx-auto w-full pt-8 mt-12 border-t border-[#D9E4EC] text-center text-xs text-[#64748B] space-y-2"
+      >
+        <div
+          suppressHydrationWarning
+          className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 font-semibold"
+        >
+          <span suppressHydrationWarning>© 2026 AgeWellRI LLC. All rights reserved.</span>
+          <span className="px-1 text-[#D9E4EC]" aria-hidden="true">•</span>
+          <span suppressHydrationWarning>(401) 212-3002</span>
+          <span className="px-1 text-[#D9E4EC]" aria-hidden="true">•</span>
+          <a
+            href="mailto:agewellri@gmail.com"
+            className="hover:text-[#294B68] transition-colors"
+            suppressHydrationWarning
+          >
+            agewellri@gmail.com
+          </a>
+        </div>
+        <div className="flex items-center justify-center gap-3 font-medium">
           <Link
+            target="_blank"
             href="/privacy-policy"
             className="hover:text-[#294B68] underline"
           >
             Privacy Policy
           </Link>
-          <span>&bull;</span>
-          <Link href="/terms-of-use" className="hover:text-[#294B68] underline">
+          <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+          <Link
+            target="_blank"
+            href="/terms-of-use"
+            className="hover:text-[#294B68] underline"
+          >
             Terms of Use
           </Link>
-          <span>&bull;</span>
-          <a href="mailto:agewellri@gmail.com" className="hover:text-[#294B68]">
-            agewellri@gmail.com
-          </a>
         </div>
-        <p>
-          AgeWellRI LLC
-        </p>
       </footer>
     </div>
   );

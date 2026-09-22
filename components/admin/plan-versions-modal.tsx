@@ -18,7 +18,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { AdminPlan } from "@/redux/features/plan/planTypes";
+import { AdminPlan, formatPlanDuration } from "@/redux/features/plan/planTypes";
 import { useGetAdminPlanByIdQuery } from "@/redux/features/plan/planApi";
 
 interface PlanVersionsModalProps {
@@ -84,7 +84,7 @@ export function PlanVersionsModal({
               <p className="text-xs text-[#64748B] mt-1 line-clamp-1">
                 {currentPlan.shortDescription ||
                   currentPlan.fullDescription ||
-                  "Comprehensive senior home care and safety oversight service plan."}
+                  "Comprehensive senior home safety oversight service plan."}
               </p>
             </div>
           </div>
@@ -142,7 +142,7 @@ export function PlanVersionsModal({
           {activeTab === "overview" && (
             <div className="space-y-6">
               {/* Quick Metrics */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 bg-[#F0F5F9]/60 rounded-2xl border border-[#D9E4EC] space-y-1">
                   <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1">
                     <DollarSign className="w-3.5 h-3.5 text-emerald-600" /> Plan Price
@@ -169,7 +169,19 @@ export function PlanVersionsModal({
                     </span>
                   </div>
                   <p className="text-xs text-[#64748B]">
-                    Included in monthly membership
+                    Included in monthly cycle
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#F0F5F9]/60 rounded-2xl border border-[#D9E4EC] space-y-1">
+                  <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#294B68]" /> Time (Hourly Duration)
+                  </span>
+                  <div className="text-lg font-black text-[#294B68] truncate">
+                    {formatPlanDuration(currentPlan.times)}
+                  </div>
+                  <p className="text-xs text-[#64748B]">
+                    Hourly time per visit
                   </p>
                 </div>
 
@@ -178,7 +190,7 @@ export function PlanVersionsModal({
                     <Users className="w-3.5 h-3.5 text-blue-600" /> Active Members
                   </span>
                   <div className="text-2xl font-black text-[#243746]">
-                    {subscribers.length || currentPlan.activeSubscribersCount }
+                    {subscribers.length || currentPlan.activeSubscribersCount || 0}
                   </div>
                   <p className="text-xs text-[#64748B]">
                     Currently active subscribers

@@ -149,7 +149,7 @@ export default function ClientNotificationsPage() {
             )}
           </div>
           <p className="text-sm text-[#64748B] mt-1">
-            Stay updated with your care visits, assessments, membership, and
+            Stay updated with your safety visits, assessments, membership, and
             billing notices.
           </p>
         </div>

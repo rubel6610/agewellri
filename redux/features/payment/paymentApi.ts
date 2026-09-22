@@ -241,6 +241,14 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing", "Subscription"],
     }),
+
+    adminDeleteInvoice: builder.mutation<ApiResponse<any>, string>({
+      query: (id) => ({
+        url: `/payments/admin/invoices/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Billing"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -266,5 +274,6 @@ export const {
   useAdminCancelSubscriptionMutation,
   useAdminReactivateSubscriptionMutation,
   useAdminUpdateSubscriptionStatusMutation,
+  useAdminDeleteInvoiceMutation,
 } = paymentApi;
 

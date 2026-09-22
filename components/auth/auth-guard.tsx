@@ -112,7 +112,7 @@ export function AuthGuard({
           />
           <div className="flex items-center gap-2 text-sm font-semibold text-[#294B68] pt-2">
             <Loader2 className="w-5 h-5 animate-spin text-[#5E8FB2]" />
-            <span>Verifying secure session...</span>
+            <span>Loading ......</span>
           </div>
         </div>
       </div>

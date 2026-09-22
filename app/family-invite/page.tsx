@@ -441,18 +441,24 @@ function FamilyInviteForm() {
             <span className="text-xs text-[#64748B] leading-tight">
               I agree to the AgeWellRI{" "}
               <Link
-                href="/terms-of-use"
+                href="https://www.agewellri.com/disclaimer"
                 className="text-[#294B68] font-bold underline"
               >
                 Terms of Service
               </Link>{" "}
+              {/* <Link
+                href="/terms-of-use"
+                className="text-[#294B68] font-bold underline"
+              >
+                Terms of Service
+              </Link>{" "} */}
               and{" "}
-              <Link
+              {/* <Link
                 href="/privacy-policy"
                 className="text-[#294B68] font-bold underline"
               >
                 Privacy Policy
-              </Link>
+              </Link> */}
               .
             </span>
           </label>

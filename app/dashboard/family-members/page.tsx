@@ -157,7 +157,7 @@ export default function FamilyMembersPage() {
       <div className="p-4 bg-[#EAF3F8] rounded-2xl border border-[#5E8FB2]/20 flex items-start gap-3">
         <HeartHandshake className="w-5 h-5 text-[#294B68] shrink-0 mt-0.5" />
         <div className="text-xs text-[#243746] leading-relaxed">
-          <span className="font-bold">Simple family access:</span> You can provide login credentials directly to any family member. When they sign in at the login page, they can view visits, review safety reports, and help coordinate care.
+          <span className="font-bold">Simple family access:</span> You can provide login credentials directly to any family member. When they sign in at the login page, they can view visits, review safety reports, and help coordinate safety.
         </div>
       </div>
 

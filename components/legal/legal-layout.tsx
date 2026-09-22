@@ -120,7 +120,19 @@ export function LegalLayout({ children, activeDocument }: LegalLayoutProps) {
               height={32}
               className="h-7 w-auto object-contain opacity-90"
             />
-            <p>© {new Date().getFullYear()} AgeWellRI Services. All rights reserved.</p>
+            <p suppressHydrationWarning className="flex flex-wrap items-center justify-center sm:justify-start gap-1">
+              <span suppressHydrationWarning>© {new Date().getFullYear()} AgeWellRI Services. All rights reserved</span>
+              <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+              <span suppressHydrationWarning>(401) 212-3002</span>
+              <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+              <a
+                href="mailto:agewellri@gmail.com"
+                className="hover:text-[#294B68] transition-colors"
+                suppressHydrationWarning
+              >
+                agewellri@gmail.com
+              </a>
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 font-semibold">
@@ -141,7 +153,7 @@ export function LegalLayout({ children, activeDocument }: LegalLayoutProps) {
             >
               Terms of Use
             </Link>
-            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            {/* <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
             <a
               href="mailto:agewellri@gmail.com"
               className="hover:text-[#294B68] transition-colors inline-flex items-center gap-1"
@@ -156,7 +168,7 @@ export function LegalLayout({ children, activeDocument }: LegalLayoutProps) {
             >
               <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
               <span>(401) 212-3002</span>
-            </a>
+            </a> */}
           </div>
         </div>
       </footer>

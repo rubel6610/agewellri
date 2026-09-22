@@ -21,6 +21,7 @@ export interface ServicePlan {
   safetyVisitsTotal: number;
   safetyVisitsCompleted: number;
   autoRenew?: boolean;
+  times?: string;
   pricePerMonth?: string;
   pricePerPeriod?: string;
 }

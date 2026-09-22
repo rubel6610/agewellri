@@ -12,7 +12,6 @@ import {
   FileCheck2,
   FileText,
   CreditCard,
-  Users,
   User,
   HelpCircle,
   LogOut,
@@ -76,7 +75,6 @@ export function MobileNavigation({
     { label: "My Reports", href: "/dashboard/reports", icon: FileCheck2 },
     { label: "My Agreements", href: "/dashboard/agreements", icon: FileText },
     { label: "My Billings", href: "/dashboard/billing", icon: CreditCard },
-    { label: "Family Members", href: "/dashboard/family-members", icon: Users },
     { label: "My Profile", href: "/dashboard/profile", icon: User },
   ];
 

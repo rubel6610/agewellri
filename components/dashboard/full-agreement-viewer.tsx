@@ -106,10 +106,10 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
             </div>
             <p className="text-xs text-[#64748B] mt-0.5">
               Client ID:{" "}
-              <strong>{agreement.clientNumber || "AW-MEMBER"}</strong> •
-              Template Version:{" "}
-              <strong>{agreement.templateVersion || "v2.0"}</strong> •
-              Executed: <strong>{formattedDate}</strong>
+              <strong>{agreement.clientNumber || "AW-MEMBER"}</strong> • 
+              {/* Template Version:{" "}
+              <strong>{agreement.templateVersion || "v2.0"}</strong> • */}
+              Executed:  <strong> {formattedDate}</strong>
             </p>
           </div>
         </div>
@@ -166,8 +166,21 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
         </div>
       </div>
 
-      {/* Canonical Agreement Document Content */}
-      <AgreementDocumentContent agreement={agreement} />
+      {/* Canonical Agreement Document Content in Scrollable Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs text-[#64748B] px-1 print:hidden">
+          <span className="font-bold uppercase tracking-wider text-[#5E8FB2]">
+            Official Agreement Document
+          </span>
+          <span className="font-medium text-[#64748B]">
+            Scroll to view 
+          </span>
+        </div>
+
+        <div className="max-h-[72vh] overflow-y-auto rounded-3xl border border-[#D9E4EC] shadow-xs bg-[#F8FAFC] p-2 sm:p-4 print:max-h-none print:overflow-visible print:p-0 print:border-none print:bg-white print:shadow-none">
+          <AgreementDocumentContent agreement={agreement} />
+        </div>
+      </div>
     </div>
   );
 }

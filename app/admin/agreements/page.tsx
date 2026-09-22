@@ -23,14 +23,12 @@ import { downloadAuthorityDocument } from "@/lib/utils/authority-document-downlo
 
 export default function AgreementsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [previewAgreement, setPreviewAgreement] = useState<AdminAgreementRecord | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const { data: agreementsRes, isLoading, isFetching, refetch } = useGetAdminAgreementsQuery({
-    state: stateFilter,
     search: searchTerm,
   });
 
@@ -146,7 +144,7 @@ export default function AgreementsAdminPage() {
       </div>
 
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-6">
-        {/* Search and filter */}
+        {/* Search */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
@@ -162,19 +160,6 @@ export default function AgreementsAdminPage() {
               placeholder="Search by client, email, signer..."
               className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
-          </div>
-
-          <div>
-            <select
-              value={stateFilter}
-              onChange={(e) => {
-                setStateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            >
-              <option value="ALL">Rhode Island (RI)</option>
-            </select>
           </div>
         </div>
 

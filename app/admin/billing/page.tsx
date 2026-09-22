@@ -9,6 +9,7 @@ import {
   useGetAdminUpcomingRenewalsQuery,
   useAdminTriggerRemindersMutation,
   useAdminRetryChargeMutation,
+  useAdminDeleteInvoiceMutation,
 } from "@/redux/features/payment/paymentApi";
 import { AdminUpcomingRenewalItem } from "@/redux/features/payment/paymentTypes";
 
@@ -18,6 +19,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Download,
+  Trash2,
   Search,
   Filter,
   Loader2,
@@ -108,6 +110,9 @@ export default function BillingAdminPage() {
     useAdminRetryChargeMutation();
   const [adminTriggerReminders, { isLoading: isTriggeringReminders }] =
     useAdminTriggerRemindersMutation();
+  const [adminDeleteInvoice, { isLoading: isDeletingInvoice }] =
+    useAdminDeleteInvoiceMutation();
+  const [deletingInvoiceId, setDeletingInvoiceId] = useState<string | null>(null);
 
   const handleRetry = async (invoiceId: string, clientName: string) => {
     try {
@@ -130,6 +135,42 @@ export default function BillingAdminPage() {
         "Charge Failed",
         err.data?.message || "Failed to retry charge.",
       );
+    }
+  };
+
+  const handleDeleteInvoice = async (inv: any) => {
+    const confirmed = await confirmCriticalAction({
+      title: "Delete Billing Record?",
+      text: `Are you sure you want to permanently delete invoice ${inv.invoiceNumber} for ${inv.clientName}? This action cannot be undone.`,
+      confirmButtonText: "Yes, Delete",
+      isDestructive: true,
+    });
+
+    if (!confirmed) return;
+
+    setDeletingInvoiceId(inv.id);
+    try {
+      const res = await adminDeleteInvoice(inv.id).unwrap();
+      if (res.success) {
+        showSuccessAlert(
+          "Invoice Deleted",
+          `Invoice ${inv.invoiceNumber} has been permanently deleted.`,
+        );
+        refetchOverview();
+        refetchInvoices();
+      } else {
+        showErrorAlert(
+          "Delete Failed",
+          res.message || "Failed to delete invoice.",
+        );
+      }
+    } catch (err: any) {
+      showErrorAlert(
+        "Delete Failed",
+        err.data?.message || err.message || "Failed to delete invoice.",
+      );
+    } finally {
+      setDeletingInvoiceId(null);
     }
   };
 
@@ -586,6 +627,21 @@ export default function BillingAdminPage() {
                                 <Download className="w-3.5 h-3.5" />
                               )}
                               <span className="hidden sm:inline">PDF</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteInvoice(inv)}
+                              disabled={deletingInvoiceId === inv.id || isDeletingInvoice}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                              title="Delete Billing Record"
+                            >
+                              {deletingInvoiceId === inv.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                              <span className="hidden sm:inline">Delete</span>
                             </button>
                           </div>
                         </td>

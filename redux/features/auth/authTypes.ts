@@ -220,6 +220,8 @@ export interface AgreementDocument {
   selectedPlan: string;
   planName?: string | null;
   planPrice: number;
+  planTimes?: string | null;
+  times?: string | null;
   hasCleaningAddon: boolean;
   signerRole?: SignerRole;
   signerName?: string | null;

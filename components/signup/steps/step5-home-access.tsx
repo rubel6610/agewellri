@@ -66,7 +66,7 @@ export function Step5HomeAccess({ initialData, onSave, onBack }: Step5HomeAccess
           Home Access Method
         </h2>
         <p className="text-sm text-[#5E8FB2] max-w-md mx-auto">
-          Choose how our licensed and vetted specialists will access the home for scheduled maintenance appointments.
+         Home Access Method: Choose how our certified, background-checked specialists will access the home for scheduled safety visits.
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock, Sparkles, FileCheck2, CalendarCheck } from "lucide-react";
+import { ArrowRight, Clock, Sparkles, FileCheck2 } from "lucide-react";
 import { ServicePlan } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
@@ -131,56 +131,6 @@ export default function DashboardHomePage() {
           </span>
         </div>
       </div>
-
-      {/* Active Service Monthly Renewal & Scheduling Action Banner */}
-      {isEntitlementsLoading ? (
-        <div className="p-6 bg-gradient-to-r from-[#294B68]/30 to-[#1E374D]/30 rounded-2xl sm:rounded-3xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-5 animate-pulse">
-          <div className="flex items-start gap-3.5 flex-1">
-            <div className="w-12 h-12 rounded-2xl bg-[#E2E8F0] shrink-0"></div>
-            <div className="space-y-2 flex-1">
-              <div className="h-4 bg-[#E2E8F0] rounded-full w-36"></div>
-              <div className="h-5 bg-[#E2E8F0] rounded-md w-64"></div>
-              <div className="h-3 bg-[#F1F5F9] rounded-md w-3/4"></div>
-            </div>
-          </div>
-          <div className="h-11 bg-[#E2E8F0] rounded-xl w-44 shrink-0"></div>
-        </div>
-      ) : entitlementsData && (entitlementsData.totalRemaining > 0 || entitlementsData.isNewQuarterReadyToSchedule) ? (
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#294B68] to-[#1E374D] text-white rounded-2xl sm:rounded-3xl shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border border-[#5E8FB2]/30">
-          <div className="flex items-start gap-3.5">
-            <div className="p-3 bg-white/10 text-white rounded-2xl shrink-0 backdrop-blur-xs border border-white/10">
-              <CalendarCheck className="w-6 h-6 text-emerald-300" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  New Service Active
-                </span>
-                <span className="text-xs text-white/70 font-semibold">{periodFormatted}</span>
-              </div>
-              <h3 className="font-extrabold text-base sm:text-lg text-white tracking-tight">
-                Your Safety Visits Are Ready to Schedule
-              </h3>
-              <p className="text-xs sm:text-sm text-white/80 max-w-xl leading-relaxed">
-                You have <strong>{entitlementsData.totalRemaining} visit{entitlementsData.totalRemaining > 1 ? "s" : ""}</strong> available this month (
-                {entitlementsData.entitlements
-                  ?.filter((e: any) => e.remaining > 0)
-                  .map((e: any) => `${e.serviceName}: ${e.remaining}`)
-                  .join(", ")}
-                ). Select your preferred dates, times, and specialists.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setScheduleModalOpen(true)}
-            className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold text-xs sm:text-sm rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 shrink-0 cursor-pointer"
-          >
-            <CalendarCheck className="w-4 h-4" />
-            <span>Schedule Your Visits</span>
-          </button>
-        </div>
-      ) : null}
 
       {/* Level 1: Plan & Next Visit Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">

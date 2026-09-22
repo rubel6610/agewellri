@@ -99,7 +99,7 @@ export function Step9Confirmation({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Resident Address */}
-          <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1 sm:col-span-2">
+          {/* <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1 sm:col-span-2">
             <span className="text-[11px] font-bold text-[#64748B] uppercase">Service Address</span>
             <div className="text-sm font-black text-[#243746]">
               {residentDetails.fullName}
@@ -108,7 +108,7 @@ export function Step9Confirmation({
               {residentDetails.address}, {residentDetails.city}, {residentDetails.state}{" "}
               {residentDetails.postalCode}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Action Button */}

@@ -58,7 +58,19 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
         {/* Bottom footer text */}
         <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#64748B]">
-          <p>© {new Date().getFullYear()} AgeWellRI LLC. All rights reserved.</p>
+          <p suppressHydrationWarning className="flex flex-wrap items-center gap-1">
+            <span suppressHydrationWarning>© {new Date().getFullYear()} AgeWellRI LLC. All rights reserved</span>
+            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            <span suppressHydrationWarning>(401) 212-3002</span>
+            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            <a
+              href="mailto:agewellri@gmail.com"
+              className="hover:text-[#294B68] transition-colors"
+              suppressHydrationWarning
+            >
+              agewellri@gmail.com
+            </a>
+          </p>
           <div className="flex items-center gap-3">
             <Link
               href="/privacy-policy"

@@ -40,7 +40,6 @@ export function ClientTable({
   onOpenScheduleModal,
 }: ClientTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -80,7 +79,7 @@ export function ClientTable({
   // Reset to page 1 on filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, stateFilter, statusFilter, pageSize]);
+  }, [searchTerm, statusFilter, pageSize]);
 
   const filteredClients = clients.filter((client) => {
     const term = searchTerm.toLowerCase();
@@ -90,8 +89,6 @@ export function ClientTable({
       client.email.toLowerCase().includes(term) ||
       client.id.toLowerCase().includes(term) ||
       (client.state && client.state.toLowerCase().includes(term));
-
-    const matchesState = stateFilter === "ALL" || client.state === stateFilter;
 
     const isExecuted = client.agreementStatus === "EXECUTED" || client.agreementStatus === "SIGNED";
     const isPaid = client.paymentStatus === "PAID";
@@ -105,7 +102,7 @@ export function ClientTable({
       (statusFilter === "agreement_executed" && isExecuted) ||
       (statusFilter === "payment_pending" && !isPaid);
 
-    return matchesSearch && matchesState && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   // KPI Quick Filter Counters
@@ -218,14 +215,6 @@ export function ClientTable({
           </div>
 
           <div className="flex items-center gap-2">
-            <select
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            >
-              <option value="ALL">Rhode Island (RI)</option>
-            </select>
-
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
