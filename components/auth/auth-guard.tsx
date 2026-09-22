@@ -108,7 +108,7 @@ export function AuthGuard({
             width={180}
             height={48}
             priority
-            className="h-auto w-auto max-h-11 object-contain"
+            className="h-18 w-auto max-h-28 object-contain"
           />
           <div className="flex items-center gap-2 text-sm font-semibold text-[#294B68] pt-2">
             <Loader2 className="w-5 h-5 animate-spin text-[#5E8FB2]" />

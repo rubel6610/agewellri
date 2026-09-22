@@ -103,7 +103,8 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     const redText: [number, number, number] = [185, 28, 28]; // #B91C1C
     const redBg: [number, number, number] = [254, 242, 242]; // #FEF2F2
 
-    const normalizedStatus = (inv.status || "paid").toUpperCase();
+    const rawStatus = (inv.status || "open").toUpperCase();
+    const normalizedStatus = rawStatus === "DRAFT" ? "OPEN" : rawStatus;
     const formattedAmount =
       typeof inv.amount === "number"
         ? `$${inv.amount.toFixed(2)}`
@@ -430,8 +431,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFontSize(8);
     doc.setTextColor(255, 255, 255);
     doc.text("ITEM DESCRIPTION", margin + 4, y + 5.5);
-    doc.text("BILLING / PAYMENT MONTH", margin + 90, y + 5.5);
-    doc.text("STATUS", margin + 140, y + 5.5);
+    doc.text("BILLING / PAYMENT MONTH", margin + 105, y + 5.5);
     doc.text("AMOUNT (USD)", pageWidth - margin - 4, y + 5.5, {
       align: "right",
     });
@@ -447,7 +447,7 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
     doc.setTextColor(...navy);
-    doc.text(planTitle, margin + 4, y + 6, { maxWidth: 82 });
+    doc.text(planTitle, margin + 4, y + 6, { maxWidth: 96 });
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
@@ -457,33 +457,19 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
         "Scheduled monthly safety inspections, fall prevention audits & safety allocations",
       margin + 4,
       y + 11.5,
-      { maxWidth: 82 },
+      { maxWidth: 96 },
     );
 
     // Billing / Payment Month in Table Row
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...primaryNavy);
-    doc.text(billingMonthName, margin + 90, y + 6);
+    doc.text(billingMonthName, margin + 105, y + 6);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(110, 125, 140);
-    doc.text(periodRangeText, margin + 90, y + 11.5);
-
-    // Status in Table Row
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    if (normalizedStatus === "PAID") {
-      doc.setTextColor(...greenText);
-      doc.text("PAID ✓", margin + 140, y + 8.5);
-    } else if (normalizedStatus === "OVERDUE" || normalizedStatus === "FAILED") {
-      doc.setTextColor(...redText);
-      doc.text("OVERDUE", margin + 140, y + 8.5);
-    } else {
-      doc.setTextColor(...amberText);
-      doc.text("OPEN", margin + 140, y + 8.5);
-    }
+    doc.text(periodRangeText, margin + 105, y + 11.5);
 
     // Amount in Table Row
     doc.setFont("helvetica", "bold");

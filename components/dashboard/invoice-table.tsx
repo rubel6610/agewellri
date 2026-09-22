@@ -57,11 +57,11 @@ export function InvoiceTable({
         </span>
       );
     }
-    if (s === "open" || s === "pending") {
+    if (s === "open" || s === "pending" || s === "draft") {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-[#C28A3A] border border-amber-200">
           <Clock className="w-3.5 h-3.5" />
-          Open / Pending
+          Open
         </span>
       );
     }
@@ -89,6 +89,8 @@ export function InvoiceTable({
     setDownloadingId(inv.id);
     try {
       const cleanDesc = getCleanDescription(inv);
+      const normalizedStatus =
+        inv.status?.toLowerCase() === "draft" ? "open" : inv.status || "open";
       generateInvoicePdf({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
@@ -106,7 +108,7 @@ export function InvoiceTable({
         paidAt: inv.paidAt,
         billingMonth: inv.billingMonth,
         billingPeriod: inv.billingPeriod,
-        status: inv.status,
+        status: normalizedStatus,
         pdfUrl: inv.pdfUrl,
       });
     } finally {

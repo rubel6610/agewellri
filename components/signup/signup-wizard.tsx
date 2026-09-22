@@ -402,7 +402,7 @@ export function SignupWizard({
             width={160}
             height={44}
             priority
-            className="h-8 sm:h-9 w-auto object-contain"
+            className="h-12 sm:h-16 w-auto object-contain"
           />
         </Link>
 

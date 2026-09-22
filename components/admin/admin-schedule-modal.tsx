@@ -40,10 +40,16 @@ export function AdminScheduleModal({
   // Client Selection State & Eligibility Filtering
   const isClientEligible = (c: any) => {
     if (!c) return false;
-    const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
-    const isPaid = c.paymentStatus === "PAID";
-    const hasQuota = c.remainingVisitsCount === undefined || c.remainingVisitsCount > 0;
-    return isExecuted && isPaid && hasQuota;
+    const isExecuted =
+      c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+    const isEnrolled =
+      c.paymentStatus === "PAID" ||
+      c.status === "active" ||
+      c.status === "pending_payment" ||
+      c.subscriptionStatus === "PENDING";
+    const hasQuota =
+      c.remainingVisitsCount === undefined || c.remainingVisitsCount > 0;
+    return isExecuted && isEnrolled && hasQuota;
   };
 
   const eligibleClients = clientsList.filter(isClientEligible);
@@ -200,6 +206,20 @@ export function AdminScheduleModal({
 
     const targetClientId = isLockedClient ? (defaultClientId || selectedClientId) : selectedClientId;
     const targetDisplayName = clientName || (selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : targetClientId) || "Client";
+
+    const dateParts = date.split("-");
+    if (dateParts.length === 3) {
+      const chosenDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+      const dow = chosenDate.getDay();
+      if (dow === 0 || dow === 3) {
+        const dayName = dow === 0 ? "Sunday" : "Wednesday";
+        showErrorAlert(
+          "Weekend Non-Service Day",
+          `Visits cannot be scheduled on ${dayName}s as they are non-service days. Working days are Monday, Tuesday, Thursday, Friday, and Saturday.`
+        );
+        return;
+      }
+    }
 
     const confirmed = await confirmCriticalAction({
       title: "Dispatch Specialist Visit?",
@@ -640,10 +660,11 @@ export function AdminScheduleModal({
                   onChange={(e) => setTimeSlot(e.target.value)}
                   className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 >
-                  <option value="09:00 AM – 11:00 AM">09:00 AM – 11:00 AM</option>
+                  <option value="08:00 AM – 10:00 AM">08:00 AM – 10:00 AM</option>
                   <option value="10:00 AM – 12:00 PM">10:00 AM – 12:00 PM</option>
                   <option value="01:00 PM – 03:00 PM">01:00 PM – 03:00 PM</option>
                   <option value="03:00 PM – 05:00 PM">03:00 PM – 05:00 PM</option>
+                  <option value="04:00 PM – 06:00 PM">04:00 PM – 06:00 PM</option>
                 </select>
               </div>
             </div>

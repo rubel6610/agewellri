@@ -56,7 +56,10 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
     }
   };
 
-  const isCancelled = billing.cancelAtPeriodEnd || billing.subscriptionStatus === "CANCELLATION_REQUESTED";
+  const isCancelled =
+    billing.cancelAtPeriodEnd ||
+    billing.subscriptionStatus === "CANCELLATION_REQUESTED" ||
+    billing.subscriptionStatus === "CANCELLED";
 
   return (
     <>
@@ -236,14 +239,14 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(true)}
-                className="px-4 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] font-bold text-xs rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
+                className="px-4 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] font-bold text-lg rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
               >
                 Update Payment Method
               </button>
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(true)}
-                className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-red-200"
+                className="px-3.5 py-2 text-lg font-bold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-red-200"
               >
                 Cancel Plan
               </button>

@@ -33,20 +33,80 @@ export default function DashboardHomePage() {
   const accountStatus = (authUser?.status as any) || "ACTIVE";
 
   // Dynamic Plan calculation from live entitlements
-  const renewalDateFormatted = entitlementsData?.billingPeriod?.endDate
+  const periodEndFormatted = entitlementsData?.billingPeriod?.endDate
     ? new Date(entitlementsData.billingPeriod.endDate).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       })
-    : "Dec 31, 2026";
+    : (() => {
+        const now = new Date();
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        const curMonth = new Date(now.getFullYear(), now.getMonth(), lastDay);
+        return curMonth.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      })();
 
   const periodFormatted = entitlementsData?.billingPeriod
     ? `${new Date(entitlementsData.billingPeriod.startDate).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-      })} – ${renewalDateFormatted}`
+      })} – ${periodEndFormatted}`
     : "Current Period";
+
+  // Next Monthly Renewal: ALWAYS the 1st of the next month (e.g. Nov 1, 2026 for an Oct cycle)
+  const nextRenewalFormatted = (() => {
+    // 1. If backend explicitly returned a next payment date that is day 1 of a month, format and use it
+    if (billingRes?.data?.nextPaymentDate) {
+      const parsed = new Date(billingRes.data.nextPaymentDate);
+      if (!isNaN(parsed.getTime())) {
+        const utcDay = parsed.getUTCDate();
+        const localDay = parsed.getDate();
+        if (utcDay === 1 || localDay === 1) {
+          return parsed.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+        }
+      }
+    }
+
+    // 2. Otherwise calculate 1st of next month directly from the entitlements billing period or current date
+    const refDate = entitlementsData?.billingPeriod?.startDate
+      ? new Date(entitlementsData.billingPeriod.startDate)
+      : entitlementsData?.billingPeriod?.endDate
+      ? new Date(entitlementsData.billingPeriod.endDate)
+      : new Date();
+
+    const nextMonthFirst = new Date(
+      refDate.getFullYear(),
+      refDate.getMonth() + 1,
+      1
+    );
+
+    return nextMonthFirst.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  })();
+
+  const isPlanCancelled =
+    billingRes?.data?.cancelAtPeriodEnd ||
+    billingRes?.data?.subscriptionStatus === "CANCELLATION_REQUESTED" ||
+    billingRes?.data?.subscriptionStatus === "CANCELLED";
+
+  const serviceEndDateFormatted = billingRes?.data?.cancellationEffectiveAt
+    ? new Date(billingRes.data.cancellationEffectiveAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : periodEndFormatted;
 
   const safetyEntitlement = entitlementsData?.entitlements?.find(
     (e: any) =>
@@ -88,7 +148,7 @@ export default function DashboardHomePage() {
   const dynamicPlan: ServicePlan = {
     name: formattedPlanName,
     currentPeriod: periodFormatted,
-    renewalDate: renewalDateFormatted,
+    renewalDate: isPlanCancelled ? serviceEndDateFormatted : nextRenewalFormatted,
     totalVisits,
     completedVisits,
     remainingVisits,
@@ -119,14 +179,20 @@ export default function DashboardHomePage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#294B68] bg-[#EAF3F8] px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 shrink-0">
-          <Clock className="w-4 h-4 text-[#5E8FB2]" />
+        <div
+          className={`flex items-center gap-2 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl border shrink-0 ${
+            isPlanCancelled
+              ? "text-amber-800 bg-amber-50 border-amber-300"
+              : "text-[#294B68] bg-[#EAF3F8] border-[#5E8FB2]/30"
+          }`}
+        >
+          <Clock className={`w-4 h-4 ${isPlanCancelled ? "text-amber-600" : "text-[#5E8FB2]"}`} />
           <span>
-            Next Monthly Renewal:{" "}
-            {isEntitlementsLoading ? (
+            {isPlanCancelled ? "Service Ending: " : "Next Monthly Renewal: "}
+            {isEntitlementsLoading || isBillingLoading ? (
               <span className="inline-block h-3 bg-[#5E8FB2]/30 rounded w-16 align-middle animate-pulse ml-1" />
             ) : (
-              <strong>{renewalDateFormatted}</strong>
+              <strong>{isPlanCancelled ? serviceEndDateFormatted : nextRenewalFormatted}</strong>
             )}
           </span>
         </div>
@@ -153,35 +219,66 @@ export default function DashboardHomePage() {
       {/* Level 1.5: Dynamic Visit Entitlements Breakdown */}
       <VisitEntitlementsCard />
 
-      {/* Level 2: Renewal Alert Banner */}
-      <div className="p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-[#EAF3F8] text-[#294B68] rounded-xl shrink-0">
-            <Sparkles className="w-5 h-5 text-[#294B68]" />
+      {/* Level 2: Renewal Alert Banner / Cancellation Notice */}
+      {isPlanCancelled ? (
+        <div className="p-5 sm:p-6 bg-amber-50 rounded-2xl sm:rounded-3xl border border-amber-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-amber-100 text-amber-800 rounded-xl shrink-0">
+              <Clock className="w-5 h-5 text-amber-700" />
+            </div>
+            <div>
+              <h4 className="font-bold text-amber-900 text-base">
+                Automatic Renewal Cancelled
+              </h4>
+              <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
+                Your AgeWellRI coverage remains active through{" "}
+                {isBillingLoading ? (
+                  <span className="inline-block h-3 bg-amber-200 rounded w-20 align-middle animate-pulse" />
+                ) : (
+                  <strong>{serviceEndDateFormatted}</strong>
+                )}
+                . You will not be billed for subsequent monthly periods.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="font-bold text-[#243746] text-base">
-              Monthly Renewal Notice
-            </h4>
-            <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-              Your next AgeWellRI monthly period begins on{" "}
-              {isEntitlementsLoading ? (
-                <span className="inline-block h-3 bg-[#E2E8F0] rounded w-20 align-middle animate-pulse" />
-              ) : (
-                <strong>{renewalDateFormatted}</strong>
-              )}{" "}
-              ({dynamicPlan.totalVisits} visits included).
-            </p>
-          </div>
-        </div>
 
-        <Link
-          href="/dashboard/billing"
-          className="text-xs font-bold text-[#294B68] hover:text-[#5E8FB2] underline shrink-0"
-        >
-          View Billing &amp; Subscription →
-        </Link>
-      </div>
+          <Link
+            href="/dashboard/billing"
+            className="text-xs font-bold text-amber-900 hover:text-amber-950 underline shrink-0"
+          >
+            Manage Subscription →
+          </Link>
+        </div>
+      ) : (
+        <div className="p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-[#EAF3F8] text-[#294B68] rounded-xl shrink-0">
+              <Sparkles className="w-5 h-5 text-[#294B68]" />
+            </div>
+            <div>
+              <h4 className="font-bold text-[#243746] text-base">
+                Monthly Renewal Notice
+              </h4>
+              <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+                Your next AgeWellRI monthly period begins on{" "}
+                {isEntitlementsLoading ? (
+                  <span className="inline-block h-3 bg-[#E2E8F0] rounded w-20 align-middle animate-pulse" />
+                ) : (
+                  <strong>{nextRenewalFormatted}</strong>
+                )}{" "}
+                ({dynamicPlan.totalVisits} visits included).
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/dashboard/billing"
+            className="text-xs font-bold text-[#294B68] hover:text-[#5E8FB2] underline shrink-0"
+          >
+            View Billing &amp; Subscription →
+          </Link>
+        </div>
+      )}
 
       {/* Level 3: Recent Reports Overview */}
       <div className="space-y-4">

@@ -169,7 +169,7 @@ export function Step8BillingSetup({
               </div>
             </div>
 
-            <div className=" bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed">
+            <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed">
               You won't be charged today. Your first charge and your first visit will both be on <strong>{commencementDateFormatted}</strong>. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
             </div>
           </div>

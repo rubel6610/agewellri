@@ -3,13 +3,11 @@
 import React, { useState } from "react";
 import {
   X,
-  AlertTriangle,
   Ban,
   Calendar,
   Clock,
-  ShieldAlert,
   Loader2,
-  Info,
+  CheckCircle2,
 } from "lucide-react";
 import { AdminSubscriptionItem } from "@/redux/features/payment/paymentTypes";
 import { useAdminCancelSubscriptionMutation } from "@/redux/features/payment/paymentApi";
@@ -28,7 +26,6 @@ export function AdminCancelSubscriptionModal({
   subscription,
   onSuccess,
 }: AdminCancelSubscriptionModalProps) {
-  const [immediate, setImmediate] = useState<boolean>(false);
   const [reason, setReason] = useState<string>("");
   const [cancelSubscription, { isLoading }] = useAdminCancelSubscriptionMutation();
 
@@ -39,13 +36,13 @@ export function AdminCancelSubscriptionModal({
     try {
       const res = await cancelSubscription({
         id: subscription.id,
-        immediate,
+        immediate: false,
         reason: reason.trim() || undefined,
       }).unwrap();
 
       await showSuccessAlert(
-        immediate ? "Subscription Cancelled Immediately" : "Cancellation Scheduled",
-        res.message || "Subscription updated successfully."
+        "Cancellation Scheduled",
+        res.message || "Subscription updated successfully. Auto-renewal has been cancelled at period end."
       );
       onClose();
       if (onSuccess) onSuccess();
@@ -103,71 +100,15 @@ export function AdminCancelSubscriptionModal({
             </div>
           </div>
 
-          {/* Cancellation Type Options */}
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-[#243746] uppercase tracking-wider block">
-              Select Cancellation Policy:
-            </label>
-
-            {/* Option 1: End of Period */}
-            <label
-              className={`flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer ${
-                !immediate
-                  ? "bg-[#EAF3F8]/50 border-[#294B68] ring-1 ring-[#294B68]"
-                  : "bg-white border-[#D9E4EC] hover:bg-[#F8FAFC]"
-              }`}
-            >
-              <input
-                type="radio"
-                name="cancellationType"
-                checked={!immediate}
-                onChange={() => setImmediate(false)}
-                className="mt-1 text-[#294B68] focus:ring-[#294B68]"
-              />
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-[#243746]">
-                    Cancel at End of Current Period (Recommended)
-                  </span>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Standard
-                  </span>
-                </div>
-                <p className="text-xs text-[#64748B] leading-relaxed">
-                  The client continues receiving safety visits until the end of their current cycle (<strong>{subscription.nextRenewalDate}</strong>). Auto-renewal is disabled and no further charges will occur.
-                </p>
-              </div>
-            </label>
-
-            {/* Option 2: Immediate */}
-            <label
-              className={`flex items-start gap-3.5 p-4 rounded-2xl border transition-all cursor-pointer ${
-                immediate
-                  ? "bg-rose-50/50 border-rose-500 ring-1 ring-rose-500"
-                  : "bg-white border-[#D9E4EC] hover:bg-[#F8FAFC]"
-              }`}
-            >
-              <input
-                type="radio"
-                name="cancellationType"
-                checked={immediate}
-                onChange={() => setImmediate(true)}
-                className="mt-1 text-rose-600 focus:ring-rose-600"
-              />
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-rose-900">
-                    Cancel Immediately (Revoke Access Right Now)
-                  </span>
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-200">
-                    Immediate
-                  </span>
-                </div>
-                <p className="text-xs text-rose-800/80 leading-relaxed">
-                  Terminates subscription coverage today. Cancels any remaining scheduled appointments and disables active client portal services.
-                </p>
-              </div>
-            </label>
+          {/* Cancellation Notice Box */}
+          <div className="p-4 bg-[#EAF3F8]/60 rounded-2xl border border-[#294B68]/20 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-[#243746]">
+              <Clock className="w-4 h-4 text-[#294B68]" />
+              <span>Cancel at End of Current Period</span>
+            </div>
+            <p className="text-xs text-[#475569] leading-relaxed">
+              The client will continue receiving service visits through the end of their current billing cycle (<strong>{subscription.nextRenewalDate || subscription.currentPeriod}</strong>). Auto-renewal will be turned off and no further charges will occur.
+            </p>
           </div>
 
           {/* Reason Input */}
@@ -196,11 +137,7 @@ export function AdminCancelSubscriptionModal({
             <button
               type="submit"
               disabled={isLoading}
-              className={`px-5 py-2.5 font-bold text-xs rounded-xl text-white shadow-sm flex items-center gap-2 transition-all cursor-pointer ${
-                immediate
-                  ? "bg-rose-600 hover:bg-rose-700 shadow-rose-600/20"
-                  : "bg-[#294B68] hover:bg-[#1E364B] shadow-[#294B68]/20"
-              }`}
+              className="px-5 py-2.5 font-bold text-xs rounded-xl text-white shadow-sm flex items-center gap-2 transition-all cursor-pointer bg-[#294B68] hover:bg-[#1E364B] shadow-[#294B68]/20 disabled:opacity-50"
             >
               {isLoading ? (
                 <>
@@ -210,7 +147,7 @@ export function AdminCancelSubscriptionModal({
               ) : (
                 <>
                   <Ban className="w-4 h-4" />
-                  <span>{immediate ? "Cancel Immediately" : "Confirm Schedule Cancellation"}</span>
+                  <span>Confirm Cancellation</span>
                 </>
               )}
             </button>

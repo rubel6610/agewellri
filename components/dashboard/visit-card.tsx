@@ -103,22 +103,10 @@ export function VisitCard({ appointment }: VisitCardProps) {
             Report Available
           </Link>
         ) : (
-          <span className="text-xs text-[#64748B]">
-            {isRequested
-              ? "Under Review by Admin"
-              : isCompleted
-              ? "Report Processing"
-              : "Upcoming Visit"}
-          </span>
+          <div />
         )}
 
-        <Link
-          href={`/dashboard/appointments/${appointment.id}`}
-          className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] flex items-center gap-1 hover:underline"
-        >
-          <span>View Details</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+      
       </div>
     </div>
   );

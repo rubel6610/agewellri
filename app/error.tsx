@@ -42,7 +42,7 @@ export default function Error({
             alt="AgeWellRI"
             width={180}
             height={48}
-            className="h-11 w-auto object-contain"
+            className="h-24 w-auto object-contain"
             priority
           />
         </div>
