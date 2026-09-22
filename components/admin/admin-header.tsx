@@ -1,6 +1,7 @@
 "use client";
 
-import { Plus, Menu, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { Plus, Menu, UserPlus, UserCheck } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
 import { useAppSelector } from "@/redux/hooks";
 
@@ -68,17 +69,21 @@ export function AdminHeader({
           <NotificationMenu />
         </div>
 
-        {/* Admin Profile */}
-        <div className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-[#D9E4EC] shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#294B68] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+        {/* Admin Profile Link */}
+        <Link
+          href="/admin/profile"
+          title="Manage Administrator Profile & Credentials"
+          className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-[#D9E4EC] shrink-0 p-1 sm:p-1.5 rounded-xl hover:bg-[#EAF3F8] transition-colors group cursor-pointer"
+        >
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#294B68] group-hover:bg-[#1E374D] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs transition-colors">
             {firstName[0]}
             {lastName[0]}
           </div>
           <div className="hidden xl:block text-left text-xs max-w-[140px]">
-            <span className="font-bold text-[#243746] block truncate">{firstName} {lastName}</span>
+            <span className="font-bold text-[#243746] block truncate group-hover:text-[#294B68] transition-colors">{firstName} {lastName}</span>
             <span className="text-[#64748B] text-[11px] block truncate">{roleLabel}</span>
           </div>
-        </div>
+        </Link>
       </div>
     </header>
   );

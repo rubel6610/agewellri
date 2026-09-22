@@ -40,6 +40,7 @@ export function AdminSidebar() {
     { label: "Agreements", href: "/admin/agreements", icon: FileText },
     { label: "Billing", href: "/admin/billing", icon: CreditCard },
     { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCw },
+    { label: "Admin Profile", href: "/admin/profile", icon: UserCheck },
   ];
 
   return (

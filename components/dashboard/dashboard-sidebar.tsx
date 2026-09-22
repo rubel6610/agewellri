@@ -102,10 +102,10 @@ export function DashboardSidebar() {
             <Image
               src="/logo.png"
               alt="AgeWellRI Portal"
-              width={260}
+              width={300}
               height={80}
               priority
-              className="w-full max-w-[215px] h-auto max-h-14 object-contain"
+              className="w-full max-w-[220px] h-auto max-h-14 object-contain"
             />
           </Link>
         </div>
