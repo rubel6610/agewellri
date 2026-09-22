@@ -26,7 +26,7 @@ export default function SettingsAdminPage() {
             <h3 className="text-base font-bold text-[#243746]">Plan &amp; Service Controls</h3>
           </div>
           <p className="text-xs text-[#64748B]">
-            Configure quarterly visit limits (Guardian Plus: 12, Essential Guard: 6) and allowed booking lead times.
+            Configure monthly visit limits and allowed booking lead times.
           </p>
           <button
             onClick={() => showToast("Plan configuration settings synced", "success")}
@@ -88,6 +88,24 @@ export default function SettingsAdminPage() {
           >
             Gateway Settings →
           </button>
+        </div>
+
+        <div className="p-6 bg-white rounded-2xl border-2 border-[#5E8FB2]/40 space-y-3 shadow-xs bg-gradient-to-br from-white to-[#F0F5F9]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#294B68] text-white rounded-xl shadow-xs">
+              <Shield className="w-5 h-5" />
+            </div>
+            <h3 className="text-base font-bold text-[#243746]">Admin Profile &amp; Credentials</h3>
+          </div>
+          <p className="text-xs text-[#64748B]">
+            Manage your personal administrative contact information and change your account security password.
+          </p>
+          <a
+            href="/admin/profile"
+            className="text-xs font-bold text-[#294B68] hover:underline pt-2 inline-flex items-center gap-1 cursor-pointer font-extrabold"
+          >
+            Manage Profile &amp; Password →
+          </a>
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ export interface StripeConfigData {
 }
 
 export interface CreateSetupIntentRequest {
-  plan?: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS";
+  plan?: string;
   hasCleaningAddon?: boolean;
 }
 
@@ -67,7 +67,17 @@ export interface PaymentMethodsData {
 export interface InvoiceItem {
   id: string;
   invoiceNumber: string;
+  clientName?: string;
+  clientNumber?: string;
+  clientEmail?: string;
+  planName?: string;
+  billingFrequency?: string;
+  paymentMethod?: string;
   date: string;
+  dueDate?: string;
+  paidAt?: string | null;
+  billingMonth?: string;
+  billingPeriod?: string;
   description: string;
   amount: string;
   status: "paid" | "open" | "overdue" | "draft" | "void" | string;
@@ -121,6 +131,9 @@ export interface ClientVisitEntitlementsResponse {
 }
 
 export interface BillingOverviewData {
+  clientName?: string;
+  clientNumber?: string;
+  clientEmail?: string;
   currentPlanName: string;
   selectedPlanCode: string;
   hasCleaningAddon: boolean;
@@ -133,6 +146,10 @@ export interface BillingOverviewData {
   currentPeriod: string;
   nextPaymentDate: string;
   nextPaymentAmount: string;
+  firstBillingDate?: string;
+  serviceCommencementDate?: string;
+  cancellationCutoffDate?: string;
+  isPendingFirstBilling?: boolean;
   paymentMethod: {
     brand: string;
     last4: string;
@@ -148,8 +165,9 @@ export interface ProcessAgreementPaymentRequest {
   paymentMethodId?: string;
   setupIntentId?: string;
   billingMethod?: "AUTOMATIC" | "INVOICE";
-  selectedPlan: "ESSENTIAL_GUARD" | "GUARDIAN_PLUS" | "STANDALONE_CLEANING";
-  hasCleaningAddon: boolean;
+  selectedPlan?: string;
+  plan?: string;
+  hasCleaningAddon?: boolean;
 }
 
 export interface ProcessAgreementPaymentData {
@@ -218,6 +236,9 @@ export interface AdminInvoiceItem {
   status: string;
   dueDate: string;
   paidAt?: string | null;
+  date?: string;
+  billingMonth?: string;
+  billingPeriod?: string;
   pdfUrl: string;
 }
 

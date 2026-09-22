@@ -8,6 +8,7 @@ import {
   X,
   LayoutDashboard,
   Users,
+  UserCheck,
   CalendarCheck,
   FileCheck2,
   FileText,
@@ -50,14 +51,15 @@ export function AdminMobileNav({
 
   const navItems = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
-    { label: "Clients", href: "/admin/clients", icon: Users, badge: "128" },
+    { label: "Clients", href: "/admin/clients", icon: Users },
+    { label: "Specialists", href: "/admin/specialists", icon: UserCheck },
     { label: "Service Plans", href: "/admin/plans", icon: Package },
-    { label: "Services Catalog", href: "/admin/services", icon: Layers },
     { label: "Appointments", href: "/admin/appointments", icon: CalendarCheck },
-    { label: "Reports", href: "/admin/reports", icon: FileCheck2, badge: "5" },
+    { label: "Reports", href: "/admin/reports", icon: FileCheck2 },
     { label: "Agreements", href: "/admin/agreements", icon: FileText },
     { label: "Billing", href: "/admin/billing", icon: CreditCard },
     { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCw },
+    { label: "Admin Profile", href: "/admin/profile", icon: UserCheck },
     { label: "Notifications", href: "/admin/notifications", icon: Bell },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ];
@@ -96,17 +98,17 @@ export function AdminMobileNav({
                 onClose();
                 onOpenAddClientModal();
               }}
-              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1 border border-[#5E8FB2]/30 cursor-pointer"
+              className="py-2.5 px-3 bg-[#EAF3F8] text-[#294B68] font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-[#5E8FB2]/30 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Client</span>
+              <span>Invite Client</span>
             </button>
             <button
               onClick={() => {
                 onClose();
                 onOpenScheduleModal();
               }}
-              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+              className="py-2.5 px-3 bg-[#294B68] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Schedule</span>
@@ -138,11 +140,7 @@ export function AdminMobileNav({
                     />
                     <span>{item.label}</span>
                   </div>
-                  {item.badge && (
-                    <span className="px-2 py-0.5 text-xs font-extrabold rounded-full bg-[#EAF3F8] text-[#294B68]">
-                      {item.badge}
-                    </span>
-                  )}
+                
                 </Link>
               );
             })}

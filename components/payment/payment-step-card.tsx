@@ -60,12 +60,16 @@ export function PaymentStepCard({
     activePlans[0] ||
     null;
 
-  const planName = planObj?.name || (selectedPlan === "GUARDIAN_PLUS" ? "Guardian Plus" : "Essential Guard");
-  const planBasePrice = planObj?.price ?? (selectedPlan === "GUARDIAN_PLUS" ? 1892 : 995);
-  const addonPrice = hasCleaningAddon ? 60 : 0;
-  const totalDueToday = planBasePrice + addonPrice;
-  const billingInterval = planObj?.billingInterval || "QUARTERLY";
-  const isOneTime = billingInterval === "ONE_TIME";
+  const planName =
+    planObj?.name ||
+    (selectedPlan
+      ? selectedPlan
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase())
+      : "Selected Plan");
+  const planBasePrice = planObj?.price ?? 0;
+  const totalDueToday = planBasePrice;
+  const isOneTime = false;
 
   // Create SetupIntent on mount or when plan changes
   useEffect(() => {
@@ -76,7 +80,7 @@ export function PaymentStepCard({
         setInitError(null);
         const res = await createSetupIntent({
           plan: selectedPlan as any,
-          hasCleaningAddon,
+          hasCleaningAddon: false,
         }).unwrap();
 
         if (isMounted && res?.data?.clientSecret) {
@@ -100,7 +104,7 @@ export function PaymentStepCard({
     return () => {
       isMounted = false;
     };
-  }, [createSetupIntent, selectedPlan, hasCleaningAddon]);
+  }, [createSetupIntent, selectedPlan]);
 
   const handleSuccess = async (setupIntentId: string, paymentMethodId: string) => {
     setIsProcessing(true);
@@ -166,7 +170,7 @@ export function PaymentStepCard({
                       {planName}
                     </h3>
                     <span className="text-[11px] text-[#64748B] font-semibold">
-                      {planObj?.totalVisits || (selectedPlan === "GUARDIAN_PLUS" ? 12 : 6)} Visits / {billingInterval.toLowerCase()}
+                      {planObj?.totalVisits || (selectedPlan === "GUARDIAN_PLUS" ? 12 : 6)} Visits / month
                     </span>
                   </div>
                 </div>
@@ -174,20 +178,12 @@ export function PaymentStepCard({
 
               {/* Service Features Included */}
               <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-2 text-[11px] text-[#475569]">
-                {(planObj?.services || []).map((srv, idx) => (
+                {(planObj?.features || []).map((feat: string, idx: number) => (
                   <div key={idx} className="flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B] shrink-0" />
-                    <span>
-                      {srv.allocatedVisits} {srv.serviceName} visits
-                    </span>
+                    <span>{feat}</span>
                   </div>
                 ))}
-                {hasCleaningAddon && (
-                  <div className="flex items-center gap-2 text-[#3F8F6B] font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B] shrink-0" />
-                    <span>+6 Cleaning Add-On Visits Included</span>
-                  </div>
-                )}
                 <div className="flex items-center gap-2 text-[#64748B]">
                   <Calendar className="w-3.5 h-3.5 text-[#5E8FB2] shrink-0" />
                   <span>Immediate booking calendar access</span>
@@ -201,12 +197,6 @@ export function PaymentStepCard({
                 <span>{planName}</span>
                 <span className="font-bold text-[#243746]">${planBasePrice}.00</span>
               </div>
-              {hasCleaningAddon && (
-                <div className="flex justify-between text-xs text-[#64748B]">
-                  <span>Cleaning Add-On (6 Visits)</span>
-                  <span className="font-bold text-[#243746]">$60.00</span>
-                </div>
-              )}
               <div className="flex justify-between text-base font-black text-[#243746] pt-3 border-t border-[#D9E4EC]">
                 <span>Amount:</span>
                 <span className="text-[#294B68]">${totalDueToday}.00</span>
@@ -214,7 +204,7 @@ export function PaymentStepCard({
               <p className="text-[11px] text-[#94A3B8] text-right">
                 {isOneTime
                   ? "One-time charge. No recurring subscription."
-                  : `Contracted rate billed ${billingInterval.toLowerCase()}. Cancel anytime.`}
+                  : "Contracted rate billed monthly. Cancel anytime."}
               </p>
             </div>
           </div>

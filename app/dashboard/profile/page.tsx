@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { ChangePasswordModal } from "@/components/auth/change-password-modal";
 import { EditProfileModal } from "@/components/auth/edit-profile-modal";
+import { AccessMethodsCard } from "@/components/dashboard/access-methods-card";
 import { Edit3 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -39,13 +40,16 @@ export default function ProfilePage() {
   const firstName = user?.firstName || "Valued";
   const lastName = user?.lastName || "Member";
   const email = user?.email || "member@agewellri.com";
-  const phone = user?.phone || "(401) 555-0199";
-  const memberId = user?.client?.clientNumber || (user?.id ? `MEM-${user.id.slice(-5).toUpperCase()}` : "MEM-94021");
+  const phone = user?.phone || "(401) 212-3002";
+  const memberId =
+    user?.client?.clientNumber ||
+    (user?.id ? `MEM-${user.id.slice(-5).toUpperCase()}` : "MEM-94021");
   const address = user?.client
     ? `${user.client.address}, ${user.client.city}, ${user.client.state} ${user.client.postalCode}`
     : "148 Hope Street, Providence, RI 02906";
   const emergencyName = user?.client?.emergencyContactName || "Sarah Jenkins";
-  const emergencyPhone = user?.client?.emergencyContactPhone || "(401) 555-0182";
+  const emergencyPhone =
+    user?.client?.emergencyContactPhone || "(401) 555-0182";
   const emergencyRel = user?.client?.emergencyContactRelation || "Daughter";
 
   return (
@@ -57,7 +61,8 @@ export default function ProfilePage() {
             My Member Profile
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">
-            Manage your personal contact info, credentials, and care coordination details.
+            Manage your personal contact info, credentials, and safety oversight
+            details.
           </p>
         </div>
 
@@ -126,7 +131,8 @@ export default function ProfilePage() {
 
           <div className="sm:col-span-2 space-y-1">
             <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#5E8FB2]" /> Home Service Address
+              <MapPin className="w-3.5 h-3.5 text-[#5E8FB2]" /> Home Service
+              Address
             </span>
             <p className="text-base font-bold text-[#243746] p-3.5 bg-[#F7FAFC] rounded-xl border border-[#D9E4EC]">
               {address}
@@ -158,6 +164,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Home Access Methods Card */}
+      <AccessMethodsCard />
 
       {/* Edit Profile Modal */}
       <EditProfileModal

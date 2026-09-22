@@ -41,7 +41,7 @@ export function DashboardHeader({
             My AgeWellRI Portal
           </h2>
           <p className="text-[11px] sm:text-xs text-[#64748B] hidden md:block truncate">
-            Member Access &amp; Care Management
+            Member Access &amp; Safety Oversight
           </p>
         </div>
       </div>

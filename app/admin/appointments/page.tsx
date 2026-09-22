@@ -210,18 +210,6 @@ function AppointmentsAdminContent() {
             Review client visit requests, assign certified specialists, dispatch scheduled visits, and upload completed reports.
           </p>
         </div>
-
-        <button
-          onClick={() => {
-            setSelectedClientId(undefined);
-            setSelectedClientName(undefined);
-            setScheduleModalOpen(true);
-          }}
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Book Visit for Client</span>
-        </button>
       </div>
 
       {/* Tabs & Search Filter Bar */}

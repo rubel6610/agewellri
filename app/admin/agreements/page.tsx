@@ -5,11 +5,13 @@ import Link from "next/link";
 import {
   useGetAdminAgreementsQuery,
   useSendAgreementReminderMutation,
+  useDeleteAdminAgreementMutation,
   AdminAgreementRecord,
 } from "@/redux/features/client/clientApi";
-import { FileText, ShieldCheck, AlertCircle, Send, Download, Loader2, Search } from "lucide-react";
+import { FileText, ShieldCheck, AlertCircle, Send, Download, Loader2, Search, Trash2, RefreshCw, FileCheck } from "lucide-react";
 import {
   confirmCriticalAction,
+  confirmDelete,
   showSuccessAlert,
   showErrorAlert,
   showToast,
@@ -17,24 +19,47 @@ import {
 import { TablePagination } from "@/components/ui/table-pagination";
 import { AgreementPreviewModal } from "@/components/admin/agreement-preview-modal";
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 
 export default function AgreementsAdminPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [previewAgreement, setPreviewAgreement] = useState<AdminAgreementRecord | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { data: agreementsRes, isLoading, refetch } = useGetAdminAgreementsQuery({
-    state: stateFilter,
+  const { data: agreementsRes, isLoading, isFetching, refetch } = useGetAdminAgreementsQuery({
     search: searchTerm,
   });
 
   const [sendReminder, { isLoading: isSendingReminder }] =
     useSendAgreementReminderMutation();
+  const [deleteAgreement, { isLoading: isDeletingAgreement }] =
+    useDeleteAdminAgreementMutation();
 
   const agreements = agreementsRes?.data || [];
+
+  const handleDelete = async (agr: AdminAgreementRecord) => {
+    const confirmed = await confirmDelete({
+      title: `Delete Service Agreement?`,
+      text: `Are you sure you want to delete the agreement for "${agr.clientName}" (${agr.title})? This action cannot be undone.`,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await deleteAgreement(agr.id).unwrap();
+      if (res.success) {
+        await showSuccessAlert(
+          "Agreement Deleted",
+          `The service agreement for ${agr.clientName} has been permanently deleted.`
+        );
+        refetch();
+      }
+    } catch (err: any) {
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete agreement.");
+    }
+  };
 
   const handleSendReminder = async (agr: AdminAgreementRecord) => {
     const confirmed = await confirmCriticalAction({
@@ -96,17 +121,30 @@ export default function AgreementsAdminPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="pb-4 border-b border-[#D9E4EC]/60">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
-          Service Agreements Lifecycle
-        </h1>
-        <p className="text-sm text-[#64748B] mt-1">
-          Monitor AgeWellRI Member Service Agreements, track e-signature execution, and dispatch signature reminders.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
+            Service Agreements Lifecycle
+          </h1>
+          <p className="text-sm text-[#64748B] mt-1">
+            Monitor AgeWellRI Member Service Agreements, track e-signature execution, and dispatch signature reminders.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className="px-3.5 py-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs transition-colors cursor-pointer disabled:opacity-50 shrink-0 self-start sm:self-auto"
+          title="Refresh agreements"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`} />
+          <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-6">
-        {/* Search and filter */}
+        {/* Search */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
@@ -123,40 +161,32 @@ export default function AgreementsAdminPage() {
               className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
           </div>
-
-          <div>
-            <select
-              value={stateFilter}
-              onChange={(e) => {
-                setStateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            >
-              <option value="ALL">Rhode Island (RI)</option>
-            </select>
-          </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[880px] xl:min-w-0">
             <thead>
-              <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                <th className="py-3.5 px-4">Client</th>
-                <th className="py-3.5 px-4">Agreement Document</th>
-                <th className="py-3.5 px-4">Signer / Authority</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Signed Date</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]">
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Client</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Primary Contact</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Agreement Document</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Signer / Authority</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Status</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Signed Date</th>
+                <th className="py-3.5 sm:py-4 px-4 sm:px-5 text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#D9E4EC]/60">
               {isLoading ? (
                 [...Array(6)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td className="py-4 px-4 space-y-2">
+                    <td className="py-4 sm:py-4.5 px-4 sm:px-5 space-y-2">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-32"></div>
                       <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
+                    </td>
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
                     </td>
                     <td className="py-4 px-4 space-y-2">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-44"></div>
@@ -179,7 +209,7 @@ export default function AgreementsAdminPage() {
                 ))
               ) : paginatedAgreements.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#64748B]">
+                  <td colSpan={7} className="py-12 text-center text-[#64748B]">
                     No service agreements found.
                   </td>
                 </tr>
@@ -195,43 +225,81 @@ export default function AgreementsAdminPage() {
 
                   return (
                     <tr key={agr.id} className="hover:bg-[#F7FAFC]">
-                      <td className="py-4 px-4 font-bold">
+                      {/* Client */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5 font-bold">
                         <Link href={`/admin/clients/${agr.clientId}`} className="hover:underline text-[#243746]">
                           {agr.clientName}
                         </Link>
                         <span className="block text-xs font-mono text-[#64748B] font-normal">{agr.clientEmail}</span>
                       </td>
 
-                      <td className="py-4 px-4">
+                      {/* Primary Contact */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-xs">
+                     
+                        {agr.primaryContactPhone ? (
+                          <span className="text-[#64748B] block font-mono text-[11px]">
+                            {agr.primaryContactPhone}
+                          </span>
+                        ) : null}
+                        <span className="text-[10px] font-semibold text-[#5E8FB2] uppercase tracking-wide">
+                          {agr.primaryContactRelation || (agr.signerRole === "RESIDENT" ? "Self" : "Representative")}
+                        </span>
+                      </td>
+
+                      {/* Agreement Document */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5">
                         <span className="text-[#294B68] font-bold block">{agr.title}</span>
                         <span className="text-xs text-[#64748B] font-mono">Version: {agr.version}</span>
                       </td>
 
-                      <td className="py-4 px-4 text-xs">
+                      {/* Signer / Authority */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-xs">
                         <span className="font-bold text-[#243746] block">{agr.signerName}</span>
                         <span className="text-[#64748B] capitalize">
                           {agr.signerRole.replace(/_/g, " ").toLowerCase()}{" "}
                           {agr.legalAuthority ? `(${agr.legalAuthority.replace(/_/g, " ")})` : ""}
                         </span>
+                        {(agr.authorityDocumentUrl || agr.documentUrl) ? (
+                          <div className="mt-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadAuthorityDocument({
+                                  url: agr.authorityDocumentUrl || agr.documentUrl,
+                                  agreementId: agr.id,
+                                  customName: `AgeWellRI_Legal_Authority_${agr.clientName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-2xs"
+                              title="Download Uploaded Legal Authority Document (POA / Guardianship)"
+                            >
+                              <FileCheck className="w-3 h-3 text-emerald-600" />
+                              <span>POA Doc</span>
+                              <Download className="w-2.5 h-2.5 text-emerald-700 ml-0.5" />
+                            </button>
+                          </div>
+                        ) : null}
                       </td>
 
-                      <td className="py-4 px-4">
+                      {/* Status */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5">
                         {isExecuted ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF8F2] text-[#166534]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EBF8F2] text-[#166534] whitespace-nowrap">
                             <ShieldCheck className="w-3.5 h-3.5" /> Executed
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-[#C28A3A]">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-[#C28A3A] whitespace-nowrap">
                             <AlertCircle className="w-3.5 h-3.5" /> Pending Signature
                           </span>
                         )}
                       </td>
 
-                      <td className="py-4 px-4 text-xs text-[#64748B]">
+                      {/* Signed Date */}
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-xs text-[#64748B] whitespace-nowrap">
                         {agr.signedDate || "Awaiting Signature"}
                       </td>
 
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Direct PDF Download Button */}
                           <button
@@ -271,6 +339,17 @@ export default function AgreementsAdminPage() {
                               <span className="hidden sm:inline">Reminder</span>
                             </button>
                           )}
+
+                          {/* Delete Agreement Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(agr)}
+                            disabled={isDeletingAgreement}
+                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors inline-block cursor-pointer disabled:opacity-50"
+                            title="Delete Service Agreement"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

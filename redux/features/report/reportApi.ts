@@ -90,6 +90,14 @@ export const reportApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Report"],
     }),
+
+    deleteAdminReport: builder.mutation<ApiResponse<{ success: boolean; message: string }>, string>({
+      query: (reportId) => ({
+        url: `/reports/admin/${reportId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Report", "Appointment", "Client"],
+    }),
   }),
 });
 
@@ -101,5 +109,6 @@ export const {
   useGetMyReportsQuery,
   useGetAdminReportsQuery,
   useGetReportByIdQuery,
+  useDeleteAdminReportMutation,
 } = reportApi;
 

@@ -2,6 +2,7 @@
 
 import React, { useState, use } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -27,14 +28,23 @@ import {
   UserCheck,
   FileUp,
   Eye,
+  Trash2,
 } from "lucide-react";
-import { useGetAdminClientByIdQuery } from "@/redux/features/client/clientApi";
+import {
+  useGetAdminClientByIdQuery,
+  useDeleteAdminClientMutation,
+} from "@/redux/features/client/clientApi";
 import { useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
 import { FullAgreementViewer } from "@/components/dashboard/full-agreement-viewer";
 import { downloadReportPdf } from "@/lib/api/report-download";
+import {
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 function formatAuditDetails(action: string, details: any): string {
   if (!details) {
@@ -129,8 +139,7 @@ function formatAuditDetails(action: string, details: any): string {
 
   if (act.includes("PAYMENT_STARTED")) {
     const plan = formatPlanName(data.plan);
-    const addon = data.hasCleaningAddon ? " with House Cleaning add-on" : "";
-    return `Payment checkout initiated for ${plan} plan${addon}.`;
+    return `Payment checkout initiated for ${plan} plan.`;
   }
 
   if (act.includes("PAYMENT_PROCESSED") || act.includes("PAYMENT_SUCCEEDED")) {
@@ -228,9 +237,12 @@ export default function ClientDetailPage({
 }) {
   const resolvedParams = use(params);
   const clientId = resolvedParams.id;
+  const router = useRouter();
 
   const { data: clientRes, isLoading, isError } = useGetAdminClientByIdQuery(clientId);
   const { data: clientApptsRes } = useGetAdminAppointmentsQuery({ clientId });
+  const [deleteAdminClient, { isLoading: isDeleting }] = useDeleteAdminClientMutation();
+
   const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "visits" | "agreement" | "billing" | "activity">("overview");
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
@@ -238,6 +250,34 @@ export default function ClientDetailPage({
 
   const client = clientRes?.data;
   const clientAppointments = clientApptsRes?.data || [];
+
+  const handleDeleteClient = async () => {
+    if (!client) return;
+    const clientFullName = `${client.firstName} ${client.lastName}`.trim();
+    const confirmed = await confirmDelete({
+      title: `Delete Client "${clientFullName}"?`,
+      text: `This will permanently delete ${clientFullName} (${client.clientNumber || client.id}), including all their agreements, active subscriptions, invoices, appointments, and portal access. If they wish to return, they will need to be re-registered.`,
+      confirmButtonText: "Yes, Permanently Delete",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const idToDelete = client.internalId || client.id || client.clientNumber || clientId;
+      const res = await deleteAdminClient(idToDelete).unwrap();
+      showSuccessAlert(
+        "Client Deleted",
+        res.message || `Client "${clientFullName}" has been permanently deleted.`
+      );
+      router.push("/admin/clients");
+    } catch (err: any) {
+      showErrorAlert(
+        "Deletion Failed",
+        err?.data?.message || err?.message || "Failed to delete client. Please try again."
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -313,14 +353,29 @@ export default function ClientDetailPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <ClientStatusBadge status={client.status} />
             <button
+              type="button"
               onClick={() => setScheduleModalOpen(true)}
               className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Schedule Visit</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteClient}
+              disabled={isDeleting}
+              className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title={`Permanently Delete Client ${client.firstName} ${client.lastName}`}
+            >
+              {isDeleting ? (
+                <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+              ) : (
+                <Trash2 className="w-4 h-4 text-rose-600" />
+              )}
+              <span>Delete Client</span>
             </button>
           </div>
         </div>
@@ -453,6 +508,34 @@ export default function ClientDetailPage({
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Danger Zone: Permanent Client Deletion */}
+            <div className="p-5 bg-rose-50/50 rounded-2xl border border-rose-200 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                    <Trash2 className="w-4 h-4 text-rose-600" /> Permanent Client Deletion
+                  </h4>
+                  <p className="text-xs text-rose-700 mt-1 max-w-2xl">
+                    Permanently deletes this client record, user credentials, agreements, active subscriptions, and appointments. The client will immediately lose portal access and will need to be re-registered if they return.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteClient}
+                  disabled={isDeleting}
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50"
+                  title="Permanently Delete Client Account"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  <span>Delete Client Account</span>
+                </button>
               </div>
             </div>
           </div>
@@ -645,12 +728,12 @@ export default function ClientDetailPage({
         {/* TAB: VISITS & REPORTS */}
         {activeTab === "visits" && (
           <div className="space-y-5 pt-2">
-            {/* Active Quarter Entitlement Summary */}
+            {/* Active Month Entitlement Summary */}
             <div className="p-5 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#294B68] text-white">
-                    Current Active Quarter
+                    Current Active Month
                   </span>
                   {client.renewalDate && (
                     <span className="text-xs text-[#64748B] font-semibold">
@@ -659,7 +742,7 @@ export default function ClientDetailPage({
                   )}
                 </div>
                 <h3 className="text-base font-extrabold text-[#243746]">
-                  {client.planName} Care Entitlements
+                  {client.planName} Safety Entitlements
                 </h3>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-[#64748B] pt-0.5 font-medium">
                   <span>Allocated: <strong className="text-[#243746]">{client.totalVisitsAllowed || client.totalVisitsCount || 12}</strong></span>
@@ -685,7 +768,7 @@ export default function ClientDetailPage({
               <div className="p-8 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
                 <Calendar className="w-8 h-8 mx-auto text-[#94A3B8]" />
                 <p className="font-bold text-sm text-[#243746]">No Visits Scheduled</p>
-                <p className="text-xs text-[#64748B]">Book a visit to assign a caregiver or technician.</p>
+                <p className="text-xs text-[#64748B]">Book a visit to assign a technician.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">

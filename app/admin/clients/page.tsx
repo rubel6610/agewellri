@@ -3,13 +3,10 @@
 import React, { useState } from "react";
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { ClientTable } from "@/components/admin/client-table";
-import { AddClientModal } from "@/components/admin/add-client-modal";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
-import { Loader2 } from "lucide-react";
 
 export default function ClientsDirectoryPage() {
-  const { data: clientsRes, isLoading, refetch } = useGetAdminClientsQuery();
-  const [addModalOpen, setAddModalOpen] = useState(false);
+  const { data: clientsRes, isLoading } = useGetAdminClientsQuery();
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
   const [selectedClientName, setSelectedClientName] = useState<string | undefined>(undefined);
@@ -39,14 +36,7 @@ export default function ClientsDirectoryPage() {
       <ClientTable
         clients={clients}
         isLoading={isLoading}
-        onOpenAddClientModal={() => setAddModalOpen(true)}
         onOpenScheduleModal={handleOpenScheduleModal}
-      />
-
-      <AddClientModal
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onSuccess={() => refetch()}
       />
 
       <AdminScheduleModal

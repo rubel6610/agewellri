@@ -3,7 +3,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 
 export const metadata = {
   title: "AgeWellRI | Admin Control Center",
-  description: "Operations dashboard for AgeWellRI staff and care managers.",
+  description: "Operations dashboard for AgeWellRI staff and operations managers.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {

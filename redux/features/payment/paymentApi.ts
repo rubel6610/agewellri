@@ -126,7 +126,7 @@ export const paymentApi = baseApi.injectEndpoints({
         method: "POST",
         body: body || {},
       }),
-      invalidatesTags: ["Billing", "Subscription"],
+      invalidatesTags: ["Billing", "Subscription", "Client", "User", "Profile"],
     }),
 
     reactivateSubscriptionRenewal: builder.mutation<
@@ -137,7 +137,7 @@ export const paymentApi = baseApi.injectEndpoints({
         url: "/payments/subscription/reactivate-renewal",
         method: "POST",
       }),
-      invalidatesTags: ["Billing", "Subscription"],
+      invalidatesTags: ["Billing", "Subscription", "Client", "User", "Profile"],
     }),
 
     getAdminBillingOverview: builder.query<ApiResponse<AdminOverviewData>, void>({
@@ -241,6 +241,14 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing", "Subscription"],
     }),
+
+    adminDeleteInvoice: builder.mutation<ApiResponse<any>, string>({
+      query: (id) => ({
+        url: `/payments/admin/invoices/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Billing"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -266,5 +274,6 @@ export const {
   useAdminCancelSubscriptionMutation,
   useAdminReactivateSubscriptionMutation,
   useAdminUpdateSubscriptionStatusMutation,
+  useAdminDeleteInvoiceMutation,
 } = paymentApi;
 

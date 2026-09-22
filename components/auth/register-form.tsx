@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, User, Phone, Loader2, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
+import {
+  Mail,
+  User,
+  Phone,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Sparkles,
+} from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
-import { showSuccessAlert } from "@/lib/alerts/sweetalert";
 
 interface FormErrors {
   firstName?: string;
@@ -37,17 +44,10 @@ export function RegisterForm() {
     agreeToTerms: false,
   });
 
-  useEffect(() => {
-    if (emailParam) {
-      setFormData((prev) => ({
-        ...prev,
-        email: prev.email || emailParam,
-      }));
-    }
-  }, [emailParam]);
-
   const [errors, setErrors] = useState<FormErrors>({});
-  const [registerSuccessMessage, setRegisterSuccessMessage] = useState<string | null>(null);
+  const [registerSuccessMessage, setRegisterSuccessMessage] = useState<
+    string | null
+  >(null);
 
   const [registerUser, { isLoading }] = useRegisterMutation();
 
@@ -104,7 +104,8 @@ export function RegisterForm() {
 
     // Terms Agreement
     if (!formData.agreeToTerms) {
-      newErrors.terms = "You must agree to the Terms of Service and Privacy Policy.";
+      newErrors.terms =
+        "You must agree to the Terms of Use and Privacy Policy.";
     }
 
     setErrors(newErrors);
@@ -136,11 +137,11 @@ export function RegisterForm() {
           user.role === "ADMIN"
             ? "/admin"
             : user.role === "TECHNICIAN"
-            ? "/technician"
-            : "/agreement";
+              ? "/technician"
+              : "/agreement";
 
         setRegisterSuccessMessage(
-          `Welcome to AgeWellRI, ${user.firstName || "Member"}! Directing you to your Service Agreement...`
+          `Welcome to AgeWellRI, ${user.firstName || "Member"}! Directing you to your Service Agreement...`,
         );
 
         setTimeout(() => {
@@ -163,12 +164,18 @@ export function RegisterForm() {
 
       if (errorData?.errors && typeof errorData.errors === "object") {
         const fieldErrors: FormErrors = {};
-        if (errorData.errors.firstName?.[0]) fieldErrors.firstName = errorData.errors.firstName[0];
-        if (errorData.errors.lastName?.[0]) fieldErrors.lastName = errorData.errors.lastName[0];
-        if (errorData.errors.email?.[0]) fieldErrors.email = errorData.errors.email[0];
-        if (errorData.errors.phone?.[0]) fieldErrors.phone = errorData.errors.phone[0];
-        if (errorData.errors.password?.[0]) fieldErrors.password = errorData.errors.password[0];
-        fieldErrors.general = errorData.message || "Please check highlighted fields.";
+        if (errorData.errors.firstName?.[0])
+          fieldErrors.firstName = errorData.errors.firstName[0];
+        if (errorData.errors.lastName?.[0])
+          fieldErrors.lastName = errorData.errors.lastName[0];
+        if (errorData.errors.email?.[0])
+          fieldErrors.email = errorData.errors.email[0];
+        if (errorData.errors.phone?.[0])
+          fieldErrors.phone = errorData.errors.phone[0];
+        if (errorData.errors.password?.[0])
+          fieldErrors.password = errorData.errors.password[0];
+        fieldErrors.general =
+          errorData.message || "Please check highlighted fields.";
         setErrors(fieldErrors);
       } else {
         setErrors({
@@ -201,7 +208,9 @@ export function RegisterForm() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-[#243746]">Account Created Successfully!</h3>
+            <h3 className="text-lg font-bold text-[#243746]">
+              Account Created Successfully!
+            </h3>
             <p className="text-sm text-[#64748B] mt-1">
               {registerSuccessMessage}
             </p>
@@ -216,7 +225,10 @@ export function RegisterForm() {
           {(emailParam || tokenParam) && (
             <div className="p-3 bg-[#EAF3F8] border border-[#5E8FB2]/30 rounded-xl text-xs font-bold text-[#294B68] flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#3F8F6B] shrink-0" />
-              <span>Invited Member Onboarding: Complete registration to proceed to your Service Agreement.</span>
+              <span>
+                Invited Member Onboarding: Complete registration to proceed to
+                your Service Agreement.
+              </span>
             </div>
           )}
 
@@ -279,7 +291,7 @@ export function RegisterForm() {
             name="phone"
             type="tel"
             label="Phone Number"
-            placeholder="(401) 555-0199"
+            placeholder="(401) 212-3002"
             value={formData.phone}
             onChange={handleChange}
             error={errors.phone}
@@ -327,29 +339,19 @@ export function RegisterForm() {
               <span className="text-sm text-[#243746] leading-snug">
                 I agree to the{" "}
                 <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    showSuccessAlert(
-                      "AgeWellRI Terms of Service",
-                      "By registering for AgeWellRI, you agree to our comprehensive care terms, privacy provisions, and home visit standards governed under the laws of the State of Rhode Island."
-                    );
-                  }}
-                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
+                  href="/terms-of-use"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
-                  Terms of Service
+                  Terms of Use
                 </Link>{" "}
-                and{" "}
+                and acknowledge the{" "}
                 <Link
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    showSuccessAlert(
-                      "AgeWellRI Privacy Policy",
-                      "Your personal health details, home access codes, and caregiver contact information are strictly protected and never shared with unauthorized third parties."
-                    );
-                  }}
-                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline"
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
                   Privacy Policy
                 </Link>

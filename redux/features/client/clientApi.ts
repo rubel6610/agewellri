@@ -81,22 +81,108 @@ export interface AdminAgreementRecord {
   clientId: string;
   clientNumber: string;
   clientName: string;
+  clientFullName?: string;
+  clientPrintedName?: string;
   clientEmail: string;
-  title: string;
+  email?: string;
+  phone?: string | null;
+  dob?: string | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  city?: string | null;
   state: string;
+  postalCode?: string | null;
+
+  primaryContactName?: string;
+  primaryContactPhone?: string | null;
+  primaryContactEmail?: string;
+  primaryContactRelation?: string;
+  primaryBillingContact?: string;
+
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
+  emergencyContactEmail?: string | null;
+  emergencyContactRelation?: string | null;
+
+  authorizedRecipients?: Array<{
+    name: string;
+    relationship: string;
+    email: string;
+    phone?: string | null;
+  }>;
+
+  homeAccessType?: string;
+  homeAccessInstructions?: string | null;
+  homeAccessCode?: string | null;
+  homeAccessAuthorized?: boolean;
+
+  authorizations?: {
+    emergencyRightOfEntry?: boolean;
+    residentAutonomyAcknowledgment?: boolean;
+    automaticBillingAuthorization?: boolean;
+  };
+
+  signingTrack?: "TRACK_A" | "TRACK_B";
+  representativeCapacity?: string | null;
+  repFullName?: string | null;
+  authorizedRepName?: string | null;
+  relationshipToClient?: string | null;
+  authorityDocumentUrl?: string | null;
+  documentUrl?: string | null;
+
+  title: string;
   version: string;
+  templateVersion?: string;
   signerRole: string;
   signerName: string;
+  signerEmail?: string | null;
+  signerPhone?: string | null;
   legalAuthority?: string;
+  legalAuthorityOther?: string | null;
   status: string;
   cancellationDeadline?: string;
   cancellationDeadlineRule?: string;
   planName: string;
+  selectedPlan?: string;
   planPrice: number;
+  planTimes?: string | null;
+  times?: string | null;
   signedDate?: string | null;
+  signedAt?: string | null;
   executedAt?: string | null;
+  agreementDate?: string | null;
+  stateAddress?: string;
   hasCleaningAddon: boolean;
   clientSignature?: string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface ClientAccessMethod {
+  id: string;
+  type: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title: string;
+  code?: string | null;
+  instructions?: string | null;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateAccessMethodPayload {
+  type: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title: string;
+  code?: string;
+  instructions?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateAccessMethodPayload {
+  type?: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER";
+  title?: string;
+  code?: string | null;
+  instructions?: string | null;
+  isDefault?: boolean;
 }
 
 export interface SendInvitationPayload {
@@ -232,6 +318,74 @@ export const clientApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Agreement"],
     }),
+
+    deleteAdminAgreement: builder.mutation<ApiResponse<{ success: boolean; message: string }>, string>({
+      query: (agreementId) => ({
+        url: `/agreements/admin/${agreementId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Agreement", "Client"],
+    }),
+
+    getClientAccessMethods: builder.query<ApiResponse<ClientAccessMethod[]>, void>({
+      query: () => "/clients/access-methods",
+      providesTags: ["Client"],
+    }),
+
+    addClientAccessMethod: builder.mutation<ApiResponse<ClientAccessMethod>, CreateAccessMethodPayload>({
+      query: (body) => ({
+        url: "/clients/access-methods",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    updateClientAccessMethod: builder.mutation<
+      ApiResponse<ClientAccessMethod>,
+      { id: string; body: UpdateAccessMethodPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/clients/access-methods/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    deleteClientAccessMethod: builder.mutation<ApiResponse<{ success: boolean; message: string }>, string>({
+      query: (id) => ({
+        url: `/clients/access-methods/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    setDefaultClientAccessMethod: builder.mutation<ApiResponse<ClientAccessMethod>, string>({
+      query: (id) => ({
+        url: `/clients/access-methods/${id}/default`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Client"],
+    }),
+
+    deleteAdminClient: builder.mutation<
+      ApiResponse<{ id: string; clientNumber: string; email: string }>,
+      string
+    >({
+      query: (clientId) => ({
+        url: `/clients/admin/${clientId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [
+        "Client",
+        "Agreement",
+        "Appointment",
+        "Report",
+        "Billing",
+        "Subscription",
+      ],
+    }),
   }),
   overrideExisting: true,
 });
@@ -243,4 +397,11 @@ export const {
   useSendInvitationMutation,
   useGetAdminAgreementsQuery,
   useSendAgreementReminderMutation,
+  useDeleteAdminAgreementMutation,
+  useGetClientAccessMethodsQuery,
+  useAddClientAccessMethodMutation,
+  useUpdateClientAccessMethodMutation,
+  useDeleteClientAccessMethodMutation,
+  useSetDefaultClientAccessMethodMutation,
+  useDeleteAdminClientMutation,
 } = clientApi;

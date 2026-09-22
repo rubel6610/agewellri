@@ -172,7 +172,7 @@ export function StripeCardElement({
             type="text"
             value={cardholderName}
             onChange={(e) => onCardholderNameChange(e.target.value)}
-            placeholder="e.g. Eleanor Vance"
+            placeholder="e.g. Arfan Rubel"
             disabled={isProcessing}
             required
             className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all disabled:opacity-60"
@@ -244,7 +244,7 @@ export function StripeCardElement({
           </label>
           <input
             type="text"
-            value={postalCode}
+           
             onChange={(e) => onPostalCodeChange(e.target.value)}
             placeholder="02906"
             maxLength={10}
@@ -259,7 +259,7 @@ export function StripeCardElement({
       <div className="p-4 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] flex items-start gap-3">
         <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0 mt-0.5" />
         <div className="text-xs text-[#475569] leading-relaxed">
-          <strong>Safe &amp; Secure Quarterly Membership:</strong> Your payment method will be saved with Stripe for automatic quarterly renewal. You can update payment methods or cancel anytime with 30 days notice in your member dashboard.
+          <strong>Safe & Secure Monthly Subscription:</strong> Your payment method is securely saved with Stripe for automatic monthly renewal. You can update your payment method or cancel anytime in your member dashboard — canceling at least 10 days before month-end stops your next charge.
         </div>
       </div>
 

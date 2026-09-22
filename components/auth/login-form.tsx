@@ -5,29 +5,19 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
-  Phone,
-  KeyRound,
   Loader2,
   CheckCircle2,
   AlertCircle,
-  ArrowRight,
-  ShieldCheck,
 } from "lucide-react";
 import { AuthCard } from "./auth-card";
 import { AuthInput } from "./auth-input";
 import { PasswordInput } from "./password-input";
-import {
-  useLoginMutation,
-  useRequestSmsOtpMutation,
-  useVerifySmsOtpMutation,
-} from "@/redux/features/auth/authApi";
+import { useLoginMutation } from "@/redux/features/auth/authApi";
 import { useAppSelector } from "@/redux/hooks";
 
 interface FormErrors {
   email?: string;
   password?: string;
-  phone?: string;
-  otp?: string;
   general?: string;
 }
 
@@ -42,17 +32,9 @@ export function LoginForm() {
     user: currentAuthUser,
   } = useAppSelector((state) => state.auth);
 
-  const [authMode, setAuthMode] = useState<"password" | "sms">("password");
-
   // Password Login State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // SMS OTP Login State
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loginSuccessMessage, setLoginSuccessMessage] = useState<string | null>(
@@ -60,10 +42,6 @@ export function LoginForm() {
   );
 
   const [login, { isLoading: isPasswordLoading }] = useLoginMutation();
-  const [requestSmsOtp, { isLoading: isSmsSending }] =
-    useRequestSmsOtpMutation();
-  const [verifySmsOtp, { isLoading: isSmsVerifying }] =
-    useVerifySmsOtpMutation();
 
   const handleRedirect = (user: any) => {
     const safeRedirect =
@@ -86,7 +64,13 @@ export function LoginForm() {
           ? safeRedirect
           : "/technician";
     } else if (user.role === "CLIENT") {
-      if (user.requiresAgreement || !user.hasCompletedAgreement) {
+      // Authorized family members never sign agreements -> go straight to dashboard
+      if (user.isFamilyMember) {
+        targetRoute =
+          safeRedirect && safeRedirect.startsWith("/dashboard")
+            ? safeRedirect
+            : "/dashboard";
+      } else if (user.requiresAgreement || !user.hasCompletedAgreement) {
         targetRoute = "/agreement";
       } else {
         targetRoute =
@@ -107,19 +91,6 @@ export function LoginForm() {
       handleRedirect(currentAuthUser);
     }
   }, [isInitialized, isAuthenticated, currentAuthUser]);
-
-  // Cooldown countdown timer
-  useEffect(() => {
-    let timer: any = null;
-    if (resendCooldown > 0) {
-      timer = setTimeout(() => {
-        setResendCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [resendCooldown]);
 
   const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,62 +137,6 @@ export function LoginForm() {
     }
   };
 
-  const handleRequestSmsCode = async () => {
-    if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
-      setErrors({
-        phone: "Please enter a valid 10-digit mobile phone number.",
-      });
-      return;
-    }
-
-    setErrors({});
-
-    try {
-      await requestSmsOtp({ phone: phone.trim() }).unwrap();
-      setIsOtpSent(true);
-      setResendCooldown(60);
-    } catch (err: any) {
-      setErrors({
-        general:
-          err?.data?.message ||
-          err?.message ||
-          "Failed to send SMS verification code.",
-      });
-    }
-  };
-
-  const handleVerifySmsCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp.trim() || otp.trim().length !== 6) {
-      setErrors({ otp: "Please enter the 6-digit verification code." });
-      return;
-    }
-
-    setErrors({});
-
-    try {
-      const response = await verifySmsOtp({
-        phone: phone.trim(),
-        otp: otp.trim(),
-      }).unwrap();
-
-      if (response.success && response.data) {
-        const user = response.data.user;
-        setLoginSuccessMessage(
-          `Verified successfully! Welcome back, ${user.firstName || "Member"}.`,
-        );
-        handleRedirect(user);
-      }
-    } catch (err: any) {
-      setErrors({
-        general:
-          err?.data?.message ||
-          err?.message ||
-          "Invalid or expired code. Please try again.",
-      });
-    }
-  };
-
   return (
     <AuthCard>
       {/* Header / Branding */}
@@ -234,38 +149,6 @@ export function LoginForm() {
             Sign in to access your AgeWellRI member portal.
           </p>
         </div>
-      </div>
-
-      {/* Auth Mode Tabs */}
-      <div className="flex p-1 bg-[#F0F5F9] rounded-xl mb-6 border border-[#D9E4EC]">
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("password");
-            setErrors({});
-          }}
-          className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-            authMode === "password"
-              ? "bg-[#294B68] text-white shadow-xs"
-              : "text-[#64748B] hover:text-[#243746]"
-          }`}
-        >
-          Email & Password
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMode("sms");
-            setErrors({});
-          }}
-          className={`flex-1 py-2.5 rounded-lg text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
-            authMode === "sms"
-              ? "bg-[#294B68] text-white shadow-xs"
-              : "text-[#64748B] hover:text-[#243746]"
-          }`}
-        >
-          📱 Sign in with SMS Code
-        </button>
       </div>
 
       {loginSuccessMessage ? (
@@ -284,7 +167,7 @@ export function LoginForm() {
             <span>Redirecting to your portal...</span>
           </div>
         </div>
-      ) : authMode === "password" ? (
+      ) : (
         /* Password Form */
         <form onSubmit={handlePasswordSubmit} noValidate className="space-y-5">
           {errors.general && (
@@ -352,117 +235,6 @@ export function LoginForm() {
             )}
           </button>
         </form>
-      ) : (
-        /* SMS OTP Form */
-        <div className="space-y-5">
-          {errors.general && (
-            <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C] flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-              <span>{errors.general}</span>
-            </div>
-          )}
-
-          {!isOtpSent ? (
-            <div className="space-y-4">
-              <AuthInput
-                id="login-phone"
-                name="phone"
-                type="tel"
-                label="Registered Mobile Phone"
-                placeholder="(401) 555-0199"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value);
-                  if (errors.phone)
-                    setErrors((prev) => ({ ...prev, phone: undefined }));
-                }}
-                error={errors.phone}
-                icon={<Phone className="w-5 h-5" aria-hidden="true" />}
-                required
-                autoComplete="tel"
-              />
-
-              <button
-                type="button"
-                onClick={handleRequestSmsCode}
-                disabled={isSmsSending}
-                className="w-full h-12 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-base rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-              >
-                {isSmsSending ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Sending Code...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Send 6-Digit Code</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleVerifySmsCode} className="space-y-4">
-              <div className="p-3 bg-[#EAF3F8] rounded-xl text-xs font-semibold text-[#294B68] flex items-center justify-between">
-                <span>Code sent to {phone}</span>
-                <button
-                  type="button"
-                  onClick={() => setIsOtpSent(false)}
-                  className="text-xs text-[#5E8FB2] hover:text-[#294B68] underline font-bold cursor-pointer"
-                >
-                  Change
-                </button>
-              </div>
-
-              <AuthInput
-                id="login-otp"
-                name="otp"
-                type="text"
-                maxLength={6}
-                label="6-Digit Verification Code"
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => {
-                  setOtp(e.target.value.replace(/\D/g, ""));
-                  if (errors.otp)
-                    setErrors((prev) => ({ ...prev, otp: undefined }));
-                }}
-                error={errors.otp}
-                icon={<KeyRound className="w-5 h-5" aria-hidden="true" />}
-                required
-              />
-
-              <div className="flex items-center justify-between text-xs font-bold text-[#64748B]">
-                <span>Didn&apos;t receive code?</span>
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || isSmsSending}
-                  onClick={handleRequestSmsCode}
-                  className="text-[#5E8FB2] hover:text-[#294B68] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {resendCooldown > 0
-                    ? `Resend in ${resendCooldown}s`
-                    : "Resend Code"}
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSmsVerifying}
-                className="w-full h-12 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-base rounded-xl shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
-              >
-                {isSmsVerifying ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Verifying Code...</span>
-                  </>
-                ) : (
-                  <span>Verify & Sign In</span>
-                )}
-              </button>
-            </form>
-          )}
-        </div>
       )}
 
       {/* Footer Navigation */}

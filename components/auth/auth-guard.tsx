@@ -51,7 +51,7 @@ export function AuthGuard({
       if (user.role === "ADMIN") {
         router.replace("/admin");
       } else if (user.role === "CLIENT") {
-        if (user?.requiresAgreement || !user?.hasCompletedAgreement) {
+        if (!user.isFamilyMember && (user?.requiresAgreement || !user?.hasCompletedAgreement)) {
           router.replace("/agreement");
         } else {
           router.replace("/dashboard");
@@ -62,6 +62,15 @@ export function AuthGuard({
 
     // 3. Client Service Agreement Check (For CLIENT users)
     if (user.role === "CLIENT") {
+      // Family members are authorized observers and never require agreement signing
+      if (user.isFamilyMember) {
+        if (allowPendingAgreement) {
+          router.replace("/dashboard");
+          return;
+        }
+        return;
+      }
+
       const isAgreementPending =
         user.requiresAgreement === true || !user.hasCompletedAgreement;
 
@@ -99,11 +108,11 @@ export function AuthGuard({
             width={180}
             height={48}
             priority
-            className="h-auto w-auto max-h-11 object-contain"
+            className="h-18 w-auto max-h-28 object-contain"
           />
           <div className="flex items-center gap-2 text-sm font-semibold text-[#294B68] pt-2">
             <Loader2 className="w-5 h-5 animate-spin text-[#5E8FB2]" />
-            <span>Verifying secure session...</span>
+            <span>Loading ......</span>
           </div>
         </div>
       </div>

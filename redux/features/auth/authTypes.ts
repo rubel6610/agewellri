@@ -14,7 +14,6 @@ export type OnboardingStatus =
 export type SignerRole =
   | "RESIDENT"
   | "FAMILY_MEMBER"
-  | "CAREGIVER"
   | "POWER_OF_ATTORNEY"
   | "AUTHORIZED_REPRESENTATIVE";
 
@@ -74,6 +73,8 @@ export interface AuthUser {
   role: UserRole;
   status: UserStatus;
   permissions?: string[];
+  isFamilyMember?: boolean;
+  isPrimary?: boolean;
   hasCompletedAgreement?: boolean;
   requiresAgreement?: boolean;
   emailVerifiedAt?: string | null;
@@ -157,9 +158,16 @@ export interface SubmitAgreementRequest {
   state: string;
   postalCode: string;
   phone: string;
-  dob: string;
+  dob?: string | null;
   email?: string;
+  signingTrack?: "TRACK_A" | "TRACK_B";
   signerRole?: SignerRole;
+  representativeCapacity?:
+    | "ATTORNEY_IN_FACT"
+    | "GUARDIAN"
+    | "CONSERVATOR"
+    | null;
+  authorityDocumentUrl?: string | null;
   signerName?: string | null;
   signerEmail?: string | null;
   signerPhone?: string | null;
@@ -170,17 +178,28 @@ export interface SubmitAgreementRequest {
   primaryContactPhone?: string | null;
   primaryContactEmail?: string | null;
   primaryContactRelation?: string | null;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
+  authorizedRecipients?: Array<{
+    name: string;
+    relationship: string;
+    email: string;
+  }>;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   emergencyContactEmail?: string | null;
   emergencyContactRelation?: string | null;
   homeAccessType?: HomeAccessType;
   homeAccessInstructions?: string | null;
   homeAccessCode?: string | null;
+  homeAccessAuthorized?: boolean;
+  authorizations?: {
+    emergencyRightOfEntry?: boolean;
+    residentAutonomyAcknowledgment?: boolean;
+    automaticBillingAuthorization?: boolean;
+  };
   planId?: string | null;
   planVersionId?: string | null;
   selectedPlan: string;
-  hasCleaningAddon: boolean;
+  hasCleaningAddon?: boolean;
   billingMethod?: "AUTOMATIC" | "INVOICE";
   paymentMethodId?: string | null;
   setupIntentId?: string | null;
@@ -195,24 +214,43 @@ export interface SubmitAgreementRequest {
 export interface AgreementDocument {
   id: string;
   templateVersion: string;
+  version?: string;
   state?: string;
   status: string;
   selectedPlan: string;
+  planName?: string | null;
   planPrice: number;
+  planTimes?: string | null;
+  times?: string | null;
   hasCleaningAddon: boolean;
   signerRole?: SignerRole;
   signerName?: string | null;
+  signerEmail?: string | null;
+  signerPhone?: string | null;
+  signingTrack?: "TRACK_A" | "TRACK_B";
+  representativeCapacity?:
+    | "ATTORNEY_IN_FACT"
+    | "GUARDIAN"
+    | "CONSERVATOR"
+    | string
+    | null;
+  repFullName?: string | null;
   legalAuthority?: string | null;
+  legalAuthorityOther?: string | null;
+  authorityDocumentUrl?: string | null;
+  documentUrl?: string | null;
   primaryBillingContact?: string | null;
   cancellationDeadline?: string | null;
   cancellationDeadlineRule?: string | null;
   planSnapshot?: any;
   clientFullName: string;
+  clientName?: string;
   clientPrintedName: string;
   authorizedRepName?: string | null;
   relationshipToClient?: string | null;
   clientSignature?: string | null;
   agreementDate: string;
+  signedDate?: string | null;
   signedAt?: string | null;
   executedAt?: string | null;
   address: string;
@@ -221,15 +259,34 @@ export interface AgreementDocument {
   postalCode: string;
   phone: string;
   dob?: string;
+  dateOfBirth?: string | null;
   email: string;
+  clientEmail?: string;
   primaryContactName?: string | null;
   primaryContactPhone?: string | null;
   primaryContactEmail?: string | null;
   primaryContactRelation?: string | null;
   emergencyContactName: string;
   emergencyContactPhone: string;
+  emergencyContactEmail?: string | null;
   emergencyContactRelation?: string | null;
+  authorizedRecipients?: Array<{
+    name: string;
+    relationship: string;
+    email: string;
+    phone?: string | null;
+  }>;
+  homeAccessType?: HomeAccessType;
+  homeAccessInstructions?: string | null;
+  homeAccessCode?: string | null;
+  homeAccessAuthorized?: boolean;
+  authorizations?: {
+    emergencyRightOfEntry?: boolean;
+    residentAutonomyAcknowledgment?: boolean;
+    automaticBillingAuthorization?: boolean;
+  };
   clientNumber: string;
+  clientId?: string;
   createdAt?: string | null;
   updatedAt?: string | null;
 }

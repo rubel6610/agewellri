@@ -17,14 +17,14 @@ export default function ReportsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] flex items-center gap-1 border border-[#5E8FB2]/20">
-              <FileText className="w-3.5 h-3.5" /> Care &amp; Safety Documentation
+              <FileText className="w-3.5 h-3.5" /> Safety Oversight Documentation
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
             My Visit Reports
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            Your official visit documentation and safety reports from completed caregiver visits are securely accessible here.
+            Your official visit documentation and safety reports from completed safety visits are securely accessible here.
           </p>
         </div>
       </div>

@@ -23,11 +23,16 @@ import {
   CalendarCheck,
   Check,
   RefreshCw,
-  Power,
-  PowerOff,
+  ShieldCheck,
+  HeartPulse,
+  Zap,
+  Languages,
+  Award,
+  Calendar,
+  Sparkles,
+  Eye,
 } from "lucide-react";
 import {
-  confirmCriticalAction,
   confirmDelete,
   confirmEdit,
   showSuccessAlert,
@@ -36,23 +41,20 @@ import {
 } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
 
-const PRESET_SPECIALTIES = [
-  "Home Safety Audits",
-  "Fall Hazard Mitigation",
-  "Grab Bar Positioning",
-  "HEPA Allergen Cleaning",
-  "Pathway Clearance & Sanitization",
-  "Lighting & Rug Safety",
-  "Bathroom Safety Assessments",
-  "Wellness Check-ins",
-];
-
-const PRESET_COLORS = [
-  { name: "Navy Blue", value: "#294B68" },
-  { name: "Slate Teal", value: "#5E8FB2" },
-  { name: "Emerald Green", value: "#3F8F6B" },
-  { name: "Deep Amber", value: "#D97706" },
-  { name: "Plum Purple", value: "#7C3AED" },
+// Standard Core Competencies automatically held by all specialists (no check off needed)
+const CORE_AUTOMATIC_COMPETENCIES = [
+  {
+    title: "Fall-Risk & Hazard Identification",
+    desc: "Comprehensive environmental auditing, walkway clearance, lighting safety, and slip/trip hazard mitigation.",
+  },
+  {
+    title: "Scam & Financial-Exploitation Awareness",
+    desc: "Elder fraud prevention, contractor scam vigilance, and vulnerable resident financial protection.",
+  },
+  {
+    title: "Emergency Response Preparedness",
+    desc: "Emergency ingress protocols, 911 dispatch coordination, first responder assistance, and family escalation.",
+  },
 ];
 
 export default function SpecialistsPage() {
@@ -72,18 +74,23 @@ export default function SpecialistsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSpecialist, setEditingSpecialist] = useState<SpecialistItem | null>(null);
+  const [viewingSpecialist, setViewingSpecialist] = useState<SpecialistItem | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    title: "Senior Home Safety Specialist",
+    title: "",
     email: "",
     phone: "",
-    specialties: ["Home Safety Audits", "Fall Hazard Mitigation"] as string[],
+    shssCertified: false,
+    shssRenewalDate: "",
+    cprCertified: false,
+    aedCertified: false,
+    backgroundChecked: true,
+    bilingualSpanish: false,
     color: "#294B68",
     status: "ACTIVE" as "ACTIVE" | "INACTIVE",
     notes: "",
-    displayOrder: 1,
   });
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -92,14 +99,18 @@ export default function SpecialistsPage() {
     setEditingSpecialist(null);
     setFormData({
       name: "",
-      title: "Senior Home Safety Specialist",
+      title: "Home Safety Specialist",
       email: "",
       phone: "",
-      specialties: ["Home Safety Audits", "Fall Hazard Mitigation"],
+      shssCertified: false,
+      shssRenewalDate: "",
+      cprCertified: false,
+      aedCertified: false,
+      backgroundChecked: true,
+      bilingualSpanish: false,
       color: "#294B68",
       status: "ACTIVE",
       notes: "",
-      displayOrder: specialists.length + 1,
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -107,31 +118,51 @@ export default function SpecialistsPage() {
 
   const openEditModal = (specialist: SpecialistItem) => {
     setEditingSpecialist(specialist);
+
+    // Fallback checks from legacy specialties string arrays if boolean flags not yet stored
+    const legacySpecs = (specialist.specialties || []).map((s) => s.toLowerCase());
+    const hasShss =
+      specialist.shssCertified ??
+      legacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
+    const hasCpr =
+      specialist.cprCertified ?? legacySpecs.some((s) => s.includes("cpr"));
+    const hasAed =
+      specialist.aedCertified ?? legacySpecs.some((s) => s.includes("aed"));
+    const hasBg =
+      specialist.backgroundChecked ??
+      (legacySpecs.some((s) => s.includes("background")) || true);
+    const hasBilingual =
+      specialist.bilingualSpanish ??
+      legacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
+
+    let renewalDateStr = "";
+    if (specialist.shssRenewalDate) {
+      try {
+        renewalDateStr = new Date(specialist.shssRenewalDate)
+          .toISOString()
+          .split("T")[0];
+      } catch {
+        renewalDateStr = String(specialist.shssRenewalDate);
+      }
+    }
+
     setFormData({
       name: specialist.name,
-      title: specialist.title,
+      title: specialist.title || "Home Safety Specialist",
       email: specialist.email || "",
       phone: specialist.phone || "",
-      specialties: specialist.specialties || [],
+      shssCertified: Boolean(hasShss),
+      shssRenewalDate: renewalDateStr,
+      cprCertified: Boolean(hasCpr),
+      aedCertified: Boolean(hasAed),
+      backgroundChecked: Boolean(hasBg),
+      bilingualSpanish: Boolean(hasBilingual),
       color: specialist.color || "#294B68",
       status: specialist.status === "ACTIVE" ? "ACTIVE" : "INACTIVE",
       notes: specialist.notes || "",
-      displayOrder: specialist.displayOrder || 1,
     });
     setFormError(null);
     setIsModalOpen(true);
-  };
-
-  const handleSpecialtyToggle = (spec: string) => {
-    setFormData((prev) => {
-      const exists = prev.specialties.includes(spec);
-      return {
-        ...prev,
-        specialties: exists
-          ? prev.specialties.filter((s) => s !== spec)
-          : [...prev.specialties, spec],
-      };
-    });
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -144,8 +175,8 @@ export default function SpecialistsPage() {
     const confirmed = await confirmEdit({
       title: editingSpecialist ? `Update "${formData.name}"?` : `Add "${formData.name}"?`,
       text: editingSpecialist
-        ? "Save changes to this specialist's directory profile?"
-        : "Add this specialist to your internal team directory?",
+        ? "Save changes to this specialist's qualifications & directory profile?"
+        : "Add this specialist to your active team directory?",
       confirmButtonText: editingSpecialist ? "Yes, Update" : "Yes, Add Specialist",
     });
 
@@ -153,35 +184,56 @@ export default function SpecialistsPage() {
 
     try {
       setFormError(null);
+
+      // Build unified array of capabilities including core + selected
+      const capabilitiesList: string[] = [
+        "Fall-Risk & Hazard Identification",
+        "Scam & Financial-Exploitation Awareness",
+        "Emergency Response Preparedness",
+      ];
+      if (formData.shssCertified) {
+        capabilitiesList.push("Senior Home Safety Specialist (SHSS)");
+      }
+      if (formData.cprCertified) capabilitiesList.push("CPR Certified");
+      if (formData.aedCertified) capabilitiesList.push("AED Certified");
+      if (formData.backgroundChecked) capabilitiesList.push("Background-Checked");
+      if (formData.bilingualSpanish) capabilitiesList.push("Bilingual (English & Spanish)");
+
+      const payload = {
+        name: formData.name.trim(),
+        title: formData.title.trim() || "Home Safety Specialist",
+        email: formData.email.trim() || null,
+        phone: formData.phone.trim() || null,
+        specialties: capabilitiesList,
+        shssCertified: formData.shssCertified,
+        shssRenewalDate:
+          formData.shssCertified && formData.shssRenewalDate
+            ? formData.shssRenewalDate
+            : null,
+        cprCertified: formData.cprCertified,
+        aedCertified: formData.aedCertified,
+        backgroundChecked: formData.backgroundChecked,
+        bilingualSpanish: formData.bilingualSpanish,
+        color: formData.color,
+        status: formData.status,
+        notes: formData.notes.trim() || null,
+      };
+
       if (editingSpecialist) {
         await updateSpecialist({
           id: editingSpecialist.id,
-          data: {
-            name: formData.name.trim(),
-            title: formData.title.trim(),
-            email: formData.email.trim() || null,
-            phone: formData.phone.trim() || null,
-            specialties: formData.specialties,
-            color: formData.color,
-            status: formData.status,
-            notes: formData.notes.trim() || null,
-            displayOrder: Number(formData.displayOrder),
-          },
+          data: payload,
         }).unwrap();
-        await showSuccessAlert("Specialist Updated", `"${formData.name}" profile has been updated.`);
+        await showSuccessAlert(
+          "Specialist Updated",
+          `"${formData.name}" profile & credentials have been updated.`
+        );
       } else {
-        await createSpecialist({
-          name: formData.name.trim(),
-          title: formData.title.trim(),
-          email: formData.email.trim() || null,
-          phone: formData.phone.trim() || null,
-          specialties: formData.specialties,
-          color: formData.color,
-          status: formData.status,
-          notes: formData.notes.trim() || null,
-          displayOrder: Number(formData.displayOrder),
-        }).unwrap();
-        await showSuccessAlert("Specialist Added", `"${formData.name}" has been added to the specialist roster.`);
+        await createSpecialist(payload).unwrap();
+        await showSuccessAlert(
+          "Specialist Added",
+          `"${formData.name}" has been added to the specialist roster.`
+        );
       }
 
       setIsModalOpen(false);
@@ -193,38 +245,30 @@ export default function SpecialistsPage() {
     }
   };
 
-  const handleToggleStatus = async (specialist: SpecialistItem) => {
-    const isCurrentlyActive = specialist.status === "ACTIVE";
-    const nextStatus = isCurrentlyActive ? "INACTIVE" : "ACTIVE";
-
-    const confirmed = await confirmCriticalAction({
-      title: isCurrentlyActive
-        ? `Deactivate "${specialist.name}"?`
-        : `Activate "${specialist.name}"?`,
-      text: isCurrentlyActive
-        ? `"${specialist.name}" will be marked inactive and will not appear in assignment dropdowns for new appointments.`
-        : `"${specialist.name}" will be restored to active status and will become available for appointment scheduling.`,
-      confirmButtonText: isCurrentlyActive ? "Yes, Deactivate" : "Yes, Activate Specialist",
-      isDestructive: isCurrentlyActive,
+  const handleDeleteSpecialist = async (specialist: SpecialistItem) => {
+    const confirmed = await confirmDelete({
+      title: `Delete "${specialist.name}"?`,
+      text: `Are you sure you want to delete ${specialist.name}? This specialist will be permanently removed from the active directory.`,
+      confirmButtonText: "Yes, Delete Specialist",
     });
 
     if (!confirmed) return;
 
     try {
-      await updateSpecialist({
-        id: specialist.id,
-        data: { status: nextStatus },
-      }).unwrap();
-
-      showToast(
-        `"${specialist.name}" is now ${nextStatus === "ACTIVE" ? "Active" : "Inactive"}.`,
-        "success"
+      await deleteSpecialist(specialist.id).unwrap();
+      showToast(`"${specialist.name}" has been deleted.`, "success");
+      await showSuccessAlert(
+        "Specialist Deleted",
+        `"${specialist.name}" has been removed from the directory.`
       );
+      if (isModalOpen) {
+        setIsModalOpen(false);
+      }
       await refetch();
     } catch (err: any) {
       showErrorAlert(
-        "Status Change Failed",
-        err?.data?.message || err?.message || "Failed to update specialist status."
+        "Delete Failed",
+        err?.data?.message || err?.message || "Failed to delete specialist."
       );
     }
   };
@@ -236,6 +280,10 @@ export default function SpecialistsPage() {
       s.title.toLowerCase().includes(term) ||
       (s.phone && s.phone.includes(term)) ||
       (s.email && s.email.toLowerCase().includes(term)) ||
+      (s.shssCertified && (term.includes("shss") || term.includes("safety specialist"))) ||
+      (s.cprCertified && term.includes("cpr")) ||
+      (s.aedCertified && term.includes("aed")) ||
+      (s.bilingualSpanish && (term.includes("bilingual") || term.includes("spanish"))) ||
       s.specialties.some((spec) => spec.toLowerCase().includes(term));
 
     const matchesStatus =
@@ -265,7 +313,7 @@ export default function SpecialistsPage() {
             </h1>
           </div>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage your internal in-home safety specialists, qualifications, active assignments, and dispatch availability.
+            Manage certified field technicians, track qualifications (SHSS, CPR, AED, Background-Checked, Bilingual), and monitor renewal cycles.
           </p>
         </div>
 
@@ -277,7 +325,9 @@ export default function SpecialistsPage() {
             className="px-3.5 py-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
             title="Refresh specialist roster"
           >
-            <RefreshCw className={`w-3.5 h-3.5 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`}
+            />
             <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
           </button>
 
@@ -293,13 +343,13 @@ export default function SpecialistsPage() {
 
       {/* Main Table Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
-        {/* Search, Filter & View Controls */}
+        {/* Search & Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
             <input
               type="search"
-              placeholder="Search specialists by name, specialty, role, or phone..."
+              placeholder="Search by name, certification (SHSS, CPR, AED), role, or phone..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -346,136 +396,194 @@ export default function SpecialistsPage() {
                   <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
                     <th className="py-3.5 px-4">Specialist</th>
                     <th className="py-3.5 px-4">Contact Info</th>
-                    <th className="py-3.5 px-4">Specialties &amp; Capabilities</th>
+                    <th className="py-3.5 px-4"> Specific Qualifications & Certifications</th>
                     <th className="py-3.5 px-4">Assignments</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
-                  {paginatedSpecialists.map((specialist) => (
-                    <tr key={specialist.id} className="hover:bg-[#F7FAFC] transition-colors">
-                      {/* Specialist Name & Avatar */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs"
-                            style={{ backgroundColor: specialist.color || "#294B68" }}
+                  {paginatedSpecialists.map((specialist) => {
+                    const legacySpecs = (specialist.specialties || []).map((s) => s.toLowerCase());
+                    const isShss =
+                      specialist.shssCertified ??
+                      legacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
+                    const isCpr =
+                      specialist.cprCertified ?? legacySpecs.some((s) => s.includes("cpr"));
+                    const isAed =
+                      specialist.aedCertified ?? legacySpecs.some((s) => s.includes("aed"));
+                    const isBg =
+                      specialist.backgroundChecked ??
+                      (legacySpecs.some((s) => s.includes("background")) || true);
+                    const isBilingual =
+                      specialist.bilingualSpanish ??
+                      legacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
+
+                    return (
+                      <tr key={specialist.id} className="hover:bg-[#F7FAFC] transition-colors">
+                        {/* Specialist Name & Avatar */}
+                        <td className="py-4 px-4">
+                          <button
+                            type="button"
+                            onClick={() => setViewingSpecialist(specialist)}
+                            className="flex items-center gap-3 text-left group cursor-pointer"
                           >
-                            {specialist.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </div>
-                          <div>
-                            <span className="font-extrabold text-[#243746] block text-sm">
-                              {specialist.name}
-                            </span>
-                            <span className="text-xs text-[#5E8FB2] font-semibold block">
-                              {specialist.title}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Contact Details */}
-                      <td className="py-4 px-4 text-xs space-y-1">
-                        {specialist.phone && (
-                          <div className="flex items-center gap-1.5 text-[#243746] font-semibold">
-                            <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                            <span>{specialist.phone}</span>
-                          </div>
-                        )}
-                        {specialist.email && (
-                          <div className="flex items-center gap-1.5 text-[#64748B]">
-                            <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                            <span>{specialist.email}</span>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Specialties Pill Badges */}
-                      <td className="py-4 px-4 max-w-xs">
-                        <div className="flex flex-wrap gap-1.5">
-                          {specialist.specialties.slice(0, 3).map((spec, sidx) => (
-                            <span
-                              key={sidx}
-                              className="px-2 py-0.5 bg-[#F0F5F9] text-[#294B68] rounded-md text-[11px] font-bold border border-[#D9E4EC]/70"
+                            <div
+                              className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs group-hover:scale-105 transition-transform"
+                              style={{ backgroundColor: specialist.color || "#294B68" }}
                             >
-                              {spec}
-                            </span>
-                          ))}
-                          {specialist.specialties.length > 3 && (
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[11px] font-bold">
-                              +{specialist.specialties.length - 3} more
-                            </span>
+                              {specialist.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </div>
+                            <div>
+                              <span className="font-extrabold text-[#243746] block text-sm group-hover:text-[#5E8FB2] transition-colors">
+                                {specialist.name}
+                              </span>
+                              <span className="text-xs text-[#5E8FB2] font-semibold block">
+                                {specialist.title}
+                              </span>
+                            </div>
+                          </button>
+                        </td>
+
+                        {/* Contact Details */}
+                        <td className="py-4 px-4 text-xs space-y-1">
+                          {specialist.phone && (
+                            <div className="flex items-center gap-1.5 text-[#243746] font-semibold">
+                              <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                              <span>{specialist.phone}</span>
+                            </div>
                           )}
-                        </div>
-                      </td>
+                          {specialist.email && (
+                            <div className="flex items-center gap-1.5 text-[#64748B]">
+                              <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                              <span>{specialist.email}</span>
+                            </div>
+                          )}
+                        </td>
 
-                      {/* Assigned Visits Count */}
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
-                          <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                          <span>{specialist.activeAssignmentsCount} visits</span>
-                        </span>
-                      </td>
+                        {/* Qualifications & Certifications Badges */}
+                        <td className="py-4 px-4 max-w-sm">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {/* SHSS Badge */}
+                            {isShss ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/30 shadow-2xs">
+                                <Award className="w-3 h-3 text-[#294B68]" />
+                                <span>SHSS Certified</span>
+                                {specialist.shssRenewalDate && (
+                                   <span className="text-[10px] text-[#5E8FB2] ml-0.5 font-semibold">
+                                    (Renews:{" "}
+                                    {new Date(specialist.shssRenewalDate).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                    )
+                                  </span>
+                                )}
+                              </span>
+                            ) : null}
 
-                      {/* Status Badge */}
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
-                            specialist.status === "ACTIVE"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                              : "bg-slate-100 text-slate-600 border border-slate-200"
-                          }`}
-                        >
-                          {specialist.status}
-                        </span>
-                      </td>
+                            {/* CPR Badge */}
+                            {isCpr ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
+                                <HeartPulse className="w-3 h-3 text-rose-600" />
+                                <span>CPR</span>
+                              </span>
+                            ) : null}
 
-                      {/* Actions */}
-                      <td className="py-4 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => openEditModal(specialist)}
-                            className="px-2.5 py-1.5 rounded-lg border border-[#D9E4EC] bg-white text-[#294B68] hover:bg-[#EAF3F8] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
-                            title="Edit Specialist Profile"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                            <span>Edit</span>
-                          </button>
+                            {/* AED Badge */}
+                            {isAed ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
+                                <Zap className="w-3 h-3 text-amber-600" />
+                                <span>AED</span>
+                              </span>
+                            ) : null}
 
-                          <button
-                            onClick={() => handleToggleStatus(specialist)}
-                            disabled={isUpdating}
-                            className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                            {/* Background-Checked */}
+                            {isBg ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                <span>Background-Checked</span>
+                              </span>
+                            ) : null}
+
+                            {/* Bilingual */}
+                            {isBilingual ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200 shadow-2xs">
+                                <Languages className="w-3 h-3 text-purple-600" />
+                                <span>Bilingual (EN/ES)</span>
+                              </span>
+                            ) : null}
+
+                            {/* Core Standards Pill */}
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-[#F8FAFC] text-[#64748B] border border-[#D9E4EC]"
+                              title="Core competencies: Fall-Risk & Hazard ID, Scam & Exploitation Awareness, Emergency Response Preparedness"
+                            >
+                              <Sparkles className="w-2.5 h-2.5 text-[#5E8FB2]" />
+                              <span>Core Standards Verified</span>
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Assigned Visits Count */}
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
+                            <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                            <span>{specialist.activeAssignmentsCount} visits</span>
+                          </span>
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-4 px-4">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider ${
                               specialist.status === "ACTIVE"
-                                ? "bg-white border-amber-200 text-amber-800 hover:bg-amber-50"
-                                : "bg-emerald-50 border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-200"
                             }`}
-                            title={
-                              specialist.status === "ACTIVE"
-                                ? "Deactivate Specialist (Mark Inactive)"
-                                : "Activate Specialist (Mark Active)"
-                            }
                           >
-                            {specialist.status === "ACTIVE" ? (
-                              <>
-                                <PowerOff className="w-3.5 h-3.5 text-amber-600" />
-                                <span>Deactivate</span>
-                              </>
-                            ) : (
-                              <>
-                                <Power className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Activate</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {specialist.status}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-4 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setViewingSpecialist(specialist)}
+                              className="px-2.5 py-1.5 rounded-lg border border-[#D9E4EC] bg-white text-[#294B68] hover:bg-[#EAF3F8] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                              title="View Specialist Details"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                              <span>View</span>
+                            </button>
+
+                            <button
+                              onClick={() => openEditModal(specialist)}
+                              className="px-2.5 py-1.5 rounded-lg border border-[#D9E4EC] bg-white text-[#294B68] hover:bg-[#EAF3F8] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                              title="Edit Specialist Profile"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteSpecialist(specialist)}
+                              disabled={isDeleting}
+                              className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-white text-rose-700 hover:bg-rose-50 hover:border-rose-300 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs disabled:opacity-50"
+                              title="Delete Specialist"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -495,12 +603,18 @@ export default function SpecialistsPage() {
       {/* Create / Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-[#D9E4EC] max-w-xl w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#D9E4EC] pb-3">
-              <h3 className="font-black text-lg text-[#243746] flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#294B68]" />
-                <span>{editingSpecialist ? "Edit Specialist" : "Add New Specialist"}</span>
-              </h3>
+          <div className="bg-white rounded-3xl border border-[#D9E4EC] max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            {/* Modal Title */}
+            <div className="flex items-center justify-between border-b border-[#D9E4EC] pb-3.5">
+              <div>
+                <h3 className="font-black text-lg text-[#243746] flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-[#294B68]" />
+                  <span>{editingSpecialist ? "Edit Specialist Profile" : "Add New Specialist"}</span>
+                </h3>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Configure qualifications, certified skills, and SHSS renewal tracking.
+                </p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
@@ -516,128 +630,381 @@ export default function SpecialistsPage() {
               </div>
             )}
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
-                    Full Legal Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mark Johnson"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                  />
+            <form onSubmit={handleSave} className="space-y-5">
+              {/* Section 1: Basic Information */}
+              <div className="space-y-3.5">
+                <h4 className="text-xs font-black uppercase tracking-wider text-[#294B68] flex items-center gap-1.5">
+                  <span>1. Contact &amp; Role Details</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Full Legal Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mark Johnson"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Job Title / Role
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Senior Home Safety Specialist"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
-                    Job Title / Role
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Senior Safety Specialist"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Mobile Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="(401) 555-0144"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="mark.johnson@agewellri.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Roster Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          status: e.target.value as "ACTIVE" | "INACTIVE",
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                    >
+                      <option value="ACTIVE">Active (Available for Visits)</option>
+                      <option value="INACTIVE">Inactive (Off-Duty / Archived)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
+                      Badge Color Identifier
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formData.color}
+                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                        className="w-10 h-10 p-0.5 rounded-xl border border-[#D9E4EC] cursor-pointer bg-white"
+                      />
+                      <span className="text-xs font-mono text-[#64748B]">
+                        {formData.color}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
-                    Mobile Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="(401) 555-0144"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="mark.johnson@agewellri.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-                  />
-                </div>
-              </div>
-
-              {/* Specialties Buttons */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider">
-                    Specialties &amp; Capabilities
-                  </label>
+              {/* Section 2: Specific Check-Off Certifications */}
+              <div className="space-y-3 pt-2 border-t border-[#D9E4EC]">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-[#294B68] flex items-center gap-1.5">
+                    <span>2. Specific Qualifications &amp; Certifications</span>
+                  </h4>
                   <span className="text-[11px] font-semibold text-[#5E8FB2]">
-                    {formData.specialties.length} selected
+                    Check off only for those who hold them
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {PRESET_SPECIALTIES.map((spec) => {
-                    const isSelected = formData.specialties.includes(spec);
-                    return (
-                      <button
-                        key={spec}
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleSpecialtyToggle(spec);
-                        }}
-                        className={`p-2.5 rounded-xl border text-xs font-bold text-left cursor-pointer transition-all flex items-center justify-between gap-2 select-none ${
-                          isSelected
-                            ? "bg-[#294B68] text-white border-[#294B68] shadow-xs"
-                            : "bg-[#F0F5F9] text-[#243746] border-[#D9E4EC] hover:bg-[#EAF3F8]"
+
+                <div className="space-y-2.5">
+                  {/* 1. Senior Home Safety Specialist (SHSS) */}
+                  <div
+                    className={`p-3.5 rounded-2xl border transition-all ${
+                      formData.shssCertified
+                        ? "bg-[#F0F5F9] border-[#294B68] shadow-xs"
+                        : "bg-[#F8FAFC] border-[#D9E4EC]"
+                    }`}
+                  >
+                    <label className="flex items-start justify-between gap-3 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.shssCertified}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              shssCertified: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 mt-0.5 text-[#294B68] rounded-md cursor-pointer shrink-0"
+                        />
+                        <div>
+                          <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                            <Award className="w-4 h-4 text-[#294B68]" />
+                            <span>Senior Home Safety Specialist (SHSS)</span>
+                          </div>
+                          <p className="text-[11px] text-[#64748B] mt-0.5">
+                            National certification for comprehensive aging-in-place and home hazard auditing.
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          formData.shssCertified
+                            ? "bg-[#294B68] text-white"
+                            : "bg-slate-200 text-slate-600"
                         }`}
                       >
-                        <span className="leading-snug">{spec}</span>
-                        {isSelected ? (
-                          <div className="w-4 h-4 rounded-md bg-white/20 flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                        ) : (
-                          <div className="w-4 h-4 rounded-md border border-[#CBD5E1] bg-white shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
+                        {formData.shssCertified ? "Certified" : "Not Held"}
+                      </span>
+                    </label>
+
+                    {/* SHSS Renewal Date Tracking Field (shown when checked) */}
+                    {formData.shssCertified && (
+                      <div className="mt-3 pt-3 border-t border-[#D9E4EC] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#243746]">
+                          <Calendar className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                          <span>SHSS Certificate Renewal Date:</span>
+                        </div>
+                        <input
+                          type="date"
+                          value={formData.shssRenewalDate}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              shssRenewalDate: e.target.value,
+                            })
+                          }
+                          className="px-3 py-1.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. CPR Certified */}
+                  <label
+                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      formData.cprCertified
+                        ? "bg-rose-50/60 border-rose-300 shadow-xs"
+                        : "bg-[#F8FAFC] border-[#D9E4EC]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.cprCertified}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            cprCertified: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 mt-0.5 text-rose-600 rounded-md cursor-pointer shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                          <HeartPulse className="w-4 h-4 text-rose-600" />
+                          <span>CPR Certified</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          Active Cardiopulmonary Resuscitation certified credential.
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        formData.cprCertified
+                          ? "bg-rose-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {formData.cprCertified ? "Certified" : "Not Held"}
+                    </span>
+                  </label>
+
+                  {/* 3. AED Certified */}
+                  <label
+                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      formData.aedCertified
+                        ? "bg-amber-50/60 border-amber-300 shadow-xs"
+                        : "bg-[#F8FAFC] border-[#D9E4EC]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.aedCertified}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            aedCertified: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 mt-0.5 text-amber-600 rounded-md cursor-pointer shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                          <Zap className="w-4 h-4 text-amber-600" />
+                          <span>AED Certified</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          Automated External Defibrillator operation certified.
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        formData.aedCertified
+                          ? "bg-amber-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {formData.aedCertified ? "Certified" : "Not Held"}
+                    </span>
+                  </label>
+
+                  {/* 4. Background-Checked */}
+                  <label
+                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      formData.backgroundChecked
+                        ? "bg-emerald-50/60 border-emerald-300 shadow-xs"
+                        : "bg-[#F8FAFC] border-[#D9E4EC]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.backgroundChecked}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            backgroundChecked: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 mt-0.5 text-emerald-600 rounded-md cursor-pointer shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                          <span>Background-Checked</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          Multi-state criminal history and vulnerable elder registry verified.
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        formData.backgroundChecked
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {formData.backgroundChecked ? "Verified" : "Pending"}
+                    </span>
+                  </label>
+
+                  {/* 5. Bilingual — English & Spanish */}
+                  <label
+                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      formData.bilingualSpanish
+                        ? "bg-purple-50/60 border-purple-300 shadow-xs"
+                        : "bg-[#F8FAFC] border-[#D9E4EC]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.bilingualSpanish}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            bilingualSpanish: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 mt-0.5 text-purple-600 rounded-md cursor-pointer shrink-0"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                          <Languages className="w-4 h-4 text-purple-600" />
+                          <span>Bilingual — English &amp; Spanish</span>
+                        </div>
+                        <p className="text-[11px] text-[#64748B] mt-0.5">
+                          Fluent in English and Spanish for native Spanish-speaking clients.
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        formData.bilingualSpanish
+                          ? "bg-purple-600 text-white"
+                          : "bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      {formData.bilingualSpanish ? "Bilingual" : "No"}
+                    </span>
+                  </label>
                 </div>
               </div>
 
-              {/* Color Theme Selector */}
-              <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-2">
-                  Calendar Badge Color
-                </label>
-                <div className="flex items-center gap-3">
-                  {PRESET_COLORS.map((c) => (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, color: c.value })}
-                      className={`w-8 h-8 rounded-full transition-transform cursor-pointer border-2 ${
-                        formData.color === c.value
-                          ? "scale-110 border-[#243746] shadow-md"
-                          : "border-transparent"
-                      }`}
-                      style={{ backgroundColor: c.value }}
-                      title={c.name}
-                    />
+              {/* Section 3: Automatic Core Competencies (No need to check off) */}
+              <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#5E8FB2]" />
+                  <span>Core Standard Competencies (Included for All Specialists)</span>
+                </div>
+                <p className="text-[11px] text-[#64748B]">
+                  All AgeWellRI specialists are standard-trained and verified across these 3 foundational pillars:
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                  {CORE_AUTOMATIC_COMPETENCIES.map((core, cidx) => (
+                    <div
+                      key={cidx}
+                      className="p-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs space-y-0.5"
+                    >
+                      <div className="flex items-center gap-1 font-bold text-[#243746] text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{core.title}</span>
+                      </div>
+                      <p className="text-[10px] text-[#64748B] leading-tight">
+                        {core.desc}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </div>
 
+              {/* Section 4: Internal Administrative Notes */}
               <div>
                 <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1">
                   Internal Administrative Notes
@@ -647,37 +1014,427 @@ export default function SpecialistsPage() {
                   placeholder="e.g. Primary territory: South County / Washington County..."
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                  className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#D9E4EC]">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="px-5 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isCreating || isUpdating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <span>{editingSpecialist ? "Update Specialist" : "Create Specialist"}</span>
-                  )}
-                </button>
+              {/* Form Actions */}
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-[#D9E4EC]">
+                {editingSpecialist ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteSpecialist(editingSpecialist)}
+                    disabled={isDeleting}
+                    className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Delete Specialist</span>
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isCreating || isUpdating}
+                    className="px-6 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isCreating || isUpdating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <span>{editingSpecialist ? "Update Specialist" : "Create Specialist"}</span>
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* View Specialist Details Modal */}
+      {viewingSpecialist && (() => {
+        const vLegacySpecs = (viewingSpecialist.specialties || []).map((s) => s.toLowerCase());
+        const vIsShss =
+          viewingSpecialist.shssCertified ??
+          vLegacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
+        const vIsCpr =
+          viewingSpecialist.cprCertified ?? vLegacySpecs.some((s) => s.includes("cpr"));
+        const vIsAed =
+          viewingSpecialist.aedCertified ?? vLegacySpecs.some((s) => s.includes("aed"));
+        const vIsBg =
+          viewingSpecialist.backgroundChecked ??
+          (vLegacySpecs.some((s) => s.includes("background")) || true);
+        const vIsBilingual =
+          viewingSpecialist.bilingualSpanish ??
+          vLegacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
+
+        let shssRenewalFormatted = null;
+        if (viewingSpecialist.shssRenewalDate) {
+          try {
+            shssRenewalFormatted = new Date(viewingSpecialist.shssRenewalDate).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            });
+          } catch {
+            shssRenewalFormatted = String(viewingSpecialist.shssRenewalDate);
+          }
+        }
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl border border-[#D9E4EC] max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+              {/* Header */}
+              <div className="flex items-start justify-between border-b border-[#D9E4EC] pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 shadow-md"
+                    style={{ backgroundColor: viewingSpecialist.color || "#294B68" }}
+                  >
+                    {viewingSpecialist.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-black text-xl text-[#243746]">
+                        {viewingSpecialist.name}
+                      </h3>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          viewingSpecialist.status === "ACTIVE"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-200"
+                        }`}
+                      >
+                        {viewingSpecialist.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#5E8FB2] font-bold mt-0.5">
+                      {viewingSpecialist.title || "Home Safety Specialist"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingSpecialist(null)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                      Phone Number
+                    </span>
+                    {viewingSpecialist.phone ? (
+                      <a
+                        href={`tel:${viewingSpecialist.phone}`}
+                        className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
+                      >
+                        {viewingSpecialist.phone}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-medium">Not provided</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                      Email Address
+                    </span>
+                    {viewingSpecialist.email ? (
+                      <a
+                        href={`mailto:${viewingSpecialist.email}`}
+                        className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
+                      >
+                        {viewingSpecialist.email}
+                      </a>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-medium">Not provided</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                    <CalendarCheck className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                      Active Assignments
+                    </span>
+                    <span className="text-xs font-bold text-[#243746] block">
+                      {viewingSpecialist.activeAssignmentsCount} visits assigned
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 1: Specific Qualifications & Certifications */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-black uppercase tracking-wider text-[#294B68] flex items-center gap-1.5">
+                    <Award className="w-4 h-4 text-[#294B68]" />
+                    <span>Specific Qualifications &amp; Certifications</span>
+                  </h4>
+                  <span className="text-[11px] font-semibold text-[#5E8FB2]">
+                    Verified Credentials
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* SHSS */}
+                  <div
+                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                      vIsShss
+                        ? "bg-[#F0F5F9] border-[#294B68]"
+                        : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <Award className={`w-4 h-4 mt-0.5 shrink-0 ${vIsShss ? "text-[#294B68]" : "text-slate-400"}`} />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#243746] block">
+                          Senior Home Safety Specialist (SHSS)
+                        </span>
+                        {vIsShss && shssRenewalFormatted ? (
+                          <span className="text-[11px] font-semibold text-[#5E8FB2] flex items-center gap-1 mt-1">
+                            <Calendar className="w-3 h-3" />
+                            <span>Renewal Date: {shssRenewalFormatted}</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                            {vIsShss ? "Certification Active" : "Not Held"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        vIsShss ? "bg-[#294B68] text-white" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {vIsShss ? "Certified" : "No"}
+                    </span>
+                  </div>
+
+                  {/* CPR */}
+                  <div
+                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                      vIsCpr
+                        ? "bg-rose-50 border-rose-200"
+                        : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <HeartPulse className={`w-4 h-4 mt-0.5 shrink-0 ${vIsCpr ? "text-rose-600" : "text-slate-400"}`} />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#243746] block">
+                          CPR Certified
+                        </span>
+                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                          {vIsCpr ? "Cardiopulmonary Resuscitation" : "Not Held"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        vIsCpr ? "bg-rose-600 text-white" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {vIsCpr ? "Certified" : "No"}
+                    </span>
+                  </div>
+
+                  {/* AED */}
+                  <div
+                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                      vIsAed
+                        ? "bg-amber-50 border-amber-200"
+                        : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <Zap className={`w-4 h-4 mt-0.5 shrink-0 ${vIsAed ? "text-amber-600" : "text-slate-400"}`} />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#243746] block">
+                          AED Certified
+                        </span>
+                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                          {vIsAed ? "Defibrillator Operation" : "Not Held"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        vIsAed ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {vIsAed ? "Certified" : "No"}
+                    </span>
+                  </div>
+
+                  {/* Background-Checked */}
+                  <div
+                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                      vIsBg
+                        ? "bg-emerald-50 border-emerald-200"
+                        : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <ShieldCheck className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBg ? "text-emerald-600" : "text-slate-400"}`} />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#243746] block">
+                          Background-Checked
+                        </span>
+                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                          {vIsBg ? "Multi-State & Elder Registry Verified" : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        vIsBg ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {vIsBg ? "Verified" : "Pending"}
+                    </span>
+                  </div>
+
+                  {/* Bilingual */}
+                  <div
+                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 sm:col-span-2 ${
+                      vIsBilingual
+                        ? "bg-purple-50 border-purple-200"
+                        : "bg-slate-50 border-slate-200 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <Languages className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBilingual ? "text-purple-600" : "text-slate-400"}`} />
+                      <div>
+                        <span className="font-extrabold text-xs text-[#243746] block">
+                          Bilingual — English &amp; Spanish
+                        </span>
+                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                          {vIsBilingual ? "Fluent in English and Spanish for native Spanish-speaking clients" : "English Only"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                        vIsBilingual ? "bg-purple-600 text-white" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {vIsBilingual ? "Bilingual (EN/ES)" : "English Only"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Core Standard Competencies (Automatic) */}
+              <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
+                  <Sparkles className="w-4 h-4 text-[#5E8FB2]" />
+                  <span>Core Standard Competencies (Included for All Specialists)</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                  {CORE_AUTOMATIC_COMPETENCIES.map((core, cidx) => (
+                    <div
+                      key={cidx}
+                      className="p-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs space-y-0.5"
+                    >
+                      <div className="flex items-center gap-1 font-bold text-[#243746] text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>{core.title}</span>
+                      </div>
+                      <p className="text-[10px] text-[#64748B] leading-tight">
+                        {core.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 3: Notes & Metadata */}
+              {viewingSpecialist.notes && (
+                <div className="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl space-y-1">
+                  <span className="text-[10px] font-bold text-[#243746] uppercase tracking-wider block">
+                    Internal Administrative Notes
+                  </span>
+                  <p className="text-xs text-[#64748B] font-medium leading-relaxed">
+                    {viewingSpecialist.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Modal Footer Actions */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#D9E4EC]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = viewingSpecialist;
+                    setViewingSpecialist(null);
+                    handleDeleteSpecialist(target);
+                  }}
+                  disabled={isDeleting}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Delete Specialist</span>
+                </button>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewingSpecialist(null)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = viewingSpecialist;
+                      setViewingSpecialist(null);
+                      openEditModal(target);
+                    }}
+                    className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit Profile</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

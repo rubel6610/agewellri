@@ -11,6 +11,7 @@ import {
   FileCheck2,
   FileText,
   CreditCard,
+  Users,
   User,
   HelpCircle,
   LogOut,
@@ -42,8 +43,8 @@ export function DashboardSidebar() {
     e.preventDefault();
     showSuccessAlert(
       "AgeWellRI Member Concierge",
-      "24/7 Care Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: care@agewellri.com\nDedicated Rhode Island Staff"
-    );
+      `Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nHours: Mon–Fri, 8am–6pm`
+    );  
   };
 
   const navItems = [
@@ -53,12 +54,12 @@ export function DashboardSidebar() {
       icon: LayoutDashboard,
     },
     {
-      label: "Care Calendar",
+      label: "My Calendar",
       href: "/dashboard/calendar",
       icon: CalendarDays,
     },
     {
-      label: "My Visits",
+      label: "My Safety Visits",
       href: "/dashboard/appointments",
       icon: CalendarCheck,
     },
@@ -68,15 +69,20 @@ export function DashboardSidebar() {
       icon: FileCheck2,
     },
     {
-      label: "My Agreement",
+      label: "My Agreements",
       href: "/dashboard/agreements",
       icon: FileText,
     },
     {
-      label: "Billing",
+      label: "My Billings",
       href: "/dashboard/billing",
       icon: CreditCard,
     },
+    // {
+    //   label: "My Family Members",
+    //   href: "/dashboard/family-members",
+    //   icon: Users,
+    // },
     {
       label: "My Profile",
       href: "/dashboard/profile",
@@ -88,7 +94,7 @@ export function DashboardSidebar() {
     <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen fixed top-0 left-0 bottom-0 shrink-0 z-30">
       {/* Top Logo */}
       <div>
-        <div className="px-5 py-5 border-b border-[#D9E4EC]/60">
+        <div className="px-5 py-4 border-b border-[#D9E4EC]/60">
           <Link
             href="/dashboard"
             className="block focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg transition-transform hover:scale-[1.02]"
@@ -97,9 +103,9 @@ export function DashboardSidebar() {
               src="/logo.png"
               alt="AgeWellRI Portal"
               width={260}
-              height={80}
+              height={70}
               priority
-              className="w-full max-w-[215px] h-auto max-h-14 object-contain"
+              className="w-full max-w-[220px] h-auto max-h-14 object-contain"
             />
           </Link>
         </div>

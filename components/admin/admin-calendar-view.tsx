@@ -7,7 +7,7 @@ import { AdminAppointment } from "@/lib/types/admin";
 
 interface AdminCalendarViewProps {
   appointments: AdminAppointment[];
-  onOpenScheduleModal: () => void;
+  onOpenScheduleModal?: () => void;
 }
 
 export function AdminCalendarView({ appointments, onOpenScheduleModal }: AdminCalendarViewProps) {
@@ -56,14 +56,6 @@ export function AdminCalendarView({ appointments, onOpenScheduleModal }: AdminCa
               Month
             </button>
           </div>
-
-          <button
-            onClick={onOpenScheduleModal}
-            className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Book Visit</span>
-          </button>
         </div>
       </div>
 

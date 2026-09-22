@@ -12,15 +12,24 @@ import {
   AlertCircle,
   Clock,
   Loader2,
+  Trash2,
 } from "lucide-react";
-import { MasterClientRecord } from "@/redux/features/client/clientApi";
+import {
+  MasterClientRecord,
+  useDeleteAdminClientMutation,
+} from "@/redux/features/client/clientApi";
+import {
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 import { ClientStatusBadge } from "./client-status-badge";
 import { TablePagination } from "@/components/ui/table-pagination";
 
 interface ClientTableProps {
   clients: MasterClientRecord[];
   isLoading?: boolean;
-  onOpenAddClientModal: () => void;
+  onOpenAddClientModal?: () => void;
   onOpenScheduleModal: (clientId: string) => void;
 }
 
@@ -31,15 +40,46 @@ export function ClientTable({
   onOpenScheduleModal,
 }: ClientTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stateFilter, setStateFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+
+  const [deleteAdminClient] = useDeleteAdminClientMutation();
+
+  const handleDeleteClient = async (client: MasterClientRecord) => {
+    const clientFullName = `${client.firstName} ${client.lastName}`.trim();
+    const confirmed = await confirmDelete({
+      title: `Delete Client "${clientFullName}"?`,
+      text: `This will permanently delete ${clientFullName} (${client.clientNumber || client.id}), including their agreements, active subscriptions, invoices, appointments, and portal access. If they wish to return, they will need to be re-registered.`,
+      confirmButtonText: "Yes, Permanently Delete",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!confirmed) return;
+
+    setDeletingClientId(client.id);
+    try {
+      const idToDelete = client.internalId || client.id || client.clientNumber;
+      const res = await deleteAdminClient(idToDelete).unwrap();
+      showSuccessAlert(
+        "Client Deleted",
+        res.message || `Client "${clientFullName}" has been permanently deleted.`
+      );
+    } catch (err: any) {
+      showErrorAlert(
+        "Deletion Failed",
+        err?.data?.message || err?.message || "Failed to delete client. Please try again."
+      );
+    } finally {
+      setDeletingClientId(null);
+    }
+  };
 
   // Reset to page 1 on filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, stateFilter, statusFilter, pageSize]);
+  }, [searchTerm, statusFilter, pageSize]);
 
   const filteredClients = clients.filter((client) => {
     const term = searchTerm.toLowerCase();
@@ -49,8 +89,6 @@ export function ClientTable({
       client.email.toLowerCase().includes(term) ||
       client.id.toLowerCase().includes(term) ||
       (client.state && client.state.toLowerCase().includes(term));
-
-    const matchesState = stateFilter === "ALL" || client.state === stateFilter;
 
     const isExecuted = client.agreementStatus === "EXECUTED" || client.agreementStatus === "SIGNED";
     const isPaid = client.paymentStatus === "PAID";
@@ -64,7 +102,7 @@ export function ClientTable({
       (statusFilter === "agreement_executed" && isExecuted) ||
       (statusFilter === "payment_pending" && !isPaid);
 
-    return matchesSearch && matchesState && matchesStatus;
+    return matchesSearch && matchesStatus;
   });
 
   // KPI Quick Filter Counters
@@ -178,14 +216,6 @@ export function ClientTable({
 
           <div className="flex items-center gap-2">
             <select
-              value={stateFilter}
-              onChange={(e) => setStateFilter(e.target.value)}
-              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            >
-              <option value="ALL">Rhode Island (RI)</option>
-            </select>
-
-            <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
@@ -199,14 +229,6 @@ export function ClientTable({
             </select>
           </div>
         </div>
-
-        <button
-          onClick={onOpenAddClientModal}
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Client</span>
-        </button>
       </div>
 
       {/* Desktop Table View */}
@@ -356,6 +378,19 @@ export function ClientTable({
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteClient(c)}
+                          disabled={deletingClientId === c.id}
+                          className="p-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+                          title={`Permanently Delete Client ${c.firstName} ${c.lastName}`}
+                        >
+                          {deletingClientId === c.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -434,13 +469,28 @@ export function ClientTable({
                       <span>Schedule (Locked)</span>
                     </span>
                   )}
-                  <Link
-                    href={`/admin/clients/${c.id}`}
-                    className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
-                  >
-                    <span>Manage</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteClient(c)}
+                      disabled={deletingClientId === c.id}
+                      className="font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                      {deletingClientId === c.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                      <span>Delete</span>
+                    </button>
+                    <Link
+                      href={`/admin/clients/${c.id}`}
+                      className="font-bold text-[#294B68] flex items-center gap-1 hover:underline"
+                    >
+                      <span>Manage</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             );

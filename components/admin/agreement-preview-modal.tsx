@@ -1,24 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import {
   X,
   Download,
   Printer,
-  ShieldCheck,
-  Calendar,
-  User,
-  Phone,
-  Mail,
-  MapPin,
   FileText,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
 import { AdminAgreementRecord } from "@/redux/features/client/clientApi";
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 import { showToast, showErrorAlert } from "@/lib/alerts/sweetalert";
+import { AgreementDocumentContent } from "../dashboard/agreement-document-content";
 
 interface AgreementPreviewModalProps {
   agreement: AdminAgreementRecord | null;
@@ -35,11 +29,26 @@ export function AgreementPreviewModal({
 
   if (!isOpen || !agreement) return null;
 
-  const isExecuted =
-    agreement.status === "EXECUTED" ||
-    agreement.status === "SIGNED" ||
-    Boolean(agreement.clientSignature) ||
-    Boolean(agreement.signedDate);
+  const authDocUrl = agreement.authorityDocumentUrl || agreement.documentUrl;
+  const signerName =
+    agreement.signerName ||
+    agreement.clientFullName ||
+    agreement.clientName ||
+    "Signer";
+
+  const rawDate =
+    agreement.agreementDate ||
+    agreement.signedAt ||
+    agreement.executedAt ||
+    agreement.signedDate;
+
+  const formattedDate = rawDate
+    ? new Date(rawDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Executed & Active";
 
   const handleDownload = async () => {
     try {
@@ -47,8 +56,8 @@ export function AgreementPreviewModal({
       showToast(`Generating official PDF for ${agreement.clientName}...`);
       await downloadAgreementPdf({
         ...agreement,
-        clientFullName: agreement.clientName,
-        email: agreement.clientEmail,
+        clientFullName: agreement.clientFullName || agreement.clientName,
+        email: agreement.email || agreement.clientEmail,
       });
     } catch (err: any) {
       console.error("PDF Download error:", err);
@@ -79,12 +88,30 @@ export function AgreementPreviewModal({
                 </span>
               </h2>
               <p className="text-xs text-[#64748B]">
-                ID: {agreement.clientNumber} • Version {agreement.version}
+                ID: {agreement.clientNumber} • Version {agreement.version || "v2.0"} • {formattedDate}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
+            {authDocUrl ? (
+              <button
+                type="button"
+                onClick={() =>
+                  downloadAuthorityDocument({
+                    url: authDocUrl,
+                    agreementId: agreement.id,
+                    customName: `AgeWellRI_Legal_Authority_${signerName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                  })
+                }
+                className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                title="Download Uploaded Legal Authority Document (POA / Guardianship)"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Authority Doc</span>
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={handleDownload}
@@ -118,143 +145,34 @@ export function AgreementPreviewModal({
           </div>
         </div>
 
-        {/* Modal Scrollable Agreement Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-[#243746] bg-white">
-          {/* Header Banner */}
-          <div className="p-6 bg-[#243746] text-white rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/logo.png"
-                alt="AgeWellRI Logo"
-                width={140}
-                height={36}
-                className="h-8 w-auto brightness-0 invert object-contain"
-              />
-              <div className="border-l border-white/20 pl-3">
-                <h3 className="text-sm font-bold text-white">Client Service Agreement</h3>
-                <p className="text-xs text-[#9EC8E2]">{agreement.state} Statutory Master Copy</p>
-              </div>
-            </div>
-
-            <div>
-              {isExecuted ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Executed & Active</span>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-400/30">
-                  <AlertCircle className="w-4 h-4 text-amber-400" />
-                  <span>Pending Signature</span>
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Section 1: Client Overview */}
-          <div className="border border-[#D9E4EC] rounded-2xl p-5 bg-[#F7FAFC] space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#5E8FB2]">
-              1. Client Information
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-              <div>
-                <span className="text-[#64748B] block font-semibold">Client Name:</span>
-                <strong className="text-sm text-[#243746]">{agreement.clientName}</strong>
-              </div>
-              <div>
-                <span className="text-[#64748B] block font-semibold">Client ID / Number:</span>
-                <strong className="text-sm text-[#243746]">{agreement.clientNumber}</strong>
-              </div>
-              <div>
-                <span className="text-[#64748B] block font-semibold">Primary Contact Email:</span>
-                <span className="text-[#243746] font-medium">{agreement.clientEmail}</span>
-              </div>
-              <div>
-                <span className="text-[#64748B] block font-semibold">Jurisdiction State:</span>
-                <span className="text-[#243746] font-medium">{agreement.state}</span>
-              </div>
-              <div>
-                <span className="text-[#64748B] block font-semibold">Selected Care Plan:</span>
-                <strong className="text-[#294B68]">{agreement.planName}</strong>
-              </div>
-              <div>
-                <span className="text-[#64748B] block font-semibold">Light Cleaning Add-on:</span>
-                <span className="text-[#243746] font-medium">
-                  {agreement.hasCleaningAddon ? "Enrolled (+6 visits/yr)" : "Not Enrolled"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Statutory 3-Day Right to Cancel */}
-          <div className="border border-rose-200 bg-rose-50/60 rounded-2xl p-5 space-y-2">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-800 flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-              <span>2. State Statutory Consumer Rights ({agreement.state})</span>
-            </h4>
-            <p className="text-xs text-rose-900 leading-relaxed">
-              Under {agreement.state} Consumer Protection Regulations, you may cancel this agreement at any time prior to midnight of the third business day after the date of this transaction without any penalty or obligation.
-            </p>
-            {agreement.cancellationDeadline && (
-              <div className="text-xs font-bold text-rose-950 pt-1">
-                Statutory Cancellation Deadline: {agreement.cancellationDeadline}
-              </div>
-            )}
-          </div>
-
-          {/* Section 3: Signatures */}
-          <div className="border border-[#D9E4EC] rounded-2xl p-5 bg-[#F7FAFC] space-y-4">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#5E8FB2]">
-              3. Execution & E-Signatures
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-white rounded-xl border border-[#D9E4EC] space-y-2">
-                <div className="text-[11px] font-bold text-[#64748B] uppercase">Client / Representative Signature</div>
-                <div className="h-14 flex items-center border-b border-dashed border-[#D9E4EC]">
-                  {agreement.clientSignature ? (
-                    agreement.clientSignature.startsWith("data:image") ? (
-                      <img
-                        src={agreement.clientSignature}
-                        alt="Client Signature"
-                        className="max-h-12 w-auto object-contain"
-                      />
-                    ) : (
-                      <span className="font-serif italic text-lg text-[#294B68]">
-                        {agreement.clientSignature}
-                      </span>
-                    )
-                  ) : (
-                    <span className="text-xs italic text-[#64748B]">Pending Signature</span>
-                  )}
-                </div>
-                <div className="text-[11px] text-[#64748B] space-y-0.5">
-                  <div><strong>Signer:</strong> {agreement.signerName} ({agreement.signerRole})</div>
-                  <div><strong>Date:</strong> {agreement.signedDate || "Awaiting Signature"}</div>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white rounded-xl border border-[#D9E4EC] space-y-2">
-                <div className="text-[11px] font-bold text-[#64748B] uppercase">AgeWellRI Authorized Officer</div>
-                <div className="h-14 flex items-center border-b border-dashed border-[#D9E4EC]">
-                  <span className="font-serif italic text-lg text-[#294B68]">
-                    Sarah Jenkins, Care Director
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#64748B] space-y-0.5">
-                  <div><strong>Officer:</strong> Sarah Jenkins</div>
-                  <div><strong>Status:</strong> Verified AgeWellRI Care Management</div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Modal Scrollable Agreement Body (Same Canonical Renderer) */}
+        <div className="p-4 sm:p-6 overflow-y-auto bg-[#F8FAFC]">
+          <AgreementDocumentContent agreement={agreement} />
         </div>
 
         {/* Modal Bottom Bar */}
         <div className="px-6 py-4 border-t border-[#D9E4EC] bg-[#F7FAFC] flex items-center justify-between shrink-0">
           <span className="text-xs text-[#64748B]">
-            Official legal document for <strong>{agreement.clientName}</strong>
+            Official legal service agreement record for <strong>{agreement.clientName}</strong>
           </span>
           <div className="flex items-center gap-2">
+            {authDocUrl ? (
+              <button
+                type="button"
+                onClick={() =>
+                  downloadAuthorityDocument({
+                    url: authDocUrl,
+                    agreementId: agreement.id,
+                    customName: `AgeWellRI_Legal_Authority_${signerName.replace(/[^a-zA-Z0-9.-]/g, "_")}`,
+                  })
+                }
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Authority Doc</span>
+              </button>
+            ) : null}
+
             <button
               type="button"
               onClick={handleDownload}
@@ -282,3 +200,4 @@ export function AgreementPreviewModal({
     </div>
   );
 }
+

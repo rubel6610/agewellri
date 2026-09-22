@@ -1,10 +1,8 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
-import { Bell, Plus, Menu, UserCheck, Shield } from "lucide-react";
+import { Plus, Menu, UserPlus, UserCheck } from "lucide-react";
 import { NotificationMenu } from "../dashboard/notification-menu";
-import { MOCK_NOTIFICATIONS } from "@/lib/api/mock-data";
 import { useAppSelector } from "@/redux/hooks";
 
 interface AdminHeaderProps {
@@ -47,13 +45,13 @@ export function AdminHeader({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 shrink-0">
-        {/* Quick actions: Add Client (md+) */}
+        {/* Quick actions: Invite Client (md+) */}
         <button
           onClick={onOpenAddClientModal}
           className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all border border-[#5E8FB2]/30 cursor-pointer shrink-0"
         >
-          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>Add Client</span>
+          <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span>Invite Client</span>
         </button>
 
         {/* Schedule Visit (Responsive text for xs vs sm+) */}
@@ -68,20 +66,24 @@ export function AdminHeader({
 
         {/* Notifications */}
         <div className="shrink-0">
-          <NotificationMenu notifications={MOCK_NOTIFICATIONS} />
+          <NotificationMenu />
         </div>
 
-        {/* Admin Profile */}
-        <div className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-[#D9E4EC] shrink-0">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#294B68] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+        {/* Admin Profile Link */}
+        <Link
+          href="/admin/profile"
+          title="Manage Administrator Profile & Credentials"
+          className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-[#D9E4EC] shrink-0 p-1 sm:p-1.5 rounded-xl hover:bg-[#EAF3F8] transition-colors group cursor-pointer"
+        >
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#294B68] group-hover:bg-[#1E374D] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs transition-colors">
             {firstName[0]}
             {lastName[0]}
           </div>
           <div className="hidden xl:block text-left text-xs max-w-[140px]">
-            <span className="font-bold text-[#243746] block truncate">{firstName} {lastName}</span>
+            <span className="font-bold text-[#243746] block truncate group-hover:text-[#294B68] transition-colors">{firstName} {lastName}</span>
             <span className="text-[#64748B] text-[11px] block truncate">{roleLabel}</span>
           </div>
-        </div>
+        </Link>
       </div>
     </header>
   );

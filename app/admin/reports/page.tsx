@@ -2,7 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useGetAdminReportsQuery } from "@/redux/features/report/reportApi";
+import {
+  useGetAdminReportsQuery,
+  useDeleteAdminReportMutation,
+} from "@/redux/features/report/reportApi";
 import { ReportItem } from "@/redux/features/report/reportTypes";
 import {
   FileCheck2,
@@ -14,9 +17,16 @@ import {
   Eye,
   Calendar,
   User,
+  Trash2,
+  RefreshCw,
 } from "lucide-react";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { downloadReportPdf } from "@/lib/api/report-download";
+import {
+  confirmDelete,
+  showSuccessAlert,
+  showErrorAlert,
+} from "@/lib/alerts/sweetalert";
 
 export default function ReportsAdminPage() {
   const [search, setSearch] = useState("");
@@ -24,10 +34,13 @@ export default function ReportsAdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data: reportsRes, isLoading } = useGetAdminReportsQuery({
+  const { data: reportsRes, isLoading, isFetching, refetch } = useGetAdminReportsQuery({
     search: search || undefined,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
   });
+
+  const [deleteReport, { isLoading: isDeletingReport }] =
+    useDeleteAdminReportMutation();
 
   const reports: ReportItem[] = reportsRes?.data || [];
 
@@ -40,6 +53,28 @@ export default function ReportsAdminPage() {
 
   const handleDownloadPdf = (reportId: string, clientName?: string, serviceType?: string) => {
     downloadReportPdf(reportId, `${clientName || "Client"}_${serviceType || "Visit"}_Report.pdf`);
+  };
+
+  const handleDeleteReport = async (rep: ReportItem) => {
+    const confirmed = await confirmDelete({
+      title: `Delete Visit Report?`,
+      text: `Are you sure you want to delete the report "${rep.title}" for ${rep.clientName}? This action cannot be undone.`,
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const res = await deleteReport(rep.id).unwrap();
+      if (res.success) {
+        await showSuccessAlert(
+          "Report Deleted",
+          `The visit report for ${rep.clientName} has been permanently deleted.`
+        );
+        refetch();
+      }
+    } catch (err: any) {
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete report.");
+    }
   };
 
   return (
@@ -55,13 +90,26 @@ export default function ReportsAdminPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/appointments"
-          className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
-        >
-          <FileUp className="w-4 h-4" />
-          <span>Upload Report to Completed Visit</span>
-        </Link>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="px-3.5 py-2.5 bg-white border border-[#D9E4EC] text-[#243746] hover:bg-[#F0F5F9] rounded-xl text-xs font-bold flex items-center gap-2 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Refresh visit reports"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-[#5E8FB2] ${isFetching ? "animate-spin" : ""}`} />
+            <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
+
+          <Link
+            href="/admin/appointments?tab=COMPLETED"
+            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <FileUp className="w-4 h-4" />
+            <span>Upload Report to Completed Visit</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -134,10 +182,10 @@ export default function ReportsAdminPage() {
               When a visit is marked completed in Appointments, upload the technician&apos;s PDF report to publish it here.
             </p>
             <Link
-              href="/admin/appointments"
+              href="/admin/appointments?tab=COMPLETED"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#294B68] text-white text-xs font-bold rounded-xl"
             >
-              <span>Go to Appointments</span>
+              <span>Go to Completed Visits</span>
             </Link>
           </div>
         ) : (
@@ -190,6 +238,16 @@ export default function ReportsAdminPage() {
                           >
                             <Download className="w-3.5 h-3.5" />
                             <span>Download PDF</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReport(rep)}
+                            disabled={isDeletingReport}
+                            className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                            title="Delete Visit Report"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

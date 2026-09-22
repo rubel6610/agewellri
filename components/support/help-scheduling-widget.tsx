@@ -5,7 +5,9 @@ interface HelpSchedulingWidgetProps {
   className?: string;
 }
 
-export function HelpSchedulingWidget({ className = "" }: HelpSchedulingWidgetProps) {
+export function HelpSchedulingWidget({
+  className = "",
+}: HelpSchedulingWidgetProps) {
   return (
     <div
       className={`bg-white rounded-2xl border border-[#D9E4EC] p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
@@ -19,7 +21,8 @@ export function HelpSchedulingWidget({ className = "" }: HelpSchedulingWidgetPro
             Need help scheduling or have questions?
           </h4>
           <p className="text-xs text-[#5E8FB2] mt-0.5 leading-relaxed font-medium">
-            Our local Rhode Island Care Concierge team is here to assist you or your family member.
+            Our local Rhode Island Safety Concierge team is here to assist you
+            or your family member.
           </p>
         </div>
       </div>
@@ -33,7 +36,7 @@ export function HelpSchedulingWidget({ className = "" }: HelpSchedulingWidgetPro
           <span>(401) 712-3012</span>
         </a>
         <a
-          href="mailto:support@agewellri.com"
+          href="mailto:agewellri@gmail.com"
           className="px-3.5 py-2 rounded-xl bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-extrabold flex items-center gap-1.5 transition-colors shadow-xs"
         >
           <Mail className="w-3.5 h-3.5" />

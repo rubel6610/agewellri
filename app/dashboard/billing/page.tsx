@@ -8,7 +8,13 @@ import { TrustBadges } from "@/components/support/trust-badges";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 export default function BillingPage() {
-  const { data: liveData, isLoading, error, refetch, isFetching } = useGetBillingOverviewQuery();
+  const {
+    data: liveData,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+  } = useGetBillingOverviewQuery();
 
   const billing = liveData?.data;
 
@@ -21,7 +27,8 @@ export default function BillingPage() {
             Billing &amp; Subscription
           </h1>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage your membership care plan, payment methods, and billing statements.
+            Per your agreement, service and billing begin on the 1st of the
+            month following signup — not on the signup date.
           </p>
         </div>
 
@@ -31,7 +38,9 @@ export default function BillingPage() {
           disabled={isFetching}
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#D9E4EC] bg-white hover:bg-[#F8FAFC] text-xs font-bold text-[#64748B] hover:text-[#243746] transition-colors self-start sm:self-auto cursor-pointer shadow-2xs disabled:opacity-50"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#294B68]" : ""}`} />
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-[#294B68]" : ""}`}
+          />
           <span>{isFetching ? "Refreshing..." : "Refresh"}</span>
         </button>
       </div>
@@ -53,7 +62,10 @@ export default function BillingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]/60 space-y-2">
+                <div
+                  key={i}
+                  className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]/60 space-y-2"
+                >
                   <div className="h-3 bg-[#F1F5F9] rounded-md w-24"></div>
                   <div className="h-5 bg-[#E2E8F0] rounded-md w-32"></div>
                 </div>
@@ -111,9 +123,12 @@ export default function BillingPage() {
         <div className="p-12 text-center bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
           <AlertCircle className="w-10 h-10 text-amber-500 mx-auto" />
           <div className="space-y-1">
-            <h3 className="text-lg font-bold text-[#243746]">Billing Overview Unavailable</h3>
+            <h3 className="text-lg font-bold text-[#243746]">
+              Billing Overview Unavailable
+            </h3>
             <p className="text-xs text-[#64748B] max-w-md mx-auto">
-              Unable to load your subscription and billing details. Please ensure your agreement has been completed.
+              Unable to load your subscription and billing details. Please
+              ensure your agreement has been completed.
             </p>
           </div>
           <button
@@ -131,7 +146,19 @@ export default function BillingPage() {
           <BillingCard billing={billing} onRefresh={refetch} />
 
           {/* Invoices & Statements Table */}
-          <InvoiceTable invoices={billing.invoices || []} />
+          <InvoiceTable
+            invoices={billing.invoices || []}
+            clientName={billing.clientName}
+            clientNumber={billing.clientNumber}
+            clientEmail={billing.clientEmail}
+            planName={billing.currentPlanName}
+            billingFrequency={billing.billingFrequency}
+            paymentMethod={
+              billing.billingMethod === "INVOICE"
+                ? "Pay by Invoice"
+                : "Credit Card (Auto-Pay)"
+            }
+          />
 
           {/* Trust Badges */}
           <TrustBadges />

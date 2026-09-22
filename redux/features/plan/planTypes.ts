@@ -1,114 +1,45 @@
-export interface PlanServiceAllocation {
-  serviceTypeId: string;
-  serviceName: string;
-  category?: string;
-  allocatedVisits: number;
-  unit: string;
-  durationMinutes?: number;
-}
-
-export interface ActivePlan {
+export interface ServicePlan {
   id: string;
-  planId: string;
-  versionId: string | null;
-  versionNumber: number;
   name: string;
   code: string;
-  shortDescription: string;
-  fullDescription: string;
   price: number;
-  currency: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault: boolean;
-  features: string[];
-  services: PlanServiceAllocation[];
+  currency?: string;
+  billingInterval: "MONTHLY";
   totalVisits: number;
-  effectiveFrom: string;
-}
-
-export interface AdminPlan {
-  id: string;
-  name: string;
-  code: string;
-  shortDescription?: string;
-  fullDescription?: string;
-  currentPrice: number;
-  price?: number;
-  currency: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
-  displayOrder: number;
-  isActive: boolean;
-  isArchived: boolean;
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault?: boolean;
-  activeSubscribersCount: number;
-  totalVersionsCount: number;
-  latestVersionNumber: number;
-  latestVersionStatus: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-  features: string[];
-  services: PlanServiceAllocation[];
-  totalVisits: number;
-  versions?: PlanVersionDetail[];
-  effectiveFrom: string;
-  lastUpdated: string;
-}
-
-export interface PlanVersionDetail {
-  id: string;
-  versionNumber: number;
-  name: string;
+  times?: string | null;
   description?: string;
-  status: string;
-  price: number;
-  currency: string;
-  billingInterval: string;
-  features: string[];
-  effectiveFrom: string;
-  effectiveTo?: string;
-  planServices: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit: string;
-    serviceType: {
-      id: string;
-      name: string;
-      category: string;
-    };
-  }[];
-}
-
-export interface AdminPlanDetail {
-  id: string;
-  name: string;
-  code: string;
   shortDescription?: string;
   fullDescription?: string;
-  price: number;
-  currentPrice?: number;
-  billingInterval: string;
-  displayOrder: number;
-  isActive: boolean;
-  isArchived: boolean;
-  supportsAutomaticBilling: boolean;
-  supportsInvoiceBilling: boolean;
-  autoRenewDefault: boolean;
-  activeSubscribersCount?: number;
-  totalVisits?: number;
   features?: string[];
-  services?: PlanServiceAllocation[];
-  stripeProductId?: string;
-  versions: PlanVersionDetail[];
-  subscriptions: {
+  displayOrder?: number;
+  isActive?: boolean;
+  isArchived?: boolean;
+  supportsAutomaticBilling?: boolean;
+  supportsInvoiceBilling?: boolean;
+  autoRenewDefault?: boolean;
+  stripeProductId?: string | null;
+  stripePriceId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ActivePlan extends ServicePlan {
+  subscribersCount?: number;
+}
+
+export interface AdminPlan extends ServicePlan {
+  activeSubscribersCount: number;
+  lastUpdated?: string;
+}
+
+export interface AdminPlanDetail extends ServicePlan {
+  activeSubscribersCount?: number;
+  subscriptions?: {
     id: string;
     status: string;
-    contractedPrice?: number;
     billingInterval?: string;
     currentPeriodStart?: string;
     currentPeriodEnd?: string;
-    planVersionId?: string;
     client: {
       id: string;
       clientNumber: string;
@@ -118,72 +49,49 @@ export interface AdminPlanDetail {
         email: string;
         phone?: string;
       };
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      phone?: string;
+      primaryContactName?: string;
+      primaryContactEmail?: string;
+      primaryContactPhone?: string;
     };
   }[];
 }
 
-export interface ServiceItem {
-  id: string;
-  name: string;
-  code?: string;
-  category: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
-  description?: string;
-  durationMinutes: number;
-  defaultPrice?: number;
-  isActive: boolean;
-  displayOrder: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 export interface CreatePlanPayload {
   name: string;
-  code: string;
-  shortDescription?: string;
-  fullDescription?: string;
+  code?: string;
   price: number;
   currency?: string;
-  billingInterval: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval?: "MONTHLY";
+  totalVisits: number;
+  times?: string;
+  description?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  features: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
-  features: string[];
-  services: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit?: string;
-    durationMinutes?: number;
-  }[];
   isActive?: boolean;
-  effectiveDate?: string;
 }
 
 export interface UpdatePlanPayload {
   name?: string;
-  shortDescription?: string;
-  fullDescription?: string;
+  code?: string;
   price?: number;
   currency?: string;
-  billingInterval?: "MONTHLY" | "QUARTERLY" | "ANNUAL" | "ONE_TIME";
+  billingInterval?: "MONTHLY";
+  totalVisits?: number;
+  times?: string;
+  description?: string;
+  shortDescription?: string;
+  fullDescription?: string;
+  features?: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
-  features?: string[];
-  services?: {
-    serviceTypeId: string;
-    allocatedVisits: number;
-    unit?: string;
-    durationMinutes?: number;
-  }[];
   isActive?: boolean;
-  effectiveDate?: string;
-  forceNewVersion?: boolean;
 }
 
 export interface ChangePlanStatusPayload {
@@ -193,7 +101,12 @@ export interface ChangePlanStatusPayload {
 export interface CreateServicePayload {
   name: string;
   code?: string;
-  category: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
+  category:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
   description?: string;
   durationMinutes?: number;
   defaultPrice?: number;
@@ -204,7 +117,12 @@ export interface CreateServicePayload {
 export interface UpdateServicePayload {
   name?: string;
   code?: string;
-  category?: "CLEANING" | "SAFETY_OVERSIGHT" | "ASSESSMENT" | "WELLNESS" | "OTHER";
+  category?:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
   description?: string;
   durationMinutes?: number;
   defaultPrice?: number;
@@ -221,4 +139,71 @@ export interface ServiceCatalogStats {
   categoryBreakdown: Record<string, { total: number; active: number }>;
   totalPlanAllocations: number;
   totalScheduledAppointments: number;
+}
+
+/**
+ * Format plan duration / times for display and persistence.
+ * Examples:
+ *   1 or "1" or "1 hour" or "an hour" or "Up to an hour" -> "Up to an hour"
+ *   2 or "2" or "2 hours" or "Up to 2 hours" -> "Up to 2 hours"
+ *   3 or "3" or "3 hours" or "Up to 3 hours" -> "Up to 3 hours"
+ *   null / undefined / "" -> "Up to 2 hours" (default)
+ */
+export function formatPlanDuration(times?: string | number | null): string {
+  if (times === undefined || times === null || times === "") {
+    return "Up to 2 hours";
+  }
+
+  const str = String(times).trim();
+
+  // If already formatted as "Up to an hour" or "Up to a hour"
+  if (/^up\s+to\s+an?\s+hour$/i.test(str)) {
+    return "Up to an hour";
+  }
+
+  // If already formatted like "Up to X hours"
+  const upToMatch = str.match(/^up\s+to\s+(\d+(?:\.\d+)?)\s*hours?$/i);
+  if (upToMatch) {
+    const hours = parseFloat(upToMatch[1]);
+    if (hours === 1) return "Up to an hour";
+    return `Up to ${hours} hours`;
+  }
+
+  // Check for phrases like "an hour", "one hour", "1 hour", "1 hr", "1"
+  if (/^(an|one)\s*hours?$/i.test(str) || str.toLowerCase() === "an hour" || str.toLowerCase() === "one hour") {
+    return "Up to an hour";
+  }
+
+  // Extract first number if present
+  const numMatch = str.match(/(\d+(?:\.\d+)?)/);
+  if (numMatch) {
+    const hours = parseFloat(numMatch[1]);
+    if (hours === 1) return "Up to an hour";
+    if (hours > 0) return `Up to ${hours} hours`;
+  }
+
+  // Fallback
+  if (str.toLowerCase().startsWith("up to")) {
+    return str;
+  }
+  return `Up to ${str}`;
+}
+
+/**
+ * Parse numeric hours from duration string/number.
+ * Returns numeric hours (e.g. 1, 2, 3). Default is 2.
+ */
+export function parsePlanDurationHours(times?: string | number | null): number {
+  if (times === undefined || times === null || times === "") return 2;
+  if (typeof times === "number") return isNaN(times) || times <= 0 ? 2 : times;
+
+  const str = String(times).trim().toLowerCase();
+  if (str.includes("an hour") || str.includes("one hour")) return 1;
+
+  const match = str.match(/(\d+(?:\.\d+)?)/);
+  if (match) {
+    const num = parseFloat(match[1]);
+    return isNaN(num) || num <= 0 ? 2 : num;
+  }
+  return 2;
 }

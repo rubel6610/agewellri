@@ -4,13 +4,18 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Calendar, Loader2, CheckCircle2, UserCheck, Search, ChevronDown, Check, AlertCircle } from "lucide-react";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
-import { useGetAllServicesQuery } from "@/redux/features/plan/planApi";
 import { useAdminScheduleAppointmentMutation } from "@/redux/features/appointment/appointmentApi";
 import {
   confirmCriticalAction,
   showSuccessAlert,
   showErrorAlert,
 } from "@/lib/alerts/sweetalert";
+
+const STANDARD_VISIT_TYPES = [
+  "Home Safety & Oversight Visit",
+  "Comprehensive Safety Assessment",
+  "Specialist Follow-up Visit",
+];
 
 interface AdminScheduleModalProps {
   isOpen: boolean;
@@ -29,16 +34,21 @@ export function AdminScheduleModal({
 }: AdminScheduleModalProps) {
   const { data: specialists = [], isLoading: isSpecialistsLoading } = useGetAllSpecialistsQuery(undefined, { skip: !isOpen });
   const { data: clientsRes, isLoading: isClientsLoading } = useGetAdminClientsQuery({ limit: 100 }, { skip: !isOpen });
-  const { data: servicesList = [], isLoading: isServicesLoading } = useGetAllServicesQuery(undefined, { skip: !isOpen });
   const clientsList = clientsRes?.data || [];
 
   // Client Selection State & Eligibility Filtering
   const isClientEligible = (c: any) => {
     if (!c) return false;
-    const isExecuted = c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
-    const isPaid = c.paymentStatus === "PAID";
-    const hasQuota = c.remainingVisitsCount === undefined || c.remainingVisitsCount > 0;
-    return isExecuted && isPaid && hasQuota;
+    const isExecuted =
+      c.agreementStatus === "EXECUTED" || c.agreementStatus === "SIGNED";
+    const isEnrolled =
+      c.paymentStatus === "PAID" ||
+      c.status === "active" ||
+      c.status === "pending_payment" ||
+      c.subscriptionStatus === "PENDING";
+    const hasQuota =
+      c.remainingVisitsCount === undefined || c.remainingVisitsCount > 0;
+    return isExecuted && isEnrolled && hasQuota;
   };
 
   const eligibleClients = clientsList.filter(isClientEligible);
@@ -49,10 +59,8 @@ export function AdminScheduleModal({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Service Type Selection State
-  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("");
-  const [serviceType, setServiceType] = useState<string>("Safety Oversight");
+  const [serviceType, setServiceType] = useState<string>("Home Safety & Oversight Visit");
   const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
-  const [serviceSearchQuery, setServiceSearchQuery] = useState("");
   const serviceDropdownRef = useRef<HTMLDivElement>(null);
 
   // Specialist Selection State
@@ -70,14 +78,7 @@ export function AdminScheduleModal({
   const [adminScheduleAppointmentMutation, { isLoading: isSubmitting }] = useAdminScheduleAppointmentMutation();
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (servicesList.length > 0 && !selectedServiceTypeId) {
-      const activeServices = servicesList.filter((s) => s.isActive !== false);
-      const first = activeServices[0] || servicesList[0];
-      setSelectedServiceTypeId(first.id);
-      setServiceType(first.name);
-    }
-  }, [servicesList, selectedServiceTypeId]);
+
 
   useEffect(() => {
     if (defaultClientId) {
@@ -165,24 +166,7 @@ export function AdminScheduleModal({
     );
   });
 
-  // Filtered Services
-  const filteredServices = servicesList
-    .filter((s) => s.isActive !== false)
-    .filter((s) => {
-      if (!serviceSearchQuery.trim()) return true;
-      const q = serviceSearchQuery.toLowerCase().trim();
-      return (
-        s.name.toLowerCase().includes(q) ||
-        (s.category && s.category.toLowerCase().includes(q)) ||
-        (s.description && s.description.toLowerCase().includes(q)) ||
-        (s.durationMinutes && s.durationMinutes.toString().includes(q))
-      );
-    });
-
-  const selectedServiceObj =
-    servicesList.find((s) => s.id === selectedServiceTypeId) ||
-    servicesList.find((s) => s.name === serviceType) ||
-    servicesList[0];
+  const selectedVisitType = serviceType || (selectedClient as any)?.planName || STANDARD_VISIT_TYPES[0];
 
   // Filtered Specialists
   const filteredSpecialists = specialists.filter((s) => {
@@ -213,7 +197,7 @@ export function AdminScheduleModal({
       } else if (!hasRemainingVisits) {
         showErrorAlert(
           "No Remaining Visits",
-          "This client has 0 remaining visits in their current quarterly cycle. Cannot schedule visit."
+          "This client has 0 remaining visits in their current monthly cycle. Cannot schedule visit."
         );
       }
       return;
@@ -221,6 +205,20 @@ export function AdminScheduleModal({
 
     const targetClientId = isLockedClient ? (defaultClientId || selectedClientId) : selectedClientId;
     const targetDisplayName = clientName || (selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : targetClientId) || "Client";
+
+    const dateParts = date.split("-");
+    if (dateParts.length === 3) {
+      const chosenDate = new Date(parseInt(dateParts[0], 10), parseInt(dateParts[1], 10) - 1, parseInt(dateParts[2], 10));
+      const dow = chosenDate.getDay();
+      if (dow === 0 || dow === 3) {
+        const dayName = dow === 0 ? "Sunday" : "Wednesday";
+        showErrorAlert(
+          "Weekend Non-Service Day",
+          `Visits cannot be scheduled on ${dayName}s as they are non-service days. Working days are Monday, Tuesday, Thursday, Friday, and Saturday.`
+        );
+        return;
+      }
+    }
 
     const confirmed = await confirmCriticalAction({
       title: "Dispatch Specialist Visit?",
@@ -235,7 +233,6 @@ export function AdminScheduleModal({
       const selectedSpecialist = specialists.find((s) => s.name === technicianName);
       await adminScheduleAppointmentMutation({
         clientId: targetClientId,
-        serviceTypeId: selectedServiceTypeId || undefined,
         serviceType,
         date,
         timeSlot,
@@ -261,7 +258,6 @@ export function AdminScheduleModal({
     setIsServiceDropdownOpen(false);
     setIsSpecialistDropdownOpen(false);
     setSearchQuery("");
-    setServiceSearchQuery("");
     setSpecialistSearchQuery("");
     onClose();
   };
@@ -315,7 +311,7 @@ export function AdminScheduleModal({
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold text-rose-950">No Remaining Visits for Client (0 Remaining)</strong>
-                  <span>This client has utilized all {selectedClient?.totalVisitsAllowed || 0} visits allocated for their active subscription period. Additional visits cannot be scheduled until next quarterly renewal.</span>
+                  <span>This client has utilized all {selectedClient?.totalVisitsAllowed || 0} visits allocated for their active subscription period. Additional visits cannot be scheduled until next monthly renewal.</span>
                 </div>
               </div>
             ) : null}
@@ -466,10 +462,10 @@ export function AdminScheduleModal({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Searchable Service Type Dropdown with Loading Option */}
+              {/* Visit Type Dropdown */}
               <div className="relative" ref={serviceDropdownRef}>
                 <label className="block text-xs font-bold text-[#243746] mb-1">
-                  Service Type <span className="text-red-500">*</span>
+                  Visit Type <span className="text-red-500">*</span>
                 </label>
                 <button
                   type="button"
@@ -480,23 +476,11 @@ export function AdminScheduleModal({
                   }}
                   className="w-full min-h-[46px] px-3.5 py-2 text-left bg-white border border-[#D9E4EC] hover:border-[#5E8FB2] rounded-xl flex items-center justify-between gap-2 transition-all cursor-pointer shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 >
-                  {isServicesLoading ? (
-                    <div className="flex items-center gap-2 text-sm text-[#64748B] py-0.5">
-                      <Loader2 className="w-4 h-4 animate-spin text-[#294B68]" />
-                      <span className="font-medium">Loading service catalog...</span>
-                    </div>
-                  ) : selectedServiceObj ? (
-                    <div className="truncate">
-                      <span className="font-bold text-sm text-[#243746]">
-                        {selectedServiceObj.name}
-                      </span>
-                      <span className="text-xs text-[#5E8FB2] font-semibold ml-1.5">
-                        ({selectedServiceObj.durationMinutes} min)
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-[#64748B]">Select service type...</span>
-                  )}
+                  <div className="truncate">
+                    <span className="font-bold text-sm text-[#243746]">
+                      {selectedVisitType}
+                    </span>
+                  </div>
                   <ChevronDown
                     className={`w-4 h-4 text-[#64748B] shrink-0 transition-transform duration-200 ${
                       isServiceDropdownOpen ? "rotate-180 text-[#294B68]" : ""
@@ -505,79 +489,28 @@ export function AdminScheduleModal({
                 </button>
 
                 {isServiceDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#D9E4EC] rounded-2xl shadow-xl z-50 p-2.5 space-y-2 animate-in fade-in zoom-in-95 duration-150">
-                    {/* Service Search Input */}
-                    <div className="relative">
-                      <Search className="w-4 h-4 text-[#64748B] absolute left-3 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        autoFocus
-                        value={serviceSearchQuery}
-                        onChange={(e) => setServiceSearchQuery(e.target.value)}
-                        placeholder="Search service type or category..."
-                        className="w-full pl-9 pr-8 py-2 text-xs font-medium bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] focus:bg-white"
-                      />
-                      {serviceSearchQuery && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#D9E4EC] rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                    {STANDARD_VISIT_TYPES.map((vt) => {
+                      const isSelected = vt === serviceType;
+                      return (
                         <button
+                          key={vt}
                           type="button"
-                          onClick={() => setServiceSearchQuery("")}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#243746] p-1 cursor-pointer"
+                          onClick={() => {
+                            setServiceType(vt);
+                            setIsServiceDropdownOpen(false);
+                          }}
+                          className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer ${
+                            isSelected
+                              ? "bg-[#EAF3F8] text-[#294B68]"
+                              : "hover:bg-[#F8FAFC] text-[#243746]"
+                          }`}
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <span className="font-bold text-xs truncate">{vt}</span>
+                          {isSelected && <Check className="w-4 h-4 text-[#294B68] shrink-0" />}
                         </button>
-                      )}
-                    </div>
-
-                    {/* Filtered Services List */}
-                    <div className="max-h-52 overflow-y-auto space-y-1 pr-1 divide-y divide-[#F1F5F9]">
-                      {isServicesLoading ? (
-                        <div className="p-5 text-center text-xs text-[#64748B] flex flex-col items-center justify-center space-y-2">
-                          <Loader2 className="w-5 h-5 animate-spin text-[#294B68]" />
-                          <p className="font-bold text-sm text-[#243746]">Loading services...</p>
-                        </div>
-                      ) : filteredServices.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-[#64748B]">
-                          No services found matching &ldquo;{serviceSearchQuery}&rdquo;
-                        </div>
-                      ) : (
-                        filteredServices.map((s) => {
-                          const isSelected =
-                            s.id === selectedServiceTypeId || s.name === serviceType;
-                          return (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() => {
-                                setSelectedServiceTypeId(s.id);
-                                setServiceType(s.name);
-                                setIsServiceDropdownOpen(false);
-                                setServiceSearchQuery("");
-                              }}
-                              className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left transition-colors cursor-pointer ${
-                                isSelected
-                                  ? "bg-[#EAF3F8] text-[#294B68]"
-                                  : "hover:bg-[#F8FAFC] text-[#243746]"
-                              }`}
-                            >
-                              <div className="min-w-0 pr-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-xs truncate">{s.name}</span>
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white text-[#5E8FB2] border border-[#D9E4EC]">
-                                    {s.durationMinutes} min
-                                  </span>
-                                </div>
-                                {s.category && (
-                                  <div className="text-[11px] text-[#64748B] truncate mt-0.5 uppercase tracking-wider font-semibold">
-                                    {s.category.replace(/_/g, " ")}
-                                  </div>
-                                )}
-                              </div>
-                              {isSelected && <Check className="w-4 h-4 text-[#294B68] shrink-0" />}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -726,10 +659,11 @@ export function AdminScheduleModal({
                   onChange={(e) => setTimeSlot(e.target.value)}
                   className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 >
-                  <option value="09:00 AM – 11:00 AM">09:00 AM – 11:00 AM</option>
+                  <option value="08:00 AM – 10:00 AM">08:00 AM – 10:00 AM</option>
                   <option value="10:00 AM – 12:00 PM">10:00 AM – 12:00 PM</option>
                   <option value="01:00 PM – 03:00 PM">01:00 PM – 03:00 PM</option>
                   <option value="03:00 PM – 05:00 PM">03:00 PM – 05:00 PM</option>
+                  <option value="04:00 PM – 06:00 PM">04:00 PM – 06:00 PM</option>
                 </select>
               </div>
             </div>

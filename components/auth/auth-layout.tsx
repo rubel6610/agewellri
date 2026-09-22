@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import { ShieldCheck, HeartHandshake, Home, Clock } from "lucide-react";
+import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -36,7 +37,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <p className="text-3xl xl:text-4xl font-bold text-[#243746] leading-12">
               Aging in place is possible. You just need the right support.
               <br />
-              <span className="text-[#294B68]">Confidence that helps you age well.&rdquo;</span>
+              <span className="text-[#294B68]">"Confidence that helps you age well.&rdquo;</span>
             </p>
             <p className="text-base text-[#64748B] leading-relaxed max-w-lg">
               AgeWellRI gives older adults the oversight they need to stay safely at home and gives families the peace of mind they deserve.
@@ -44,31 +45,46 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </blockquote>
 
           {/* Reassuring Trust Highlights */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#D9E4EC]/80">
-            <div className="flex items-start gap-3 bg-white/60 p-3.5 rounded-xl border border-white/80">
+          <div className="pt-4 border-t border-[#D9E4EC]/80">
+            <div className="flex items-start gap-3 bg-white/60 p-3.5 rounded-xl border border-white/80 max-w-sm">
               <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-sm font-bold text-[#243746]">Private & Secure Portal</h4>
                 <p className="text-xs text-[#64748B]">All your information is protected</p>
               </div>
             </div>
-
-            <div className="flex items-start gap-3 bg-white/60 p-3.5 rounded-xl border border-white/80">
-              <HeartHandshake className="w-5 h-5 text-[#5E8FB2] shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-[#243746]">Dedicated Care Support</h4>
-                <p className="text-xs text-[#64748B]">24/7 peace of mind for families</p>
-              </div>
-            </div>
           </div>
         </div>
 
         {/* Bottom footer text */}
-        <div className="relative z-10 flex items-center justify-between text-xs font-medium text-[#64748B]">
-          <p>© {new Date().getFullYear()} AgeWellRI Services. All rights reserved.</p>
-          <div className="flex items-center gap-1 text-[#294B68]">
-            <Clock className="w-3.5 h-3.5" />
-            <span>24/7 Member Support</span>
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-[#64748B]">
+          <p suppressHydrationWarning className="flex flex-wrap items-center gap-1">
+            <span suppressHydrationWarning>© {new Date().getFullYear()} AgeWellRI LLC. All rights reserved</span>
+            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            <span suppressHydrationWarning>(401) 212-3002</span>
+            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            <a
+              href="mailto:agewellri@gmail.com"
+              className="hover:text-[#294B68] transition-colors"
+              suppressHydrationWarning
+            >
+              agewellri@gmail.com
+            </a>
+          </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/privacy-policy"
+              className="hover:text-[#294B68] hover:underline transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
+            <Link
+              href="/terms-of-use"
+              className="hover:text-[#294B68] hover:underline transition-colors"
+            >
+              Terms of Use
+            </Link>
           </div>
         </div>
       </aside>

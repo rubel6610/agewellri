@@ -115,19 +115,9 @@ export default function ClientCalendarPage() {
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"month" | "agenda">("month");
-  const [filterCategory, setFilterCategory] = useState<string>("ALL");
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
-  // Filtered appointments by category
-  const filteredAppointments = useMemo(() => {
-    if (filterCategory === "ALL") return appointments;
-    return appointments.filter((a) => {
-      const cat = a.serviceCategory || (a.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-      return cat === filterCategory;
-    });
-  }, [appointments, filterCategory]);
 
   // Next upcoming active appointment
   const nextAppointment = useMemo(() => {
@@ -186,7 +176,7 @@ export default function ClientCalendarPage() {
   // Map appointments by dateKey
   const appointmentsByDate = useMemo(() => {
     const map: Record<string, AppointmentItem[]> = {};
-    for (const appt of filteredAppointments) {
+    for (const appt of appointments) {
       const key = getApptDateKey(appt);
       if (!map[key]) {
         map[key] = [];
@@ -194,7 +184,7 @@ export default function ClientCalendarPage() {
       map[key].push(appt);
     }
     return map;
-  }, [filteredAppointments]);
+  }, [appointments]);
 
   // Generate 42 calendar grid cells (6 weeks)
   const calendarCells = useMemo(() => {
@@ -267,7 +257,7 @@ export default function ClientCalendarPage() {
       setSelectedAppointment(null);
       await showSuccessAlert(
         "Visit Cancelled",
-        "Your visit has been successfully cancelled and your quarterly entitlement quota has been restored."
+        "Your visit has been successfully cancelled and your visit entitlement quota has been restored."
       );
       refetchAppointments();
     } catch (err: any) {
@@ -278,9 +268,9 @@ export default function ClientCalendarPage() {
     }
   };
 
-  const planName = entitlementData?.planName || "Guardian Plus";
+  const planName = entitlementData?.planName || "Service Plan";
   const totalRemaining = entitlementData?.totalRemaining ?? 0;
-  const totalAllocated = entitlementData?.totalAllocated ?? 12;
+  const totalAllocated = entitlementData?.totalAllocated ?? totalRemaining;
   const entitlementsList = entitlementData?.entitlements || [];
 
   return (
@@ -290,14 +280,14 @@ export default function ClientCalendarPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
-              Visit &amp; Care Calendar
+              Safety Oversight Calendar
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
               {planName}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium mt-1">
-            View upcoming and past safety check-ins, home deep cleanings, and manage your scheduled visits.
+            View upcoming and past safety check-ins and manage your scheduled visits
           </p>
         </div>
 
@@ -315,7 +305,7 @@ export default function ClientCalendarPage() {
             className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Schedule Care Visit</span>
+            <span>Schedule Safety Visit</span>
           </button>
         </div>
       </div>
@@ -339,22 +329,18 @@ export default function ClientCalendarPage() {
             {nextAppointment ? (
               <div>
                 <div className="text-lg font-black text-white flex items-center gap-2">
-                  {nextAppointment.serviceCategory === "CLEANING" ? (
-                    <Sparkles className="w-5 h-5 text-emerald-300" />
-                  ) : (
-                    <ShieldCheck className="w-5 h-5 text-sky-300" />
-                  )}
+                  <ShieldCheck className="w-5 h-5 text-sky-300" />
                   <span>{nextAppointment.serviceType}</span>
                 </div>
                 <p className="text-xs text-slate-200 mt-0.5">
-                  Assigned Care Specialist: <strong>{nextAppointment.technicianName}</strong> ({nextAppointment.technicianTitle})
+                  Assigned Safety Specialist: <strong>{nextAppointment.technicianName}</strong> ({nextAppointment.technicianTitle})
                 </p>
               </div>
             ) : (
               <div>
                 <div className="text-base font-black text-white">No upcoming visits scheduled</div>
                 <p className="text-xs text-slate-300">
-                  You have {totalRemaining} care visit{totalRemaining !== 1 ? "s" : ""} available to book for this cycle.
+                  You have {totalRemaining} safety visit{totalRemaining !== 1 ? "s" : ""} available to book for this cycle.
                 </p>
               </div>
             )}
@@ -368,11 +354,11 @@ export default function ClientCalendarPage() {
           </button>
         </div>
 
-        {/* Dynamic Quarterly Quotas Breakdown */}
+        {/* Dynamic Monthly Quotas Breakdown */}
         <div className="p-5 rounded-2xl bg-white border border-[#D9E4EC] shadow-xs flex flex-col justify-between space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-[#5E8FB2]">
-              Quarterly Visit Quotas
+              Monthly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
               {totalRemaining} of {totalAllocated} Remaining
@@ -382,8 +368,6 @@ export default function ClientCalendarPage() {
           <div className="space-y-2.5">
             {entitlementsList.length > 0 ? (
               entitlementsList.map((item) => {
-                const isCleaning = item.category === "CLEANING";
-                const isSafety = item.category === "SAFETY_OVERSIGHT";
                 const used = item.completed + item.scheduled;
                 const total = item.allocated || 1;
                 const pct = Math.min(100, Math.round((used / total) * 100));
@@ -392,13 +376,7 @@ export default function ClientCalendarPage() {
                   <div key={item.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs font-bold">
                       <span className="flex items-center gap-1.5 text-[#243746] truncate max-w-[170px]">
-                        {isCleaning ? (
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        ) : isSafety ? (
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
-                        ) : (
-                          <ClipboardCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                        )}
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
                         <span className="truncate">{item.serviceName}:</span>
                       </span>
                       <span className="text-[#294B68] shrink-0">
@@ -407,9 +385,7 @@ export default function ClientCalendarPage() {
                     </div>
                     <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          isCleaning ? "bg-emerald-600" : "bg-[#294B68]"
-                        }`}
+                        className="h-full rounded-full transition-all bg-[#294B68]"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -459,44 +435,8 @@ export default function ClientCalendarPage() {
             </div>
           </div>
 
-          {/* Filters & View Modes */}
+          {/* View Modes */}
           <div className="flex items-center gap-3 flex-wrap">
-            {/* Service Category Filter */}
-            <div className="flex items-center gap-1.5 bg-[#F0F5F9] p-1 rounded-xl border border-[#D9E4EC] text-xs font-bold">
-              <button
-                onClick={() => setFilterCategory("ALL")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  filterCategory === "ALL"
-                    ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                All Visits ({appointments.length})
-              </button>
-              <button
-                onClick={() => setFilterCategory("SAFETY_OVERSIGHT")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterCategory === "SAFETY_OVERSIGHT"
-                    ? "bg-[#294B68] text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                <ShieldCheck className="w-3 h-3" />
-                <span>Safety</span>
-              </button>
-              <button
-                onClick={() => setFilterCategory("CLEANING")}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                  filterCategory === "CLEANING"
-                    ? "bg-emerald-700 text-white shadow-2xs font-extrabold"
-                    : "text-[#64748B] hover:text-[#243746]"
-                }`}
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Cleaning</span>
-              </button>
-            </div>
-
             {/* View Mode Toggle */}
             <div className="flex items-center gap-1 bg-[#F8FAFC] p-1 rounded-xl border border-[#D9E4EC] text-xs font-bold">
               <button
@@ -581,8 +521,8 @@ export default function ClientCalendarPage() {
                       {/* Appointments Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
                         {cell.appointments.map((appt) => {
-                          const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                          const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
+                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                           const Icon = style.icon;
 
                           return (
@@ -613,15 +553,15 @@ export default function ClientCalendarPage() {
                 <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
                 <span className="font-bold text-xs">Loading appointments...</span>
               </div>
-            ) : filteredAppointments.length === 0 ? (
+            ) : appointments.length === 0 ? (
               <div className="p-12 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-                No visits found matching the selected filter.
+                No visits scheduled yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredAppointments.map((appt) => {
-                  const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-                  const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                {appointments.map((appt) => {
+                  const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
+                  const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                   const Icon = style.icon;
                   const isScheduled =
                     appt.status === "scheduled" ||
@@ -673,7 +613,7 @@ export default function ClientCalendarPage() {
                           <div className="text-xs text-[#243746] font-semibold flex items-center gap-1.5">
                             <UserCheck className="w-3.5 h-3.5 text-[#294B68]" />
                             <span>
-                              Care Specialist: <strong>{appt.technicianName}</strong>
+                              Safety Specialist: <strong>{appt.technicianName}</strong>
                             </span>
                           </div>
                           <div className="text-[11px] text-[#5E8FB2]">
@@ -707,18 +647,8 @@ export default function ClientCalendarPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D9E4EC]/70 pb-4">
               <div className="flex items-center gap-2.5">
-                <span
-                  className={`p-2.5 rounded-xl ${
-                    selectedAppointment.serviceCategory === "CLEANING"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-[#EAF3F8] text-[#294B68]"
-                  }`}
-                >
-                  {selectedAppointment.serviceCategory === "CLEANING" ? (
-                    <Sparkles className="w-6 h-6" />
-                  ) : (
-                    <ShieldCheck className="w-6 h-6" />
-                  )}
+                <span className="p-2.5 rounded-xl bg-[#EAF3F8] text-[#294B68]">
+                  <ShieldCheck className="w-6 h-6" />
                 </span>
                 <div>
                   <h3 className="text-lg font-black text-[#243746]">
@@ -760,10 +690,10 @@ export default function ClientCalendarPage() {
                 </div>
               </div>
 
-              {/* Care Specialist Profile */}
+              {/* Safety Specialist Profile */}
               <div className="p-4 rounded-2xl border border-[#D9E4EC] bg-white space-y-2">
                 <div className="text-[11px] uppercase tracking-wider text-[#5E8FB2] font-extrabold">
-                  Assigned Care Specialist
+                  Assigned Safety Specialist
                 </div>
                 <div className="flex items-center gap-3">
                   <div

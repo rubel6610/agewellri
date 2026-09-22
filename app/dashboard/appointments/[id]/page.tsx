@@ -12,6 +12,8 @@ import {
   FileText,
   ArrowLeft,
   Phone,
+  Key,
+  Lock,
 } from "lucide-react";
 import { getAppointmentById } from "@/lib/api/dashboard";
 import { Appointment } from "@/lib/types/dashboard";
@@ -40,7 +42,7 @@ export default function AppointmentDetailsPage({
   const handleRescheduleRequest = async () => {
     const confirmed = await confirmCriticalAction({
       title: "Request Reschedule?",
-      text: "Submit a request to change your scheduled visit date or time window? An AgeWellRI care specialist will reach out within 2 business hours.",
+      text: "Submit a request to change your scheduled visit date or time window? An AgeWellRI safety specialist will reach out within 2 business hours.",
       confirmButtonText: "Yes, Request Reschedule",
       isDestructive: false,
     });
@@ -49,7 +51,7 @@ export default function AppointmentDetailsPage({
 
     await showSuccessAlert(
       "Reschedule Request Received",
-      "Our dispatch team has received your request. A care coordinator will contact you to confirm a new time slot."
+      "Our dispatch team has received your request. A safety coordinator will contact you to confirm a new time slot."
     );
   };
 
@@ -172,6 +174,34 @@ export default function AppointmentDetailsPage({
           </div>
         </div>
 
+        {/* Home Access Info for Specialist */}
+        {((appt as any).accessMethodTitle || (appt as any).accessMethodInstructions || (appt as any).accessMethodCode) && (
+          <div className="space-y-3">
+            <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
+              <Lock className="w-4 h-4 text-[#294B68]" />
+              <span>Specialist Entry &amp; Access Method</span>
+            </h3>
+            <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[#243746] text-sm flex items-center gap-2">
+                  <Key className="w-4 h-4 text-[#5E8FB2]" />
+                  {(appt as any).accessMethodTitle || "Designated Access Method"}
+                </span>
+                {(appt as any).accessMethodCode && (
+                  <span className="text-xs font-mono font-bold text-[#294B68] bg-white px-2 py-0.5 rounded border border-[#D9E4EC]">
+                    Code: {(appt as any).accessMethodCode}
+                  </span>
+                )}
+              </div>
+              {(appt as any).accessMethodInstructions && (
+                <p className="text-xs text-[#64748B] pt-1 border-t border-[#D9E4EC]/60 leading-relaxed">
+                  {(appt as any).accessMethodInstructions}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Notes */}
         {appt.notes && (
           <div className="space-y-2">
@@ -192,7 +222,7 @@ export default function AppointmentDetailsPage({
                   Home Safety Report Available
                 </h4>
                 <p className="text-xs text-[#64748B]">
-                  View the completed assessment score and caregiver observations.
+                  View the completed assessment score observations.
                 </p>
               </div>
             </div>

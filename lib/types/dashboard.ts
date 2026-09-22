@@ -5,7 +5,7 @@ export type AccountStatus =
   | "suspended"
   | "cancelled";
 
-export type ServicePlanType = "Guardian Plus" | "Essential Guard" | "Cleaning Add-On" | "Standalone Cleaning" | string;
+export type ServicePlanType = string;
 
 export interface ServicePlan {
   id?: string;
@@ -21,10 +21,12 @@ export interface ServicePlan {
   safetyVisitsTotal: number;
   safetyVisitsCompleted: number;
   autoRenew?: boolean;
-  pricePerQuarter?: string;
+  times?: string;
+  pricePerMonth?: string;
+  pricePerPeriod?: string;
 }
 
-export type VisitType = "Safety Oversight" | "Cleaning";
+export type VisitType = "Safety Oversight" | "Comprehensive Assessment" | "Specialist Follow-up" | string;
 
 export type AppointmentStatus =
   | "scheduled"
@@ -79,7 +81,7 @@ export interface Invoice {
 
 export interface BillingInfo {
   currentPlanName: ServicePlanType;
-  billingFrequency: "Quarterly" | "Monthly" | "Annual";
+  billingFrequency: "Monthly";
   paymentMethod: {
     brand: string;
     last4: string;

@@ -48,16 +48,16 @@ export default function AppointmentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
-            My Home Visits
+            My Safety Visits
           </h1>
           <p className="text-sm text-[#64748B] mt-1 font-medium">
-            Manage scheduled Safety Oversight, Cleaning visits, and review past visits for your residence.
+            Manage your scheduled safety oversight and hazard-mitigation visits, and review past visits for your residence.
           </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right text-xs font-semibold text-[#64748B] hidden sm:block">
-            <span>Visits remaining this quarter:</span>
+            <span>Visits remaining this month:</span>
             {isEntLoading ? (
               <span className="block h-5 bg-[#E2E8F0] rounded w-16 ml-auto animate-pulse mt-0.5" />
             ) : (

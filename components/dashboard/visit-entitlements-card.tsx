@@ -3,6 +3,7 @@
 import React from "react";
 import { Sparkles, CalendarCheck, ShieldCheck, CheckCircle2, AlertCircle } from "lucide-react";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { formatDuration } from "@/lib/utils";
 
 export function VisitEntitlementsCard() {
   const { data: entitlementsRes, isLoading, isError } = useGetVisitEntitlementsQuery();
@@ -36,7 +37,7 @@ export function VisitEntitlementsCard() {
         day: "numeric",
         year: "numeric",
       })}`
-    : "Current Quarter";
+    : "Current Month";
 
   return (
     <div className="p-6 sm:p-7 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs space-y-5 text-[#243746]">
@@ -48,7 +49,7 @@ export function VisitEntitlementsCard() {
               <Sparkles className="w-4 h-4 text-[#294B68]" />
             </span>
             <h3 className="text-lg sm:text-xl font-extrabold text-[#243746] tracking-tight">
-              Included Visits &amp; Care Allocation
+              Included Visits &amp; Safety Allocation
             </h3>
           </div>
           <p className="text-xs sm:text-sm text-[#64748B] font-medium">
@@ -83,7 +84,7 @@ export function VisitEntitlementsCard() {
                     {item.serviceName}
                   </h4>
                   <span className="text-xs font-semibold text-[#5E8FB2]">
-                    {item.durationMinutes} min / visit
+                    {formatDuration(item.durationMinutes)} / visit
                   </span>
                 </div>
 

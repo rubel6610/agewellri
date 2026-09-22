@@ -32,6 +32,11 @@ export interface AppointmentItem {
   location: string;
   notes: string;
   bookedBy: string;
+  accessMethodId?: string | null;
+  accessMethodType?: "LOCKBOX" | "RESIDENT_ANSWERS" | "DIGITAL_CODE" | "OTHER" | string | null;
+  accessMethodTitle?: string | null;
+  accessMethodCode?: string | null;
+  accessMethodInstructions?: string | null;
   createdAt: string;
 }
 
@@ -44,6 +49,11 @@ export interface ScheduleAppointmentRequest {
   timeSlot: string;
   notes?: string;
   location?: string;
+  accessMethodId?: string;
+  accessMethodType?: string;
+  accessMethodTitle?: string;
+  accessMethodCode?: string;
+  accessMethodInstructions?: string;
 }
 
 export interface AdminScheduleAppointmentRequest {
@@ -56,6 +66,11 @@ export interface AdminScheduleAppointmentRequest {
   timeSlot: string;
   notes?: string;
   location?: string;
+  accessMethodId?: string;
+  accessMethodType?: string;
+  accessMethodTitle?: string;
+  accessMethodCode?: string;
+  accessMethodInstructions?: string;
 }
 
 export interface RescheduleAppointmentRequest {

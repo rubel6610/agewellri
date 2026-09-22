@@ -4,7 +4,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 
 export const metadata = {
   title: "AgeWellRI | Client Portal",
-  description: "Member dashboard and care coordination portal.",
+  description: "Member dashboard and safety oversight portal.",
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
