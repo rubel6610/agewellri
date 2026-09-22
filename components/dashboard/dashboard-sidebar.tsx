@@ -94,7 +94,7 @@ export function DashboardSidebar() {
     <aside className="w-64 bg-white border-r border-[#D9E4EC] flex flex-col justify-between h-screen fixed top-0 left-0 bottom-0 shrink-0 z-30">
       {/* Top Logo */}
       <div>
-        <div className="px-5 py-5 border-b border-[#D9E4EC]/60">
+        <div className="px-5 py-4 border-b border-[#D9E4EC]/60">
           <Link
             href="/dashboard"
             className="block focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] rounded-lg transition-transform hover:scale-[1.02]"
@@ -102,8 +102,8 @@ export function DashboardSidebar() {
             <Image
               src="/logo.png"
               alt="AgeWellRI Portal"
-              width={300}
-              height={80}
+              width={260}
+              height={70}
               priority
               className="w-full max-w-[220px] h-auto max-h-14 object-contain"
             />
