@@ -71,11 +71,8 @@ export async function scheduleAppointment(data: {
     date: data.date,
     timeSlot: data.timeSlot,
     status: "scheduled",
-    technicianName: data.serviceType === "Cleaning" ? "Elena Rostova" : "Marcus Vance",
-    technicianTitle:
-      data.serviceType === "Cleaning"
-        ? "Senior Home Safety Speacialist"
-        : "Certified Home Safety Specialist",
+    technicianName: "Marcus Vance",
+    technicianTitle: "Certified Home Safety Specialist",
     bookedBy: "Client",
     notes: data.notes,
   };

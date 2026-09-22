@@ -13,8 +13,7 @@ import {
 
 const STANDARD_VISIT_TYPES = [
   "Home Safety & Oversight Visit",
-  "Cleaning & Home Support Visit",
-  "Comprehensive safety Assessment",
+  "Comprehensive Safety Assessment",
   "Specialist Follow-up Visit",
 ];
 

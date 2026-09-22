@@ -119,7 +119,7 @@ export async function createClientAccount(data: {
 
 export async function adminBookAppointment(data: {
   clientId: string;
-  serviceType: "Safety Oversight" | "Cleaning";
+  serviceType: "Safety Oversight" | "Comprehensive Assessment" | "Specialist Follow-up" | string;
   date: string;
   timeSlot: string;
   technicianName: string;

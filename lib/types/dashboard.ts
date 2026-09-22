@@ -26,7 +26,7 @@ export interface ServicePlan {
   pricePerPeriod?: string;
 }
 
-export type VisitType = "Safety Oversight" | "Cleaning";
+export type VisitType = "Safety Oversight" | "Comprehensive Assessment" | "Specialist Follow-up" | string;
 
 export type AppointmentStatus =
   | "scheduled"

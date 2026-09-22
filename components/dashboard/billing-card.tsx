@@ -77,11 +77,6 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </div>
             <h3 className="text-2xl font-extrabold text-[#243746] mt-1 flex items-center gap-2">
               <span>{billing.currentPlanName}</span>
-              {billing.hasCleaningAddon && (
-                <span className="text-xs font-bold text-[#3F8F6B] bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  + Cleaning Add-On
-                </span>
-              )}
             </h3>
           </div>
 

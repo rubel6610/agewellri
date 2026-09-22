@@ -22,20 +22,18 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
     billing?.subscriptionStatus === "CANCELLED";
 
   // Normalize plan visit numbers to ensure no 0 of 0 display glitch
-  const safetyTotal = plan.safetyVisitsTotal || 6;
-  const safetyCompleted = plan.safetyVisitsCompleted || 0;
-  const cleaningTotal = plan.cleaningVisitsTotal || 0;
-  const cleaningCompleted = plan.cleaningVisitsCompleted || 0;
+  const safetyTotal = plan.safetyVisitsTotal || plan.totalVisits || 6;
+  const safetyCompleted = plan.safetyVisitsCompleted || plan.completedVisits || 0;
 
   const totalVisits =
     plan.totalVisits && plan.totalVisits > 0
       ? plan.totalVisits
-      : safetyTotal + cleaningTotal;
+      : safetyTotal;
 
   const completedVisits =
-    plan.completedVisits !== undefined && plan.completedVisits > 0
+    plan.completedVisits !== undefined && plan.completedVisits >= 0
       ? plan.completedVisits
-      : safetyCompleted + cleaningCompleted;
+      : safetyCompleted;
 
   const remainingVisits =
     plan.remainingVisits !== undefined && plan.totalVisits > 0
@@ -219,15 +217,6 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
             {isLoading ? "..." : `${safetyCompleted} / ${safetyTotal}`}
           </span>
         </div>
-
-        {cleaningTotal > 0 && (
-          <div>
-            <span>
-              Cleaning Support:{" "}
-              {isLoading ? "..." : `${cleaningCompleted} / ${cleaningTotal}`}
-            </span>
-          </div>
-        )}
       </div>
     </div>
 

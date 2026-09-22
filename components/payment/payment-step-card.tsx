@@ -68,8 +68,7 @@ export function PaymentStepCard({
           .replace(/\b\w/g, (char) => char.toUpperCase())
       : "Selected Plan");
   const planBasePrice = planObj?.price ?? 0;
-  const addonPrice = hasCleaningAddon ? 60 : 0;
-  const totalDueToday = planBasePrice + addonPrice;
+  const totalDueToday = planBasePrice;
   const isOneTime = false;
 
   // Create SetupIntent on mount or when plan changes
@@ -81,7 +80,7 @@ export function PaymentStepCard({
         setInitError(null);
         const res = await createSetupIntent({
           plan: selectedPlan as any,
-          hasCleaningAddon,
+          hasCleaningAddon: false,
         }).unwrap();
 
         if (isMounted && res?.data?.clientSecret) {
@@ -105,7 +104,7 @@ export function PaymentStepCard({
     return () => {
       isMounted = false;
     };
-  }, [createSetupIntent, selectedPlan, hasCleaningAddon]);
+  }, [createSetupIntent, selectedPlan]);
 
   const handleSuccess = async (setupIntentId: string, paymentMethodId: string) => {
     setIsProcessing(true);
@@ -185,12 +184,6 @@ export function PaymentStepCard({
                     <span>{feat}</span>
                   </div>
                 ))}
-                {hasCleaningAddon && (
-                  <div className="flex items-center gap-2 text-[#3F8F6B] font-bold">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B] shrink-0" />
-                    <span>+6 Cleaning Add-On Visits Included</span>
-                  </div>
-                )}
                 <div className="flex items-center gap-2 text-[#64748B]">
                   <Calendar className="w-3.5 h-3.5 text-[#5E8FB2] shrink-0" />
                   <span>Immediate booking calendar access</span>
@@ -204,12 +197,6 @@ export function PaymentStepCard({
                 <span>{planName}</span>
                 <span className="font-bold text-[#243746]">${planBasePrice}.00</span>
               </div>
-              {hasCleaningAddon && (
-                <div className="flex justify-between text-xs text-[#64748B]">
-                  <span>Cleaning Add-On (6 Visits)</span>
-                  <span className="font-bold text-[#243746]">$60.00</span>
-                </div>
-              )}
               <div className="flex justify-between text-base font-black text-[#243746] pt-3 border-t border-[#D9E4EC]">
                 <span>Amount:</span>
                 <span className="text-[#294B68]">${totalDueToday}.00</span>

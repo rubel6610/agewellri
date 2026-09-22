@@ -139,8 +139,7 @@ function formatAuditDetails(action: string, details: any): string {
 
   if (act.includes("PAYMENT_STARTED")) {
     const plan = formatPlanName(data.plan);
-    const addon = data.hasCleaningAddon ? " with House Cleaning add-on" : "";
-    return `Payment checkout initiated for ${plan} plan${addon}.`;
+    return `Payment checkout initiated for ${plan} plan.`;
   }
 
   if (act.includes("PAYMENT_PROCESSED") || act.includes("PAYMENT_SUCCEEDED")) {

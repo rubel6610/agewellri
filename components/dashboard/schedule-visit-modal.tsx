@@ -450,11 +450,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-[#243746] text-base flex items-center gap-2">
-                          {srv.category === "CLEANING" ? (
-                            <Sparkles className="w-5 h-5 text-[#5E8FB2]" />
-                          ) : (
-                            <ShieldCheck className="w-5 h-5 text-[#294B68]" />
-                          )}
+                          <ShieldCheck className="w-5 h-5 text-[#294B68]" />
                           {srv.serviceName}
                         </span>
                         <span
@@ -482,11 +478,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                     desc: "Comprehensive home environment, grab-bar, and hazard inspection.",
                     rem: plan ? plan.safetyVisitsTotal - plan.safetyVisitsCompleted : 0,
                   },
-                  {
-                    name: "Cleaning Visit",
-                    desc: "Dedicated deep cleaning of living areas, bathrooms, and walkways.",
-                    rem: plan ? plan.cleaningVisitsTotal - plan.cleaningVisitsCompleted : 0,
-                  },
                 ].map((s) => {
                   const isExhausted = s.rem <= 0;
                   return (
@@ -505,11 +496,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-[#243746] text-base flex items-center gap-2">
-                          {s.name.includes("Safety") ? (
-                            <ShieldCheck className="w-5 h-5 text-[#294B68]" />
-                          ) : (
-                            <Sparkles className="w-5 h-5 text-[#5E8FB2]" />
-                          )}
+                          <ShieldCheck className="w-5 h-5 text-[#294B68]" />
                           {s.name}
                         </span>
                         <span

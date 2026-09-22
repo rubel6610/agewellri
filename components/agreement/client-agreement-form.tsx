@@ -223,8 +223,8 @@ export function ClientAgreementForm() {
   }, [dynamicPlans, formData.selectedPlanId, formData.selectedPlanCode]);
 
   const basePrice = selectedPlanObj ? selectedPlanObj.price : 1892;
-  const addonPrice = formData.hasCleaningAddon ? 60 : 0;
-  const totalPrice = basePrice + addonPrice;
+  const addonPrice = 0;
+  const totalPrice = basePrice;
 
   // Resolve effective state code for submission and disclosure
   const effectiveState = useMemo(() => {
@@ -1580,8 +1580,7 @@ export function ClientAgreementForm() {
                   Selected Plan
                 </div>
                 <div className="text-xl font-black text-[#243746]">
-                  {selectedPlanObj?.name}{" "}
-                  {formData.hasCleaningAddon ? "+ Cleaning Add-On" : ""}
+                  {selectedPlanObj?.name}
                 </div>
                 <div className="text-xs text-[#5E8FB2] font-semibold">
                   ${totalPrice} billed monthly ·{" "}

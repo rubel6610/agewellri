@@ -84,17 +84,11 @@ export function AcceptVisitRequestModal({
 
       // Auto-suggest specialist matching category
       if (specialists.length > 0) {
-        const isCleaning = appointment.serviceCategory === "CLEANING";
-        const matched = specialists.find((s) => {
-          if (isCleaning) {
-            return s.specialties?.some((sp: string) =>
-              sp.toLowerCase().includes("cleaning") || sp.toLowerCase().includes("support")
-            );
-          }
-          return s.specialties?.some((sp: string) =>
-            sp.toLowerCase().includes("safety") || sp.toLowerCase().includes("fall")
-          );
-        });
+        const matched = specialists.find((s) =>
+          s.specialties?.some((sp: string) =>
+            sp.toLowerCase().includes("safety") || sp.toLowerCase().includes("fall") || sp.toLowerCase().includes("audit")
+          )
+        );
 
         setSelectedSpecialistId(matched?.id || specialists[0].id);
       }

@@ -112,10 +112,6 @@ export default function DashboardHomePage() {
     (e: any) =>
       e.serviceName?.toLowerCase().includes("safety") || e.category === "SAFETY_OVERSIGHT"
   );
-  const cleaningEntitlement = entitlementsData?.entitlements?.find(
-    (e: any) =>
-      e.serviceName?.toLowerCase().includes("clean") || e.category === "CLEANING_SUPPORT"
-  );
 
   const rawPlanName = entitlementsData?.planName || authUser?.client?.selectedPlan || "Member Service Plan";
   let formattedPlanName = rawPlanName;
@@ -125,20 +121,18 @@ export default function DashboardHomePage() {
       .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 
-  const safetyTotal = safetyEntitlement?.allocated ?? 0;
-  const safetyCompleted = safetyEntitlement?.completed ?? 0;
-  const cleaningTotal = cleaningEntitlement?.allocated ?? 0;
-  const cleaningCompleted = cleaningEntitlement?.completed ?? 0;
+  const safetyTotal = safetyEntitlement?.allocated ?? entitlementsData?.totalAllocated ?? 2;
+  const safetyCompleted = safetyEntitlement?.completed ?? entitlementsData?.totalCompleted ?? 0;
 
   const totalVisits =
     entitlementsData?.totalAllocated && entitlementsData.totalAllocated > 0
       ? entitlementsData.totalAllocated
-      : safetyTotal + cleaningTotal;
+      : safetyTotal;
 
   const completedVisits =
-    entitlementsData?.totalCompleted !== undefined && entitlementsData.totalCompleted > 0
+    entitlementsData?.totalCompleted !== undefined && entitlementsData.totalCompleted >= 0
       ? entitlementsData.totalCompleted
-      : safetyCompleted + cleaningCompleted;
+      : safetyCompleted;
 
   const remainingVisits =
     entitlementsData?.totalRemaining !== undefined && entitlementsData.totalAllocated && entitlementsData.totalAllocated > 0
@@ -154,8 +148,8 @@ export default function DashboardHomePage() {
     remainingVisits,
     safetyVisitsTotal: safetyTotal,
     safetyVisitsCompleted: safetyCompleted,
-    cleaningVisitsTotal: cleaningTotal,
-    cleaningVisitsCompleted: cleaningCompleted,
+    cleaningVisitsTotal: 0,
+    cleaningVisitsCompleted: 0,
   };
 
   // Next scheduled appointment

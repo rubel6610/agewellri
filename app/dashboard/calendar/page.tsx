@@ -329,11 +329,7 @@ export default function ClientCalendarPage() {
             {nextAppointment ? (
               <div>
                 <div className="text-lg font-black text-white flex items-center gap-2">
-                  {nextAppointment.serviceCategory === "CLEANING" ? (
-                    <Sparkles className="w-5 h-5 text-emerald-300" />
-                  ) : (
-                    <ShieldCheck className="w-5 h-5 text-sky-300" />
-                  )}
+                  <ShieldCheck className="w-5 h-5 text-sky-300" />
                   <span>{nextAppointment.serviceType}</span>
                 </div>
                 <p className="text-xs text-slate-200 mt-0.5">
@@ -372,8 +368,6 @@ export default function ClientCalendarPage() {
           <div className="space-y-2.5">
             {entitlementsList.length > 0 ? (
               entitlementsList.map((item) => {
-                const isCleaning = item.category === "CLEANING";
-                const isSafety = item.category === "SAFETY_OVERSIGHT";
                 const used = item.completed + item.scheduled;
                 const total = item.allocated || 1;
                 const pct = Math.min(100, Math.round((used / total) * 100));
@@ -382,13 +376,7 @@ export default function ClientCalendarPage() {
                   <div key={item.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs font-bold">
                       <span className="flex items-center gap-1.5 text-[#243746] truncate max-w-[170px]">
-                        {isCleaning ? (
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        ) : isSafety ? (
-                          <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
-                        ) : (
-                          <ClipboardCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                        )}
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
                         <span className="truncate">{item.serviceName}:</span>
                       </span>
                       <span className="text-[#294B68] shrink-0">
@@ -397,9 +385,7 @@ export default function ClientCalendarPage() {
                     </div>
                     <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          isCleaning ? "bg-emerald-600" : "bg-[#294B68]"
-                        }`}
+                        className="h-full rounded-full transition-all bg-[#294B68]"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -535,8 +521,8 @@ export default function ClientCalendarPage() {
                       {/* Appointments Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
                         {cell.appointments.map((appt) => {
-                          const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                          const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
+                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                           const Icon = style.icon;
 
                           return (
@@ -574,8 +560,8 @@ export default function ClientCalendarPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {appointments.map((appt) => {
-                  const cat = appt.serviceCategory || (appt.serviceType?.toLowerCase().includes("cleaning") ? "CLEANING" : "SAFETY_OVERSIGHT");
-                  const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.OTHER;
+                  const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
+                  const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                   const Icon = style.icon;
                   const isScheduled =
                     appt.status === "scheduled" ||
@@ -661,18 +647,8 @@ export default function ClientCalendarPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D9E4EC]/70 pb-4">
               <div className="flex items-center gap-2.5">
-                <span
-                  className={`p-2.5 rounded-xl ${
-                    selectedAppointment.serviceCategory === "CLEANING"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-[#EAF3F8] text-[#294B68]"
-                  }`}
-                >
-                  {selectedAppointment.serviceCategory === "CLEANING" ? (
-                    <Sparkles className="w-6 h-6" />
-                  ) : (
-                    <ShieldCheck className="w-6 h-6" />
-                  )}
+                <span className="p-2.5 rounded-xl bg-[#EAF3F8] text-[#294B68]">
+                  <ShieldCheck className="w-6 h-6" />
                 </span>
                 <div>
                   <h3 className="text-lg font-black text-[#243746]">

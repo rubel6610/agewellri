@@ -44,7 +44,7 @@ export interface AdminAppointment {
   clientName: string;
   clientPhone: string;
   clientAddress: string;
-  serviceType: "Safety Oversight" | "Cleaning";
+  serviceType: "Safety Oversight" | "Comprehensive Assessment" | "Specialist Follow-up" | string;
   date: string;
   timeSlot: string;
   status: "scheduled" | "in_progress" | "completed" | "cancelled" | "missed";
@@ -61,7 +61,7 @@ export interface AdminVisit {
   appointmentId: string;
   clientId: string;
   clientName: string;
-  serviceType: "Safety Oversight" | "Cleaning";
+  serviceType: "Safety Oversight" | "Comprehensive Assessment" | "Specialist Follow-up" | string;
   date: string;
   technicianName: string;
   status: "scheduled" | "in_progress" | "completed" | "missed" | "cancelled";
