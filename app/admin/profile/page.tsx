@@ -35,10 +35,10 @@ export default function AdminProfilePage() {
     );
   }
 
-  const firstName = user?.firstName || "System";
-  const lastName = user?.lastName || "Admin";
+  const firstName = user?.firstName || "Cory";
+  const lastName = user?.lastName || "Poplaski";
   const email = user?.email || "agewellri@gmail.com";
-  const phone = user?.phone || "(401) 212-3000";
+  const phone = user?.phone || "(401) 212-3002";
   const role = user?.role || "ADMIN";
 
   const adminInitials = `${(firstName[0] || "A").toUpperCase()}${(lastName[0] || "D").toUpperCase()}`;
