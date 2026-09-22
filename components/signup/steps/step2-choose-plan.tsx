@@ -120,8 +120,8 @@ export function Step2ChoosePlan({
               plan.id === (selectedPlan?.id || currentSelectedId) ||
               plan.code === (selectedPlan?.code || currentSelectedId);
             const isPopular =
-              plan.code.includes("PEACE_OF_MIND") ||
-              plan.name.includes("Peace of Mind");
+              plan.code?.includes("PEACE_OF_MIND") ||
+              plan.name?.includes("Peace of Mind");
 
             return (
               <div
@@ -155,7 +155,7 @@ export function Step2ChoosePlan({
                   </div>
 
                   {/* Price */}
-                  <div className="pt-2 pb-4  border-[#D9E4EC]">
+                  <div className="pt-2 pb-4 border-[#D9E4EC]">
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl sm:text-4xl font-black text-[#243746]">
                         ${plan.price}
@@ -179,7 +179,7 @@ export function Step2ChoosePlan({
                   </div>
 
                   {/* Features / Inclusions Bullet Points */}
-                  <div className="">
+                  <div className="space-y-2.5">
                     {plan.features && plan.features.length > 0 && (
                       <span className="text-xs font-bold uppercase tracking-wider text-[#64748B] block">
                         Plan Inclusions &amp; Features:
@@ -198,7 +198,7 @@ export function Step2ChoosePlan({
                 </div>
 
                 {/* Selection Check Indicator */}
-                <div className="pt-2   border-[#D9E4EC] flex items-center justify-between">
+                <div className="pt-2 border-[#D9E4EC] flex items-center justify-between">
                   <span className="text-xs font-bold text-[#64748B]">
                     {isSelected ? "Plan Selected" : "Click to Select"}
                   </span>

@@ -107,7 +107,7 @@ export function Step8BillingSetup({
     configData?.data?.publishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#EAF3F8] text-[#294B68] text-xs font-bold uppercase tracking-wider">
@@ -131,7 +131,7 @@ export function Step8BillingSetup({
                 <Sparkles className="w-3.5 h-3.5" /> Due Today at Signup
               </span>
               <div className="text-3xl font-black text-emerald-800">$0.00</div>
-              <p className="text-xs text-emerald-700">
+              <p className="text-base text-emerald-700">
                 Zero initial charge. Your payment method is authorized and securely stored.
               </p>
             </div>
@@ -169,7 +169,7 @@ export function Step8BillingSetup({
               </div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-[11px] text-[#64748B] leading-relaxed">
+            <div className=" bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed">
               You won't be charged today. Your first charge and your first visit will both be on <strong>{commencementDateFormatted}</strong>. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
             </div>
           </div>

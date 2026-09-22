@@ -218,7 +218,7 @@ export function PlanVersionsModal({
                 </h4>
                 {currentPlan.features && currentPlan.features.length > 0 ? (
                   <ul className="space-y-2">
-                    {currentPlan.features.map((feat, fidx) => (
+                    {currentPlan.features.map((feat: string, fidx: number) => (
                       <li key={fidx} className="flex items-start gap-2.5 text-sm text-[#243746]">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>{feat}</span>

@@ -92,7 +92,7 @@ export function Step7Authorizations({
         {/* Quick Select All Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#D9E4EC]">
           <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-            Contract Clauses (3 of 3 Required)
+          Required Authorizations (3 of 3)
           </span>
           <button
             type="button"
@@ -122,11 +122,11 @@ export function Step7Authorizations({
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-600" />
                 <h4 className="text-sm font-extrabold text-[#243746]">
-                  1. Emergency Right of Entry (Section 12.2) *
+                  Section 12.2: Emergency Right of Entry Authorization  *
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-               I authorize AgeWellRI to enter the home during a scheduled visit if a technician has a reasonable belief that a medical emergency or safety crisis is occurring inside. I authorize the use of any available key/code, contacting emergency services (911), and following instructions from designated family contacts. AgeWellRI and its technicians are held harmless for property damage (such as forced entry) or liabilities resulting from a good-faith emergency response — except in cases of gross negligence, recklessness, or willful misconduct.
+               EMERGENCY ACCESS AGREEMENT: Regardless of the selection made in Section 12.1, the Client explicitly grants AgeWellRI LLC the right to enter the home during a scheduled visit window if the technician has a reasonable belief that a medical emergency or safety crisis is occurring inside (e.g., viewing a resident fallen on the floor through a window, or hearing cries for help). I authorize AgeWellRI LLC to utilize any available key/code, contact emergency services (911), or follow instructions from designated family contacts. AgeWellRI LLC and its technicians shall be held completely harmless for any property damage (such as forced entry) or liabilities resulting from responding to a suspected medical or safety emergency in good faith, except to the extent caused by AgeWellRI’s gross negligence, recklessness, or willful misconduct.
               </p>
             </div>
           </label>
@@ -151,11 +151,11 @@ export function Step7Authorizations({
               <div className="flex items-center gap-2">
                 <HeartHandshake className="w-4 h-4 text-[#294B68]" />
                 <h4 className="text-sm font-extrabold text-[#243746]">
-                  2. Resident Autonomy & Refusal (Section 12.3) *
+                  Section 12.3: Resident Autonomy & Refusal Acknowledgment  *
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-               I acknowledge that AgeWellRI technicians respect the dignity, comfort, and personal boundaries of all residents. If a resident refuses entry, objects to a checklist item, or asks a technician to leave an area, the technician will immediately respect that and stop that part of the service. I understand this refusal is not a breach of contract by AgeWellRI, the standard visit fee still applies, and AgeWellRI is not liable for accidents caused by a hazard left in place because the resident declined to have it addressed — except in cases of gross negligence, recklessness, or willful misconduct.
+              RESIDENT BOUNDARIES ACKNOWLEDGMENT: Client acknowledges that AgeWellRI LLC technicians prioritize the dignity, comfort, and personal boundaries of all residents. If a resident explicitly refuses entry, objects to a specific safety checklist item, or requests that a technician leave a specific area during a scheduled visit, our technicians will immediately respect those boundaries and cease that portion of the service. Client agrees that such a refusal by the resident does not constitute a breach of contract by AgeWellRI LLC, and that the standard visit fee will still apply in full. Company is not liable for accidents or injuries caused by a hazard that remains in place solely because the resident declined to have it addressed, except to the extent caused by Company's gross negligence, recklessness, or willful misconduct.
               </p>
             </div>
           </label>
@@ -180,11 +180,11 @@ export function Step7Authorizations({
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-[#3F8F6B]" />
                 <h4 className="text-sm font-extrabold text-[#243746]">
-                  3. Automatic Billing Authorization (Section 12.4) *
+                  Section 12.4: Automatic Billing Authorization  *
                 </h4>
               </div>
               <p className="text-xs text-[#475569] leading-relaxed">
-             I authorize AgeWellRI to automatically charge my saved payment method (or process my check payment) the flat monthly fee for my selected plan ($495 for Plan 1 / $295 for Plan 2) on a recurring basis. I understand I can cancel anytime by emailing <strong className="text-agewell-green">agewellri@gmail.com</strong> or using my secure client dashboard.
+            AUTOMATED MONTHLY CHARGE AUTHORIZATION: I authorize AgeWellRI LLC to automatically charge my saved digital payment method or process my submitted check payment for the flat monthly fee corresponding to my selected tier ($295.00 for Plan 1 / $495.00 for Plan 2) on a recurring basis. I understand I can cancel this subscription at any time by emailing <strong className="text-agewell-green">agewellri@gmail.com</strong> or utilizing my secure client dashboard portal link.
               </p>
             </div>
           </label>

@@ -8,13 +8,12 @@ import {
   Package,
   Plus,
   Trash2,
-  Check,
   DollarSign,
   Layers,
   Clock,
   Sparkles,
   Save,
-  Users,
+  Check,
 } from "lucide-react";
 import {
   useGetAdminPlanByIdQuery,
@@ -154,32 +153,23 @@ export default function EditPlanPage() {
 
     try {
       const res = await deletePlan(planId).unwrap();
-      await showSuccessAlert("Plan Deleted", res.message || "Plan deleted successfully.");
+      await showSuccessAlert(
+        "Plan Deleted",
+        res.message || `"${form.name}" has been deleted.`,
+      );
       router.push("/admin/plans");
     } catch (err: any) {
-      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete plan.");
+      showErrorAlert(
+        "Delete Failed",
+        err?.data?.message || "Failed to delete plan.",
+      );
     }
   };
 
   if (isPlanLoading) {
     return (
-      <div className="py-20 text-center text-[#5E8FB2] font-bold text-sm">
-        Loading service plan details...
-      </div>
-    );
-  }
-
-  if (!plan) {
-    return (
-      <div className="py-20 text-center space-y-3">
-        <Package className="w-12 h-12 text-[#5E8FB2] mx-auto" />
-        <h2 className="text-xl font-bold text-[#243746]">Service Plan Not Found</h2>
-        <Link
-          href="/admin/plans"
-          className="inline-flex items-center gap-2 text-sm font-bold text-[#294B68] hover:underline"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to Plans
-        </Link>
+      <div className="max-w-4xl mx-auto py-12 text-center text-sm font-semibold text-[#5E8FB2]">
+        Loading plan information...
       </div>
     );
   }
@@ -187,7 +177,7 @@ export default function EditPlanPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
       {/* Header & Back Link */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9E4EC] pb-4">
+      <div className="flex items-center justify-between gap-4 border-b border-[#D9E4EC] pb-4">
         <div className="flex items-center gap-3">
           <Link
             href="/admin/plans"
@@ -197,10 +187,10 @@ export default function EditPlanPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-black text-[#243746] tracking-tight">
-              Edit Plan: {plan.name}
+              Edit Plan: {form.name || "Service Plan"}
             </h1>
             <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium">
-              Update pricing, visit quotas, and feature bullet points
+              Update monthly pricing, visit allocations, hourly durations, and features
             </p>
           </div>
         </div>
@@ -209,9 +199,9 @@ export default function EditPlanPage() {
           type="button"
           onClick={handleDelete}
           disabled={isDeleting}
-          className="px-4 py-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
+          className="px-3.5 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
           <span>Delete Plan</span>
         </button>
       </div>

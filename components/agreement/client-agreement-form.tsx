@@ -548,7 +548,7 @@ export function ClientAgreementForm() {
 
         await showSuccessAlert(
           "Agreement Signed — Welcome to AgeWellRI!",
-          `Your service agreement is complete and your subscription is active.\n\n• Your plan: ${planName} — ${priceText}\n• Service begins: ${commencementDateFormatted}\n• First billing: ${commencementDateFormatted} — you won't be charged today\n• A copy of your signed agreement has been emailed to you for your records.\n\nWe'll be in touch shortly to schedule your first visit. Questions? Call us anytime at (401) 212-3002.`,
+          `Your service agreement is complete and your subscription is active.\n\n• Your plan: ${planName} — ${priceText}\n• Service begins: ${commencementDateFormatted}\n• First billing: ${commencementDateFormatted} — you won't be charged today\n• A copy of your signed agreement has been emailed to you for your records.\n\nYou can schedule your first visit in your member portal. Questions? Reach us at (401) 212-3002 or agewellri@gmail.com, and we'll respond promptly.`,
         );
         router.push("/dashboard");
       }

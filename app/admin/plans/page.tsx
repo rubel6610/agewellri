@@ -280,7 +280,6 @@ export default function AdminPlansPage() {
                 <th className="py-3.5 px-4">Plan Name &amp; Code</th>
                 <th className="py-3.5 px-4">Price &amp; Interval</th>
                 <th className="py-3.5 px-4">Visits &amp; Time</th>
-
                 <th className="py-3.5 px-4">Subscribers</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
@@ -317,7 +316,7 @@ export default function AdminPlansPage() {
                 ))
               ) : filteredPlans.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-[#5E8FB2]">
+                  <td colSpan={6} className="py-16 text-center text-[#5E8FB2]">
                     <div className="flex flex-col items-center gap-2">
                       <Package className="w-10 h-10 text-[#D9E4EC]" />
                       <div className="text-base font-bold text-[#243746]">
@@ -370,7 +369,6 @@ export default function AdminPlansPage() {
                         </span>
                       </div>
                     </td>
-
                     <td className="py-4 px-4">
                       <button
                         type="button"

@@ -93,7 +93,7 @@ export function Step9Confirmation({
           </ul>
 
           <div className="pt-2 border-t border-[#D9E4EC] text-xs font-semibold text-[#294B68]">
-            We'll be in touch shortly to schedule your first visit. Questions? Call us anytime at <strong>(401) 212-3002</strong>.
+           You can schedule your first visit in your member portal. Questions? Reach us at (401) 212-3002 or agewellri@gmail.com, and we'll respond promptly.
           </div>
         </div>
 

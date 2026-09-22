@@ -3,20 +3,22 @@ export interface ServicePlan {
   name: string;
   code: string;
   price: number;
-  currency: string;
+  currency?: string;
   billingInterval: "MONTHLY";
   totalVisits: number;
   times?: string | null;
   description?: string;
   shortDescription?: string;
   fullDescription?: string;
-  features: string[];
-  isActive: boolean;
-  isArchived: boolean;
-  displayOrder: number;
+  features?: string[];
+  displayOrder?: number;
+  isActive?: boolean;
+  isArchived?: boolean;
   supportsAutomaticBilling?: boolean;
   supportsInvoiceBilling?: boolean;
   autoRenewDefault?: boolean;
+  stripeProductId?: string | null;
+  stripePriceId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -64,6 +66,7 @@ export interface CreatePlanPayload {
   times?: string;
   description?: string;
   shortDescription?: string;
+  fullDescription?: string;
   features: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
@@ -82,6 +85,7 @@ export interface UpdatePlanPayload {
   times?: string;
   description?: string;
   shortDescription?: string;
+  fullDescription?: string;
   features?: string[];
   displayOrder?: number;
   supportsAutomaticBilling?: boolean;
@@ -91,27 +95,115 @@ export interface UpdatePlanPayload {
 }
 
 export interface ChangePlanStatusPayload {
-  status: "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
+  status: "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED" | "UNARCHIVED";
 }
 
+export interface CreateServicePayload {
+  name: string;
+  code?: string;
+  category:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
+  description?: string;
+  durationMinutes?: number;
+  defaultPrice?: number;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface UpdateServicePayload {
+  name?: string;
+  code?: string;
+  category?:
+    | "CLEANING"
+    | "SAFETY_OVERSIGHT"
+    | "ASSESSMENT"
+    | "WELLNESS"
+    | "OTHER";
+  description?: string;
+  durationMinutes?: number;
+  defaultPrice?: number;
+  displayOrder?: number;
+  isActive?: boolean;
+}
+
+export interface ServiceCatalogStats {
+  totalServices: number;
+  activeServices: number;
+  inactiveServices: number;
+  totalCategories: number;
+  activeCategoriesCount: number;
+  categoryBreakdown: Record<string, { total: number; active: number }>;
+  totalPlanAllocations: number;
+  totalScheduledAppointments: number;
+}
+
+/**
+ * Format plan duration / times for display and persistence.
+ * Examples:
+ *   1 or "1" or "1 hour" or "an hour" or "Up to an hour" -> "Up to an hour"
+ *   2 or "2" or "2 hours" or "Up to 2 hours" -> "Up to 2 hours"
+ *   3 or "3" or "3 hours" or "Up to 3 hours" -> "Up to 3 hours"
+ *   null / undefined / "" -> "Up to 2 hours" (default)
+ */
 export function formatPlanDuration(times?: string | number | null): string {
-  if (!times) return "Up to 2 hours";
+  if (times === undefined || times === null || times === "") {
+    return "Up to 2 hours";
+  }
+
   const str = String(times).trim();
-  if (str.toLowerCase().includes("an hour") || str.toLowerCase().includes("one hour")) {
+
+  // If already formatted as "Up to an hour" or "Up to a hour"
+  if (/^up\s+to\s+an?\s+hour$/i.test(str)) {
     return "Up to an hour";
   }
-  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
-  if (!isNaN(num) && num > 0) {
-    if (num === 1) return "Up to an hour";
-    return `Up to ${num} hours`;
+
+  // If already formatted like "Up to X hours"
+  const upToMatch = str.match(/^up\s+to\s+(\d+(?:\.\d+)?)\s*hours?$/i);
+  if (upToMatch) {
+    const hours = parseFloat(upToMatch[1]);
+    if (hours === 1) return "Up to an hour";
+    return `Up to ${hours} hours`;
   }
-  return str.startsWith("Up to") ? str : `Up to ${str}`;
+
+  // Check for phrases like "an hour", "one hour", "1 hour", "1 hr", "1"
+  if (/^(an|one)\s*hours?$/i.test(str) || str.toLowerCase() === "an hour" || str.toLowerCase() === "one hour") {
+    return "Up to an hour";
+  }
+
+  // Extract first number if present
+  const numMatch = str.match(/(\d+(?:\.\d+)?)/);
+  if (numMatch) {
+    const hours = parseFloat(numMatch[1]);
+    if (hours === 1) return "Up to an hour";
+    if (hours > 0) return `Up to ${hours} hours`;
+  }
+
+  // Fallback
+  if (str.toLowerCase().startsWith("up to")) {
+    return str;
+  }
+  return `Up to ${str}`;
 }
 
+/**
+ * Parse numeric hours from duration string/number.
+ * Returns numeric hours (e.g. 1, 2, 3). Default is 2.
+ */
 export function parsePlanDurationHours(times?: string | number | null): number {
   if (times === undefined || times === null || times === "") return 2;
+  if (typeof times === "number") return isNaN(times) || times <= 0 ? 2 : times;
+
   const str = String(times).trim().toLowerCase();
   if (str.includes("an hour") || str.includes("one hour")) return 1;
-  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
-  return isNaN(num) || num <= 0 ? 2 : num;
+
+  const match = str.match(/(\d+(?:\.\d+)?)/);
+  if (match) {
+    const num = parseFloat(match[1]);
+    return isNaN(num) || num <= 0 ? 2 : num;
+  }
+  return 2;
 }
