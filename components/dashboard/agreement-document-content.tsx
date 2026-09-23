@@ -155,10 +155,10 @@ export function AgreementDocumentContent({
           />
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
-          AGEWELLRI HYBRID SERVICES AGREEMENT (RHODE ISLAND VERSION)
+          AGEWELLRI HYBRID SERVICES AGREEMENT 
         </h1>
         <p className="text-sm sm:text-base font-bold text-[#5E8FB2]">
-          Company Name: AgeWellRI LLC | Location: Westerly, Rhode Island
+          Company Name: AgeWellRI LLC. All rights reserved. | Location: Westerly, Rhode Island
         </p>
        
       </div>
@@ -766,42 +766,30 @@ export function AgreementDocumentContent({
         {/* 12. REQUIRED INTERACTIVE SECTIONS */}
         <div className="space-y-3">
           <div className="bg-[#243746] text-white px-5 py-2.5 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between">
-            <span>12. REQUIRED INTERACTIVE SECTIONS &amp; AUTHORIZATIONS</span>
+            <span>12. Required Authorizations </span>
           </div>
           <div className="p-5 sm:p-6 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-4 text-xs sm:text-sm text-[#475569]">
-            <p className="text-xs text-[#64748B] italic">
-              (The Client must review and check each individual box below in order to authorize service tracking and execution)
-            </p>
+           
 
             <div className="p-4 bg-white rounded-xl border border-[#D9E4EC] space-y-2.5">
-              <div>
-                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.1: Scheduled Access Selection (Check EXACTLY One Box)</strong>
-                <div className="mt-1 space-y-1.5 pl-2 text-xs leading-relaxed">
-                  <p>
-                    <strong>&bull; RESIDENT ANSWERS DOOR:</strong> A resident will be present to unlock the door and grant entry at the scheduled time. If the resident is unresponsive or fails to open the door within fifteen (15) minutes of arrival, it will be treated as a &ldquo;Client Lockout,&rdquo; the visit will be canceled, and the standard visit fee will still apply.
-                  </p>
-                  <p>
-                    <strong>&bull; DIGITAL KEYPAD / SMART LOCK:</strong> AgeWellRI LLC is authorized to use the digital keypad code provided by the Client during sign-up to unlock the door. Where Client authorizes keypad or smart-lock access, the entry code is collected and stored through Company&apos;s secure, access-controlled client portal rather than in this signed Agreement, and is accessible only to Company personnel assigned to service the Client&apos;s account.
-                  </p>
-                </div>
-              </div>
+            
 
               <div className="pt-2.5 border-t border-slate-100">
-                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.2: Emergency Right of Entry Authorization (Mandatory Standalone Checkbox)</strong>
+                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.2: Emergency Right of Entry Authorization</strong>
                 <p className="mt-1 pl-2 text-xs leading-relaxed">
-                  <strong>EMERGENCY ACCESS AGREEMENT:</strong> Regardless of the selection made in Section 12.1, the Client explicitly grants AgeWellRI LLC the right to enter the home during a scheduled visit window if the technician has a reasonable belief that a medical emergency or safety crisis is occurring inside (e.g., viewing a resident fallen on the floor through a window, or hearing cries for help). I authorize AgeWellRI LLC to utilize any available key/code, contact emergency services (911), or follow instructions from designated family contacts. AgeWellRI LLC and its technicians shall be held completely harmless for any property damage (such as forced entry) or liabilities resulting from responding to a suspected medical or safety emergency in good faith, except to the extent caused by AgeWellRI&apos;s gross negligence, recklessness, or willful misconduct.
+                  <strong>EMERGENCY ACCESS AGREEMENT:</strong> Regardless of the selection made in Section 12.1, the Client explicitly grants AgeWellRI LLC the right to enter the home during a scheduled visit window if the technician has a reasonable belief that a medical emergency or safety crisis is occurring inside (e.g., viewing a resident fallen on the floor through a window, or hearing cries for help). I authorize AgeWellRI LLC to utilize any available key/code, contact emergency services (911), or follow instructions from designated family contacts. AgeWellRI LLC and its technicians shall be held completely harmless for any property damage (such as forced entry) or liabilities resulting from responding to a suspected medical or safety emergency in good faith, except to the extent caused by AgeWellRI’s gross negligence, recklessness, or willful misconduct.
                 </p>
               </div>
 
               <div className="pt-2.5 border-t border-slate-100">
-                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.3: Resident Autonomy &amp; Refusal Acknowledgment (Mandatory Standalone Checkbox)</strong>
+                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.3: Resident Autonomy & Refusal Acknowledgment </strong>
                 <p className="mt-1 pl-2 text-xs leading-relaxed">
-                  <strong>RESIDENT BOUNDARIES ACKNOWLEDGMENT:</strong> Client acknowledges that AgeWellRI LLC technicians prioritize the dignity, comfort, and personal boundaries of all residents. If a resident explicitly refuses entry, objects to a specific safety checklist item, or requests that a technician leave a specific area during a scheduled visit, our technicians will immediately respect those boundaries and cease that portion of the service. Client agrees that such a refusal by the resident does not constitute a breach of contract by AgeWellRI LLC, and that the standard visit fee will still apply in full. Company is not liable for accidents or injuries caused by a hazard that remains in place solely because the resident declined to have it addressed, except to the extent caused by Company&apos;s gross negligence, recklessness, or willful misconduct.
+                  <strong>RESIDENT BOUNDARIES ACKNOWLEDGMENT:</strong> Client acknowledges that AgeWellRI LLC technicians prioritize the dignity, comfort, and personal boundaries of all residents. If a resident explicitly refuses entry, objects to a specific safety checklist item, or requests that a technician leave a specific area during a scheduled visit, our technicians will immediately respect those boundaries and cease that portion of the service. Client agrees that such a refusal by the resident does not constitute a breach of contract by AgeWellRI LLC, and that the standard visit fee will still apply in full. Company is not liable for accidents or injuries caused by a hazard that remains in place solely because the resident declined to have it addressed, except to the extent caused by Company's gross negligence, recklessness, or willful misconduct.
                 </p>
               </div>
 
               <div className="pt-2.5 border-t border-slate-100">
-                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.4: Automatic Billing Authorization (Mandatory Standalone Checkbox)</strong>
+                <strong className="text-[#243746] block text-xs sm:text-sm">Section 12.4: Automatic Billing Authorization</strong>
                 <p className="mt-1 pl-2 text-xs leading-relaxed">
                   <strong>AUTOMATED MONTHLY CHARGE AUTHORIZATION:</strong> I authorize AgeWellRI LLC to automatically charge my saved digital payment method or process my submitted check payment for the flat monthly fee corresponding to my selected tier ($295.00 for Plan 1 / $495.00 for Plan 2) on a recurring basis. I understand I can cancel this subscription at any time by emailing agewellri@gmail.com or utilizing my secure client dashboard portal link.
                 </p>

@@ -361,10 +361,10 @@ export function Step6AgreementSigning({
             {/* Agreement Header */}
             <div className="text-center pb-4 border-b border-[#D9E4EC] space-y-1">
               <h4 className="font-extrabold text-sm sm:text-base text-[#243746] tracking-tight">
-                AGEWELLRI HYBRID SERVICES AGREEMENT (RHODE ISLAND VERSION)
+                AGEWELLRI HYBRID SERVICES AGREEMENT
               </h4>
               <p className="text-xs font-bold text-[#5E8FB2]">
-                Company Name: AgeWellRI LLC | Location: Westerly, Rhode Island
+                Company Name: AgeWellRI LLC. All rights reserved. | Location: Westerly, Rhode Island
               </p>
               {/* <p className="text-[11px] text-[#64748B]">
                 Jurisdiction: State of Rhode Island &bull; Active Version 2.0
