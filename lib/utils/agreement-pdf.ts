@@ -132,19 +132,19 @@ function formatCapacity(cap?: string | null): string {
   }
 }
 
-function formatAccessType(accessType?: string | null): string {
-  if (!accessType) return "Resident Answers Door";
-  switch (accessType) {
-    case "RESIDENT_ANSWERS":
-      return "Resident Answers Door (Onsite Resident / Family Member greets specialist)";
-    case "DIGITAL_CODE":
-      return "Digital Keypad / Lockbox (Specialist enters via authorized code/lockbox)";
-    case "LOCKBOX":
-      return "Key Lockbox (Exterior key vault access)";
-    default:
-      return accessType.replace(/_/g, " ");
-  }
-}
+// function formatAccessType(accessType?: string | null): string {
+//   if (!accessType) return "Resident Answers Door";
+//   switch (accessType) {
+//     case "RESIDENT_ANSWERS":
+//       return "Resident Answers Door (Onsite Resident / Family Member greets specialist)";
+//     case "DIGITAL_CODE":
+//       return "Digital Keypad / Lockbox (Specialist enters via authorized code/lockbox)";
+//     case "LOCKBOX":
+//       return "Key Lockbox (Exterior key vault access)";
+//     default:
+//       return accessType.replace(/_/g, " ");
+//   }
+// }
 
 /**
  * Generates and downloads a vector-based, high-fidelity PDF of the AgeWellRI Hybrid Services Agreement (16-Section Rhode Island Version).
@@ -336,7 +336,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(10.8);
   doc.setTextColor(255, 255, 255);
   doc.text(
-    "AGEWELLRI HYBRID SERVICES AGREEMENT (RHODE ISLAND VERSION)",
+    "AGEWELLRI HYBRID SERVICES AGREEMENT",
     margin + 4,
     y + 6.5,
   );
@@ -345,7 +345,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(8);
   doc.setTextColor(190, 220, 240);
   doc.text(
-    "Company Name: AgeWellRI LLC | Location: Westerly, Rhode Island",
+    "Company Name: © 2026 AgeWellRI LLC. All rights reserved.| Location: Westerly, Rhode Island",
     margin + 4,
     y + 12,
   );
@@ -690,7 +690,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(7.5);
   doc.setTextColor(...(isPlan1 ? lightNavy : darkText));
   doc.text(
-    `${isPlan1 ? "[✓]" : "[ ]"} PLAN 1: THE PREMIUM SAFETY SAFEGUARD`,
+    `PLAN 1: THE PREMIUM SAFETY SAFEGUARD`,
     margin + 4,
     p1Y,
   );
@@ -743,7 +743,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(7.5);
   doc.setTextColor(...(isPlan2 ? lightNavy : darkText));
   doc.text(
-    `${isPlan2 ? "[✓]" : "[ ]"} PLAN 2: THE INDEPENDENCE & UPKEEP PLAN`,
+    `PLAN 2: THE INDEPENDENCE & UPKEEP PLAN`,
     margin + 4,
     p2Y,
   );
@@ -948,32 +948,24 @@ export async function downloadAgreementPdf(
 
   // SECTION 12
   drawSectionHeader(
-    "12. REQUIRED INTERACTIVE SECTIONS & AUTHORIZATIONS",
+    "12. REQUIRED AUTHORIZATIONS",
     4.5,
   );
-  renderParagraph(
-    "(The Client must review and check each individual box below in order to authorize service tracking and execution)",
-    3,
+  
+
+  renderSubsection(
+    "Section 12.2: Emergency Right of Entry Authorization",
+    "EMERGENCY ACCESS AGREEMENT: Regardless of the selection made in Section 12.1, the Client explicitly grants AgeWellRI LLC the right to enter the home during a scheduled visit window if the technician has a reasonable belief that a medical emergency or safety crisis is occurring inside (e.g., viewing a resident fallen on the floor through a window, or hearing cries for help). I authorize AgeWellRI LLC to utilize any available key/code, contact emergency services (911), or follow instructions from designated family contacts. AgeWellRI LLC and its technicians shall be held completely harmless for any property damage (such as forced entry) or liabilities resulting from responding to a suspected medical or safety emergency in good faith, except to the extent caused by AgeWellRI’s gross negligence, recklessness, or willful misconduct.",
   );
 
   renderSubsection(
-    "Section 12.1: Scheduled Access Selection (Check EXACTLY One Box)",
-    `• RESIDENT ANSWERS DOOR: A resident will be present to unlock the door and grant entry at the scheduled time. If the resident is unresponsive or fails to open the door within fifteen (15) minutes of arrival, it will be treated as a "Client Lockout," the visit will be canceled, and the standard visit fee will still apply.\n• DIGITAL KEYPAD / SMART LOCK: AgeWellRI LLC is authorized to use the digital keypad code provided by the Client during sign-up to unlock the door. Where Client authorizes keypad or smart-lock access, the entry code is collected and stored through Company's secure, access-controlled client portal rather than in this signed Agreement, and is accessible only to Company personnel assigned to service the Client's account.`,
-  );
-
-  renderSubsection(
-    "Section 12.2: Emergency Right of Entry Authorization (Mandatory Standalone Checkbox) [✓ AGREED]",
-    "EMERGENCY ACCESS AGREEMENT: Regardless of the selection made in Section 12.1, the Client explicitly grants AgeWellRI LLC the right to enter the home during a scheduled visit window if the technician has a reasonable belief that a medical emergency or safety crisis is occurring inside (e.g., viewing a resident fallen on the floor through a window, or hearing cries for help). I authorize AgeWellRI LLC to utilize any available key/code, contact emergency services (911), or follow instructions from designated family contacts. AgeWellRI LLC and its technicians shall be held completely harmless for any property damage (such as forced entry) or liabilities resulting from responding to a suspected medical or safety emergency in good faith, except to the extent caused by AgeWellRI's gross negligence, recklessness, or willful misconduct.",
-  );
-
-  renderSubsection(
-    "Section 12.3: Resident Autonomy & Refusal Acknowledgment (Mandatory Standalone Checkbox) [✓ AGREED]",
+    "Section 12.3: Resident Autonomy & Refusal Acknowledgment",
     "RESIDENT BOUNDARIES ACKNOWLEDGMENT: Client acknowledges that AgeWellRI LLC technicians prioritize the dignity, comfort, and personal boundaries of all residents. If a resident explicitly refuses entry, objects to a specific safety checklist item, or requests that a technician leave a specific area during a scheduled visit, our technicians will immediately respect those boundaries and cease that portion of the service. Client agrees that such a refusal by the resident does not constitute a breach of contract by AgeWellRI LLC, and that the standard visit fee will still apply in full. Company is not liable for accidents or injuries caused by a hazard that remains in place solely because the resident declined to have it addressed, except to the extent caused by Company's gross negligence, recklessness, or willful misconduct.",
   );
 
   renderSubsection(
-    "Section 12.4: Automatic Billing Authorization (Mandatory Standalone Checkbox) [✓ AGREED]",
-    `AUTOMATED MONTHLY CHARGE AUTHORIZATION: I authorize AgeWellRI LLC to automatically charge my saved digital payment method or process my submitted check payment for the flat monthly fee corresponding to my selected tier ($295.00 for Plan 1 / $${planPrice}.00 for Plan 2) on a recurring basis. I understand I can cancel this subscription at any time by emailing agewellri@gmail.com or utilizing my secure client dashboard portal link.`,
+    "Section 12.4: Automatic Billing Authorization",
+    `AUTOMATED MONTHLY CHARGE AUTHORIZATION: : I authorize AgeWellRI LLC to automatically charge my saved digital payment method or process my submitted check payment for the flat monthly fee corresponding to my selected tier ($295.00 for Plan 1 / $495.00 for Plan 2) on a recurring basis. I understand I can cancel this subscription at any time by emailing agewellri@gmail.com or utilizing my secure client dashboard portal link.`,
   );
 
   // SECTION 13
