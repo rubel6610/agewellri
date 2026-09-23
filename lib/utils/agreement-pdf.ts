@@ -345,7 +345,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(8);
   doc.setTextColor(190, 220, 240);
   doc.text(
-    "Company Name: AgeWellRI LLC.| Location: Westerly, Rhode Island",
+    "Company Name: © 2026 AgeWellRI LLC. All rights reserved.| Location: Westerly, Rhode Island",
     margin + 4,
     y + 12,
   );

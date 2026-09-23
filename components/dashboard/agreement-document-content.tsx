@@ -158,7 +158,7 @@ export function AgreementDocumentContent({
           AGEWELLRI HYBRID SERVICES AGREEMENT 
         </h1>
         <p className="text-sm sm:text-base font-bold text-[#5E8FB2]">
-          Company Name: AgeWellRI LLC. All rights reserved. | Location: Westerly, Rhode Island
+          Company Name: © 2026 AgeWellRI LLC. All rights reserved. | Location: Westerly, Rhode Island
         </p>
        
       </div>
