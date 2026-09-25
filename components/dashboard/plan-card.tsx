@@ -68,12 +68,10 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
               )}
             </div>
 
-            <span
+            {/* <span
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border shadow-2xs shrink-0 ${
                 isCancelled
                   ? "bg-amber-50 text-amber-800 border-amber-300"
-                  : billing?.isPendingFirstBilling
-                  ? "bg-sky-50 text-sky-800 border-sky-300"
                   : "bg-[#EAF3F8] text-[#166534] border-emerald-300"
               }`}
             >
@@ -82,18 +80,13 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>Ending Period</span>
                 </>
-              ) : billing?.isPendingFirstBilling ? (
-                <>
-                  <Clock className="w-3.5 h-3.5 text-sky-600" />
-                  <span>Schedule on 1st</span>
-                </>
               ) : (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   <span>Active Coverage</span>
                 </>
               )}
-            </span>
+            </span> */}
           </div>
 
           {/* Subscription Key Metrics Overview (Price, Next Billing, Auto-Renewal) */}

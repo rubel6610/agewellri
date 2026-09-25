@@ -1,4 +1,5 @@
 import jsPDF from "jspdf";
+import { formatPlanDuration } from "@/redux/features/plan/planTypes";
 
 export interface AuthorizedRecipientItem {
   name: string;
@@ -706,7 +707,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p1Times = "Up to 1 hour";
+  const p1Times = formatPlanDuration(1);
   doc.text(
     `Rate: $295.00 per month   •   Time: ${p1Times}   •   (Environmental Safety Oversight Only)`,
     margin + 4,

@@ -525,7 +525,7 @@ export function AgreementDocumentContent({
                     Rate: $295.00 per month.
                   </p>
                   <span className="text-[11px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                    Time: Up to 1 hour
+                    Time: {formatPlanDuration(1)}
                   </span>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed">
