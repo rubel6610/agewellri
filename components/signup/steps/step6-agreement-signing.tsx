@@ -406,10 +406,10 @@ export function Step6AgreementSigning({
                   </div>
                   <div className="mt-1 flex items-center gap-3 flex-wrap">
                     <p className="font-bold text-xs text-[#294B68]">
-                      Rate: $295.00 per calendar month.
+                      Rate: $295.00 per  month.
                     </p>
                     <span className="text-[10px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                      Time: {formatPlanDuration(planDetails.times)}
+                      Time: Up to 1 hour
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed">
@@ -438,10 +438,10 @@ export function Step6AgreementSigning({
                   </div>
                   <div className="mt-1 flex items-center gap-3 flex-wrap">
                     <p className="font-bold text-xs text-[#294B68]">
-                      Rate: ${planDetails.planPrice ? `${planDetails.planPrice}.00` : "495.00"} per calendar month.
+                      Rate: ${planDetails.planPrice ? `${planDetails.planPrice}.00` : "495.00"} per month.
                     </p>
                     <span className="text-[10px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                      Time: {formatPlanDuration(planDetails.times)}
+                      Time: Up to 2 hours
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed">

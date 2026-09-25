@@ -522,10 +522,10 @@ export function AgreementDocumentContent({
                 </div>
                 <div className="mt-1 flex items-center gap-3 flex-wrap">
                   <p className="font-bold text-xs text-[#294B68]">
-                    Rate: $295.00 per calendar month.
+                    Rate: $295.00 per month.
                   </p>
                   <span className="text-[11px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                    Time: {formatPlanDuration((agreement as any).planTimes || (agreement as any).times || (agreement as any).planSnapshot?.times)}
+                    Time: Up to 1 hour
                   </span>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed">
@@ -554,10 +554,10 @@ export function AgreementDocumentContent({
                 </div>
                 <div className="mt-1 flex items-center gap-3 flex-wrap">
                   <p className="font-bold text-xs text-[#294B68]">
-                    Rate: ${agreement.planPrice ? `${agreement.planPrice}.00` : "495.00"} per calendar month.
+                    Rate: ${agreement.planPrice ? `${agreement.planPrice}.00` : "495.00"} per month.
                   </p>
                   <span className="text-[11px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                    Time: {formatPlanDuration((agreement as any).planTimes || (agreement as any).times || (agreement as any).planSnapshot?.times)}
+                    Time: Up to 2 hours
                   </span>
                 </div>
                 <p className="mt-1.5 text-xs leading-relaxed">
@@ -936,9 +936,9 @@ export function AgreementDocumentContent({
                 <div className="text-[11px] text-[#64748B]">
                   Date: {formattedDate}
                 </div>
-                <div className="text-[10px] text-emerald-700 font-bold pt-1">
+                {/* <div className="text-[10px] text-emerald-700 font-bold pt-1">
                   ✓ Verified Digital E-Signature (ESIGN / UETA Compliant)
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -971,9 +971,9 @@ export function AgreementDocumentContent({
                   {AGEWELL_OWNER_DETAILS.company}
                 </div>
               
-                <div className="text-[10px] text-emerald-700 font-bold pt-1">
+                {/* <div className="text-[10px] text-emerald-700 font-bold pt-1">
                   ✓ Verified Officer Counter-Signature On File
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

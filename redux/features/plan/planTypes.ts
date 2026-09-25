@@ -151,34 +151,34 @@ export interface ServiceCatalogStats {
  */
 export function formatPlanDuration(times?: string | number | null): string {
   if (times === undefined || times === null || times === "") {
-    return "Up to 2 hours";
+    return "Up to 1 hour";
   }
 
   const str = String(times).trim();
 
-  // If already formatted as "Up to an hour" or "Up to a hour"
-  if (/^up\s+to\s+an?\s+hour$/i.test(str)) {
-    return "Up to an hour";
+  // If already formatted as "Up to 1 hour" or "Up to an hour"
+  if (/^up\s+to\s+(an?|1)\s+hours?$/i.test(str)) {
+    return "Up to 1 hour";
   }
 
   // If already formatted like "Up to X hours"
   const upToMatch = str.match(/^up\s+to\s+(\d+(?:\.\d+)?)\s*hours?$/i);
   if (upToMatch) {
     const hours = parseFloat(upToMatch[1]);
-    if (hours === 1) return "Up to an hour";
+    if (hours === 1) return "Up to 1 hour";
     return `Up to ${hours} hours`;
   }
 
   // Check for phrases like "an hour", "one hour", "1 hour", "1 hr", "1"
-  if (/^(an|one)\s*hours?$/i.test(str) || str.toLowerCase() === "an hour" || str.toLowerCase() === "one hour") {
-    return "Up to an hour";
+  if (/^(an|one|1)\s*hours?$/i.test(str) || str.toLowerCase() === "an hour" || str.toLowerCase() === "one hour" || str.toLowerCase() === "1 hour") {
+    return "Up to 1 hour";
   }
 
   // Extract first number if present
   const numMatch = str.match(/(\d+(?:\.\d+)?)/);
   if (numMatch) {
     const hours = parseFloat(numMatch[1]);
-    if (hours === 1) return "Up to an hour";
+    if (hours === 1) return "Up to 1 hour";
     if (hours > 0) return `Up to ${hours} hours`;
   }
 

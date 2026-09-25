@@ -60,8 +60,8 @@ export function AdminMobileNav({
     { label: "Billing", href: "/admin/billing", icon: CreditCard },
     { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCw },
     { label: "Admin Profile", href: "/admin/profile", icon: UserCheck },
-    { label: "Notifications", href: "/admin/notifications", icon: Bell },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
+    // { label: "Notifications", href: "/admin/notifications", icon: Bell },
+    // { label: "Settings", href: "/admin/settings", icon: Settings },
   ];
 
   return (

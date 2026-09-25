@@ -116,7 +116,7 @@ function formatAuditDetails(action: string, details: any): string {
 
   if (act.includes("AGREEMENT_CREATED") || act.includes("AGREEMENT_SENT")) {
     const state = stateNames[data.state] || data.state || "Rhode Island";
-    const version = data.templateVersion || "v2.0";
+    const version = data.templateVersion;
     return `Client service agreement initiated (${version} for ${state}).`;
   }
 

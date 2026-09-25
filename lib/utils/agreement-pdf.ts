@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import { formatPlanDuration } from "@/redux/features/plan/planTypes";
 
 export interface AuthorizedRecipientItem {
   name: string;
@@ -365,12 +364,12 @@ export async function downloadAgreementPdf(
     y + 4.2,
   );
   doc.text(`Client ID: ${clientNumber}`, margin + 48, y + 4.2);
-  doc.text(
-    `Version: ${agreement.templateVersion || agreement.version || "v2.0"} (RI)`,
-    margin + 95,
-    y + 4.2,
-  );
-  doc.text(`Effective: ${formattedDate}`, margin + 140, y + 4.2);
+  // doc.text(
+  //   `Version: ${agreement.templateVersion || agreement.version || "v2.0"} (RI)`,
+  //   margin + 95,
+  //   y + 4.2,
+  // );
+  // doc.text(`Effective: ${formattedDate}`, margin + 140, y + 4.2);
 
   y += 9.5;
 
@@ -409,9 +408,9 @@ export async function downloadAgreementPdf(
 
   doc.setFontSize(7.5);
   doc.setTextColor(...darkText);
-  doc.text(agreement.phone || "On File", margin + 3.5, y + 18.5);
+  doc.text(agreement.phone || "N/A", margin + 3.5, y + 18.5);
   doc.text(
-    agreement.dob || agreement.dateOfBirth || "On File",
+    agreement.dob || agreement.dateOfBirth || "N/A",
     margin + 50,
     y + 18.5,
   );
@@ -627,7 +626,7 @@ export async function downloadAgreementPdf(
       ? "Digital Keypad / Smart Lock Access"
       : agreement.homeAccessType === "LOCKBOX"
         ? "Key Lockbox Access"
-        : "Resident Answers Door (Onsite Greeting)";
+        : "Resident Answers Door ";
   doc.text(accessDisplay, margin + 3.5, y + 8.5);
 
   doc.setTextColor(...greenText);
@@ -707,13 +706,9 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p1Times = formatPlanDuration(
-    (agreement as any).planTimes ||
-      (agreement as any).times ||
-      agreement.planSnapshot?.times,
-  );
+  const p1Times = "Up to 1 hour";
   doc.text(
-    `Rate: $295.00 per calendar month   •   Time: ${p1Times}   •   (Environmental Safety Oversight Only)`,
+    `Rate: $295.00 per month   •   Time: ${p1Times}   •   (Environmental Safety Oversight Only)`,
     margin + 4,
     p1Y,
   );
@@ -760,13 +755,9 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p2Times = formatPlanDuration(
-    (agreement as any).planTimes ||
-      (agreement as any).times ||
-      agreement.planSnapshot?.times,
-  );
+  const p2Times = "Up to 2 hours";
   doc.text(
-    `Rate: $${planPrice}.00 per calendar month   •   Time: ${p2Times}   •   (Comprehensive Safety Oversight & Proactive Mitigation)`,
+    `Rate: $${planPrice}.00 per month   •   Time: ${p2Times}   •   (Comprehensive Safety Oversight & Proactive Mitigation)`,
     margin + 4,
     p2Y,
   );
@@ -1060,7 +1051,7 @@ export async function downloadAgreementPdf(
   );
   doc.setFontSize(5.5);
   doc.setTextColor(...greenText);
-  doc.text("✓ EXECUTED", margin + sigBoxW - 3.5, y + 4.5, { align: "right" });
+  doc.text("EXECUTED", margin + sigBoxW - 3.5, y + 4.5, { align: "right" });
 
   // White Signature Canvas Pad for Client
   const padX = margin + 3.5;
@@ -1142,14 +1133,14 @@ export async function downloadAgreementPdf(
     doc.text(`Execution Date: ${formattedDate}`, margin + 3.5, y + 33.5);
   }
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(5.2);
-  doc.setTextColor(...greenText);
-  doc.text(
-    "✓ Verified Digital E-Signature (ESIGN / UETA Compliant)",
-    margin + 3.5,
-    y + (isRepresentative ? 40.8 : 37.5),
-  );
+  // doc.setFont("helvetica", "bold");
+  // doc.setFontSize(5.2);
+  // doc.setTextColor(...greenText);
+  // doc.text(
+  //   "✓ Verified Digital E-Signature (ESIGN / UETA Compliant)",
+  //   margin + 3.5,
+  //   y + (isRepresentative ? 40.8 : 37.5),
+  // );
 
   // 2. AgeWellRI Provider Counter-Signature Box
   const providerX = margin + sigBoxW + 4;
@@ -1163,7 +1154,7 @@ export async function downloadAgreementPdf(
   doc.setTextColor(...greenText);
   doc.text("AgeWellRI Authorized Signature", providerX + 3.5, y + 4.5);
   doc.setFontSize(5.5);
-  doc.text("✓ AUTHORIZED", providerX + sigBoxW - 3.5, y + 4.5, {
+  doc.text("AUTHORIZED", providerX + sigBoxW - 3.5, y + 4.5, {
     align: "right",
   });
 
@@ -1229,14 +1220,14 @@ export async function downloadAgreementPdf(
     y + 37.5,
   );
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(5.2);
-  doc.setTextColor(...greenText);
-  doc.text(
-    "✓ Verified Provider Counter-Signature On File",
-    providerX + 3.5,
-    y + 40.8,
-  );
+  // doc.setFont("helvetica", "bold");
+  // doc.setFontSize(5.2);
+  // doc.setTextColor(...greenText);
+  // doc.text(
+  //   "✓ Verified Provider Counter-Signature On File",
+  //   providerX + 3.5,
+  //   y + 40.8,
+  // );
 
   y += sigBoxH + 4;
 
@@ -1253,14 +1244,15 @@ export async function downloadAgreementPdf(
     doc.setFontSize(6);
     doc.setTextColor(...mutedText);
     doc.text(
-      `AgeWellRI LLC • Client Service Agreement (${stateCode}) • Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`,
+      "© 2026 AgeWellRI LLC. All rights reserved. • (401) 212-3002 • agewellri@gmail.com",
       margin,
       pageHeight - 6,
     );
     doc.text(
       `Page ${p} of ${totalPages}`,
-      pageWidth - margin - 20,
+      pageWidth - margin,
       pageHeight - 6,
+      { align: "right" },
     );
   }
 
