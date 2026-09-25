@@ -6,14 +6,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   UserCheck,
-  Key,
-  DoorClosed,
-  AlertTriangle,
-  CreditCard,
-  HeartHandshake,
   FileCheck,
   Download,
-  ExternalLink,
 } from "lucide-react";
 import { AgreementDocument } from "@/redux/features/auth/authTypes";
 import { AdminAgreementRecord } from "@/redux/features/client/clientApi";
