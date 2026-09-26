@@ -57,25 +57,60 @@ export default function DashboardHomePage() {
       })} – ${periodEndFormatted}`
     : "Current Period";
 
-  // Next Monthly Renewal: ALWAYS the 1st of the next month (e.g. Nov 1, 2026 for an Oct cycle)
+  // Service Begins: First day of commencement month (e.g. October 1, 2026)
+  const serviceBeginsFormatted = (() => {
+    if (billingRes?.data?.serviceCommencementDate) {
+      const parsed = new Date(billingRes.data.serviceCommencementDate);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+    if (billingRes?.data?.firstBillingDate) {
+      const parsed = new Date(billingRes.data.firstBillingDate);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+    if (entitlementsData?.billingPeriod?.startDate) {
+      const parsed = new Date(entitlementsData.billingPeriod.startDate);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+    const now = new Date();
+    const currentMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1);
+    return currentMonthFirst.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  })();
+
+  // Next Monthly Renewal: ALWAYS the 1st of the next month (e.g. November 1, 2026 for an Oct cycle)
   const nextRenewalFormatted = (() => {
-    // 1. If backend explicitly returned a next payment date that is day 1 of a month, format and use it
     if (billingRes?.data?.nextPaymentDate) {
       const parsed = new Date(billingRes.data.nextPaymentDate);
       if (!isNaN(parsed.getTime())) {
-        const utcDay = parsed.getUTCDate();
-        const localDay = parsed.getDate();
-        if (utcDay === 1 || localDay === 1) {
-          return parsed.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
-        }
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
       }
     }
 
-    // 2. Otherwise calculate 1st of next month directly from the entitlements billing period or current date
     const refDate = entitlementsData?.billingPeriod?.startDate
       ? new Date(entitlementsData.billingPeriod.startDate)
       : entitlementsData?.billingPeriod?.endDate
@@ -89,7 +124,7 @@ export default function DashboardHomePage() {
     );
 
     return nextMonthFirst.toLocaleDateString("en-US", {
-      month: "short",
+      month: "long",
       day: "numeric",
       year: "numeric",
     });
@@ -102,7 +137,7 @@ export default function DashboardHomePage() {
 
   const serviceEndDateFormatted = billingRes?.data?.cancellationEffectiveAt
     ? new Date(billingRes.data.cancellationEffectiveAt).toLocaleDateString("en-US", {
-        month: "short",
+        month: "long",
         day: "numeric",
         year: "numeric",
       })
@@ -166,7 +201,7 @@ export default function DashboardHomePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#243746] tracking-tight">
-            Welcome back, {firstName}
+            Welcome, {firstName}
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">
             Here is your AgeWellRI service overview and safety schedule.
@@ -174,21 +209,26 @@ export default function DashboardHomePage() {
         </div>
 
         <div
-          className={`flex items-center gap-2 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl border shrink-0 ${
+          className={`flex items-center gap-3 text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-2xl border shrink-0 ${
             isPlanCancelled
               ? "text-amber-800 bg-amber-50 border-amber-300"
               : "text-[#294B68] bg-[#EAF3F8] border-[#5E8FB2]/30"
           }`}
         >
-          <Clock className={`w-4 h-4 ${isPlanCancelled ? "text-amber-600" : "text-[#5E8FB2]"}`} />
-          <span>
-            {isPlanCancelled ? "Service Ending: " : "Next Monthly Renewal: "}
-            {isEntitlementsLoading || isBillingLoading ? (
-              <span className="inline-block h-3 bg-[#5E8FB2]/30 rounded w-16 align-middle animate-pulse ml-1" />
-            ) : (
-              <strong>{isPlanCancelled ? serviceEndDateFormatted : nextRenewalFormatted}</strong>
-            )}
-          </span>
+          <Clock className={`w-4 h-4 shrink-0 ${isPlanCancelled ? "text-amber-600" : "text-[#5E8FB2]"}`} />
+          {isEntitlementsLoading || isBillingLoading ? (
+            <span className="inline-block h-4 bg-[#5E8FB2]/30 rounded w-48 align-middle animate-pulse" />
+          ) : (
+            <div className="flex flex-col gap-0.5 text-xs sm:text-sm leading-snug">
+              <div>
+                Service Begins: <strong>{serviceBeginsFormatted}</strong>
+              </div>
+              <div>
+                {isPlanCancelled ? "Service Ending: " : "Next Monthly Renewal: "}
+                <strong>{isPlanCancelled ? serviceEndDateFormatted : nextRenewalFormatted}</strong>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

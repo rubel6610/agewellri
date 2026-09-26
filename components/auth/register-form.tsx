@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -34,6 +34,8 @@ export function RegisterForm() {
   const emailParam = searchParams.get("email") || "";
   const tokenParam = searchParams.get("token") || "";
 
+  const [mounted, setMounted] = useState(false);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,6 +45,34 @@ export function RegisterForm() {
     confirmPassword: "",
     agreeToTerms: false,
   });
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_register_form_draft");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore register form draft:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("agewellri_register_form_draft", JSON.stringify(formData));
+      } catch (err) {
+        console.error("Failed to save register form draft:", err);
+      }
+    }
+  }, [formData, mounted]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [registerSuccessMessage, setRegisterSuccessMessage] = useState<
@@ -340,8 +370,6 @@ export function RegisterForm() {
                 I agree to the{" "}
                 <Link
                   href="/terms-of-use"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
                   Terms of Use
@@ -349,8 +377,6 @@ export function RegisterForm() {
                 and acknowledge the{" "}
                 <Link
                   href="/privacy-policy"
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="font-bold text-[#5E8FB2] hover:text-[#294B68] underline focus-visible:outline-2 focus-visible:outline-[#5E8FB2] rounded"
                 >
                   Privacy Policy

@@ -89,11 +89,11 @@ export function Step2ChoosePlan({
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
           Choose Your Service Plan
         </h2>
-        <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
+        {/* <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
           Select the membership plan tailored to your household. Plans include
           dedicated home visits, safety inspections, and authorized family
           updates.
-        </p>
+        </p> */}
       </div>
 
       {isLoading ? (
