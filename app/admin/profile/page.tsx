@@ -128,13 +128,13 @@ export default function AdminProfilePage() {
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => setIsEditProfileModalOpen(true)}
             className="px-3.5 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] text-xs font-extrabold rounded-lg border border-[#5E8FB2]/30 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Edit Profile</span>
-          </button>
+          </button> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -172,9 +172,9 @@ export default function AdminProfilePage() {
                 Verified
               </span>
             </div>
-            <p className="text-[11px] text-[#64748B]">
+            {/* <p className="text-[11px] text-[#64748B]">
               Primary administrative account email used for authentication and system alerts.
-            </p>
+            </p> */}
           </div>
 
           <div className="space-y-1.5">
@@ -184,9 +184,9 @@ export default function AdminProfilePage() {
             <p className="text-base font-bold text-[#243746] p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]">
               {phone}
             </p>
-            <p className="text-[11px] text-[#64748B]">
+            {/* <p className="text-[11px] text-[#64748B]">
               Direct line used for specialist coordination and high-priority member dispatch.
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

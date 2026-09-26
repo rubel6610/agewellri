@@ -57,25 +57,7 @@ function parseDateSafe(dateInput?: string | Date | null): Date | null {
 }
 
 /**
- * Gets the ordinal suffix for a day number (e.g. 1st, 2nd, 14th)
- */
-function getOrdinalSuffix(day: number): string {
-  if (day > 3 && day < 21) return `${day}th`;
-  switch (day % 10) {
-    case 1:
-      return `${day}st`;
-    case 2:
-      return `${day}nd`;
-    case 3:
-      return `${day}rd`;
-    default:
-      return `${day}th`;
-  }
-}
-
-/**
- * Generates an official, crisp vector-based PDF receipt/statement for an invoice
- * Clearly displaying the billing payment month and the exact day the invoice payment was generated.
+ * Generates an official, crisp vector-based PDF receipt/statement matching the exact AgeWellRI format.
  */
 export function generateInvoicePdf(inv: InvoicePdfData): boolean {
   try {
@@ -90,32 +72,25 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     const contentWidth = pageWidth - margin * 2; // 182mm
     let y = 14;
 
-    // Color Palette matching AgeWellRI design tokens
-    const navy: [number, number, number] = [36, 55, 70]; // #243746
-    const primaryNavy: [number, number, number] = [41, 75, 104]; // #294B68
-    const slateBlue: [number, number, number] = [94, 143, 178]; // #5E8FB2
-    const paleBg: [number, number, number] = [247, 250, 252]; // #F7FAFC
-    const borderColor: [number, number, number] = [217, 228, 236]; // #D9E4EC
-    const greenText: [number, number, number] = [22, 101, 52]; // #166534
-    const greenBg: [number, number, number] = [235, 248, 242]; // #EBF8F2
-    const amberText: [number, number, number] = [194, 138, 58]; // #C28A3A
-    const amberBg: [number, number, number] = [254, 243, 199]; // #FEF3C7
-    const redText: [number, number, number] = [185, 28, 28]; // #B91C1C
-    const redBg: [number, number, number] = [254, 242, 242]; // #FEF2F2
+    // Color Palette matching design
+    const navy: [number, number, number] = [27, 54, 93]; // #1B365D Dark Navy
+    const greenText: [number, number, number] = [46, 125, 50]; // #2E7D32 Green Tagline
+    const darkBody: [number, number, number] = [51, 65, 85]; // #334155 Dark Text
+    const mutedText: [number, number, number] = [100, 116, 139]; // #64748B Muted
+    const cardBg: [number, number, number] = [234, 243, 248]; // #EAF3F8 Grid Fill
+    const borderColor: [number, number, number] = [217, 228, 236]; // #D9E4EC Border
 
-    const rawStatus = (inv.status || "open").toUpperCase();
+    const rawStatus = (inv.status || "OPEN").toUpperCase();
     const normalizedStatus = rawStatus === "DRAFT" ? "OPEN" : rawStatus;
-    const formattedAmount =
-      typeof inv.amount === "number"
-        ? `$${inv.amount.toFixed(2)}`
-        : inv.amount.startsWith("$")
-          ? inv.amount
-          : `$${inv.amount}`;
 
-    // ==========================================
-    // DATE & MONTH COMPUTATION
-    // ==========================================
-    // 1. Generation / Payment Date (Exact day & date generated)
+    const rawAmountNum =
+      typeof inv.amount === "number"
+        ? inv.amount
+        : parseFloat(String(inv.amount).replace(/[^0-9.]/g, "")) || 0;
+
+    const formattedAmount = `$${rawAmountNum.toFixed(2)}`;
+
+    // Parse Dates for Billing Month & Service Period
     const parsedGenDate =
       parseDateSafe(inv.generatedDate) ||
       parseDateSafe(inv.paidAt) ||
@@ -123,35 +98,12 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
       parseDateSafe(inv.dueDate) ||
       new Date();
 
-    const formattedGeneratedDate = parsedGenDate.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    }); // e.g. "Sep 14, 2026"
-
-    const formattedGeneratedDateLong = parsedGenDate.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    }); // e.g. "September 14, 2026"
-
-    const generatedDayNum = parsedGenDate.getDate();
-    const generatedDayOrdinal = getOrdinalSuffix(generatedDayNum); // e.g. "14th"
-    const generatedWeekday = parsedGenDate.toLocaleDateString("en-US", {
-      weekday: "long",
-    }); // e.g. "Monday"
-    const generatedWeekdayShort = parsedGenDate.toLocaleDateString("en-US", {
-      weekday: "short",
-    }); // e.g. "Mon"
-    const generatedDaySubtitle = `Day ${generatedDayNum} (${generatedWeekdayShort})`;
-
-    // 2. Billing Month & Service Period (Which month payment is for)
     let billingMonthName = inv.billingMonth?.trim();
     if (!billingMonthName) {
       billingMonthName = parsedGenDate.toLocaleDateString("en-US", {
         month: "long",
         year: "numeric",
-      }); // e.g. "September 2026"
+      }); // e.g. "October 2026"
     }
 
     let periodRangeText = inv.billingPeriod?.trim();
@@ -169,341 +121,271 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
         day: "numeric",
         year: "numeric",
       });
-      periodRangeText = `${startFormatted} – ${endFormatted}`; // e.g. "Sep 1 – Sep 30, 2026"
+      periodRangeText = `${startFormatted} – ${endFormatted}`; // e.g. "Oct 1 – Oct 31, 2026"
     }
 
-    const rawPlanTitle = inv.planName || inv.description || "Membership Plan";
-    const planTitle = rawPlanTitle
-      .replace(/ (Membership Statement|Manual Invoice)$/i, "")
-      .trim();
-    const paymentChannel = inv.paymentMethod || "Credit Card (Auto-Pay)";
+    // Format Plan Name & Plan Number
+    const rawPlanTitle = inv.planName || "Premium Safety Safeguard (Plan 1)";
+    const isPlan2 =
+      rawPlanTitle.toLowerCase().includes("plan 2") ||
+      rawPlanTitle.toLowerCase().includes("independence") ||
+      rawAmountNum >= 400;
+
+    let planDisplayTitle = rawPlanTitle;
+    if (isPlan2 && !planDisplayTitle.includes("Plan 2")) {
+      planDisplayTitle = "Independence & Upkeep (Plan 2)";
+    } else if (!isPlan2 && !planDisplayTitle.includes("Plan 1")) {
+      planDisplayTitle = "Premium Safety Safeguard (Plan 1)";
+    }
+
+    const defaultScopeDesc = isPlan2
+      ? "Comprehensive home safety oversight, proactive hazard mitigation, and environmental adjustments"
+      : "Scheduled monthly safety inspections, fall-prevention assessments, and minor safety adjustments";
+
+    const itemDescriptionText = inv.description?.trim() || defaultScopeDesc;
+    const paymentChannel = inv.paymentMethod || "Credit Card (Auto)";
 
     // ==========================================
-    // 1. DOCUMENT HEADER BANNER
+    // 1. TOP HEADER BRANDING
     // ==========================================
-    doc.setFillColor(...primaryNavy);
-    doc.roundedRect(margin, y, contentWidth, 26, 2, 2, "F");
-
-    // Brand Name & Subtitle
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(255, 255, 255);
-    doc.text("AgeWellRI LLC", margin + 6, y + 10,);
+    doc.setFontSize(22);
+    doc.setTextColor(...navy);
+    doc.text("AgeWellRI", margin, y + 6);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...greenText);
+    doc.text("Comprehensive Senior Home Safety Services", margin, y + 12.5);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...navy);
+    doc.text("PAYMENT INVOICE / RECEIPT", margin, y + 21);
+
+    y += 29;
+
+    // ==========================================
+    // 2. SERVICE PROVIDER & BILLED TO (2 COLUMNS)
+    // ==========================================
+    const colWidth = (contentWidth - 10) / 2; // ~86mm
+    const rightColX = margin + colWidth + 10;
+
+    // Left Column: Service Provider
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text("Service Provider", margin, y);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
-    doc.setTextColor(215, 235, 250);
-    // doc.text("Comprehensive Senior Home Safety Services", margin + 6, y + 17.5);
+    doc.setTextColor(...darkBody);
+    doc.text("AgeWellRI LLC", margin, y + 5);
+    doc.text("Westerly, RI 02891", margin, y + 9.5);
+    doc.text("(401) 212-3002", margin, y + 14);
+    doc.text("agewellri@gmail.com", margin, y + 18.5);
+    doc.text("Serving Rhode Island Statewide", margin, y + 23);
+    doc.text("Certified Senior Home Safety Specialists", margin, y + 27.5);
 
-    // Document Title, Statement #, and Payment Month (Right aligned)
+    // Right Column: Billed To
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10.5);
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text("Billed To", rightColX, y);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...darkBody);
+
+    const clientDisplayName = inv.clientName || "Valued Member";
+    doc.text(clientDisplayName, rightColX, y + 5);
+    doc.text(`Member ID: ${inv.clientNumber || "AW-1001"}`, rightColX, y + 9.5);
+    doc.text(`Plan: ${planDisplayTitle}`, rightColX, y + 14, {
+      maxWidth: colWidth,
+    });
+
+    y += 35;
+
+    // ==========================================
+    // 3. METADATA 4-COLUMN BOX GRID
+    // ==========================================
+    const gridHeight = 18;
+    doc.setFillColor(...cardBg);
+    doc.setDrawColor(...borderColor);
+    doc.roundedRect(margin, y, contentWidth, gridHeight, 1.5, 1.5, "FD");
+
+    const col4W = contentWidth / 4; // ~45.5mm
+
+    // Faint Vertical Dividers
+    doc.setDrawColor(...borderColor);
+    doc.line(margin + col4W, y + 2, margin + col4W, y + gridHeight - 2);
+    doc.line(margin + col4W * 2, y + 2, margin + col4W * 2, y + gridHeight - 2);
+    doc.line(margin + col4W * 3, y + 2, margin + col4W * 3, y + gridHeight - 2);
+
+    // Col 1: INVOICE
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...mutedText);
+    doc.text("INVOICE", margin + 4, y + 5.5);
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text(inv.invoiceNumber, margin + 4, y + 12);
+
+    // Col 2: PAYMENT MONTH
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...mutedText);
+    doc.text("PAYMENT MONTH", margin + col4W + 4, y + 5.5);
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text(billingMonthName, margin + col4W + 4, y + 12);
+
+    // Col 3: SERVICE PERIOD
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...mutedText);
+    doc.text("SERVICE PERIOD", margin + col4W * 2 + 4, y + 5.5);
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text(periodRangeText, margin + col4W * 2 + 4, y + 12, {
+      maxWidth: col4W - 6,
+    });
+
+    // Col 4: STATUS & Method
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...mutedText);
+    doc.text("STATUS", margin + col4W * 3 + 4, y + 5.5);
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text(normalizedStatus, margin + col4W * 3 + 4, y + 11.5);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...mutedText);
+    doc.text(paymentChannel, margin + col4W * 3 + 4, y + 15.5, {
+      maxWidth: col4W - 6,
+    });
+
+    y += gridHeight + 7;
+
+    // ==========================================
+    // 4. ITEM DESCRIPTION TABLE HEADER BAR
+    // ==========================================
+    const tableHeaderH = 9;
+    doc.setFillColor(...navy);
+    doc.rect(margin, y, contentWidth, tableHeaderH, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
     doc.setTextColor(255, 255, 255);
-    doc.text("PAYMENT INVOICE RECEIPT", pageWidth - margin - 6, y + 9.5, {
+    doc.text("ITEM DESCRIPTION", margin + 4, y + 6);
+    doc.text("AMOUNT (USD)", pageWidth - margin - 4, y + 6, {
       align: "right",
     });
 
-    // doc.setFont("helvetica", "normal");
-    // doc.setFontSize(8.5);
-    // doc.setTextColor(215, 235, 250);
-    // doc.text(
-    //   `Statement #${inv.invoiceNumber}`,
-    //   pageWidth - margin - 6,
-    //   y + 15.5,
-    //   { align: "right" },
-    // );
+    y += tableHeaderH;
 
+    // ==========================================
+    // 5. TABLE CONTENT ROW
+    // ==========================================
+    y += 4;
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(36, 55, 70);
+    doc.text(planDisplayTitle, margin + 4, y + 4);
+
+    doc.setFontSize(9);
+    doc.text(formattedAmount, pageWidth - margin - 4, y + 4, {
+      align: "right",
+    });
+
+    y += 6;
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(254, 240, 138); // Soft warm gold
-    doc.text(
-      `Payment Month: ${billingMonthName}`,
-      pageWidth - margin - 6,
-      y + 15.6,
-      { align: "right" },
+    doc.setTextColor(...mutedText);
+    const itemDescLines = doc.splitTextToSize(
+      itemDescriptionText,
+      contentWidth - 40,
     );
+    doc.text(itemDescLines, margin + 4, y + 3);
 
-    y += 32;
+    y += itemDescLines.length * 4 + 6;
+
+    // Line divider below item row
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y, pageWidth - margin, y);
+
+    y += 7;
 
     // ==========================================
-    // 2. BILLED BY & BILLED TO SECTIONS
+    // 6. TOTALS SECTION (Right-aligned)
     // ==========================================
-    const colWidth = (contentWidth - 6) / 2; // 88mm
-    const boxHeight = 46;
+    const totalsXLabel = pageWidth - margin - 50;
+    const totalsXValue = pageWidth - margin - 4;
 
-    // Left Box: Billed By (Service Provider)
-    doc.setFillColor(...paleBg);
-    doc.setDrawColor(...borderColor);
-    doc.roundedRect(margin, y, colWidth, boxHeight, 2, 2, "FD");
-
-    doc.setFont("helvetica", "bold");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
+    doc.setTextColor(...darkBody);
+    doc.text("Subtotal:", totalsXLabel, y, { align: "right" });
+    doc.text(formattedAmount, totalsXValue, y, { align: "right" });
+
+    y += 5.5;
+    doc.text("State Sales Tax (0.0%):", totalsXLabel, y, { align: "right" });
+    doc.text("$0.00", totalsXValue, y, { align: "right" });
+
+    y += 3.5;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(totalsXLabel - 25, y, pageWidth - margin, y);
+
+    y += 5.5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
     doc.setTextColor(...navy);
-    doc.text("Service Provider:", margin + 5, y + 7);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(...primaryNavy);
-    doc.text("AgeWellRI LLC", margin + 5, y + 13.5, {
-      maxWidth: colWidth - 10,
-    });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(90, 110, 130);
-    doc.text("Westerly, RI 02903", margin + 5, y + 19.5);
-    doc.text("Phone: (401) 212-3002", margin + 5, y + 24.5);
-    doc.text("Email: agewellri@gmail.com", margin + 5, y + 29.5);
-    // doc.text("Service Region: Rhode Island Statewide", margin + 5, y + 34.5);
-    // doc.text("Licensed Senior Home Safety Care", margin + 5, y + 39.5);
-
-    // Right Box: Billed To (Client Member)
-    const rightColX = margin + colWidth + 6;
-    doc.setFillColor(...paleBg);
-    doc.setDrawColor(...borderColor);
-    doc.roundedRect(rightColX, y, colWidth, boxHeight, 2, 2, "FD");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...navy);
-    doc.text("Billed To (Member):", rightColX + 5, y + 7);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(...navy);
-    const clientDisplayName = inv.clientName || "Valued Client";
-    doc.text(clientDisplayName, rightColX + 5, y + 13.5, {
-      maxWidth: colWidth - 10,
-    });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(90, 110, 130);
-
-    let rightY = y + 19.5;
-    if (inv.clientNumber) {
-      doc.text(`Member ID: ${inv.clientNumber}`, rightColX + 5, rightY, {
-        maxWidth: colWidth - 10,
-      });
-      rightY += 5;
-    }
-    if (inv.clientEmail) {
-      doc.text(`Email: ${inv.clientEmail}`, rightColX + 5, rightY, {
-        maxWidth: colWidth - 10,
-      });
-      rightY += 5;
-    } else if (inv.clientId && !inv.clientNumber) {
-      doc.text(`Account ID: ${inv.clientId}`, rightColX + 5, rightY, {
-        maxWidth: colWidth - 10,
-      });
-      rightY += 5;
-    }
-    doc.text(`Service Plan: ${planTitle}`, rightColX + 5, rightY, {
-      maxWidth: colWidth - 10,
-    });
-    rightY += 7;
-
-    // Highlight Payment Month and Generation Day
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...primaryNavy);
-    doc.text(`Payment Month: ${billingMonthName}`, rightColX + 5, rightY, {
-      maxWidth: colWidth - 10,
-    });
-    rightY += 5;
-
-    // doc.setFont("helvetica", "normal");
-    // doc.setTextColor(90, 110, 130);
-    // doc.text(`Generated On: ${formattedGeneratedDate} (${generatedWeekdayShort})`, rightColX + 5, rightY, {
-    //   maxWidth: colWidth - 10,
-    // });
-
-    y += 52;
-
-    // ==========================================
-    // 3. STATEMENT SUMMARY INFO BAR (3 Columns)
-    // ==========================================
-    const barHeight = 22;
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(...borderColor);
-    doc.roundedRect(margin, y, contentWidth, barHeight, 2, 2, "FD");
-
-    const sectionW = contentWidth / 3;
-
-    // Draw internal column dividers (2 dividers for 3 columns)
-    doc.setDrawColor(...borderColor);
-    doc.line(margin + sectionW, y + 3, margin + sectionW, y + barHeight - 3);
-    doc.line(margin + sectionW * 2, y + 3, margin + sectionW * 2, y + barHeight - 3);
-
-    // Col 1: Invoice Number
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(110, 130, 150);
-    doc.text("INVOICE NUMBER", margin + 4, y + 5.5);
-    doc.setFontSize(8.5);
-    doc.setTextColor(...navy);
-    doc.text(inv.invoiceNumber, margin + 4, y + 11.5);
-    doc.setFontSize(7);
-    doc.setTextColor(130, 145, 160);
-    doc.text("Official Statement", margin + 4, y + 16.5);
-
-    // Col 2: Payment / Billing Month
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(110, 130, 150);
-    doc.text("PAYMENT MONTH", margin + sectionW + 4, y + 5.5);
-    doc.setFontSize(8.5);
-    doc.setTextColor(...primaryNavy);
-    doc.text(billingMonthName, margin + sectionW + 4, y + 11.5, {
-      maxWidth: sectionW - 6,
-    });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(130, 145, 160);
-    doc.text(periodRangeText, margin + sectionW + 4, y + 16.5, {
-      maxWidth: sectionW - 6,
-    });
-
-    // Col 3: Payment Status & Channel
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(110, 130, 150);
-    doc.text("STATUS & METHOD", margin + sectionW * 2 + 4, y + 5.5);
-
-    const statusX = margin + sectionW * 2 + 4;
-    const statusY = y + 7.5;
-    if (normalizedStatus === "PAID") {
-      doc.setFillColor(...greenBg);
-      doc.setDrawColor(134, 239, 172);
-      doc.roundedRect(statusX, statusY, 22, 5.5, 1, 1, "FD");
-      doc.setTextColor(...greenText);
-      doc.setFontSize(7.5);
-      doc.text("PAID ✓", statusX + 11, statusY + 3.8, { align: "center" });
-    } else if (
-      normalizedStatus === "OVERDUE" ||
-      normalizedStatus === "FAILED"
-    ) {
-      doc.setFillColor(...redBg);
-      doc.setDrawColor(254, 202, 202);
-      doc.roundedRect(statusX, statusY, 24, 5.5, 1, 1, "FD");
-      doc.setTextColor(...redText);
-      doc.setFontSize(7.5);
-      doc.text("OVERDUE", statusX + 12, statusY + 3.8, { align: "center" });
-    } else {
-      doc.setFillColor(...amberBg);
-      doc.setDrawColor(253, 230, 138);
-      doc.roundedRect(statusX, statusY, 22, 5.5, 1, 1, "FD");
-      doc.setTextColor(...amberText);
-      doc.setFontSize(7.5);
-      doc.text("OPEN", statusX + 11, statusY + 3.8, { align: "center" });
-    }
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.8);
-    doc.setTextColor(110, 130, 150);
-    doc.text(paymentChannel, statusX, y + 17, {
-      maxWidth: sectionW - 8,
-    });
-
-    y += 28;
-
-    // ==========================================
-    // 4. ITEMIZED CHARGES TABLE
-    // ==========================================
-    // Table Header
-    doc.setFillColor(...primaryNavy);
-    doc.rect(margin, y, contentWidth, 8, "F");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(255, 255, 255);
-    doc.text("ITEM DESCRIPTION", margin + 4, y + 5.5);
-    doc.text("BILLING / PAYMENT MONTH", margin + 105, y + 5.5);
-    doc.text("AMOUNT (USD)", pageWidth - margin - 4, y + 5.5, {
-      align: "right",
-    });
-
-    y += 8;
-
-    // Item Row
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(...borderColor);
-    doc.rect(margin, y, contentWidth, 18, "FD");
-
-    // Item Description
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...navy);
-    doc.text(planTitle, margin + 4, y + 6, { maxWidth: 96 });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(110, 125, 140);
-    doc.text(
-      inv.description ||
-        "Scheduled monthly safety inspections, fall prevention audits & safety allocations",
-      margin + 4,
-      y + 11.5,
-      { maxWidth: 96 },
-    );
-
-    // Billing / Payment Month in Table Row
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...primaryNavy);
-    doc.text(billingMonthName, margin + 105, y + 6);
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(110, 125, 140);
-    doc.text(periodRangeText, margin + 105, y + 11.5);
-
-    // Amount in Table Row
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(...navy);
-    doc.text(formattedAmount, pageWidth - margin - 4, y + 8.5, {
-      align: "right",
-    });
+    const totalLabel = normalizedStatus === "PAID" ? "Total Paid:" : "Total Due:";
+    doc.text(totalLabel, totalsXLabel, y, { align: "right" });
+    doc.text(formattedAmount, totalsXValue, y, { align: "right" });
 
     y += 16;
 
     // ==========================================
-    // 6. LEGAL NOTICE & AUDIT FOOTER
+    // 7. OFFICIAL STATEMENT FOOTER
     // ==========================================
-    doc.setDrawColor(...borderColor);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...navy);
+    doc.text("Official Statement", margin, y);
 
-    // doc.setFont("helvetica", "bold");
-    // doc.setFontSize(7.5);
-    // doc.setTextColor(...navy);
-    // doc.text("Official Statement & Payment Proof", margin, y);
+    y += 4.5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(90, 105, 120);
 
-    // doc.setFont("helvetica", "normal");
-    // doc.setFontSize(6.8);
-    // doc.setTextColor(130, 145, 160);
-    // doc.text(
-    //   `This electronic statement represents an official record of contracted services provided by  AgeWellRI LLCfor the month of ${billingMonthName} (${periodRangeText}).`,
-    //   margin,
-    //   y + 4.5,
-    // );
-    // doc.text(
-    //   `Invoice generated on ${formattedGeneratedDateLong} (${generatedDaySubtitle}) for Statement #${inv.invoiceNumber}.`,
-    //   margin,
-    //   y + 8.5,
-    // );
-    // doc.text(
-    //   "AgeWellRI provides senior safety oversight, non-medical home safety evaluations, and proactive hazard mitigation across Rhode Island.",
-    //   margin,
-    //   y + 12.5,
-    // );
+    const stmtText1 =
+      "This electronic statement is an official record of contracted services provided by AgeWellRI LLC. AgeWellRI provides senior home safety oversight, non-medical home safety evaluations, and proactive hazard mitigation across Rhode Island. We are not a medical provider, home health agency, or cleaning service.";
+    const stmtLines1 = doc.splitTextToSize(stmtText1, contentWidth);
+    doc.text(stmtLines1, margin, y);
+    y += stmtLines1.length * 3.5 + 3;
+
+    const stmtText2 =
+      "Questions about this statement, renewal dates, or payment methods? Email agewellri@gmail.com or call (401) 212-3002.";
+    const stmtLines2 = doc.splitTextToSize(stmtText2, contentWidth);
+    doc.text(stmtLines2, margin, y);
+
+    // ==========================================
+    // 8. COPYRIGHT FOOTER (Bottom of Page)
+    // ==========================================
+    const footerY = 285;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(140, 150, 160);
     doc.text(
-      "For questions: renewal dates, or payment methods, please email agewellri@gmail.com or call (401) 212-3002.",
-      margin,
-      y + 16.5,
+      "© 2026 AgeWellRI LLC • (401) 212-3002 • agewellri@gmail.com",
+      pageWidth / 2,
+      footerY,
+      { align: "center" },
     );
 
-    // Save File with clean filename
+    // Save PDF
     const safeInvoiceNum = inv.invoiceNumber.replace(/[^a-zA-Z0-9-_]/g, "_");
     const safeMonth = billingMonthName.replace(/[^a-zA-Z0-9]/g, "_");
     const filename = `AgeWellRI_Invoice_${safeInvoiceNum}_${safeMonth}.pdf`;
