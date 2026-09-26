@@ -687,10 +687,10 @@ export async function downloadAgreementPdf(
 
   let p1Y = y + 4.5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(...(isPlan1 ? lightNavy : darkText));
   doc.text(
-    `PLAN 1: THE PREMIUM SAFETY SAFEGUARD`,
+    `Plan 1 — Premium Safety Safeguard (Environmental Safety Oversight Only)`,
     margin + 4,
     p1Y,
   );
@@ -707,9 +707,9 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p1Times = formatPlanDuration(1);
+  const p1Times = "Each biweekly visit runs up to 60 minutes";
   doc.text(
-    `Rate: $295.00 per month   •   Time: ${p1Times}   •   (Environmental Safety Oversight Only)`,
+    `Rate: $295.00 per month   •   ${p1Times}`,
     margin + 4,
     p1Y,
   );
@@ -736,10 +736,10 @@ export async function downloadAgreementPdf(
 
   let p2Y = y + 4.5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.0);
   doc.setTextColor(...(isPlan2 ? lightNavy : darkText));
   doc.text(
-    `PLAN 2: THE INDEPENDENCE & UPKEEP PLAN`,
+    `Plan 2 — Independence & Upkeep (Comprehensive Safety Oversight & Proactive Mitigation)`,
     margin + 4,
     p2Y,
   );
@@ -756,9 +756,9 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p2Times = "Up to 2 hours";
+  const p2Times = "Each biweekly visit runs up to two hours";
   doc.text(
-    `Rate: $${planPrice}.00 per month   •   Time: ${p2Times}   •   (Comprehensive Safety Oversight & Proactive Mitigation)`,
+    `Rate: $${planPrice}.00 per month   •   ${p2Times}`,
     margin + 4,
     p2Y,
   );

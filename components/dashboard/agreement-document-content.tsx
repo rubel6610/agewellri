@@ -495,69 +495,69 @@ export function AgreementDocumentContent({
                 [Client Must Check Exactly One Box to Select a Plan Tier]:
               </div>
 
-              {/* Plan 1 */}
-              <div className={`p-4 rounded-xl border transition-all ${
-                agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1")
-                  ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              }`}>
-                <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-xs font-bold bg-white text-[#294B68] border-[#294B68]">
-                    {agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1") ? "✓" : ""}
-                  </span>
-                  <span className="font-extrabold text-[#243746]">
-                    PLAN 1: THE PREMIUM SAFETY SAFEGUARD (Environmental Safety Oversight Only)
-                  </span>
-                  {(agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1")) && (
-                    <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
-                      Selected Plan
+                {/* Plan 1 */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1")
+                    ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                }`}>
+                  <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-xs font-bold bg-white text-[#294B68] border-[#294B68]">
+                      {agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1") ? "✓" : ""}
                     </span>
-                  )}
-                </div>
-                <div className="mt-1 flex items-center gap-3 flex-wrap">
-                  <p className="font-bold text-xs text-[#294B68]">
-                    Rate: $295.00 per month.
+                    <span className="font-extrabold text-[#243746]">
+                      Plan 1 — Premium Safety Safeguard (Environmental Safety Oversight Only)
+                    </span>
+                    {(agreement.planPrice === 295 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 1")) && (
+                      <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
+                        Selected Plan
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center gap-3 flex-wrap">
+                    <p className="font-bold text-xs text-[#294B68]">
+                      Rate: $295.00 per month.
+                    </p>
+                    <span className="text-[11px] font-bold text-[#294B68] bg-white border border-[#D9E4EC] px-2.5 py-1 rounded-md">
+                      Each biweekly visit runs up to 60 minutes
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed">
+                    <strong>Scope:</strong> Each biweekly visit provides a dedicated, objective environmental safety assessment of the home. During the visit, an AgeWellRI specialist conducts a structured walkthrough of the home&apos;s key areas &mdash; stairs and circulation, bathrooms, exterior entry, bedrooms and living areas, life-safety systems, and kitchen and laundry &mdash; to identify fall risks, hazards, and safety concerns. The specialist documents each finding with photos, notes recommended corrections, generates a standardized residential safety report, and delivers it to the Client&apos;s designated family dashboard the same day. This plan may include the complimentary minor safety courtesies described in Section 7 (such as replacing a bulb, placing a plug-in nightlight, or securing a loose cord). It does not include the proactive hazard-clearing, item relocation, or expanded mitigation services offered under Plan 2, and does not include any general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
                   </p>
-                  <span className="text-[11px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                    Time: {formatPlanDuration(1)}
-                  </span>
                 </div>
-                <p className="mt-1.5 text-xs leading-relaxed">
-                  <strong>Scope:</strong> Each biweekly visit provides a dedicated, objective environmental safety assessment of the home. During the visit, an AgeWellRI specialist conducts a structured walkthrough of the home&apos;s key areas &mdash; stairs and circulation, bathrooms, exterior entry, bedrooms and living areas, life-safety systems, and kitchen and laundry &mdash; to identify fall risks, hazards, and safety concerns. The specialist documents each finding with photos, notes recommended corrections, generates a standardized residential safety report, and delivers it to the Client&apos;s designated family dashboard the same day. This plan may include the complimentary minor safety courtesies described in Section 7 (such as replacing a bulb, placing a plug-in nightlight, or securing a loose cord). It does not include the proactive hazard-clearing, item relocation, or expanded mitigation services offered under Plan 2, and does not include any general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
-                </p>
-              </div>
 
-              {/* Plan 2 */}
-              <div className={`p-4 rounded-xl border transition-all ${
-                agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard"))
-                  ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
-                  : "bg-slate-50 border-slate-200 text-slate-700"
-              }`}>
-                <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-xs font-bold bg-white text-[#294B68] border-[#294B68]">
-                    {agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard")) ? "✓" : ""}
-                  </span>
-                  <span className="font-extrabold text-[#243746]">
-                    PLAN 2: THE INDEPENDENCE &amp; UPKEEP PLAN (Comprehensive Home Safety Oversight &amp; Proactive Hazard Removal)
-                  </span>
-                  {(agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard"))) && (
-                    <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
-                      Selected Plan
+                {/* Plan 2 */}
+                <div className={`p-4 rounded-xl border transition-all ${
+                  agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard"))
+                    ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
+                    : "bg-slate-50 border-slate-200 text-slate-700"
+                }`}>
+                  <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-xs font-bold bg-white text-[#294B68] border-[#294B68]">
+                      {agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard")) ? "✓" : ""}
                     </span>
-                  )}
-                </div>
-                <div className="mt-1 flex items-center gap-3 flex-wrap">
-                  <p className="font-bold text-xs text-[#294B68]">
-                    Rate: ${agreement.planPrice ? `${agreement.planPrice}.00` : "495.00"} per month.
+                    <span className="font-extrabold text-[#243746]">
+                      Plan 2 — Independence &amp; Upkeep (Comprehensive Home Safety Oversight &amp; Proactive Hazard Removal)
+                    </span>
+                    {(agreement.planPrice === 495 || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("independence") || (agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("plan 2") || (agreement.planPrice !== 295 && !(agreement.planName || agreement.selectedPlan || "").toLowerCase().includes("safeguard"))) && (
+                      <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
+                        Selected Plan
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex items-center gap-3 flex-wrap">
+                    <p className="font-bold text-xs text-[#294B68]">
+                      Rate: ${agreement.planPrice ? `${agreement.planPrice}.00` : "495.00"} per month.
+                    </p>
+                    <span className="text-[11px] font-bold text-[#294B68] bg-white border border-[#D9E4EC] px-2.5 py-1 rounded-md">
+                      Each biweekly visit runs up to two hours
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed">
+                    <strong>Scope:</strong> Each biweekly visit provides everything in Plan 1, plus proactive hazard clearing performed during the same visit. This includes: verifying and improving lighting at key entrances and along stairs, hallways, and walkways by swapping in brighter LED bulbs and placing plug-in, battery, or solar nightlights and motion lights (no wiring); clearing clutter and obstacles from walkways, hallways, stairs, and entryways to establish clear walking paths; applying anti-slip backing or tape to loose rugs, runners, and stair treads, non-slip strips to bare stairs and to tub and shower surfaces, and foam guards to sharp furniture corners; marking stair edges and steps with high-contrast non-slip tape, adding clear hot/cold water indicators, and applying easy-to-read overlays on stove and appliance controls; securing loose cords along baseboards with safety clips; stabilizing unstable furniture; at the resident&apos;s direction, moving critical items such as a cane, phone, or eyeglasses within safe reach, and relocating frequently used items from unsafe high or low storage to a safer, reachable height where it reduces a clear fall or strain hazard; manual testing and battery replacement for smoke and carbon monoxide alarms; checking fire-extinguisher condition and expiration dates; testing that emergency alert and medical-alert devices are charged and connected to the home Wi-Fi network; mounting lightweight fire extinguishers in high-risk areas; posting emergency contact cards and exit-route plans; checking that water temperature settings remain below 120&deg;F; and addressing an immediate wet-floor or spill-related slip hazard identified during the visit, such as drying the affected area or placing a temporary caution marker, so the hazard does not persist between visits. This plan does not include general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
                   </p>
-                  <span className="text-[11px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                    Time: Up to 2 hours
-                  </span>
                 </div>
-                <p className="mt-1.5 text-xs leading-relaxed">
-                  <strong>Scope:</strong> Each biweekly visit provides everything in Plan 1, plus proactive hazard clearing performed during the same visit. This includes: verifying and improving lighting at key entrances and along stairs, hallways, and walkways by swapping in brighter LED bulbs and placing plug-in, battery, or solar nightlights and motion lights (no wiring); clearing clutter and obstacles from walkways, hallways, stairs, and entryways to establish clear walking paths; applying anti-slip backing or tape to loose rugs, runners, and stair treads, non-slip strips to bare stairs and to tub and shower surfaces, and foam guards to sharp furniture corners; marking stair edges and steps with high-contrast non-slip tape, adding clear hot/cold water indicators, and applying easy-to-read overlays on stove and appliance controls; securing loose cords along baseboards with safety clips; stabilizing unstable furniture; at the resident&apos;s direction, moving critical items such as a cane, phone, or eyeglasses within safe reach, and relocating frequently used items from unsafe high or low storage to a safer, reachable height where it reduces a clear fall or strain hazard; manual testing and battery replacement for smoke and carbon monoxide alarms; checking fire-extinguisher condition and expiration dates; testing that emergency alert and medical-alert devices are charged and connected to the home Wi-Fi network; mounting lightweight fire extinguishers in high-risk areas; posting emergency contact cards and exit-route plans; checking that water temperature settings remain below 120&deg;F; and addressing an immediate wet-floor or spill-related slip hazard identified during the visit, such as drying the affected area or placing a temporary caution marker, so the hazard does not persist between visits. This plan does not include general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
-                </p>
-              </div>
             </div>
           </div>
         </div>
