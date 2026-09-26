@@ -234,7 +234,7 @@ export default function AppointmentsPage() {
               <XCircle className="w-5 h-5 text-rose-600" />
               <span>Cancelled Visits {isApptLoading ? "" : `(${cancelledVisits.length})`}</span>
             </h2>
-            <span className="text-xs text-[#64748B]">Entitlement quota restored</span>
+            {/* <span className="text-xs text-[#64748B]">Entitlement quota restored</span> */}
           </div>
 
           {isApptLoading ? (

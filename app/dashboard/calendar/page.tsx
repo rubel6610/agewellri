@@ -119,20 +119,22 @@ export default function ClientCalendarPage() {
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
+  // Filter out cancelled, no_show, and declined appointments
+  const activeAppointments = useMemo(() => {
+    return appointments.filter((a) => {
+      const st = (a.status || "").toLowerCase();
+      return st !== "cancelled" && st !== "no_show" && st !== "declined";
+    });
+  }, [appointments]);
+
   // Next upcoming active appointment
   const nextAppointment = useMemo(() => {
-    const active = appointments.filter(
-      (a) =>
-        a.status === "scheduled" ||
-        a.status === "confirmed" ||
-        a.status === "rescheduled"
-    );
-    if (active.length === 0) return null;
+    if (activeAppointments.length === 0) return null;
 
-    return [...active].sort(
+    return [...activeAppointments].sort(
       (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
     )[0];
-  }, [appointments]);
+  }, [activeAppointments]);
 
   // Calendar Date Calculations
   const year = currentDate.getFullYear();
@@ -162,29 +164,37 @@ export default function ClientCalendarPage() {
     return `${y}-${mm}-${dd}`;
   };
 
-  // Helper to extract "YYYY-MM-DD" from appointment startAt
+  // Helper to extract "YYYY-MM-DD" from appointment startAt or date
   const getApptDateKey = (appt: AppointmentItem): string => {
-    if (appt.startAt) {
-      const d = new Date(appt.startAt);
+    if (appt.startAt && typeof appt.startAt === "string" && /^\d{4}-\d{2}-\d{2}/.test(appt.startAt)) {
+      return appt.startAt.split("T")[0];
+    }
+    if (appt.date && typeof appt.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(appt.date.trim())) {
+      return appt.date.trim();
+    }
+    if (appt.date && typeof appt.date === "string") {
+      const d = new Date(appt.date);
       if (!isNaN(d.getTime())) {
         return formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
       }
     }
-    return appt.date || "";
+    return "";
   };
 
-  // Map appointments by dateKey
+  // Map active (non-cancelled) appointments by dateKey
   const appointmentsByDate = useMemo(() => {
     const map: Record<string, AppointmentItem[]> = {};
-    for (const appt of appointments) {
+    for (const appt of activeAppointments) {
       const key = getApptDateKey(appt);
-      if (!map[key]) {
-        map[key] = [];
+      if (key) {
+        if (!map[key]) {
+          map[key] = [];
+        }
+        map[key].push(appt);
       }
-      map[key].push(appt);
     }
     return map;
-  }, [appointments]);
+  }, [activeAppointments]);
 
   // Generate 42 calendar grid cells (6 weeks)
   const calendarCells = useMemo(() => {
@@ -249,6 +259,7 @@ export default function ClientCalendarPage() {
     if (!confirmed) return;
 
     try {
+      showToast("Cancelling scheduled visit...", "info");
       await cancelAppointment({
         id: appt.id,
         reason: "Client cancelled from Calendar portal",
@@ -379,9 +390,7 @@ export default function ClientCalendarPage() {
                         <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
                         <span className="truncate">{item.serviceName}:</span>
                       </span>
-                      <span className="text-[#294B68] shrink-0">
-                        {item.completed}/{item.allocated} done ({item.remaining} left)
-                      </span>
+                 
                     </div>
                     <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
                       <div
@@ -524,15 +533,23 @@ export default function ClientCalendarPage() {
                           const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
                           const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                           const Icon = style.icon;
+                          const timeShort = appt.timeSlot ? appt.timeSlot.split("–")[0].trim() : "";
 
                           return (
                             <button
                               key={appt.id}
                               onClick={() => setSelectedAppointment(appt)}
-                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${style.cellBg} ${style.cellText} border ${style.cellBorder}`}
+                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center justify-between gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${style.cellBg} ${style.cellText} border ${style.cellBorder}`}
                             >
-                              <Icon className={`w-2.5 h-2.5 ${style.iconColor} shrink-0`} />
-                              <span className="truncate">{appt.serviceType}</span>
+                              <div className="flex items-center gap-1 truncate min-w-0">
+                                <Icon className={`w-2.5 h-2.5 ${style.iconColor} shrink-0`} />
+                                <span className="truncate">{appt.serviceType}</span>
+                              </div>
+                              {timeShort && (
+                                <span className="text-[9px] font-mono font-bold shrink-0 opacity-80 bg-white/60 px-1 rounded">
+                                  {timeShort}
+                                </span>
+                              )}
                             </button>
                           );
                         })}
@@ -553,13 +570,13 @@ export default function ClientCalendarPage() {
                 <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
                 <span className="font-bold text-xs">Loading appointments...</span>
               </div>
-            ) : appointments.length === 0 ? (
+            ) : activeAppointments.length === 0 ? (
               <div className="p-12 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-                No visits scheduled yet.
+                No active visits scheduled yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {appointments.map((appt) => {
+                {activeAppointments.map((appt) => {
                   const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
                   const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                   const Icon = style.icon;
@@ -737,18 +754,32 @@ export default function ClientCalendarPage() {
                       type="button"
                       disabled={isCancelling}
                       onClick={() => handleCancelAppointment(selectedAppointment)}
-                      className="text-xs font-bold text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 cursor-pointer"
+                      className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                        isCancelling
+                          ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
+                          : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
+                      }`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Cancel Visit</span>
+                      {isCancelling ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                          <span className="font-extrabold">Cancelling Visit...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <span>Cancel Visit</span>
+                        </>
+                      )}
                     </button>
                   )}
               </div>
 
               <button
                 type="button"
+                disabled={isCancelling}
                 onClick={() => setSelectedAppointment(null)}
-                className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50"
               >
                 Close Details
               </button>

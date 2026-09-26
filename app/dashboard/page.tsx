@@ -57,53 +57,40 @@ export default function DashboardHomePage() {
       })} – ${periodEndFormatted}`
     : "Current Period";
 
-  // Service Begins: First day of commencement month (e.g. October 1, 2026)
-  const serviceBeginsFormatted = (() => {
+  // Resolve base Service Commencement Date as a Date object
+  const serviceBeginsDate = (() => {
     if (billingRes?.data?.serviceCommencementDate) {
       const parsed = new Date(billingRes.data.serviceCommencementDate);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      }
+      if (!isNaN(parsed.getTime())) return parsed;
     }
     if (billingRes?.data?.firstBillingDate) {
       const parsed = new Date(billingRes.data.firstBillingDate);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      }
+      if (!isNaN(parsed.getTime())) return parsed;
     }
     if (entitlementsData?.billingPeriod?.startDate) {
       const parsed = new Date(entitlementsData.billingPeriod.startDate);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
-      }
+      if (!isNaN(parsed.getTime())) return parsed;
     }
     const now = new Date();
-    const currentMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1);
-    return currentMonthFirst.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    return new Date(now.getFullYear(), now.getMonth() + 1, 1);
   })();
 
-  // Next Monthly Renewal: ALWAYS the 1st of the next month (e.g. November 1, 2026 for an Oct cycle)
+  // Service Begins: 1st day of commencement month (e.g. October 1, 2026 for a Sept signup)
+  const serviceBeginsFormatted = serviceBeginsDate.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  // Next Monthly Renewal: ALWAYS the 1st of the month AFTER Service Begins (e.g. November 1, 2026 for an Oct commencement)
   const nextRenewalFormatted = (() => {
     if (billingRes?.data?.nextPaymentDate) {
-      const parsed = new Date(billingRes.data.nextPaymentDate);
-      if (!isNaN(parsed.getTime())) {
-        return parsed.toLocaleDateString("en-US", {
+      const parsedNext = new Date(billingRes.data.nextPaymentDate);
+      if (
+        !isNaN(parsedNext.getTime()) &&
+        parsedNext.getTime() > serviceBeginsDate.getTime()
+      ) {
+        return parsedNext.toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
           year: "numeric",
@@ -111,15 +98,9 @@ export default function DashboardHomePage() {
       }
     }
 
-    const refDate = entitlementsData?.billingPeriod?.startDate
-      ? new Date(entitlementsData.billingPeriod.startDate)
-      : entitlementsData?.billingPeriod?.endDate
-      ? new Date(entitlementsData.billingPeriod.endDate)
-      : new Date();
-
     const nextMonthFirst = new Date(
-      refDate.getFullYear(),
-      refDate.getMonth() + 1,
+      serviceBeginsDate.getFullYear(),
+      serviceBeginsDate.getMonth() + 1,
       1
     );
 
@@ -169,6 +150,11 @@ export default function DashboardHomePage() {
       ? entitlementsData.totalCompleted
       : safetyCompleted;
 
+  const scheduledVisits =
+    entitlementsData?.totalScheduled !== undefined && entitlementsData.totalScheduled >= 0
+      ? entitlementsData.totalScheduled
+      : 0;
+
   const remainingVisits =
     entitlementsData?.totalRemaining !== undefined && entitlementsData.totalAllocated && entitlementsData.totalAllocated > 0
       ? entitlementsData.totalRemaining
@@ -180,6 +166,7 @@ export default function DashboardHomePage() {
     renewalDate: isPlanCancelled ? serviceEndDateFormatted : nextRenewalFormatted,
     totalVisits,
     completedVisits,
+    scheduledVisits,
     remainingVisits,
     safetyVisitsTotal: safetyTotal,
     safetyVisitsCompleted: safetyCompleted,
