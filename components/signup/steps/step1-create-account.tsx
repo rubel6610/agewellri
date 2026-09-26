@@ -149,7 +149,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
         err?.data?.message ||
         err?.message ||
         (typeof err?.data?.errors === "string" ? err.data.errors : null) ||
-        "An error occurred while creating your account. The email may already be in use.";
+        "An error occurred while creating your account. ";
       setErrorMessage(msg);
     }
   };

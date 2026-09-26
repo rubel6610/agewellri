@@ -72,6 +72,7 @@ export function SignupWizard({
         sessionStorage.removeItem("agewellri_signup_step5");
         sessionStorage.removeItem("agewellri_signup_step6");
         sessionStorage.removeItem("agewellri_signup_step7");
+        sessionStorage.removeItem("agewellri_register_form_draft");
       } catch (e) {
         console.error("Error clearing signup storage:", e);
       }
@@ -212,6 +213,10 @@ export function SignupWizard({
 
   useEffect(() => {
     if (mounted && typeof window !== "undefined") {
+      if (currentStep >= 9) {
+        clearSignupStorage();
+        return;
+      }
       try {
         sessionStorage.setItem(
           "agewellri_signup_wizard_state",
