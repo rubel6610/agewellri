@@ -279,7 +279,6 @@ export default function ClientCalendarPage() {
     }
   };
 
-  const planName = entitlementData?.planName || "Service Plan";
   const totalRemaining = entitlementData?.totalRemaining ?? 0;
   const totalAllocated = entitlementData?.totalAllocated ?? totalRemaining;
   const entitlementsList = entitlementData?.entitlements || [];
@@ -289,14 +288,9 @@ export default function ClientCalendarPage() {
       {/* Top Header & Scheduling CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
-              Safety Oversight Calendar
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
-              {planName}
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
+            Safety Oversight Calendar
+          </h1>
           <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium mt-1">
             View upcoming and past safety check-ins and manage your scheduled visits
           </p>

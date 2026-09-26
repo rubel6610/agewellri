@@ -2,16 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock, Sparkles, FileCheck2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { ServicePlan } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetVisitEntitlementsQuery, useGetBillingOverviewQuery } from "@/redux/features/payment/paymentApi";
-import { useGetMyReportsQuery } from "@/redux/features/report/reportApi";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { NextVisitCard } from "@/components/dashboard/next-visit-card";
 import { VisitEntitlementsCard } from "@/components/dashboard/visit-entitlements-card";
-import { ReportCard } from "@/components/dashboard/report-card";
 import { OnboardingBanner } from "@/components/dashboard/onboarding-banner";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
 
@@ -22,11 +20,9 @@ export default function DashboardHomePage() {
   const { data: entitlementsRes, isLoading: isEntitlementsLoading, refetch: refetchEntitlements } = useGetVisitEntitlementsQuery();
   const { data: billingRes, isLoading: isBillingLoading, refetch: refetchBilling } = useGetBillingOverviewQuery();
   const { data: apptsRes, isLoading: isApptsLoading } = useGetMyAppointmentsQuery();
-  const { data: reportsRes, isLoading: isReportsLoading } = useGetMyReportsQuery();
 
   const realAppointments = apptsRes?.data || [];
   const entitlementsData = entitlementsRes?.data;
-  const dynamicReports = reportsRes?.data || [];
 
   // Dynamic user data
   const firstName = authUser?.firstName || "Member";
@@ -239,120 +235,6 @@ export default function DashboardHomePage() {
 
       {/* Level 1.5: Dynamic Visit Entitlements Breakdown */}
       <VisitEntitlementsCard />
-
-      {/* Level 2: Renewal Alert Banner / Cancellation Notice */}
-      {isPlanCancelled ? (
-        <div className="p-5 sm:p-6 bg-amber-50 rounded-2xl sm:rounded-3xl border border-amber-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-amber-100 text-amber-800 rounded-xl shrink-0">
-              <Clock className="w-5 h-5 text-amber-700" />
-            </div>
-            <div>
-              <h4 className="font-bold text-amber-900 text-base">
-                Automatic Renewal Cancelled
-              </h4>
-              <p className="text-xs sm:text-sm text-amber-800 mt-0.5">
-                Your AgeWellRI coverage remains active through{" "}
-                {isBillingLoading ? (
-                  <span className="inline-block h-3 bg-amber-200 rounded w-20 align-middle animate-pulse" />
-                ) : (
-                  <strong>{serviceEndDateFormatted}</strong>
-                )}
-                . You will not be billed for subsequent monthly periods.
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href="/dashboard/billing"
-            className="text-xs font-bold text-amber-900 hover:text-amber-950 underline shrink-0"
-          >
-            Manage Subscription →
-          </Link>
-        </div>
-      ) : (
-        <div className="p-5 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-[#EAF3F8] text-[#294B68] rounded-xl shrink-0">
-              <Sparkles className="w-5 h-5 text-[#294B68]" />
-            </div>
-            <div>
-              <h4 className="font-bold text-[#243746] text-base">
-                Monthly Renewal Notice
-              </h4>
-              <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
-                Your next AgeWellRI monthly period begins on{" "}
-                {isEntitlementsLoading ? (
-                  <span className="inline-block h-3 bg-[#E2E8F0] rounded w-20 align-middle animate-pulse" />
-                ) : (
-                  <strong>{nextRenewalFormatted}</strong>
-                )}{" "}
-                ({dynamicPlan.totalVisits} visits included).
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href="/dashboard/billing"
-            className="text-xs font-bold text-[#294B68] hover:text-[#5E8FB2] underline shrink-0"
-          >
-            View Billing &amp; Subscription →
-          </Link>
-        </div>
-      )}
-
-      {/* Level 3: Recent Reports Overview */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-[#243746]">Recent Home Reports</h2>
-            <p className="text-xs text-[#64748B]">Age Safe® Home Score™ assessment documents</p>
-          </div>
-
-          <Link
-            href="/dashboard/reports"
-            className="text-xs sm:text-sm font-bold text-[#5E8FB2] hover:text-[#294B68] flex items-center gap-1 hover:underline"
-          >
-            <span>View All Reports ({dynamicReports.length})</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        {isReportsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
-                <div className="flex justify-between items-center">
-                  <div className="h-5 bg-[#E2E8F0] rounded-md w-36"></div>
-                  <div className="h-5 bg-[#E2E8F0] rounded-full w-20"></div>
-                </div>
-                <div className="h-3 bg-[#F1F5F9] rounded-md w-full"></div>
-                <div className="h-3 bg-[#F1F5F9] rounded-md w-3/4"></div>
-                <div className="pt-4 border-t border-[#D9E4EC]/60 flex justify-between items-center">
-                  <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
-                  <div className="h-9 bg-[#E2E8F0] rounded-xl w-28"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : dynamicReports.length === 0 ? (
-          <div className="p-8 sm:p-10 text-center bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] space-y-3">
-            <div className="w-12 h-12 bg-[#EAF3F8] text-[#294B68] rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
-              <FileCheck2 className="w-6 h-6 text-[#294B68]" />
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-[#243746]">No Assessment Reports Yet</h3>
-            <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto">
-              Your certified specialist will generate and upload your official Age Safe® Home Score™ assessment report following your completed home safety visit.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {dynamicReports.slice(0, 2).map((rep) => (
-              <ReportCard key={rep.id} report={rep} />
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Schedule Visit Modal */}
       <ScheduleVisitModal

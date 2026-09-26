@@ -263,7 +263,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     }
   }, [isOpen, isAdvanceBooking, periodStartDateStr]);
 
-  // Find first available working day (not Sun=0, not Wed=3) on or after commencement
+  // Find first available working day (not Sun=0, not Wed=3) on or after commencement that DOES NOT have a scheduled visit
   useEffect(() => {
     if (isOpen && !selectedDate) {
       const now = new Date();
@@ -275,8 +275,17 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       }
 
-      // Loop until we find a working day (Mon, Tue, Thu, Fri, Sat)
-      while (d.getDay() === 0 || d.getDay() === 3) {
+      // Loop until we find a working day (Mon, Tue, Thu, Fri, Sat) WITHOUT an active booked visit
+      while (
+        d.getDay() === 0 ||
+        d.getDay() === 3 ||
+        activeAppointments.some((a) => {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return getApptDateFormatted(a) === `${y}-${m}-${day}`;
+        })
+      ) {
         d.setDate(d.getDate() + 1);
       }
 
@@ -285,7 +294,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       const dayStr = String(d.getDate()).padStart(2, "0");
       setSelectedDate(`${yearStr}-${monthStr}-${dayStr}`);
     }
-  }, [isOpen, isAdvanceBooking, periodStartDateStr, selectedDate]);
+  }, [isOpen, isAdvanceBooking, periodStartDateStr, selectedDate, activeAppointments]);
 
   useEffect(() => {
     if (entitlements.length > 0 && !selectedServiceTypeId) {
@@ -748,11 +757,12 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                       new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate()).getTime() > dayDate.getTime()
                     );
 
-                    const isDisabled = Boolean(isWeekend || isPast || isBeforeCommence);
-                    const isSelected = selectedDate === dayStr;
-                    const isToday = todayMidnight.getTime() === dayDate.getTime();
                     const dayBookedAppts = activeAppointments.filter((a) => getApptDateFormatted(a) === dayStr);
                     const hasBookedVisits = dayBookedAppts.length > 0;
+
+                    const isDisabled = Boolean(isWeekend || isPast || isBeforeCommence || hasBookedVisits);
+                    const isSelected = selectedDate === dayStr;
+                    const isToday = todayMidnight.getTime() === dayDate.getTime();
 
                     cells.push(
                       <button
@@ -768,18 +778,18 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                             : isPast
                             ? "Past date cannot be scheduled."
                             : hasBookedVisits
-                            ? `Scheduled Visit on this day: ${dayBookedAppts.map(a => a.timeSlot).join(", ")}`
+                            ? `Visit already scheduled on this date (${dayBookedAppts.map(a => a.timeSlot || "Scheduled").join(", ")}). Date is disabled.`
                             : `${dayDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
                         }
                         className={`h-11 w-full rounded-xl text-xs flex flex-col items-center justify-center transition-all relative ${
                           isSelected
                             ? "bg-[#294B68] text-white font-extrabold shadow-sm ring-2 ring-[#294B68]"
+                            : hasBookedVisits
+                            ? "bg-rose-100/90 text-rose-950 font-bold border-2 border-rose-400 cursor-not-allowed shadow-none"
                             : isDisabled
                             ? isWeekend
                               ? "bg-rose-50/60 text-rose-300 line-through cursor-not-allowed border border-rose-100/50"
                               : "text-slate-300 bg-slate-100/40 cursor-not-allowed"
-                            : hasBookedVisits
-                            ? "bg-rose-50/90 text-rose-950 font-bold border border-rose-300 hover:bg-rose-100 cursor-pointer"
                             : isToday
                             ? "bg-[#EAF3F8] text-[#294B68] font-bold border border-[#5E8FB2] hover:bg-[#294B68] hover:text-white cursor-pointer"
                             : "bg-white text-[#243746] font-semibold border border-[#D9E4EC]/70 hover:bg-[#EAF3F8] hover:border-[#5E8FB2] cursor-pointer"
@@ -788,9 +798,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         <span>{day}</span>
                         {hasBookedVisits && (
                           <span className={`text-[8px] font-extrabold uppercase px-1 py-0.2 rounded mt-0.5 leading-none ${
-                            isSelected ? "bg-rose-500 text-white" : "bg-rose-200 text-rose-900 border border-rose-300"
+                            isSelected ? "bg-rose-500 text-white" : "bg-rose-200 text-rose-900 border border-rose-400"
                           }`}>
-                            {dayBookedAppts.length} Booked
+                            Scheduled
                           </span>
                         )}
                       </button>
@@ -809,7 +819,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-200 border border-rose-400" />
-                  <span className="text-rose-800 font-semibold">Has Scheduled Visit</span>
+                  <span className="text-rose-800 font-semibold">Already Scheduled (Date Disabled)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-100 border border-rose-300" />
@@ -845,10 +855,18 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               </button>
               <button
                 type="button"
-                disabled={!selectedDate}
+                disabled={!selectedDate || activeAppointments.some((a) => getApptDateFormatted(a) === selectedDate)}
                 onClick={() => {
                   if (!selectedDate) {
                     showErrorAlert("Please Select a Date", "Please click an available date on the calendar.");
+                    return;
+                  }
+
+                  if (activeAppointments.some((a) => getApptDateFormatted(a) === selectedDate)) {
+                    showErrorAlert(
+                      "Date Already Scheduled",
+                      "A visit is already scheduled on this date. Please select an open date on the calendar."
+                    );
                     return;
                   }
 
@@ -878,12 +896,14 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                   setStep(3);
                 }}
                 className={`w-2/3 py-3 font-bold rounded-xl shadow-xs transition-all ${
-                  !selectedDate
+                  !selectedDate || activeAppointments.some((a) => getApptDateFormatted(a) === selectedDate)
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                     : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
                 }`}
               >
-                Select Time Window →
+                {activeAppointments.some((a) => getApptDateFormatted(a) === selectedDate)
+                  ? "Date Already Scheduled"
+                  : "Select Time Window →"}
               </button>
             </div>
           </div>
@@ -1051,7 +1071,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
             <div className="p-3 bg-[#EAF3F8] rounded-xl border border-[#5E8FB2]/30 flex items-start gap-2 text-xs text-[#243746]">
               <Info className="w-4 h-4 text-[#294B68] shrink-0 mt-0.5" />
               <span>
-                Your plan includes <strong>{planDurationHours} {planDurationHours === 1 ? "hour" : "hours"}</strong> per scheduled visit. Visits can be scheduled between <strong>8:00 AM and 6:00 PM EST</strong> on working days (Monday, Tuesday, Thursday, Friday, and Saturday).
+                Your plan includes up to  <strong>{planDurationHours} {planDurationHours === 1 ? "hour" : "hours"}</strong> per scheduled visit. Visits can be scheduled between <strong>8:00 AM and 6:00 PM ET</strong> on available days (Monday, Tuesday, Thursday, Friday, and Saturday).
               </span>
             </div>
 
