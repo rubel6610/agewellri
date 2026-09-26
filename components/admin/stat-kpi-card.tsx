@@ -5,7 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 interface StatKpiCardProps {
   title: string;
   value: string | number;
-  subtitle: string;
+  subtitle?: string;
   icon: React.ReactNode;
   href?: string;
   urgent?: boolean;
@@ -14,13 +14,13 @@ interface StatKpiCardProps {
 export function StatKpiCard({ title, value, subtitle, icon, href, urgent }: StatKpiCardProps) {
   const content = (
     <div
-      className={`p-5 rounded-2xl border transition-all shadow-xs flex flex-col justify-between space-y-3 ${
+      className={`h-full p-5 rounded-2xl border transition-all shadow-xs flex flex-col justify-between space-y-3 ${
         urgent
           ? "bg-amber-50/50 border-[#C28A3A]/40 hover:border-[#C28A3A]"
           : "bg-white border-[#D9E4EC] hover:border-[#5E8FB2]"
       }`}
     >
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-2">
         <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
           {title}
         </span>
@@ -40,19 +40,25 @@ export function StatKpiCard({ title, value, subtitle, icon, href, urgent }: Stat
             </span>
           )}
         </div>
-        <p
-          className={`text-xs font-semibold mt-1 ${
-            urgent ? "text-[#C28A3A]" : "text-[#64748B]"
-          }`}
-        >
-          {subtitle}
-        </p>
+        {subtitle && (
+          <p
+            className={`text-xs font-semibold mt-1 ${
+              urgent ? "text-[#C28A3A]" : "text-[#64748B]"
+            }`}
+          >
+            {subtitle}
+          </p>
+        )}
       </div>
     </div>
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} className="h-full block">
+        {content}
+      </Link>
+    );
   }
 
   return content;

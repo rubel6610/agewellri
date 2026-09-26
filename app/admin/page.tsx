@@ -67,8 +67,8 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Primary KPI Cards Grid Skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, idx) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, idx) => (
             <div
               key={idx}
               className="p-5 rounded-2xl border border-[#D9E4EC] bg-white flex flex-col justify-between space-y-3 shadow-xs"
@@ -304,11 +304,10 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Primary KPI Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatKpiCard
           title="Active Clients"
           value={kpis?.activeClientsCount ?? 0}
-          subtitle={`+${kpis?.newClientsThisMonth ?? 0} this month`}
           icon={<Users className="w-5 h-5 text-[#294B68]" />}
           href="/admin/clients"
         />
@@ -316,24 +315,14 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Pending Payments"
           value={kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0}
-          subtitle="Awaiting payment"
           icon={<CreditCard className="w-5 h-5 text-[#C28A3A]" />}
           href="/admin/billing"
           urgent={(kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0) > 0}
         />
 
         <StatKpiCard
-          title="Upcoming Visits"
-          value={kpis?.upcomingVisitsCount ?? 0}
-          subtitle="Next 7 days"
-          icon={<CalendarCheck className="w-5 h-5 text-[#294B68]" />}
-          href="/admin/appointments"
-        />
-
-        <StatKpiCard
           title="Pending Reports"
           value={kpis?.reportsPendingCount ?? 0}
-          subtitle="Completed visits"
           icon={<FileCheck2 className="w-5 h-5 text-[#C95C5C]" />}
           href="/admin/appointments?tab=COMPLETED"
           urgent={(kpis?.reportsPendingCount ?? 0) > 0}
@@ -342,7 +331,6 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Agreements Executed"
           value={kpis?.executedAgreementsCount ?? 0}
-          subtitle={`${kpis?.pendingAgreementsCount ?? 0} pending sign`}
           icon={<ShieldCheck className="w-5 h-5 text-[#3F8F6B]" />}
           href="/admin/agreements"
         />
@@ -350,7 +338,6 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Renewals in 30d"
           value={kpis?.renewalsUpcomingCount ?? 0}
-          subtitle="Monthly cycles"
           icon={<RefreshCw className="w-5 h-5 text-[#5E8FB2]" />}
           href="/admin/subscriptions"
         />
