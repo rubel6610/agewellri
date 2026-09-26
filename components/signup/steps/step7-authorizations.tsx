@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AlertTriangle, CreditCard, HeartHandshake, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Step7AuthorizationsProps {
@@ -27,6 +27,7 @@ export function Step7Authorizations({
   onSave,
   onBack,
 }: Step7AuthorizationsProps) {
+  const [mounted, setMounted] = useState(false);
   const [authorizations, setAuthorizations] = useState({
     emergencyRightOfEntry: initialAuthorizations?.emergencyRightOfEntry ?? false,
     residentAutonomyAcknowledgment:
@@ -34,6 +35,31 @@ export function Step7Authorizations({
     automaticBillingAuthorization:
       initialAuthorizations?.automaticBillingAuthorization ?? false,
   });
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_signup_step7");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setAuthorizations((prev) => ({ ...prev, ...parsed }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore step7 form data:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("agewellri_signup_step7", JSON.stringify(authorizations));
+      } catch (err) {
+        console.error("Failed to save step7 form data:", err);
+      }
+    }
+  }, [authorizations, mounted]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

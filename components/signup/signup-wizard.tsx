@@ -62,11 +62,49 @@ export function SignupWizard({
 
   const [mounted, setMounted] = useState(false);
 
+  const clearSignupStorage = () => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("agewellri_signup_wizard_state");
+        sessionStorage.removeItem("agewellri_signup_step1");
+        sessionStorage.removeItem("agewellri_signup_step3");
+        sessionStorage.removeItem("agewellri_signup_step4");
+        sessionStorage.removeItem("agewellri_signup_step5");
+        sessionStorage.removeItem("agewellri_signup_step6");
+        sessionStorage.removeItem("agewellri_signup_step7");
+        sessionStorage.removeItem("agewellri_register_form_draft");
+      } catch (e) {
+        console.error("Error clearing signup storage:", e);
+      }
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
+    try {
+      const savedState = sessionStorage.getItem("agewellri_signup_wizard_state");
+      if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed) {
+          if (parsed.currentStep && typeof parsed.currentStep === "number") {
+            setCurrentStep(parsed.currentStep);
+          }
+          if (parsed.accountData) setAccountData(parsed.accountData);
+          if (parsed.planData) setPlanData(parsed.planData);
+          if (parsed.residentData) setResidentData(parsed.residentData);
+          if (parsed.authorizedRecipients) setAuthorizedRecipients(parsed.authorizedRecipients);
+          if (parsed.homeAccessData) setHomeAccessData(parsed.homeAccessData);
+          if (parsed.signingData) setSigningData(parsed.signingData);
+          if (parsed.authorizationsData) setAuthorizationsData(parsed.authorizationsData);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore signup wizard state:", err);
+    }
   }, []);
 
   const handleLogout = () => {
+    clearSignupStorage();
     dispatch(logout());
     router.replace("/login");
   };
@@ -172,6 +210,42 @@ export function SignupWizard({
     residentAutonomyAcknowledgment: false,
     automaticBillingAuthorization: false,
   });
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      if (currentStep >= 9) {
+        clearSignupStorage();
+        return;
+      }
+      try {
+        sessionStorage.setItem(
+          "agewellri_signup_wizard_state",
+          JSON.stringify({
+            currentStep,
+            accountData,
+            planData,
+            residentData,
+            authorizedRecipients,
+            homeAccessData,
+            signingData,
+            authorizationsData,
+          })
+        );
+      } catch (err) {
+        console.error("Failed to persist signup wizard state:", err);
+      }
+    }
+  }, [
+    mounted,
+    currentStep,
+    accountData,
+    planData,
+    residentData,
+    authorizedRecipients,
+    homeAccessData,
+    signingData,
+    authorizationsData,
+  ]);
 
   // Calculate dynamic 1st of next month
   const now = new Date();
@@ -377,6 +451,7 @@ export function SignupWizard({
         }
       }
 
+      clearSignupStorage();
       setCurrentStep(9);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
@@ -596,7 +671,6 @@ export function SignupWizard({
         </div>
         <div className="flex items-center justify-center gap-3 font-medium">
           <Link
-            target="_blank"
             href="/privacy-policy"
             className="hover:text-[#294B68] underline"
           >
@@ -604,7 +678,6 @@ export function SignupWizard({
           </Link>
           <span className="text-[#D9E4EC]" aria-hidden="true">•</span>
           <Link
-            target="_blank"
             href="/terms-of-use"
             className="hover:text-[#294B68] underline"
           >
