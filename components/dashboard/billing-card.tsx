@@ -270,11 +270,11 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <ShieldCheck className="w-5 h-5 text-[#3F8F6B] shrink-0 mt-0.5" />
               <div className="text-xs sm:text-sm text-[#243746] min-w-0 leading-relaxed">
                 <p>
-                  Your service begins <strong>{billing.nextPaymentDate}</strong>.
+                  Your service begins <strong>{commencementDateStr || billing.nextPaymentDate}</strong>.
                 </p>
                 {billing.cancellationCutoffDate && (
                   <p className="text-xs text-[#64748B] mt-0.5">
-                    You were not charged at signup. You may cancel anytime before <strong>{billing.nextPaymentDate.split(",")[0]}</strong> at no charge. After service begins, automatic monthly renewal applies, and you can cancel any future month by giving notice at least 10 days before month-end.
+                    You were not charged at signup. You may cancel anytime before <strong>{(commencementDateStr || billing.nextPaymentDate).split(",")[0]}</strong> at no charge. After service begins, automatic monthly renewal applies, and you can cancel any future month by giving notice at least 10 days before month-end.
                   </p>
                 )}
               </div>
