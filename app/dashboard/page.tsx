@@ -166,7 +166,7 @@ export default function DashboardHomePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D9E4EC]/60">
         <div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#243746] tracking-tight">
-            Welcome back, {firstName}
+            Welcome, {firstName}
           </h1>
           <p className="text-sm sm:text-base text-[#64748B] mt-1">
             Here is your AgeWellRI service overview and safety schedule.

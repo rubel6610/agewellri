@@ -28,6 +28,20 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
 
   useEffect(() => {
     setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_signup_step1");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore step1 form data:", err);
+    }
   }, []);
 
   const [formData, setFormData] = useState({
@@ -39,6 +53,16 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
     confirmPassword: "",
     agreedToLegal: false,
   });
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("agewellri_signup_step1", JSON.stringify(formData));
+      } catch (err) {
+        console.error("Failed to persist step1 form data:", err);
+      }
+    }
+  }, [formData, mounted]);
 
   useEffect(() => {
     if (initialData?.email || authUser?.email) {
@@ -260,7 +284,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
-              Password * (Min 8 chars)
+              Password *
             </label>
             <div className="relative">
               <input
@@ -321,8 +345,6 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
               I agree to the{" "}
               <Link
                 href="/terms-of-use"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-[#294B68] font-bold underline hover:text-[#1E374D]"
               >
                 Terms of Use
@@ -330,8 +352,6 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
               and{" "}
               <Link
                 href="/privacy-policy"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-[#294B68] font-bold underline hover:text-[#1E374D]"
               >
                 Privacy Policy

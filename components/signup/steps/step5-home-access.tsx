@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Key, DoorClosed, ShieldAlert, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Step5HomeAccessProps {
@@ -20,6 +20,7 @@ interface Step5HomeAccessProps {
 }
 
 export function Step5HomeAccess({ initialData, onSave, onBack }: Step5HomeAccessProps) {
+  const [mounted, setMounted] = useState(false);
   const [accessType, setAccessType] = useState<"RESIDENT_ANSWERS" | "DIGITAL_CODE">(
     initialData?.accessType || "RESIDENT_ANSWERS"
   );
@@ -28,6 +29,38 @@ export function Step5HomeAccess({ initialData, onSave, onBack }: Step5HomeAccess
   const [specialInstructions, setSpecialInstructions] = useState(
     initialData?.specialInstructions || ""
   );
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_signup_step5");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.accessType) setAccessType(parsed.accessType);
+          if (typeof parsed.entryCode === "string") setEntryCode(parsed.entryCode);
+          if (typeof parsed.isAuthorized === "boolean") setIsAuthorized(parsed.isAuthorized);
+          if (typeof parsed.specialInstructions === "string") setSpecialInstructions(parsed.specialInstructions);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore step5 form data:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "agewellri_signup_step5",
+          JSON.stringify({ accessType, entryCode, isAuthorized, specialInstructions })
+        );
+      } catch (err) {
+        console.error("Failed to save step5 form data:", err);
+      }
+    }
+  }, [accessType, entryCode, isAuthorized, specialInstructions, mounted]);
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
