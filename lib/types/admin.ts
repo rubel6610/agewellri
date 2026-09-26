@@ -153,6 +153,7 @@ export interface AdminStats {
   activeClientsCount: number;
   activeClientsDelta: string;
   pendingOnboardingCount: number;
+  pendingPaymentsCount?: number;
   upcomingVisitsCount: number;
   reportsPendingCount: number;
   paymentsDueCount: number;

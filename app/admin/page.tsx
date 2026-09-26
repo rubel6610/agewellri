@@ -314,12 +314,12 @@ export default function AdminOverviewPage() {
         />
 
         <StatKpiCard
-          title="Pending Intakes"
-          value={kpis?.pendingOnboardingCount ?? 0}
-          subtitle="Awaiting onboarding"
-          icon={<UserPlus className="w-5 h-5 text-[#C28A3A]" />}
-          href="/admin/clients"
-          urgent={(kpis?.pendingOnboardingCount ?? 0) > 0}
+          title="Pending Payments"
+          value={kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0}
+          subtitle="Awaiting payment"
+          icon={<CreditCard className="w-5 h-5 text-[#C28A3A]" />}
+          href="/admin/billing"
+          urgent={(kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0) > 0}
         />
 
         <StatKpiCard
