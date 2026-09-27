@@ -15,6 +15,7 @@ export const MOCK_ADMIN_STATS: AdminStats = {
   activeClientsCount: 128,
   activeClientsDelta: "+8 this month",
   pendingOnboardingCount: 7,
+  pendingPaymentsCount: 4,
   upcomingVisitsCount: 18,
   reportsPendingCount: 5,
   paymentsDueCount: 4,

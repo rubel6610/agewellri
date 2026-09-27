@@ -61,6 +61,60 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
     billing.subscriptionStatus === "CANCELLATION_REQUESTED" ||
     billing.subscriptionStatus === "CANCELLED";
 
+  const commencementDateStr = billing.serviceCommencementDate || billing.firstBillingDate;
+  const nextRenewalDisplayDate = (() => {
+    if (isCancelled && billing.cancellationEffectiveAt) {
+      const parsed = new Date(billing.cancellationEffectiveAt);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    const nextPaymentStr = billing.nextPaymentDate;
+    if (commencementDateStr && nextPaymentStr) {
+      const parsedCommencement = new Date(commencementDateStr);
+      const parsedNext = new Date(nextPaymentStr);
+
+      if (!isNaN(parsedCommencement.getTime()) && !isNaN(parsedNext.getTime())) {
+        if (parsedNext.getTime() > parsedCommencement.getTime()) {
+          return nextPaymentStr;
+        }
+        const nextMonth = new Date(
+          parsedCommencement.getFullYear(),
+          parsedCommencement.getMonth() + 1,
+          1
+        );
+        return nextMonth.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    if (commencementDateStr) {
+      const parsedCommencement = new Date(commencementDateStr);
+      if (!isNaN(parsedCommencement.getTime())) {
+        const nextMonth = new Date(
+          parsedCommencement.getFullYear(),
+          parsedCommencement.getMonth() + 1,
+          1
+        );
+        return nextMonth.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    return nextPaymentStr || "Not Scheduled";
+  })();
+
   return (
     <>
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
@@ -112,7 +166,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <p className="mt-0.5 text-sky-950">
                 You were not charged today. Your payment method is securely saved and your first charge of{" "}
                 <strong>{billing.nextPaymentAmount}</strong> will occur on{" "}
-                <strong>{billing.firstBillingDate || billing.nextPaymentDate}</strong>, which is also your official Service Commencement Date. After that, billing recurs automatically on the 1st of each month.
+                <strong>{billing.serviceCommencementDate || billing.firstBillingDate || billing.nextPaymentDate}</strong>, which is also your official Service Commencement Date. After that, billing recurs automatically on the 1st of each month.
               </p>
             </div>
           </div>
@@ -127,7 +181,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </span>
             <span className="text-base font-bold text-[#243746] mt-1 block">
               {billing.isPendingFirstBilling
-                ? (billing.serviceCommencementDate || billing.nextPaymentDate)
+                ? (billing.serviceCommencementDate || billing.firstBillingDate)
                 : (billing.currentPeriod || "Active Month")}
             </span>
             <span className="text-[11px] text-[#64748B]">Frequency: {billing.billingFrequency}</span>
@@ -156,7 +210,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </button>
           </div>
 
-          {/* Next Renewal / First Billing */}
+          {/* Next Renewal / First Billing Date */}
           <div className="p-4 bg-[#EAF3F8]/60 rounded-2xl border border-[#5E8FB2]/30">
             <span className="text-xs text-[#294B68] font-bold block">
               {isCancelled
@@ -168,7 +222,9 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             <div className="flex items-center gap-2 mt-1">
               <Calendar className="w-4 h-4 text-[#294B68]" />
               <span className="text-base font-extrabold text-[#294B68]">
-                {billing.nextPaymentDate}
+                {billing.isPendingFirstBilling
+                  ? (billing.firstBillingDate || billing.serviceCommencementDate || nextRenewalDisplayDate)
+                  : nextRenewalDisplayDate}
               </span>
             </div>
             <span className="text-xs font-semibold text-[#64748B] mt-0.5 block">
@@ -214,11 +270,11 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <ShieldCheck className="w-5 h-5 text-[#3F8F6B] shrink-0 mt-0.5" />
               <div className="text-xs sm:text-sm text-[#243746] min-w-0 leading-relaxed">
                 <p>
-                  Your service begins <strong>{billing.nextPaymentDate}</strong>.
+                  Your service begins <strong>{commencementDateStr || billing.nextPaymentDate}</strong>.
                 </p>
                 {billing.cancellationCutoffDate && (
                   <p className="text-xs text-[#64748B] mt-0.5">
-                    You were not charged at signup. You may cancel anytime before <strong>{billing.nextPaymentDate.split(",")[0]}</strong> at no charge. After service begins, automatic monthly renewal applies, and you can cancel any future month by giving notice at least 10 days before month-end.
+                    You were not charged at signup. You may cancel anytime before <strong>{(commencementDateStr || billing.nextPaymentDate).split(",")[0]}</strong> at no charge. After service begins, automatic monthly renewal applies, and you can cancel any future month by giving notice at least 10 days before month-end.
                   </p>
                 )}
               </div>

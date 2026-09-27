@@ -8,6 +8,7 @@ import {
   useUpdateAppointmentStatusMutation,
   useCancelAppointmentMutation,
   useDeclineVisitRequestMutation,
+  useDeleteAppointmentMutation,
 } from "@/redux/features/appointment/appointmentApi";
 import {
   CalendarCheck,
@@ -24,6 +25,8 @@ import {
   AlertCircle,
   XCircle,
   Calendar,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
@@ -69,6 +72,7 @@ function AppointmentsAdminContent() {
   const [updateStatusMutation] = useUpdateAppointmentStatusMutation();
   const [cancelAppointmentMutation] = useCancelAppointmentMutation();
   const [declineVisitRequestMutation] = useDeclineVisitRequestMutation();
+  const [deleteAppointmentMutation] = useDeleteAppointmentMutation();
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
@@ -79,6 +83,8 @@ function AppointmentsAdminContent() {
 
   const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
   const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
+
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const allAppointments = apptsRes?.data || [];
 
@@ -191,6 +197,28 @@ function AppointmentsAdminContent() {
       showSuccessAlert("Visit Cancelled", "Appointment has been cancelled and visit entitlement restored.");
     } catch (err: any) {
       showErrorAlert("Cancellation Failed", err?.data?.message || "Failed to cancel appointment.");
+    }
+  };
+
+  const handleDeleteVisit = async (appt: any) => {
+    const confirmed = await confirmCriticalAction({
+      title: `Permanently Delete Visit?`,
+      text: `Are you sure you want to permanently delete this cancelled visit for ${appt.clientName} (${appt.date})? This action cannot be undone.`,
+      confirmButtonText: "Yes, Delete Visit",
+      isDestructive: true,
+    });
+
+    if (!confirmed) return;
+
+    setDeletingId(appt.id);
+    try {
+      await deleteAppointmentMutation(appt.id).unwrap();
+      refetch();
+      showSuccessAlert("Visit Deleted", "The cancelled appointment record has been permanently deleted.");
+    } catch (err: any) {
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete appointment.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -607,16 +635,22 @@ function AppointmentsAdminContent() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
-                              onClick={() => {
-                                setSelectedClientId(appt.clientId);
-                                setSelectedClientName(appt.clientName);
-                                setScheduleModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                              title="Rebook new visit for this client"
+                              onClick={() => handleDeleteVisit(appt)}
+                              disabled={deletingId === appt.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Permanently delete this cancelled visit record"
                             >
-                              <Plus className="w-3 h-3" />
-                              <span>Rebook</span>
+                              {deletingId === appt.id ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                                  <span>Deleting...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>Delete</span>
+                                </>
+                              )}
                             </button>
                           </div>
                         )}

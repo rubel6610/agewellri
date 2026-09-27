@@ -88,9 +88,9 @@ export function VisitEntitlementsCard() {
                   </span>
                 </div>
 
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-[#294B68] text-white shrink-0 shadow-2xs">
+                {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-[#294B68] text-white shrink-0 shadow-2xs">
                   {item.allocated} Included
-                </span>
+                </span> */}
               </div>
 
               {/* Progress Bar */}

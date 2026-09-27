@@ -5,13 +5,13 @@ import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointm
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { VisitCard } from "@/components/dashboard/visit-card";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
-import { Calendar, Plus, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Calendar, Plus, CheckCircle2 } from "lucide-react";
 
 export default function AppointmentsPage() {
   const { data: apptRes, isLoading: isApptLoading } = useGetMyAppointmentsQuery();
   const { data: entitlementsRes, isLoading: isEntLoading } = useGetVisitEntitlementsQuery();
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-  const [statusTab, setStatusTab] = useState<"ALL" | "UPCOMING" | "COMPLETED" | "CANCELLED">("ALL");
+  const [statusTab, setStatusTab] = useState<"ALL" | "UPCOMING" | "COMPLETED">("ALL");
 
   const appointments = apptRes?.data || [];
   const entitlementData = entitlementsRes?.data;
@@ -31,11 +31,6 @@ export default function AppointmentsPage() {
 
   const pastVisits = useMemo(
     () => appointments.filter((a) => a.status === "completed"),
-    [appointments]
-  );
-
-  const cancelledVisits = useMemo(
-    () => appointments.filter((a) => (a.status || "").toLowerCase() === "cancelled"),
     [appointments]
   );
 
@@ -87,7 +82,7 @@ export default function AppointmentsPage() {
               : "bg-white text-[#243746] hover:bg-[#EAF3F8] border border-[#D9E4EC]"
           }`}
         >
-          <span>All Visits ({appointments.length})</span>
+          <span>All Active Visits ({upcomingVisits.length + pastVisits.length})</span>
         </button>
 
         <button
@@ -112,18 +107,6 @@ export default function AppointmentsPage() {
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
           <span>Completed Visits ({pastVisits.length})</span>
-        </button>
-
-        <button
-          onClick={() => setStatusTab("CANCELLED")}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-            statusTab === "CANCELLED"
-              ? "bg-rose-600 text-white shadow-xs"
-              : "bg-white text-[#243746] hover:bg-rose-50 border border-[#D9E4EC]"
-          }`}
-        >
-          <XCircle className="w-3.5 h-3.5" />
-          <span>Cancelled Visits ({cancelledVisits.length})</span>
         </button>
       </div>
 
@@ -219,38 +202,6 @@ export default function AppointmentsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {pastVisits.map((appt: any) => (
-                <VisitCard key={appt.id} appointment={appt} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Section 3: Cancelled Visits */}
-      {(statusTab === "ALL" ? cancelledVisits.length > 0 : statusTab === "CANCELLED") && (
-        <div className="space-y-4 pt-4 border-t border-[#D9E4EC]/60">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-rose-800 flex items-center gap-2">
-              <XCircle className="w-5 h-5 text-rose-600" />
-              <span>Cancelled Visits {isApptLoading ? "" : `(${cancelledVisits.length})`}</span>
-            </h2>
-            <span className="text-xs text-[#64748B]">Entitlement quota restored</span>
-          </div>
-
-          {isApptLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-              <div className="p-6 bg-white rounded-3xl border border-[#D9E4EC] space-y-4 shadow-xs">
-                <div className="h-5 bg-[#E2E8F0] rounded-md w-32"></div>
-                <div className="h-4 bg-[#F1F5F9] rounded-md w-48"></div>
-              </div>
-            </div>
-          ) : cancelledVisits.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-              <p>No cancelled visits on record.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {cancelledVisits.map((appt: any) => (
                 <VisitCard key={appt.id} appointment={appt} />
               ))}
             </div>

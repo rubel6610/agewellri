@@ -5,6 +5,7 @@ import Link from "next/link";
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
 import { useAppSelector } from "@/redux/hooks";
+import { isValidEmail } from "@/lib/utils";
 
 interface Step1CreateAccountProps {
   onSuccess: (accountData: {
@@ -25,6 +26,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
   const authUser = useAppSelector((state) => state.auth.user);
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [mounted, setMounted] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -83,6 +85,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setEmailTouched(true);
 
     // If already authenticated and email matches, simply proceed
     if (authUser && authUser.email === formData.email) {
@@ -100,8 +103,9 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
       return;
     }
 
-    if (!formData.email.trim() || !formData.email.includes("@")) {
-      setErrorMessage("Please enter a valid email address.");
+    const cleanEmail = formData.email.trim().toLowerCase();
+    if (!cleanEmail || !isValidEmail(cleanEmail)) {
+      setErrorMessage("Please enter a valid email address (e.g. name@example.com).");
       return;
     }
 
@@ -271,12 +275,25 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (errorMessage?.includes("email")) setErrorMessage(null);
+                }}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="eleanor@example.com"
-                className="w-full h-12 pl-11 pr-4 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all"
+                className={`w-full h-12 pl-11 pr-4 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  emailTouched && formData.email && !isValidEmail(formData.email)
+                    ? "border-red-400 focus:ring-red-400 focus:border-red-500 bg-red-50/30"
+                    : "border-[#D9E4EC] focus:ring-[#5E8FB2]"
+                }`}
               />
               <Mail className="w-5 h-5 text-[#94A3B8] absolute left-3.5 top-3.5" />
             </div>
+            {emailTouched && formData.email && !isValidEmail(formData.email) && (
+              <p className="text-[11px] font-medium text-red-600 mt-1">
+                Please enter a valid email address (e.g. name@example.com).
+              </p>
+            )}
           </div>
         </div>
 

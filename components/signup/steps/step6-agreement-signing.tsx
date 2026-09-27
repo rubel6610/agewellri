@@ -377,7 +377,7 @@ export function Step6AgreementSigning({
                 1. PARTIES, PLANS, &amp; SCOPE OF SERVICE
               </div>
               <p>
-                This Hybrid Services Agreement (the &ldquo;Agreement&rdquo;) is entered into by and between <strong>AgeWellRI LLC</strong> (&ldquo;Company&rdquo;) and the undersigned client and/or responsible family representative (&ldquo;Client&rdquo;): <strong className="text-[#243746]">{residentDetails.fullName || "Client Member"}</strong>, residing at <strong className="text-[#243746]">{residentDetails.address ? `${residentDetails.address}, ${residentDetails.city}, ${residentDetails.state || "RI"} ${residentDetails.postalCode}` : "Address on file"}</strong>. Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.
+                This Hybrid Services Agreement (the &ldquo;Agreement&rdquo;) is entered into by and between <strong>AgeWellRI LLC</strong> (&ldquo;Company&rdquo;) and the undersigned client and/or responsible family representative (&ldquo;Client&rdquo;). Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.
               </p>
 
               <div className="p-3.5 bg-white rounded-xl border border-[#D9E4EC] space-y-3">
@@ -386,65 +386,27 @@ export function Step6AgreementSigning({
                 </div>
 
                 {/* Plan 1 */}
-                <div className={`p-3 rounded-lg border transition-all ${
-                  planDetails.planPrice === 295 || planDetails.planName.toLowerCase().includes("safeguard") || planDetails.planName.toLowerCase().includes("plan 1")
-                    ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
-                    : "bg-slate-50 border-slate-200 text-slate-700"
-                }`}>
-                  <div className="flex items-center gap-2 font-bold text-xs">
-                    <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-[10px] font-bold bg-white text-[#294B68] border-[#294B68]">
-                      {planDetails.planPrice === 295 || planDetails.planName.toLowerCase().includes("safeguard") || planDetails.planName.toLowerCase().includes("plan 1") ? "✓" : ""}
-                    </span>
-                    <span className="font-extrabold text-[#243746]">
-                      PLAN 1: THE PREMIUM SAFETY SAFEGUARD (Environmental Safety Oversight Only)
-                    </span>
-                    {(planDetails.planPrice === 295 || planDetails.planName.toLowerCase().includes("safeguard") || planDetails.planName.toLowerCase().includes("plan 1")) && (
-                      <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
-                        Selected Plan
-                      </span>
-                    )}
+                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 text-slate-700 space-y-1">
+                  <div className="font-extrabold text-xs text-[#243746]">
+                    PLAN 1: THE PREMIUM SAFETY SAFEGUARD (Environmental Safety Oversight Only)
                   </div>
-                  <div className="mt-1 flex items-center gap-3 flex-wrap">
-                    <p className="font-bold text-xs text-[#294B68]">
-                      Rate: $295.00 per  month.
-                    </p>
-                    <span className="text-[10px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                      Time: {formatPlanDuration(1)}
-                    </span>
+                  <div className="text-xs font-bold text-[#294B68]">
+                    Rate: $295.00 per calendar month.
                   </div>
-                  <p className="mt-1 text-[11px] leading-relaxed">
+                  <p className="text-[11px] leading-relaxed">
                     <strong>Scope:</strong> Each biweekly visit provides a dedicated, objective environmental safety assessment of the home. During the visit, an AgeWellRI specialist conducts a structured walkthrough of the home&apos;s key areas &mdash; stairs and circulation, bathrooms, exterior entry, bedrooms and living areas, life-safety systems, and kitchen and laundry &mdash; to identify fall risks, hazards, and safety concerns. The specialist documents each finding with photos, notes recommended corrections, generates a standardized residential safety report, and delivers it to the Client&apos;s designated family dashboard the same day. This plan may include the complimentary minor safety courtesies described in Section 7 (such as replacing a bulb, placing a plug-in nightlight, or securing a loose cord). It does not include the proactive hazard-clearing, item relocation, or expanded mitigation services offered under Plan 2, and does not include any general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
                   </p>
                 </div>
 
                 {/* Plan 2 */}
-                <div className={`p-3 rounded-lg border transition-all ${
-                  planDetails.planPrice === 495 || planDetails.planName.toLowerCase().includes("independence") || planDetails.planName.toLowerCase().includes("plan 2") || (planDetails.planPrice !== 295 && !planDetails.planName.toLowerCase().includes("safeguard"))
-                    ? "bg-[#EAF3F8] border-[#294B68] text-[#243746]"
-                    : "bg-slate-50 border-slate-200 text-slate-700"
-                }`}>
-                  <div className="flex items-center gap-2 font-bold text-xs">
-                    <span className="inline-flex items-center justify-center w-4 h-4 rounded border text-[10px] font-bold bg-white text-[#294B68] border-[#294B68]">
-                      {planDetails.planPrice === 495 || planDetails.planName.toLowerCase().includes("independence") || planDetails.planName.toLowerCase().includes("plan 2") || (planDetails.planPrice !== 295 && !planDetails.planName.toLowerCase().includes("safeguard")) ? "✓" : ""}
-                    </span>
-                    <span className="font-extrabold text-[#243746]">
-                      PLAN 2: THE INDEPENDENCE &amp; UPKEEP PLAN (Comprehensive Home Safety Oversight &amp; Proactive Hazard Removal)
-                    </span>
-                    {(planDetails.planPrice === 495 || planDetails.planName.toLowerCase().includes("independence") || planDetails.planName.toLowerCase().includes("plan 2") || (planDetails.planPrice !== 295 && !planDetails.planName.toLowerCase().includes("safeguard"))) && (
-                      <span className="ml-auto text-[10px] font-bold bg-[#294B68] text-white px-2 py-0.5 rounded-full">
-                        Selected Plan
-                      </span>
-                    )}
+                <div className="p-3 rounded-lg border bg-slate-50 border-slate-200 text-slate-700 space-y-1">
+                  <div className="font-extrabold text-xs text-[#243746]">
+                    PLAN 2: THE INDEPENDENCE &amp; UPKEEP PLAN (Comprehensive Home Safety Oversight &amp; Proactive Hazard Mitigation)
                   </div>
-                  <div className="mt-1 flex items-center gap-3 flex-wrap">
-                    <p className="font-bold text-xs text-[#294B68]">
-                      Rate: ${planDetails.planPrice ? `${planDetails.planPrice}.00` : "495.00"} per month.
-                    </p>
-                    <span className="text-[10px] font-bold text-[#5E8FB2] bg-white border border-[#D9E4EC] px-2 py-0.5 rounded-md">
-                      Time: Up to 2 hours
-                    </span>
+                  <div className="text-xs font-bold text-[#294B68]">
+                    Rate: $495.00 per calendar month.
                   </div>
-                  <p className="mt-1 text-[11px] leading-relaxed">
+                  <p className="text-[11px] leading-relaxed">
                     <strong>Scope:</strong> Each biweekly visit provides everything in Plan 1, plus proactive hazard clearing performed during the same visit. This includes: verifying and improving lighting at key entrances and along stairs, hallways, and walkways by swapping in brighter LED bulbs and placing plug-in, battery, or solar nightlights and motion lights (no wiring); clearing clutter and obstacles from walkways, hallways, stairs, and entryways to establish clear walking paths; applying anti-slip backing or tape to loose rugs, runners, and stair treads, non-slip strips to bare stairs and to tub and shower surfaces, and foam guards to sharp furniture corners; marking stair edges and steps with high-contrast non-slip tape, adding clear hot/cold water indicators, and applying easy-to-read overlays on stove and appliance controls; securing loose cords along baseboards with safety clips; stabilizing unstable furniture; at the resident&apos;s direction, moving critical items such as a cane, phone, or eyeglasses within safe reach, and relocating frequently used items from unsafe high or low storage to a safer, reachable height where it reduces a clear fall or strain hazard; manual testing and battery replacement for smoke and carbon monoxide alarms; checking fire-extinguisher condition and expiration dates; testing that emergency alert and medical-alert devices are charged and connected to the home Wi-Fi network; mounting lightweight fire extinguishers in high-risk areas; posting emergency contact cards and exit-route plans; checking that water temperature settings remain below 120&deg;F; and addressing an immediate wet-floor or spill-related slip hazard identified during the visit, such as drying the affected area or placing a temporary caution marker, so the hazard does not persist between visits. This plan does not include general or routine housekeeping, laundry, meal preparation, or personal care of any kind.
                   </p>
                 </div>
@@ -731,127 +693,44 @@ export function Step6AgreementSigning({
 
             {/* 16. SIGNATURES */}
             <div className="space-y-3 pt-2 border-t-2 border-[#243746]">
-              <div className="font-extrabold text-sm text-[#243746] bg-[#243746] text-white px-3 py-2 rounded-lg flex items-center justify-between">
-                <span>16. SIGNATURES &amp; EXECUTION</span>
-                <span className="text-[11px] font-normal text-slate-200">
-                  Active Track: {signingTrack === "TRACK_A" ? "Track A (Resident)" : "Track B (Representative)"}
-                </span>
+              <div className="font-extrabold text-sm text-[#243746] bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200">
+                16. SIGNATURES
               </div>
-              <p className="text-[11px] text-[#64748B]">
+              <p>
                 This Agreement is signed electronically through AgeWellRI&apos;s online client portal. One of the two signature tracks below applies, depending on who is signing.
               </p>
 
-              {/* Track A Box */}
-              <div className={`p-4 rounded-xl border transition-all space-y-2 ${
-                signingTrack === "TRACK_A"
-                  ? "bg-white border-[#294B68] ring-2 ring-[#294B68]/20 shadow-xs"
-                  : "bg-slate-50/70 border-slate-200 opacity-75"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs text-[#243746]">
+              <div className="space-y-3">
+                {/* Track A Box */}
+                <div className="p-3.5 rounded-xl border bg-slate-50 border-slate-200 text-slate-700 space-y-2">
+                  <div className="font-extrabold text-xs text-[#243746]">
                     Track A &mdash; Resident Signature (resident is signing for themselves)
-                  </span>
-                  {signingTrack === "TRACK_A" && (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      ✓ Selected Signing Track
-                    </span>
-                  )}
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    By signing below, I confirm that I am the resident receiving services under this Agreement, that I have read and understood this Agreement in full, and that I agree to its terms.
+                  </p>
+                  <p className="text-[11px] font-mono text-[#243746] pt-1">
+                    Printed Name: _______________________________ &nbsp;&nbsp;&nbsp;&nbsp; Signature: _______________________________ &nbsp;&nbsp;&nbsp;&nbsp; Date: ______________
+                  </p>
                 </div>
-                <p className="text-[11px] text-[#475569] italic leading-relaxed">
-                  By signing below, I confirm that I am the resident receiving services under this Agreement, that I have read and understood this Agreement in full, and that I agree to its terms.
-                </p>
 
-                <div className="pt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs border-t border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Printed Name:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_A" ? (residentPrintedName || residentDetails.fullName || "_______________________________") : "_______________________________"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Signature:</span>
-                    <span className="font-serif italic font-bold text-[#294B68] text-xs">
-                      {signingTrack === "TRACK_A" ? (
-                        hasSignature
-                          ? `[✓ Signed: ${residentPrintedName || residentDetails.fullName}]`
-                          : (residentPrintedName || residentDetails.fullName ? `[Pending: ${residentPrintedName || residentDetails.fullName}]` : "_______________________________")
-                      ) : "_______________________________"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Date:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_A" ? (agreementDate || todayStr) : "______________"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Track B Box */}
-              <div className={`p-4 rounded-xl border transition-all space-y-2 ${
-                signingTrack === "TRACK_B"
-                  ? "bg-white border-[#294B68] ring-2 ring-[#294B68]/20 shadow-xs"
-                  : "bg-slate-50/70 border-slate-200 opacity-75"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-xs text-[#243746]">
+                {/* Track B Box */}
+                <div className="p-3.5 rounded-xl border bg-slate-50 border-slate-200 text-slate-700 space-y-2">
+                  <div className="font-extrabold text-xs text-[#243746]">
                     Track B &mdash; Representative Signature (someone is signing on the resident&apos;s behalf)
-                  </span>
-                  {signingTrack === "TRACK_B" && (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                      ✓ Selected Signing Track
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-[#64748B]">
-                  Company routes every Client through Track A whenever the resident is able to sign for themselves. Track B applies only when the resident is genuinely unable to sign.
-                </p>
-                <p className="text-[11px] text-[#475569] italic leading-relaxed">
-                  By signing below, I confirm that I am signing on behalf of the resident identified above, that I hold legal authority to do so under a durable or general power of attorney, a court-appointed guardianship, or a court-appointed conservatorship, and that this authority includes both the power to enter into this Agreement and the power to release and waive claims on the resident&apos;s behalf. A healthcare proxy or health care power of attorney, standing alone, does not satisfy this requirement, since that authority is limited to health care decision-making and does not include the power to contract or to release legal claims. I have provided a copy of the document establishing this authority as part of sign-up. By signing in this representative capacity, I represent that the above is true, and I agree to personally indemnify and hold harmless AgeWellRI from any claims, losses, or costs, including reasonable attorneys&apos; fees, arising from my lack of actual authority to bind the resident or release claims on the resident&apos;s behalf.
-                </p>
-
-                <div className="pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs border-t border-slate-100">
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Representative Printed Name:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_B" ? (repFullName || "_______________________________") : "_______________________________"}
-                    </span>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Signing Capacity:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_B" ? (
-                        repCapacity === "ATTORNEY_IN_FACT"
-                          ? "Attorney-in-Fact (Durable Power of Attorney)"
-                          : repCapacity === "GUARDIAN"
-                          ? "Court-Appointed Legal Guardian"
-                          : repCapacity === "CONSERVATOR"
-                          ? "Court-Appointed Conservator"
-                          : "Power of Attorney / Legal Guardian"
-                      ) : "_______________________________"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">On behalf of Resident:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_B" ? (residentDetails.fullName || "_______________________________") : "_______________________________"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Signature:</span>
-                    <span className="font-serif italic font-bold text-[#294B68] text-xs">
-                      {signingTrack === "TRACK_B" ? (
-                        hasSignature
-                          ? `[✓ Signed: ${repFullName || "Representative"}]`
-                          : (repFullName ? `[Pending: ${repFullName}]` : "_______________________________")
-                      ) : "_______________________________"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase block">Date:</span>
-                    <span className="font-bold text-[#243746] text-xs">
-                      {signingTrack === "TRACK_B" ? (agreementDate || todayStr) : "______________"}
-                    </span>
+                  <p className="text-[11px] text-[#64748B] leading-relaxed">
+                    Company routes every Client through Track A whenever the resident is able to sign for themselves. Track B applies only when the resident is genuinely unable to sign.
+                  </p>
+                  <p className="text-[11px] leading-relaxed">
+                    By signing below, I confirm that I am signing on behalf of the resident identified above, that I hold legal authority to do so under a durable or general power of attorney, a court-appointed guardianship, or a court-appointed conservatorship, and that this authority includes both the power to enter into this Agreement and the power to release and waive claims on the resident&apos;s behalf. A healthcare proxy or health care power of attorney, standing alone, does not satisfy this requirement, since that authority is limited to health care decision-making and does not include the power to contract or to release legal claims. I have provided a copy of the document establishing this authority as part of sign-up. By signing in this representative capacity, I represent that the above is true, and I agree to personally indemnify and hold harmless AgeWellRI from any claims, losses, or costs, including reasonable attorneys&apos; fees, arising from my lack of actual authority to bind the resident or release claims on the resident&apos;s behalf.
+                  </p>
+                  <div className="text-[11px] font-mono text-[#243746] space-y-1 pt-1 border-t border-slate-200/60">
+                    <p>Representative Printed Name: _______________________________</p>
+                    <p>Signing capacity (e.g., Power of Attorney, Guardian): _______________________________</p>
+                    <p>On behalf of Resident: _______________________________</p>
+                    <p>Signature: _______________________________</p>
+                    <p>Date: ______________</p>
                   </div>
                 </div>
               </div>
