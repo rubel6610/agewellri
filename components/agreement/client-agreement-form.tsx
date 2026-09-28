@@ -31,7 +31,6 @@ import {
   Key,
   Home,
   HelpCircle,
-  Printer,
   Download,
   ArrowLeft,
   LogOut,

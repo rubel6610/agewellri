@@ -346,8 +346,8 @@ export default function ClientDetailPage({
               <p className="text-xs text-[#64748B] flex flex-wrap items-center gap-2 mt-1">
                 <span>Plan: <strong>{client.planName}</strong></span>
                 <span>•</span>
-                <span>Role: <strong>{client.signerRole}</strong></span>
-                <span>•</span>
+                {/* <span>Role: <strong>{client.signerRole}</strong></span>
+                <span>•</span> */}
                 <span>Enrolled: {client.createdAt}</span>
               </p>
             </div>

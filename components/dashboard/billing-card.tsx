@@ -133,7 +133,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <span>{billing.currentPlanName}</span>
             </h3>
           </div>
-
+{/* 
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold self-start sm:self-auto border ${
               isCancelled
@@ -154,7 +154,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
                 <span>Active Account</span>
               </>
             )}
-          </span>
+          </span> */}
         </div>
 
         {/* Informational Banner for New Signups (First Billing Scheduled on 1st of Next Month) */}

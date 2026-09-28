@@ -126,9 +126,9 @@ export default function SubscriptionsAdminPage() {
   const filterTabs = [
     { label: "All Subscriptions", value: "ALL" },
     { label: "Active", value: "ACTIVE" },
-    { label: "Ending Soon", value: "CANCELLATION_REQUESTED" },
+    // { label: "Ending Soon", value: "CANCELLATION_REQUESTED" },
     { label: "Cancelled", value: "CANCELLED" },
-    { label: "Payment Failed", value: "PAYMENT_FAILED" },
+    // { label: "Payment Failed", value: "PAYMENT_FAILED" },
     { label: "Pending", value: "PENDING" },
   ];
 
@@ -295,7 +295,7 @@ export default function SubscriptionsAdminPage() {
                           {sub.planName}
                         </div>
                         <div className="text-xs font-semibold text-[#5E8FB2] mt-0.5">
-                          {sub.planPrice} • {sub.billingMethod === "AUTOMATIC" ? "Card Auto" : "Invoice"}
+                          {sub.planPrice}
                         </div>
                       </td>
 

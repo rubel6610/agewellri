@@ -51,7 +51,7 @@ export default function AppointmentsPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-right text-xs font-semibold text-[#64748B] hidden sm:block">
+          {/* <div className="text-right text-xs font-semibold text-[#64748B] hidden sm:block">
             <span>Visits remaining this month:</span>
             {isEntLoading ? (
               <span className="block h-5 bg-[#E2E8F0] rounded w-16 ml-auto animate-pulse mt-0.5" />
@@ -60,15 +60,7 @@ export default function AppointmentsPage() {
                 {totalRemaining} of {totalAllocated}
               </strong>
             )}
-          </div>
-
-          <button
-            onClick={() => setScheduleModalOpen(true)}
-            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Schedule Visit</span>
-          </button>
+          </div> */}
         </div>
       </div>
 

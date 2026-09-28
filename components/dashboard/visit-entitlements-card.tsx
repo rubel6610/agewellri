@@ -56,13 +56,13 @@ export function VisitEntitlementsCard() {
             Your {data.planName} coverage for {periodFormatted}
           </p>
         </div>
-
+{/* 
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EBF8F2] border border-[#3F8F6B]/30 text-xs font-bold text-[#166534] shrink-0 self-start sm:self-auto">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B]" />
           <span>
             {data.totalRemaining} of {data.totalAllocated} Total Visits Remaining
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Entitlement Service Items */}
@@ -107,7 +107,7 @@ export function VisitEntitlementsCard() {
                     {item.completed} completed • {item.scheduled} scheduled
                   </span>
                   <span className="font-extrabold text-[#294B68]">
-                    {item.remaining} remaining
+                    {item.remaining} remaining to be scheduled
                   </span>
                 </div>
               </div>

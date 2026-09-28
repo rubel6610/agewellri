@@ -372,38 +372,37 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
     // 7. OFFICIAL STATEMENT FOOTER
     // ==========================================
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9.5);
+    doc.setFontSize(10);
     doc.setTextColor(...navy);
     doc.text("Official Statement", margin, y);
 
-    y += 4.5;
+    y += 5;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(90, 105, 120);
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
 
     const stmtText1 =
       "This electronic statement is an official record of contracted services provided by AgeWellRI LLC. AgeWellRI provides senior home safety oversight, non-medical home safety evaluations, and proactive hazard mitigation across Rhode Island. We are not a medical provider, home health agency, or cleaning service.";
     const stmtLines1 = doc.splitTextToSize(stmtText1, contentWidth);
     doc.text(stmtLines1, margin, y);
-    y += stmtLines1.length * 3.5 + 3;
+    y += stmtLines1.length * 3.8 + 3.5;
 
     const stmtText2 =
       "Questions about this statement, renewal dates, or payment methods? Email agewellri@gmail.com or call (401) 212-3002.";
     const stmtLines2 = doc.splitTextToSize(stmtText2, contentWidth);
     doc.text(stmtLines2, margin, y);
+    y += stmtLines2.length * 3.8 + 6;
 
     // ==========================================
-    // 8. COPYRIGHT FOOTER (Bottom of Page)
+    // 8. COPYRIGHT FOOTER
     // ==========================================
-    const footerY = 285;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(140, 150, 160);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
     doc.text(
       "© 2026 AgeWellRI LLC • (401) 212-3002 • agewellri@gmail.com",
-      pageWidth / 2,
-      footerY,
-      { align: "center" },
+      margin,
+      y
     );
 
     // Save PDF

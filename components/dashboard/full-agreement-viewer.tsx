@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   FileCheck,
   Download,
-  Printer,
   ShieldCheck,
   Loader2,
 } from "lucide-react";
@@ -67,15 +66,11 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
       console.error("Failed to generate PDF:", error);
       showErrorAlert(
         "PDF Generation Error",
-        "Unable to generate PDF directly. You can also use the Print button to Save as PDF.",
+        "Failed to generate agreement PDF.",
       );
     } finally {
       setIsGeneratingPdf(false);
     }
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   return (
@@ -134,16 +129,6 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               <Download className="w-3.5 h-3.5 text-emerald-700" />
             </button>
           ) : null} */}
-
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="px-4 py-2.5 bg-[#F7FAFC] hover:bg-[#EAF3F8] text-[#243746] font-bold text-xs sm:text-sm rounded-xl border border-[#D9E4EC] transition-colors flex items-center gap-2 cursor-pointer"
-            title="Print or Save as PDF"
-          >
-            <Printer className="w-4 h-4 text-[#5E8FB2]" />
-            <span>Print</span>
-          </button>
 
           <button
             type="button"
