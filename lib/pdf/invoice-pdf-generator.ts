@@ -90,17 +90,38 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
 
     const formattedAmount = `$${rawAmountNum.toFixed(2)}`;
 
-    // Parse Dates for Billing Month & Service Period
-    const parsedGenDate =
+    // Determine the target service date for Billing Month & Service Period.
+    // In AgeWellRI, service commences on the 1st of the billing month of service (represented by inv.dueDate).
+    // If inv.dueDate is not provided, or an invoice is issued/paid prior to the 1st of the upcoming service month (e.g. Sept 28 for Oct 1),
+    // the service commencement date is the 1st of the next calendar month.
+    const parsedDueDate = parseDateSafe(inv.dueDate);
+    const parsedIssueDate =
       parseDateSafe(inv.generatedDate) ||
       parseDateSafe(inv.paidAt) ||
       parseDateSafe(inv.date) ||
-      parseDateSafe(inv.dueDate) ||
       new Date();
+
+    let targetServiceDate: Date;
+    if (parsedDueDate) {
+      targetServiceDate = parsedDueDate;
+    } else if (parsedIssueDate) {
+      // If issue/payment date is after the 1st of the month, service starts on the 1st of the next month
+      if (parsedIssueDate.getDate() > 1) {
+        targetServiceDate = new Date(
+          parsedIssueDate.getFullYear(),
+          parsedIssueDate.getMonth() + 1,
+          1
+        );
+      } else {
+        targetServiceDate = parsedIssueDate;
+      }
+    } else {
+      targetServiceDate = new Date();
+    }
 
     let billingMonthName = inv.billingMonth?.trim();
     if (!billingMonthName) {
-      billingMonthName = parsedGenDate.toLocaleDateString("en-US", {
+      billingMonthName = targetServiceDate.toLocaleDateString("en-US", {
         month: "long",
         year: "numeric",
       }); // e.g. "October 2026"
@@ -108,8 +129,8 @@ export function generateInvoicePdf(inv: InvoicePdfData): boolean {
 
     let periodRangeText = inv.billingPeriod?.trim();
     if (!periodRangeText) {
-      const genYear = parsedGenDate.getFullYear();
-      const genMonth = parsedGenDate.getMonth();
+      const genYear = targetServiceDate.getFullYear();
+      const genMonth = targetServiceDate.getMonth();
       const startOfMonth = new Date(genYear, genMonth, 1);
       const endOfMonth = new Date(genYear, genMonth + 1, 0);
       const startFormatted = startOfMonth.toLocaleDateString("en-US", {

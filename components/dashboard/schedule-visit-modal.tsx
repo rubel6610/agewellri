@@ -567,7 +567,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         </span>
                       </div>
                       <p className="text-xs text-[#64748B] mt-1.5 font-medium">
-                        {formatDuration(srv.durationMinutes)} session • {srv.allocated} total included in monthly cycle
+                      Up to {formatDuration(srv.durationMinutes)} session • {srv.allocated} total included in monthly cycle
                       </p>
                     </div>
                   );

@@ -366,7 +366,7 @@ export default function ClientCalendarPage() {
               Monthly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
-              {totalRemaining} of {totalAllocated} Remaining
+              {totalRemaining} of {totalAllocated} Remaining to be scheduled
             </span>
           </div>
 

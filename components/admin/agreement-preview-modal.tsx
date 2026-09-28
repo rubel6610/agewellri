@@ -42,13 +42,13 @@ export function AgreementPreviewModal({
     agreement.executedAt ||
     agreement.signedDate;
 
-  const formattedDate = rawDate
-    ? new Date(rawDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Executed & Active";
+  // const formattedDate = rawDate
+  //   ? new Date(rawDate).toLocaleDateString("en-US", {
+  //       year: "numeric",
+  //       month: "long",
+  //       day: "numeric",
+  //     })
+  //   : "Executed & Active";
 
   const handleDownload = async () => {
     try {

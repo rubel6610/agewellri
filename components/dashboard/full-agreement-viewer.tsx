@@ -91,7 +91,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
               <h2 className="text-lg sm:text-xl font-bold text-[#243746]">
                 Client Service Agreement
               </h2>
-              <span
+              {/* <span
                 className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
                   isExecuted
                     ? "bg-[#EBF8F2] text-[#166534] border border-[#166534]/20"
@@ -102,7 +102,7 @@ export function FullAgreementViewer({ agreement }: FullAgreementViewerProps) {
                 <span>
                   {isExecuted ? "Executed & Active" : "Pending Signature"}
                 </span>
-              </span>
+              </span> */}
             </div>
             <p className="text-xs text-[#64748B] mt-0.5">
               Client ID:{" "}

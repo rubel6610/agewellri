@@ -84,7 +84,7 @@ export function VisitEntitlementsCard() {
                     {item.serviceName}
                   </h4>
                   <span className="text-xs font-semibold text-[#5E8FB2]">
-                    {formatDuration(item.durationMinutes)} / visit
+                 Up to   {formatDuration(item.durationMinutes)} / visit
                   </span>
                 </div>
 

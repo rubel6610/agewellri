@@ -707,9 +707,8 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p1Times = "Each biweekly visit runs up to 60 minutes";
   doc.text(
-    `Rate: $295.00 per month   •   ${p1Times}`,
+    `Rate: $295.00 per month`,
     margin + 4,
     p1Y,
   );
@@ -756,9 +755,8 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p2Times = "Each biweekly visit runs up to two hours";
   doc.text(
-    `Rate: $${planPrice}.00 per month   •   ${p2Times}`,
+    `Rate: $${planPrice}.00 per month`,
     margin + 4,
     p2Y,
   );
