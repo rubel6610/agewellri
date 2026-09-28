@@ -238,10 +238,10 @@ export function AcceptVisitRequestModal({
             </div>
           </div>
 
-          <div className="flex items-start gap-1.5 pt-1 text-[11px]">
+          {/* <div className="flex items-start gap-1.5 pt-1 text-[11px]">
             <MapPin className="w-3.5 h-3.5 text-[#5E8FB2] shrink-0 mt-0.5" />
             <span className="line-clamp-2">{appointment.clientAddress}</span>
-          </div>
+          </div> */}
 
           {appointment.notes && (
             <div className="p-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs text-[#243746]">
@@ -455,7 +455,7 @@ export function AcceptVisitRequestModal({
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Accept &amp; Dispatch Specialist</span>
+                  <span>Accept &amp; Assign Specialist</span>
                 </>
               )}
             </button>

@@ -359,7 +359,7 @@ function AppointmentsAdminContent() {
                 <th className="py-3.5 px-4">Service Type</th>
                 <th className="py-3.5 px-4">Assigned Specialist</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Report Status</th>
+                {/* <th className="py-3.5 px-4">Report Status</th> */}
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -511,7 +511,7 @@ function AppointmentsAdminContent() {
                       </td>
 
                       {/* Report Status */}
-                      <td className="py-4 px-4">
+                      {/* <td className="py-4 px-4">
                         {isCompleted ? (
                           hasReport ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -527,7 +527,7 @@ function AppointmentsAdminContent() {
                         ) : (
                           <span className="text-xs text-[#94A3B8]">—</span>
                         )}
-                      </td>
+                      </td> */}
 
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">

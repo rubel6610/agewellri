@@ -198,13 +198,21 @@ export function AdminScheduleModal({
   const [adminScheduleAppointmentMutation, { isLoading: isSubmitting }] = useAdminScheduleAppointmentMutation();
   const [success, setSuccess] = useState(false);
 
+  // Filter out unassigned clients (clients without an assigned active plan)
+  const assignedClients = useMemo(() => {
+    return clientsList.filter((c) => {
+      const plan = (c.planName || c.planCode || c.subscriptions?.[0]?.plan?.name || "").toLowerCase().trim();
+      return plan !== "" && plan !== "unassigned" && !plan.includes("unassigned");
+    });
+  }, [clientsList]);
+
   useEffect(() => {
     if (defaultClientId) {
       setSelectedClientId(defaultClientId);
-    } else if (clientsList.length > 0 && !selectedClientId) {
-      setSelectedClientId(clientsList[0].id);
+    } else if (assignedClients.length > 0 && (!selectedClientId || !assignedClients.some((c) => c.id === selectedClientId))) {
+      setSelectedClientId(assignedClients[0].id);
     }
-  }, [defaultClientId, clientsList, isOpen, selectedClientId]);
+  }, [defaultClientId, assignedClients, isOpen, selectedClientId]);
 
   useEffect(() => {
     if (specialists.length > 0 && !technicianName) {
@@ -230,7 +238,7 @@ export function AdminScheduleModal({
   // Derive matched and selected client
   const isLockedClient = Boolean(hideClientSelect || defaultClientId);
 
-  const matchedClient = clientsList.find(
+  const matchedClient = (assignedClients.length > 0 ? assignedClients : clientsList).find(
     (c) =>
       c.id === (defaultClientId || selectedClientId) ||
       c.clientNumber === (defaultClientId || selectedClientId) ||
@@ -238,7 +246,7 @@ export function AdminScheduleModal({
       c.internalId === (defaultClientId || selectedClientId)
   );
 
-  const selectedClient = matchedClient || clientsList[0];
+  const selectedClient = matchedClient || assignedClients[0] || clientsList[0];
 
   // Derive default serviceType from client plan
   const serviceType = selectedClient?.planName || "Home Safety & Oversight Visit";
@@ -299,8 +307,8 @@ export function AdminScheduleModal({
     : true;
   const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits;
 
-  // Filtered Clients
-  const filteredClients = clientsList.filter((c) => {
+  // Filtered Clients (Search within assigned clients)
+  const filteredClients = assignedClients.filter((c) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const fullName = `${c.firstName || ""} ${c.lastName || ""}`.toLowerCase();
