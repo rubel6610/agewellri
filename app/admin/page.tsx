@@ -296,10 +296,10 @@ export default function AdminOverviewPage() {
             <span>Good day, {greetingName}</span>
             <Sparkles className="w-6 h-6 text-[#5E8FB2]" />
           </h1>
-          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
+          {/* <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Real-time operations &amp; safety oversight overview for{" "}
             <strong>{todayFormatted}</strong>.
-          </p>
+          </p> */}
         </div>
       </div>
 
@@ -534,8 +534,9 @@ export default function AdminOverviewPage() {
                 Active Plan Tiers
               </span>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(stats.planDistribution || {}).map(
-                  ([planName, count]) => (
+                {Object.entries(stats.planDistribution || {})
+                  .filter(([planName]) => !planName.toLowerCase().includes("unassigned"))
+                  .map(([planName, count]) => (
                     <div
                       key={planName}
                       className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
@@ -545,8 +546,7 @@ export default function AdminOverviewPage() {
                         {count}
                       </span>
                     </div>
-                  ),
-                )}
+                  ))}
               </div>
             </div>
           </div>

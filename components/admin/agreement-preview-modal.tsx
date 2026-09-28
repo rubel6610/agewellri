@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   X,
   Download,
-  Printer,
   FileText,
   Loader2,
 } from "lucide-react";
@@ -42,13 +41,13 @@ export function AgreementPreviewModal({
     agreement.executedAt ||
     agreement.signedDate;
 
-  const formattedDate = rawDate
-    ? new Date(rawDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Executed & Active";
+  // const formattedDate = rawDate
+  //   ? new Date(rawDate).toLocaleDateString("en-US", {
+  //       year: "numeric",
+  //       month: "long",
+  //       day: "numeric",
+  //     })
+  //   : "Executed & Active";
 
   const handleDownload = async () => {
     try {
@@ -67,9 +66,7 @@ export function AgreementPreviewModal({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#243746]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
@@ -126,14 +123,7 @@ export function AgreementPreviewModal({
               <span>Download PDF</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#D9E4EC] bg-white hover:bg-[#F8FAFC] text-[#243746] text-xs font-bold transition-colors cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#64748B]" />
-              <span>Print</span>
-            </button>
+
 
             <button
               type="button"

@@ -296,23 +296,23 @@ export default function ClientCalendarPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          <Link
+        {/* <div className="flex items-center gap-3 self-start sm:self-auto"> */}
+          {/* <Link
             href="/dashboard/appointments"
             className="px-4 py-2.5 bg-white hover:bg-[#F0F5F9] border border-[#D9E4EC] text-[#243746] font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shadow-2xs"
           >
             <Eye className="w-4 h-4 text-[#5E8FB2]" />
             <span>List View</span>
-          </Link>
-
+          </Link> */}
+{/* 
           <button
             onClick={() => setIsScheduleModalOpen(true)}
             className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>Schedule Safety Visit</span>
-          </button>
-        </div>
+          </button> */}
+        {/* </div> */}
       </div>
 
       {/* Plan Quota & Next Visit Status Ribbon */}
@@ -366,7 +366,7 @@ export default function ClientCalendarPage() {
               Monthly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
-              {totalRemaining} of {totalAllocated} Remaining
+              {totalRemaining} of {totalAllocated} Remaining to be scheduled
             </span>
           </div>
 
@@ -665,9 +665,9 @@ export default function ClientCalendarPage() {
                   <h3 className="text-lg font-black text-[#243746]">
                     {selectedAppointment.serviceType}
                   </h3>
-                  <p className="text-xs text-[#5E8FB2] font-semibold">
+                  {/* <p className="text-xs text-[#5E8FB2] font-semibold">
                     Appointment ID: #{selectedAppointment.id}
-                  </p>
+                  </p> */}
                 </div>
               </div>
 
