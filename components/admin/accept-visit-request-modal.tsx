@@ -420,7 +420,7 @@ export function AcceptVisitRequestModal({
           {/* Admin Dispatch Notes */}
           <div>
             <label className="block text-xs font-bold uppercase text-[#243746] mb-1">
-              Internal Dispatch Notes (Optional)
+              Internal Visit Notes (Optional)
             </label>
             <textarea
               rows={2}

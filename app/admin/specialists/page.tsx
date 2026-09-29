@@ -645,7 +645,7 @@ export default function SpecialistsPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Mark Johnson"
+                      placeholder="e.g. Cory Poplaski"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"

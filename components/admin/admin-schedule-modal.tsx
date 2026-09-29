@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { X, Calendar, Loader2, CheckCircle2, UserCheck, Search, ChevronDown, Check, AlertCircle, Edit3 } from "lucide-react";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
-import { useAdminScheduleAppointmentMutation } from "@/redux/features/appointment/appointmentApi";
+import { useAdminScheduleAppointmentMutation, useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { parsePlanDurationHours } from "@/redux/features/plan/planTypes";
 import {
@@ -23,6 +23,60 @@ function timeToMinutes(timeStr: string): number {
   if (ampm === "PM" && hour < 12) hour += 12;
   if (ampm === "AM" && hour === 12) hour = 0;
   return hour * 60 + min;
+}
+
+function parseTimeSlotToMinutes(timeSlot: string): { startMin: number; endMin: number } | null {
+  if (!timeSlot) return null;
+  const parts = timeSlot.split(/\s*(?:–|—|-|to)\s*/i);
+  if (parts.length < 2) return null;
+  const startMin = timeToMinutes(parts[0]);
+  const endMin = timeToMinutes(parts[1]);
+  if (endMin <= startMin) return null;
+  return { startMin, endMin };
+}
+
+function parseApptTimeSlotToMinutes(appt: any): { startMin: number; endMin: number } | null {
+  if (appt?.timeSlot) {
+    const range = parseTimeSlotToMinutes(appt.timeSlot);
+    if (range) return range;
+  }
+  if (appt?.startAt && appt?.endAt) {
+    const dStart = new Date(appt.startAt);
+    const dEnd = new Date(appt.endAt);
+    if (!isNaN(dStart.getTime()) && !isNaN(dEnd.getTime())) {
+      const startMin = dStart.getHours() * 60 + dStart.getMinutes();
+      const endMin = dEnd.getHours() * 60 + dEnd.getMinutes();
+      if (endMin > startMin) return { startMin, endMin };
+    }
+  }
+  return null;
+}
+
+function isTimeOverlapping(
+  slot1: { startMin: number; endMin: number },
+  slot2: { startMin: number; endMin: number }
+): boolean {
+  return Math.max(slot1.startMin, slot2.startMin) < Math.min(slot1.endMin, slot2.endMin);
+}
+
+function getApptDateFormatted(appt: any): string {
+  if (!appt) return "";
+  if (appt.startAt && typeof appt.startAt === "string" && /^\d{4}-\d{2}-\d{2}/.test(appt.startAt)) {
+    return appt.startAt.split("T")[0];
+  }
+  if (appt.date && typeof appt.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(appt.date.trim())) {
+    return appt.date.trim();
+  }
+  if (appt.date && typeof appt.date === "string") {
+    const d = new Date(appt.date);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+  }
+  return "";
 }
 
 function formatMinutesToTimeString(totalMinutes: number): string {
@@ -173,7 +227,20 @@ export function AdminScheduleModal({
   const { data: specialists = [], isLoading: isSpecialistsLoading } = useGetAllSpecialistsQuery(undefined, { skip: !isOpen });
   const { data: clientsRes, isLoading: isClientsLoading } = useGetAdminClientsQuery({ limit: 100 }, { skip: !isOpen });
   const { data: activePlans = [] } = useGetActivePlansQuery(undefined, { skip: !isOpen });
+  const { data: adminApptsRes } = useGetAdminAppointmentsQuery(undefined, { skip: !isOpen });
   const clientsList = clientsRes?.data || [];
+
+  const adminAppointments = useMemo(() => {
+    const raw = Array.isArray(adminApptsRes?.data)
+      ? adminApptsRes.data
+      : Array.isArray(adminApptsRes)
+      ? adminApptsRes
+      : [];
+    return raw.filter((a: any) => {
+      const st = (a.status || "").toLowerCase();
+      return st !== "cancelled" && st !== "no_show" && st !== "declined";
+    });
+  }, [adminApptsRes]);
 
   const [selectedClientId, setSelectedClientId] = useState(defaultClientId || "");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -181,7 +248,7 @@ export function AdminScheduleModal({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Specialist Selection State
-  const [technicianName, setTechnicianName] = useState(specialists[0]?.name || "Mark Johnson");
+  const [technicianName, setTechnicianName] = useState(specialists[0]?.name);
   const [isSpecialistDropdownOpen, setIsSpecialistDropdownOpen] = useState(false);
   const [specialistSearchQuery, setSpecialistSearchQuery] = useState("");
   const specialistDropdownRef = useRef<HTMLDivElement>(null);
@@ -248,6 +315,51 @@ export function AdminScheduleModal({
 
   const selectedClient = matchedClient || assignedClients[0] || clientsList[0];
 
+  const selectedSpecialistObj =
+    specialists.find((s) => s.name === technicianName) ||
+    specialists.find((s) => s.id === technicianName) ||
+    specialists[0];
+
+  const checkSlotBooked = (ts: string): { isBooked: boolean; appt?: any; sameDate: boolean; conflictEntity: string } => {
+    const slotRange = parseTimeSlotToMinutes(ts);
+    if (!slotRange) return { isBooked: false, sameDate: false, conflictEntity: "" };
+
+    const targetClientId = selectedClient?.id || selectedClientId;
+    const targetInternalId = selectedClient?.internalId || selectedClient?.userId;
+    const targetSpecId = selectedSpecialistObj?.id;
+
+    for (const appt of adminAppointments) {
+      const isClientAppt =
+        appt.clientId === targetClientId ||
+        appt.clientId === targetInternalId ||
+        appt.clientNumber === targetClientId ||
+        (selectedClient?.clientNumber && appt.clientNumber === selectedClient.clientNumber);
+
+      const isSpecAppt =
+        Boolean(targetSpecId &&
+        (appt.technicianId === targetSpecId ||
+          (appt.technicianName && selectedSpecialistObj?.name && appt.technicianName.toLowerCase() === selectedSpecialistObj.name.toLowerCase())));
+
+      if (!isClientAppt && !isSpecAppt) continue;
+
+      const apptRange = parseApptTimeSlotToMinutes(appt);
+      if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
+        const apptDate = getApptDateFormatted(appt);
+        const isSameDate = date && apptDate === date;
+        const conflictEntity = isClientAppt
+          ? `${selectedClient?.firstName || "Client"}`
+          : `${selectedSpecialistObj?.name || "Specialist"}`;
+        return { isBooked: true, appt, sameDate: Boolean(isSameDate), conflictEntity };
+      }
+    }
+
+    return { isBooked: false, sameDate: false, conflictEntity: "" };
+  };
+
+  const currentSlotStatus = useMemo(() => {
+    return checkSlotBooked(timeSlot);
+  }, [timeSlot, date, selectedClient, selectedSpecialistObj, adminAppointments]);
+
   // Derive default serviceType from client plan
   const serviceType = selectedClient?.planName || "Home Safety & Oversight Visit";
 
@@ -269,11 +381,33 @@ export function AdminScheduleModal({
       setCustomEnd(end);
       setTimeSlot(`${start} – ${end}`);
     } else {
-      if (!standardTimeSlots.includes(timeSlot)) {
-        setTimeSlot(standardTimeSlots[0] || (planDurationHours === 1 ? "08:00 AM – 09:00 AM" : "10:00 AM – 12:00 PM"));
+      if (!standardTimeSlots.includes(timeSlot) || checkSlotBooked(timeSlot).isBooked) {
+        const firstAvailable = standardTimeSlots.find((s) => !checkSlotBooked(s).isBooked);
+        setTimeSlot(firstAvailable || standardTimeSlots[0] || (planDurationHours === 1 ? "08:00 AM – 09:00 AM" : "10:00 AM – 12:00 PM"));
       }
     }
-  }, [selectedClientId, planDurationHours, isCustomTime, standardTimeSlots]);
+  }, [selectedClientId, planDurationHours, isCustomTime, standardTimeSlots, date, selectedSpecialistObj]);
+
+  const getRemainingVisitsForClient = (client: any) => {
+    if (!client) return 1;
+    if (typeof client.remainingVisitsCount === "number") {
+      return client.remainingVisitsCount;
+    }
+    if (Array.isArray(client.visitEntitlements) && client.visitEntitlements.length > 0) {
+      return client.visitEntitlements.reduce((sum: number, item: any) => sum + (item.remaining || 0), 0);
+    }
+    const planStr = (client.planName || client.planCode || "").toLowerCase();
+    if (planStr && planStr !== "unassigned") {
+      return planStr.includes("plan 2") || planStr.includes("independence") ? 2 : 1;
+    }
+    return 1;
+  };
+
+  const isTargetClientAgreementPaid = Boolean(selectedClient);
+  const clientRemainingVisits = getRemainingVisitsForClient(selectedClient);
+  const hasRemainingVisits = clientRemainingVisits > 0;
+  const isTimeSlotValid = !currentSlotStatus.isBooked;
+  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && isTimeSlotValid;
 
   if (!isOpen) return null;
 
@@ -291,21 +425,11 @@ export function AdminScheduleModal({
     selectedClientId ||
     "AW-CLIENT";
 
-  const isTargetClientAgreementPaid = selectedClient
-    ? (selectedClient.agreementStatus === "EXECUTED" ||
-        selectedClient.agreementStatus === "SIGNED" ||
-        (selectedClient.agreementStatus || "").toUpperCase() === "EXECUTED" ||
-        (selectedClient.agreementStatus || "").toUpperCase() === "SIGNED") &&
-      (selectedClient.paymentStatus === "PAID" ||
-        (selectedClient.status as string) === "active" ||
-        (selectedClient.status as string) === "pending_payment" ||
-        selectedClient.subscriptionStatus === "PENDING" ||
-        selectedClient.subscriptionStatus === "ACTIVE")
+  const isPaymentPending = selectedClient
+    ? selectedClient.paymentStatus === "PENDING" ||
+      selectedClient.subscriptionStatus === "PENDING" ||
+      (selectedClient.status as string) === "pending_payment"
     : false;
-  const hasRemainingVisits = selectedClient
-    ? selectedClient.remainingVisitsCount === undefined || selectedClient.remainingVisitsCount > 0
-    : true;
-  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits;
 
   // Filtered Clients (Search within assigned clients)
   const filteredClients = assignedClients.filter((c) => {
@@ -336,11 +460,6 @@ export function AdminScheduleModal({
       (s.specialties && s.specialties.some((sp: string) => sp.toLowerCase().includes(q)))
     );
   });
-
-  const selectedSpecialistObj =
-    specialists.find((s) => s.name === technicianName) ||
-    specialists.find((s) => s.id === technicianName) ||
-    specialists[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -454,13 +573,13 @@ export function AdminScheduleModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-            {/* Warning Banners */}
-            {!isTargetClientAgreementPaid ? (
-              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            {/* Warning / Informational Banners */}
+            {isPaymentPending ? (
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-blue-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="block font-bold text-amber-950">Visit Scheduling Unavailable</strong>
-                  <span>This client has not executed their Service Agreement or completed their subscription payment. Both an executed agreement and active payment are required before scheduling visits.</span>
+                  <strong className="block font-bold text-blue-950">Advance Scheduling Active</strong>
+                  <span>This visit is being scheduled &amp; assigned in advance. Active payment subscription will be required before marking the visit as completed.</span>
                 </div>
               </div>
             ) : !hasRemainingVisits ? (
@@ -783,11 +902,26 @@ export function AdminScheduleModal({
                           }}
                           className="w-full h-10 px-3 bg-white border border-[#D9E4EC] rounded-xl text-xs font-bold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2]"
                         >
-                          {availableStartTimes.map((st) => (
-                            <option key={st} value={st}>
-                              {st}
-                            </option>
-                          ))}
+                          {availableStartTimes.map((st) => {
+                            const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
+                            const { isBooked, appt, sameDate, conflictEntity } = checkSlotBooked(customSlotStr);
+                            let label = st;
+                            if (isBooked) {
+                              label += sameDate
+                                ? ` (${conflictEntity} Booked on this date)`
+                                : ` (${conflictEntity} Booked on ${appt?.date || "other date"})`;
+                            }
+                            return (
+                              <option
+                                key={st}
+                                value={st}
+                                disabled={isBooked}
+                                className={isBooked ? "text-rose-600 bg-rose-50 font-bold" : ""}
+                              >
+                                {label}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div>
@@ -821,19 +955,59 @@ export function AdminScheduleModal({
                     }}
                     className="w-full h-11 px-3.5 bg-white border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
                   >
-                    {standardTimeSlots.map((ts) => (
-                      <option key={ts} value={ts}>
-                        {ts}
-                      </option>
-                    ))}
+                    {standardTimeSlots.map((ts) => {
+                      const { isBooked, appt, sameDate, conflictEntity } = checkSlotBooked(ts);
+                      let label = ts;
+                      if (isBooked) {
+                        label += sameDate
+                          ? ` — [Already Booked: ${conflictEntity} on this date]`
+                          : ` — [Already Booked: ${conflictEntity} on ${appt?.date || "another date"}]`;
+                      }
+                      return (
+                        <option
+                          key={ts}
+                          value={ts}
+                          disabled={isBooked}
+                          className={isBooked ? "text-rose-600 bg-rose-50 font-bold" : ""}
+                        >
+                          {label}
+                        </option>
+                      );
+                    })}
                     <option value="__CUSTOM__">✎ Enter Custom Time...</option>
                   </select>
                 )}
               </div>
             </div>
 
+            {/* Full-width Time slot conflict alert banner */}
+            {currentSlotStatus.isBooked && (
+              <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">
+                    {currentSlotStatus.sameDate
+                      ? `Time Slot Conflict (${(() => {
+                          try {
+                            const [y, m, d] = date.split("-").map(Number);
+                            return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                          } catch {
+                            return date;
+                          }
+                        })()})`
+                      : `Time Slot Already Scheduled (${currentSlotStatus.appt?.date || "Another Date"})`}
+                  </strong>
+                  <p className="text-rose-800 text-[11px] mt-0.5 leading-relaxed">
+                    <strong>{currentSlotStatus.conflictEntity}</strong> already has an active visit booked at{" "}
+                    <strong>{currentSlotStatus.appt?.timeSlot || timeSlot}</strong> on{" "}
+                    <strong>{currentSlotStatus.appt?.date || date}</strong>. The same time slot cannot be scheduled on the same or different dates. Please choose another time slot.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs font-bold text-[#243746] mb-1">Dispatch Notes (Optional)</label>
+              <label className="block text-xs font-bold text-[#243746] mb-1">Visit Notes (Optional)</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -858,6 +1032,8 @@ export function AdminScheduleModal({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
+                ) : !isTimeSlotValid ? (
+                  <span>Time Slot Conflict — Choose Another Time</span>
                 ) : !isTargetClientAgreementPaid ? (
                   <span>Agreement &amp; Payment Required to Schedule</span>
                 ) : !hasRemainingVisits ? (
