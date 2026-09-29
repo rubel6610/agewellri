@@ -154,7 +154,7 @@ export function Step8BillingSetup({
 
               <div className="flex items-start justify-between text-xs pt-2 border-t border-[#D9E4EC]">
                 <span className="text-[#64748B] font-medium flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#294B68]" /> Service Starts:
+              Service Starts:
                 </span>
                 <span className="font-bold text-[#294B68] text-right">
                   {commencementDateFormatted}

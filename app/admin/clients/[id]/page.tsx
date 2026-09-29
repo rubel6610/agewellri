@@ -339,16 +339,16 @@ export default function ClientDetailPage({
                 <span className="font-mono text-xs font-bold text-[#294B68] bg-[#EAF3F8] px-2.5 py-1 rounded-md">
                   {client.id}
                 </span>
-                <span className="text-xs font-extrabold bg-[#294B68] text-white px-2 py-0.5 rounded-md">
+                {/* <span className="text-xs font-extrabold bg-[#294B68] text-white px-2 py-0.5 rounded-md">
                   {client.state}
-                </span>
+                </span> */}
               </div>
               <p className="text-xs text-[#64748B] flex flex-wrap items-center gap-2 mt-1">
                 <span>Plan: <strong>{client.planName}</strong></span>
-                <span>•</span>
+                {/* <span>•</span> */}
                 {/* <span>Role: <strong>{client.signerRole}</strong></span>
                 <span>•</span> */}
-                <span>Enrolled: {client.createdAt}</span>
+                {/* <span>Enrolled: {client.createdAt}</span> */}
               </p>
             </div>
           </div>

@@ -201,7 +201,7 @@ export default function SpecialistsPage() {
 
       const payload = {
         name: formData.name.trim(),
-        title: formData.title.trim() || "Home Safety Specialist",
+        title: formData.title.trim() || "",
         email: formData.email.trim() || null,
         phone: formData.phone.trim() || null,
         specialties: capabilitiesList,
@@ -645,7 +645,7 @@ export default function SpecialistsPage() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Mark Johnson"
+                      placeholder="e.g. Cory Poplaski"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
@@ -772,7 +772,7 @@ export default function SpecialistsPage() {
                             <span>Senior Home Safety Specialist (SHSS)</span>
                           </div>
                           <p className="text-[11px] text-[#64748B] mt-0.5">
-                            National certification for comprehensive aging-in-place and home hazard auditing.
+                           Certified by Age Safe® America.
                           </p>
                         </div>
                       </div>

@@ -116,7 +116,7 @@ export function generateAssessmentPdf(report: ReportItem): boolean {
       y + 14,
     );
     doc.text(
-      `Safety Specialist: ${report.specialistName || "Mark Johnson"}`,
+      `Safety Specialist: ${report.specialistName}`,
       margin + contentWidth / 2 + 6,
       y + 20,
     );

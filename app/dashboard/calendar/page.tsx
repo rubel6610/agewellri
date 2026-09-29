@@ -1,24 +1,16 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
   UserCheck,
-  Plus,
   ShieldCheck,
   Sparkles,
-  CheckCircle2,
   CalendarDays,
-  ListFilter,
-  Eye,
   X,
-  MapPin,
-  Check,
-  AlertCircle,
   ArrowRight,
   Loader2,
   Trash2,
@@ -33,6 +25,7 @@ import {
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
+import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
 import {
   confirmDelete,
   showSuccessAlert,
@@ -118,6 +111,8 @@ export default function ClientCalendarPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
 
   // Filter out cancelled, no_show, and declined appointments
   const activeAppointments = useMemo(() => {
@@ -407,36 +402,38 @@ export default function ClientCalendarPage() {
       {/* Main Calendar Card */}
       <div className="bg-white rounded-3xl border border-[#D9E4EC] p-5 sm:p-7 shadow-xs space-y-6">
         {/* Controls Bar: Month Selector, View Switcher & Filters */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/70">
-          {/* Month / Year Navigator */}
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-black text-[#243746] tracking-tight min-w-[180px]">
-              {monthName} {year}
-            </h2>
+        <div className={`flex flex-col lg:flex-row lg:items-center ${viewMode === "month" ? "justify-between" : "justify-end"} gap-4 pb-4 border-b border-[#D9E4EC]/70`}>
+          {/* Month / Year Navigator (Only for Month view) */}
+          {viewMode === "month" && (
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-black text-[#243746] tracking-tight min-w-[180px]">
+                {monthName} {year}
+              </h2>
 
-            <div className="flex items-center gap-1 border border-[#D9E4EC] rounded-xl p-1 bg-[#F8FAFC]">
-              <button
-                onClick={prevMonth}
-                aria-label="Previous Month"
-                className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={goToToday}
-                className="px-2.5 py-1 text-xs font-black text-[#243746] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
-              >
-                Today
-              </button>
-              <button
-                onClick={nextMonth}
-                aria-label="Next Month"
-                className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 border border-[#D9E4EC] rounded-xl p-1 bg-[#F8FAFC]">
+                <button
+                  onClick={prevMonth}
+                  aria-label="Previous Month"
+                  className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={goToToday}
+                  className="px-2.5 py-1 text-xs font-black text-[#243746] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={nextMonth}
+                  aria-label="Next Month"
+                  className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* View Modes */}
           <div className="flex items-center gap-3 flex-wrap">
@@ -489,18 +486,24 @@ export default function ClientCalendarPage() {
             ) : (
               <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
                 {calendarCells.map((cell, idx) => {
+                  if (!cell.isCurrentMonth) {
+                    return (
+                      <div
+                        key={idx}
+                        className="min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border border-[#EAEFF4]/50 bg-[#F8FAFC]/30"
+                      />
+                    );
+                  }
+
                   const isToday =
-                    cell.isCurrentMonth &&
                     new Date().toDateString() === new Date(year, month, cell.dayNumber).toDateString();
 
                   return (
                     <div
                       key={idx}
-                      className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
-                        cell.isCurrentMonth
-                          ? "bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs"
-                          : "bg-[#F8FAFC]/70 border-[#EAEFF4] text-[#94A3B8]"
-                      } ${isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""}`}
+                      className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs ${
+                        isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""
+                      }`}
                     >
                       {/* Date Number */}
                       <div className="flex items-center justify-between">
@@ -508,9 +511,7 @@ export default function ClientCalendarPage() {
                           className={`text-xs font-black rounded-lg w-6 h-6 flex items-center justify-center ${
                             isToday
                               ? "bg-[#294B68] text-white shadow-2xs"
-                              : cell.isCurrentMonth
-                              ? "text-[#243746]"
-                              : "text-[#94A3B8]"
+                              : "text-[#243746]"
                           }`}
                         >
                           {cell.dayNumber}
@@ -727,10 +728,10 @@ export default function ClientCalendarPage() {
               </div>
 
               {/* Location */}
-              <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
+              {/* <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
                 <MapPin className="w-4 h-4 text-[#5E8FB2] shrink-0" />
                 <span>{selectedAppointment.location || selectedAppointment.clientAddress}</span>
-              </div>
+              </div> */}
 
               {selectedAppointment.notes && (
                 <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-amber-900 text-xs">
@@ -741,31 +742,48 @@ export default function ClientCalendarPage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
-              <div>
+              <div className="flex items-center gap-2">
                 {selectedAppointment.status !== "cancelled" &&
                   selectedAppointment.status !== "completed" && (
-                    <button
-                      type="button"
-                      disabled={isCancelling}
-                      onClick={() => handleCancelAppointment(selectedAppointment)}
-                      className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
-                        isCancelling
-                          ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
-                          : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
-                      }`}
-                    >
-                      {isCancelling ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-                          <span className="font-extrabold">Cancelling Visit...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                          <span>Cancel Visit</span>
-                        </>
-                      )}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={isCancelling}
+                        onClick={() => {
+                          const target = selectedAppointment;
+                          setSelectedAppointment(null);
+                          setRescheduleTargetAppt(target);
+                          setIsRescheduleModalOpen(true);
+                        }}
+                        className="text-xs font-bold px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 bg-[#EAF3F8] text-[#294B68] hover:bg-[#294B68] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>Reschedule Visit</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isCancelling}
+                        onClick={() => handleCancelAppointment(selectedAppointment)}
+                        className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                          isCancelling
+                            ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
+                            : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
+                        }`}
+                      >
+                        {isCancelling ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            <span className="font-extrabold">Cancelling Visit...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <span>Cancel Visit</span>
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
               </div>
 
@@ -786,6 +804,19 @@ export default function ClientCalendarPage() {
       <ScheduleVisitModal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
+      />
+
+      {/* Reschedule Visit Modal Integration */}
+      <RescheduleVisitModal
+        isOpen={isRescheduleModalOpen}
+        onClose={() => {
+          setIsRescheduleModalOpen(false);
+          setRescheduleTargetAppt(null);
+        }}
+        appointment={rescheduleTargetAppt}
+        onSuccess={() => {
+          refetchAppointments();
+        }}
       />
     </div>
   );
