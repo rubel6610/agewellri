@@ -5,13 +5,15 @@ import { Appointment } from "@/lib/types/dashboard";
 
 interface VisitCardProps {
   appointment: Appointment | any;
+  onReschedule?: (appointment: any) => void;
 }
 
-export function VisitCard({ appointment }: VisitCardProps) {
+export function VisitCard({ appointment, onReschedule }: VisitCardProps) {
   const statusLower = (appointment.status || "").toLowerCase();
   const isRequested = statusLower === "requested" || (!appointment.technicianId && statusLower !== "cancelled");
   const isCompleted = statusLower === "completed";
   const isCancelled = statusLower === "cancelled";
+  const canReschedule = !isCompleted && !isCancelled;
 
   const formattedDate = new Date(appointment.date).toLocaleDateString("en-US", {
     weekday: "short",
@@ -93,7 +95,7 @@ export function VisitCard({ appointment }: VisitCardProps) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-1">
+      <div className="flex items-center justify-between pt-1 gap-2">
         {appointment.reportId ? (
           <Link
             href="/dashboard/reports"
@@ -106,7 +108,16 @@ export function VisitCard({ appointment }: VisitCardProps) {
           <div />
         )}
 
-      
+        {canReschedule && onReschedule && (
+          <button
+            type="button"
+            onClick={() => onReschedule(appointment)}
+            className="px-3.5 py-1.5 bg-[#EAF3F8] hover:bg-[#294B68] text-[#294B68] hover:text-white font-bold text-xs rounded-xl transition-all border border-[#5E8FB2]/30 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Reschedule Visit</span>
+          </button>
+        )}
       </div>
     </div>
   );
