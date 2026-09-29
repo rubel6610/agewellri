@@ -1,24 +1,16 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
   UserCheck,
-  Plus,
   ShieldCheck,
   Sparkles,
-  CheckCircle2,
   CalendarDays,
-  ListFilter,
-  Eye,
   X,
-  MapPin,
-  Check,
-  AlertCircle,
   ArrowRight,
   Loader2,
   Trash2,
@@ -33,6 +25,7 @@ import {
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
+import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
 import {
   confirmDelete,
   showSuccessAlert,
@@ -118,6 +111,8 @@ export default function ClientCalendarPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
 
   // Filter out cancelled, no_show, and declined appointments
   const activeAppointments = useMemo(() => {
@@ -733,10 +728,10 @@ export default function ClientCalendarPage() {
               </div>
 
               {/* Location */}
-              <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
+              {/* <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
                 <MapPin className="w-4 h-4 text-[#5E8FB2] shrink-0" />
                 <span>{selectedAppointment.location || selectedAppointment.clientAddress}</span>
-              </div>
+              </div> */}
 
               {selectedAppointment.notes && (
                 <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-amber-900 text-xs">
@@ -747,31 +742,48 @@ export default function ClientCalendarPage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
-              <div>
+              <div className="flex items-center gap-2">
                 {selectedAppointment.status !== "cancelled" &&
                   selectedAppointment.status !== "completed" && (
-                    <button
-                      type="button"
-                      disabled={isCancelling}
-                      onClick={() => handleCancelAppointment(selectedAppointment)}
-                      className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
-                        isCancelling
-                          ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
-                          : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
-                      }`}
-                    >
-                      {isCancelling ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-                          <span className="font-extrabold">Cancelling Visit...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                          <span>Cancel Visit</span>
-                        </>
-                      )}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        disabled={isCancelling}
+                        onClick={() => {
+                          const target = selectedAppointment;
+                          setSelectedAppointment(null);
+                          setRescheduleTargetAppt(target);
+                          setIsRescheduleModalOpen(true);
+                        }}
+                        className="text-xs font-bold px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 bg-[#EAF3F8] text-[#294B68] hover:bg-[#294B68] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>Reschedule Visit</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={isCancelling}
+                        onClick={() => handleCancelAppointment(selectedAppointment)}
+                        className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                          isCancelling
+                            ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
+                            : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
+                        }`}
+                      >
+                        {isCancelling ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+                            <span className="font-extrabold">Cancelling Visit...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <span>Cancel Visit</span>
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
               </div>
 
@@ -792,6 +804,19 @@ export default function ClientCalendarPage() {
       <ScheduleVisitModal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
+      />
+
+      {/* Reschedule Visit Modal Integration */}
+      <RescheduleVisitModal
+        isOpen={isRescheduleModalOpen}
+        onClose={() => {
+          setIsRescheduleModalOpen(false);
+          setRescheduleTargetAppt(null);
+        }}
+        appointment={rescheduleTargetAppt}
+        onSuccess={() => {
+          refetchAppointments();
+        }}
       />
     </div>
   );
