@@ -144,7 +144,7 @@ export function SignupWizard({
       ? `${authUser.firstName} ${authUser.lastName}`.trim()
       : "",
     address: "",
-    city: "Providence",
+    city: "",
     state: "RI",
     postalCode: "02906",
     phone: authUser?.phone || "",

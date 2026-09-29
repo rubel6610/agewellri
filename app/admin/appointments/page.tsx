@@ -12,19 +12,15 @@ import {
 } from "@/redux/features/appointment/appointmentApi";
 import {
   CalendarCheck,
-  Plus,
   Search,
   CheckCircle2,
   FileUp,
   Download,
-  Eye,
-  FileText,
   Clock,
   RefreshCw,
   UserCheck,
   AlertCircle,
   XCircle,
-  Calendar,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -65,7 +61,7 @@ function AppointmentsAdminContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data: apptsRes, isLoading, refetch } = useGetAdminAppointmentsQuery({
+  const { data: apptsRes, isLoading, isFetching, refetch } = useGetAdminAppointmentsQuery({
     search: search || undefined,
   });
 
@@ -238,6 +234,7 @@ function AppointmentsAdminContent() {
             Review client visit requests, assign certified specialists, dispatch scheduled visits, and upload completed reports.
           </p>
         </div>
+
       </div>
 
       {/* Tabs & Search Filter Bar */}
@@ -331,7 +328,7 @@ function AppointmentsAdminContent() {
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-2xl border border-[#D9E4EC] p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white rounded-2xl border border-[#D9E4EC] p-3.5 flex items-center justify-between gap-3 shadow-2xs">
           <div className="relative w-full sm:w-96">
             <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -345,6 +342,17 @@ function AppointmentsAdminContent() {
               className="w-full pl-9 pr-3 py-2 text-xs bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching || isLoading}
+            className="p-2 sm:px-3 sm:py-2 bg-[#F8FAFC] hover:bg-[#EAF3F8] border border-[#D9E4EC] text-[#243746] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Refresh appointments"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching || isLoading ? "animate-spin text-[#294B68]" : "text-[#5E8FB2]"}`} />
+            <span className="hidden sm:inline">{isFetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
         </div>
       </div>
 

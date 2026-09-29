@@ -5,12 +5,15 @@ import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointm
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { VisitCard } from "@/components/dashboard/visit-card";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
+import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
 import { Calendar, Plus, CheckCircle2 } from "lucide-react";
 
 export default function AppointmentsPage() {
   const { data: apptRes, isLoading: isApptLoading } = useGetMyAppointmentsQuery();
   const { data: entitlementsRes, isLoading: isEntLoading } = useGetVisitEntitlementsQuery();
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [selectedRescheduleAppt, setSelectedRescheduleAppt] = useState<any>(null);
   const [statusTab, setStatusTab] = useState<"ALL" | "UPCOMING" | "COMPLETED">("ALL");
 
   const appointments = apptRes?.data || [];
@@ -151,7 +154,14 @@ export default function AppointmentsPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {upcomingVisits.map((appt: any) => (
-                <VisitCard key={appt.id} appointment={appt} />
+                <VisitCard
+                  key={appt.id}
+                  appointment={appt}
+                  onReschedule={(targetAppt) => {
+                    setSelectedRescheduleAppt(targetAppt);
+                    setRescheduleModalOpen(true);
+                  }}
+                />
               ))}
             </div>
           )}
@@ -205,6 +215,16 @@ export default function AppointmentsPage() {
       <ScheduleVisitModal
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
+      />
+
+      {/* Reschedule Visit Modal */}
+      <RescheduleVisitModal
+        isOpen={rescheduleModalOpen}
+        onClose={() => {
+          setRescheduleModalOpen(false);
+          setSelectedRescheduleAppt(null);
+        }}
+        appointment={selectedRescheduleAppt}
       />
     </div>
   );
