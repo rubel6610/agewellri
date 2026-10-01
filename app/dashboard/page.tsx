@@ -19,7 +19,7 @@ export default function DashboardHomePage() {
 
   const { data: entitlementsRes, isLoading: isEntitlementsLoading, refetch: refetchEntitlements } = useGetVisitEntitlementsQuery();
   const { data: billingRes, isLoading: isBillingLoading, refetch: refetchBilling } = useGetBillingOverviewQuery();
-  const { data: apptsRes, isLoading: isApptsLoading } = useGetMyAppointmentsQuery();
+  const { data: apptsRes, isLoading: isApptsLoading, refetch: refetchAppts } = useGetMyAppointmentsQuery();
 
   const realAppointments = apptsRes?.data || [];
   const entitlementsData = entitlementsRes?.data;
@@ -230,6 +230,11 @@ export default function DashboardHomePage() {
           appointment={nextVisit}
           isLoading={isApptsLoading}
           onScheduleVisit={() => setScheduleModalOpen(true)}
+          onRefetch={() => {
+            refetchAppts();
+            refetchEntitlements();
+            refetchBilling();
+          }}
         />
       </div>
 

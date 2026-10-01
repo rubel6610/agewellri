@@ -27,6 +27,7 @@ import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentAp
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
 import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
+import { VisitDetailsModal } from "@/components/dashboard/visit-details-modal";
 import {
   confirmDelete,
   showSuccessAlert,
@@ -660,178 +661,20 @@ export default function ClientCalendarPage() {
         )}
       </div>
 
-      {/* VISIT DETAILS MODAL / DRAWER */}
-      {selectedAppointment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setSelectedAppointment(null)}
-          />
-
-          <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl z-10 space-y-6 animate-in zoom-in-95 duration-200 border border-[#D9E4EC]">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#D9E4EC]/70 pb-4">
-              <div className="flex items-center gap-2.5">
-                <span
-                  className={`p-2.5 rounded-xl ${
-                    (selectedAppointment.status || "").toLowerCase() === "completed"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-[#EAF3F8] text-[#294B68]"
-                  }`}
-                >
-                  {(selectedAppointment.status || "").toLowerCase() === "completed" ? (
-                    <CheckCircle2 className="w-6 h-6" />
-                  ) : (
-                    <ShieldCheck className="w-6 h-6" />
-                  )}
-                </span>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-lg font-black text-[#243746]">
-                      {selectedAppointment.serviceType}
-                    </h3>
-                    <span
-                      className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                        (selectedAppointment.status || "").toLowerCase() === "completed"
-                          ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                          : "bg-sky-50 text-sky-800 border border-sky-200"
-                      }`}
-                    >
-                      {(selectedAppointment.status || "").toLowerCase() === "completed"
-                        ? "Complete"
-                        : "Schedule"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedAppointment(null)}
-                aria-label="Close"
-                className="p-1.5 rounded-xl border border-[#D9E4EC] text-[#64748B] hover:text-[#243746] cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Visit Details Grid */}
-            <div className="space-y-4 text-xs font-semibold text-[#243746]">
-              <div className="grid grid-cols-2 gap-3 p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]">
-                <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
-                    Scheduled Date
-                  </span>
-                  <span className="text-sm font-black text-[#243746] mt-0.5 block">
-                    {selectedAppointment.date}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
-                    Time Window
-                  </span>
-                  <span className="text-sm font-black text-[#243746] mt-0.5 block">
-                    {selectedAppointment.timeSlot}
-                  </span>
-                </div>
-              </div>
-
-              {/* Safety Specialist Profile */}
-              <div className="p-4 rounded-2xl border border-[#D9E4EC] bg-white space-y-2">
-                <div className="text-[11px] uppercase tracking-wider text-[#5E8FB2] font-extrabold">
-                  Assigned Safety Specialist
-                </div>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full text-white flex items-center justify-center font-black text-sm shadow-xs"
-                    style={{
-                      backgroundColor: selectedAppointment.technicianColor || "#294B68",
-                    }}
-                  >
-                    {selectedAppointment.technicianName.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-black text-[#243746]">
-                      {selectedAppointment.technicianName}
-                    </div>
-                    <div className="text-xs text-[#5E8FB2]">
-                      {selectedAppointment.technicianTitle}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              {/* <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
-                <MapPin className="w-4 h-4 text-[#5E8FB2] shrink-0" />
-                <span>{selectedAppointment.location || selectedAppointment.clientAddress}</span>
-              </div> */}
-
-              {selectedAppointment.notes && (
-                <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-amber-900 text-xs">
-                  <strong>Member Notes:</strong> {selectedAppointment.notes}
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
-              <div className="flex items-center gap-2">
-                {selectedAppointment.status !== "cancelled" &&
-                  selectedAppointment.status !== "completed" && (
-                    <>
-                      <button
-                        type="button"
-                        disabled={isCancelling}
-                        onClick={() => {
-                          const target = selectedAppointment;
-                          setSelectedAppointment(null);
-                          setRescheduleTargetAppt(target);
-                          setIsRescheduleModalOpen(true);
-                        }}
-                        className="text-xs font-bold px-3.5 py-2 rounded-xl border border-[#5E8FB2]/30 bg-[#EAF3F8] text-[#294B68] hover:bg-[#294B68] hover:text-white flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                      >
-                        <CalendarIcon className="w-4 h-4" />
-                        <span>Reschedule Visit</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={isCancelling}
-                        onClick={() => handleCancelAppointment(selectedAppointment)}
-                        className={`text-xs font-bold px-3.5 py-2 rounded-xl border flex items-center gap-1.5 transition-all ${
-                          isCancelling
-                            ? "bg-red-50 text-red-700 border-red-300 opacity-90 cursor-wait shadow-2xs"
-                            : "text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 cursor-pointer"
-                        }`}
-                      >
-                        {isCancelling ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-                            <span className="font-extrabold">Cancelling Visit...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                            <span>Cancel Visit</span>
-                          </>
-                        )}
-                      </button>
-                    </>
-                  )}
-              </div>
-
-              <button
-                type="button"
-                disabled={isCancelling}
-                onClick={() => setSelectedAppointment(null)}
-                className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                Close Details
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* VISIT DETAILS MODAL */}
+      <VisitDetailsModal
+        isOpen={Boolean(selectedAppointment)}
+        onClose={() => setSelectedAppointment(null)}
+        appointment={selectedAppointment}
+        onReschedule={(appt) => {
+          setSelectedAppointment(null);
+          setRescheduleTargetAppt(appt);
+          setIsRescheduleModalOpen(true);
+        }}
+        onSuccess={() => {
+          refetchAppointments();
+        }}
+      />
 
       {/* Schedule Visit Modal Integration */}
       <ScheduleVisitModal
