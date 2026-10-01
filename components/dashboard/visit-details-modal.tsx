@@ -138,7 +138,7 @@ export function VisitDetailsModal({
                   </span>
                 ) : (
                   <span className="inline-block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full border border-[#38BDF8] text-[#0284C7] bg-[#F0F9FF]">
-                    SCHEDULE
+                    SCHEDULED
                   </span>
                 )}
               </div>
