@@ -20,11 +20,7 @@ import { useAppDispatch } from "@/redux/hooks";
 import { logout } from "@/redux/features/auth/authSlice";
 import { confirmCriticalAction, showSuccessAlert } from "@/lib/alerts/sweetalert";
 
-interface DashboardSidebarProps {
-  onOpenContactModal?: () => void;
-}
-
-export function DashboardSidebar({ onOpenContactModal }: DashboardSidebarProps = {}) {
+export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -45,14 +41,10 @@ export function DashboardSidebar({ onOpenContactModal }: DashboardSidebarProps =
 
   const handleHelp = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (onOpenContactModal) {
-      onOpenContactModal();
-    } else {
-      showSuccessAlert(
-        "AgeWellRI Member Concierge",
-        `Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nHours: Mon–Fri, 8am–6pm`
-      );
-    }
+    showSuccessAlert(
+      "AgeWellRI Member Concierge",
+      `Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nHours: Mon–Fri, 8am–6pm`
+    );
   };
 
   const navItems = [

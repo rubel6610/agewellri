@@ -30,7 +30,7 @@ export function DashboardLayout({
     <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746] overflow-x-hidden max-w-full w-full">
       {/* Desktop Fixed Sidebar */}
       <div className="hidden lg:block w-64 shrink-0">
-        <DashboardSidebar onOpenContactModal={() => setContactModalOpen(true)} />
+        <DashboardSidebar />
       </div>
 
       {/* Mobile Drawer Navigation */}
@@ -38,7 +38,6 @@ export function DashboardLayout({
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         onOpenScheduleModal={() => setScheduleModalOpen(true)}
-        onOpenContactModal={() => setContactModalOpen(true)}
       />
 
       {/* Main Content Area */}
