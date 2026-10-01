@@ -7,6 +7,7 @@ import { MobileNavigation } from "./mobile-navigation";
 
 import { UserProfile, NotificationItem, ServicePlan } from "@/lib/types/dashboard";
 import { ScheduleVisitModal } from "./schedule-visit-modal";
+import { ContactSupportModal } from "./contact-support-modal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,12 +24,13 @@ export function DashboardLayout({
 }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-[#F7FAFC] flex flex-col lg:flex-row antialiased text-[#243746] overflow-x-hidden max-w-full w-full">
       {/* Desktop Fixed Sidebar */}
       <div className="hidden lg:block w-64 shrink-0">
-        <DashboardSidebar />
+        <DashboardSidebar onOpenContactModal={() => setContactModalOpen(true)} />
       </div>
 
       {/* Mobile Drawer Navigation */}
@@ -36,6 +38,7 @@ export function DashboardLayout({
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         onOpenScheduleModal={() => setScheduleModalOpen(true)}
+        onOpenContactModal={() => setContactModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -45,6 +48,7 @@ export function DashboardLayout({
           notifications={notifications}
           onOpenMobileMenu={() => setMobileMenuOpen(true)}
           onOpenScheduleModal={() => setScheduleModalOpen(true)}
+          onOpenContactModal={() => setContactModalOpen(true)}
         />
 
         {/* Fixed Header Height Spacer */}
@@ -60,6 +64,12 @@ export function DashboardLayout({
         isOpen={scheduleModalOpen}
         onClose={() => setScheduleModalOpen(false)}
         plan={plan}
+      />
+
+      {/* Direct-to-Gmail Contact Support Modal */}
+      <ContactSupportModal
+        isOpen={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
       />
     </div>
   );

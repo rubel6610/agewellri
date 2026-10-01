@@ -28,12 +28,14 @@ interface MobileNavigationProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenScheduleModal: () => void;
+  onOpenContactModal?: () => void;
 }
 
 export function MobileNavigation({
   isOpen,
   onClose,
   onOpenScheduleModal,
+  onOpenContactModal,
 }: MobileNavigationProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -58,10 +60,15 @@ export function MobileNavigation({
 
   const handleHelp = (e: React.MouseEvent) => {
     e.preventDefault();
-    showSuccessAlert(
-      "AgeWellRI Member Concierge",
-      "24/7 Safety Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: agewellri@gmail.com\nDedicated Rhode Island Staff",
-    );
+    onClose();
+    if (onOpenContactModal) {
+      onOpenContactModal();
+    } else {
+      showSuccessAlert(
+        "AgeWellRI Member Concierge",
+        "Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nDedicated Rhode Island Staff"
+      );
+    }
   };
 
   const navItems = [
