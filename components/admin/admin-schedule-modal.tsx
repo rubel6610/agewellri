@@ -326,13 +326,12 @@ export function AdminScheduleModal({
     specialists.find((s) => s.id === technicianName) ||
     specialists[0];
 
-  const checkSlotBooked = (ts: string): { isBooked: boolean; appt?: any; sameDate: boolean; conflictEntity: string } => {
+  const checkSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
-    if (!slotRange) return { isBooked: false, sameDate: false, conflictEntity: "" };
+    if (!slotRange || !date) return { isBooked: false };
 
     const targetClientId = selectedClient?.id || selectedClientId;
     const targetInternalId = selectedClient?.internalId || selectedClient?.userId;
-    const targetSpecId = selectedSpecialistObj?.id;
 
     for (const appt of adminAppointments) {
       const isClientAppt =
@@ -341,30 +340,24 @@ export function AdminScheduleModal({
         appt.clientNumber === targetClientId ||
         (selectedClient?.clientNumber && appt.clientNumber === selectedClient.clientNumber);
 
-      const isSpecAppt =
-        Boolean(targetSpecId &&
-        (appt.technicianId === targetSpecId ||
-          (appt.technicianName && selectedSpecialistObj?.name && appt.technicianName.toLowerCase() === selectedSpecialistObj.name.toLowerCase())));
+      if (!isClientAppt) continue;
 
-      if (!isClientAppt && !isSpecAppt) continue;
+      const apptDate = getApptDateFormatted(appt);
+      // Only conflict if it is the EXACT same date
+      if (apptDate !== date) continue;
 
       const apptRange = parseApptTimeSlotToMinutes(appt);
       if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
-        const apptDate = getApptDateFormatted(appt);
-        const isSameDate = date && apptDate === date;
-        const conflictEntity = isClientAppt
-          ? `${selectedClient?.firstName || "Client"}`
-          : `${selectedSpecialistObj?.name || "Specialist"}`;
-        return { isBooked: true, appt, sameDate: Boolean(isSameDate), conflictEntity };
+        return { isBooked: true, appt };
       }
     }
 
-    return { isBooked: false, sameDate: false, conflictEntity: "" };
+    return { isBooked: false };
   };
 
   const currentSlotStatus = useMemo(() => {
     return checkSlotBooked(timeSlot);
-  }, [timeSlot, date, selectedClient, selectedSpecialistObj, adminAppointments]);
+  }, [timeSlot, date, selectedClient, adminAppointments]);
 
   // Derive default serviceType from client plan
   const serviceType = selectedClient?.planName || "Home Safety & Oversight Visit";
@@ -409,11 +402,30 @@ export function AdminScheduleModal({
     return 1;
   };
 
+  const clientApptOnSelectedDate = useMemo(() => {
+    if (!date) return null;
+    const targetClientId = selectedClient?.id || selectedClientId;
+    const targetInternalId = selectedClient?.internalId || selectedClient?.userId;
+
+    return adminAppointments.find((appt) => {
+      const isClientAppt =
+        appt.clientId === targetClientId ||
+        appt.clientId === targetInternalId ||
+        appt.clientNumber === targetClientId ||
+        (selectedClient?.clientNumber && appt.clientNumber === selectedClient.clientNumber);
+
+      if (!isClientAppt) return false;
+      return getApptDateFormatted(appt) === date;
+    });
+  }, [date, selectedClient, selectedClientId, adminAppointments]);
+
+  const hasDateConflict = Boolean(clientApptOnSelectedDate);
+
   const isTargetClientAgreementPaid = Boolean(selectedClient);
   const clientRemainingVisits = getRemainingVisitsForClient(selectedClient);
   const hasRemainingVisits = clientRemainingVisits > 0;
-  const isTimeSlotValid = !currentSlotStatus.isBooked;
-  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && isTimeSlotValid;
+  const isTimeSlotValid = !currentSlotStatus.isBooked && !hasDateConflict;
+  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && !hasDateConflict && isTimeSlotValid;
 
   if (!isOpen) return null;
 
@@ -469,6 +481,14 @@ export function AdminScheduleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (hasDateConflict) {
+      showErrorAlert(
+        "Date Conflict",
+        `A visit is already scheduled for this client on ${date} (${clientApptOnSelectedDate?.timeSlot || "Scheduled"}). The same client cannot have multiple visits scheduled on the same date. Please select another date.`
+      );
+      return;
+    }
 
     if (!isTargetClientEligible) {
       if (!isTargetClientAgreementPaid) {
@@ -873,7 +893,11 @@ export function AdminScheduleModal({
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full h-11 px-3 text-sm border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                  className={`w-full h-11 px-3 text-sm border rounded-xl focus:outline-none focus:ring-2 ${
+                    hasDateConflict
+                      ? "border-rose-400 bg-rose-50/40 text-rose-900 focus:ring-rose-500"
+                      : "border-[#D9E4EC] focus:ring-[#5E8FB2]"
+                  }`}
                 />
               </div>
 
@@ -910,12 +934,10 @@ export function AdminScheduleModal({
                         >
                           {availableStartTimes.map((st) => {
                             const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
-                            const { isBooked, appt, sameDate, conflictEntity } = checkSlotBooked(customSlotStr);
+                            const { isBooked, appt } = checkSlotBooked(customSlotStr);
                             let label = st;
                             if (isBooked) {
-                              label += sameDate
-                                ? ` (${conflictEntity} Booked on this date)`
-                                : ` (${conflictEntity} Booked on ${appt?.date || "other date"})`;
+                              label += ` (Client already booked: ${appt?.timeSlot || customSlotStr})`;
                             }
                             return (
                               <option
@@ -962,12 +984,10 @@ export function AdminScheduleModal({
                     className="w-full h-11 px-3.5 bg-white border border-[#D9E4EC] rounded-xl text-sm font-bold text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] cursor-pointer"
                   >
                     {standardTimeSlots.map((ts) => {
-                      const { isBooked, appt, sameDate, conflictEntity } = checkSlotBooked(ts);
+                      const { isBooked, appt } = checkSlotBooked(ts);
                       let label = ts;
                       if (isBooked) {
-                        label += sameDate
-                          ? ` — [Already Booked: ${conflictEntity} on this date]`
-                          : ` — [Already Booked: ${conflictEntity} on ${appt?.date || "another date"}]`;
+                        label += ` — [Already Booked: ${appt?.timeSlot || ts}]`;
                       }
                       return (
                         <option
@@ -986,27 +1006,35 @@ export function AdminScheduleModal({
               </div>
             </div>
 
-            {/* Full-width Time slot conflict alert banner */}
-            {currentSlotStatus.isBooked && (
+            {/* Full-width Date conflict alert banner */}
+            {hasDateConflict && (
               <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold text-rose-950">
-                    {currentSlotStatus.sameDate
-                      ? `Time Slot Conflict (${(() => {
-                          try {
-                            const [y, m, d] = date.split("-").map(Number);
-                            return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-                          } catch {
-                            return date;
-                          }
-                        })()})`
-                      : `Time Slot Already Scheduled (${currentSlotStatus.appt?.date || "Another Date"})`}
+                    Visit Already Scheduled on this Date ({date})
                   </strong>
                   <p className="text-rose-800 text-[11px] mt-0.5 leading-relaxed">
-                    <strong>{currentSlotStatus.conflictEntity}</strong> already has an active visit booked at{" "}
+                    This client already has an active visit booked on{" "}
+                    <strong>{date}</strong> at{" "}
+                    <strong>{clientApptOnSelectedDate?.timeSlot || "Scheduled"}</strong>. Multiple visits cannot be scheduled on the same date for the same client. Please choose another date.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Full-width Time slot conflict alert banner */}
+            {!hasDateConflict && currentSlotStatus.isBooked && (
+              <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">
+                    Client Time Slot Conflict ({date})
+                  </strong>
+                  <p className="text-rose-800 text-[11px] mt-0.5 leading-relaxed">
+                    This client already has an active visit scheduled at{" "}
                     <strong>{currentSlotStatus.appt?.timeSlot || timeSlot}</strong> on{" "}
-                    <strong>{currentSlotStatus.appt?.date || date}</strong>. The same time slot cannot be scheduled on the same or different dates. Please choose another time slot.
+                    <strong>{date}</strong>. The same client cannot be scheduled for two visits at the same time on the same date. Please select another time slot or date.
                   </p>
                 </div>
               </div>
@@ -1026,9 +1054,9 @@ export function AdminScheduleModal({
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting || !isTargetClientEligible}
+                disabled={isSubmitting || !isTargetClientEligible || hasDateConflict}
                 className={`w-full py-3 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 ${
-                  !isTargetClientEligible
+                  !isTargetClientEligible || hasDateConflict
                     ? "bg-slate-100 text-[#94A3B8] border border-slate-200 cursor-not-allowed"
                     : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
                 }`}
@@ -1038,6 +1066,8 @@ export function AdminScheduleModal({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
+                ) : hasDateConflict ? (
+                  <span>Date Conflict — Client already has a visit on this date</span>
                 ) : !isTimeSlotValid ? (
                   <span>Time Slot Conflict — Choose Another Time</span>
                 ) : !isTargetClientAgreementPaid ? (

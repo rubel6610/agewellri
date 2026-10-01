@@ -345,19 +345,20 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     return activeAppointments.filter((a) => getApptDateFormatted(a) === selectedDate);
   }, [activeAppointments, selectedDate]);
 
-  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any; sameDate: boolean } => {
+  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
-    if (!slotRange) return { isBooked: false, sameDate: false };
+    if (!slotRange || !selectedDate) return { isBooked: false };
 
     for (const appt of activeAppointments) {
+      const apptDate = getApptDateFormatted(appt);
+      if (apptDate !== selectedDate) continue;
+
       const apptRange = parseApptTimeSlotToMinutes(appt);
       if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
-        const apptDate = getApptDateFormatted(appt);
-        const isSameDate = selectedDate && apptDate === selectedDate;
-        return { isBooked: true, appt, sameDate: Boolean(isSameDate) };
+        return { isBooked: true, appt };
       }
     }
-    return { isBooked: false, sameDate: false };
+    return { isBooked: false };
   };
 
   const standardTimeSlots = useMemo(() => {
@@ -971,7 +972,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <div className="space-y-2.5">
                 <div className={`grid gap-2.5 ${planDurationHours === 1 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
                   {standardTimeSlots.map((ts) => {
-                    const { isBooked, appt, sameDate } = checkTimeSlotBooked(ts);
+                    const { isBooked, appt } = checkTimeSlotBooked(ts);
                     const isSelected = selectedTimeSlot === ts;
 
                     return (
@@ -982,9 +983,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         onClick={() => setSelectedTimeSlot(ts)}
                         title={
                           isBooked
-                            ? sameDate
-                              ? `Already Scheduled: ${appt?.serviceType || "Visit"} is scheduled at ${ts} on this date`
-                              : `Already Scheduled: ${appt?.serviceType || "Visit"} is scheduled at ${ts} on ${appt?.date || "another date"}`
+                            ? `Already Scheduled: ${appt?.serviceType || "Visit"} is scheduled at ${ts} on this date`
                             : `Select ${ts}`
                         }
                         className={`p-3.5 rounded-xl border text-center font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-1 ${
@@ -999,7 +998,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         {isBooked ? (
                           <span className="text-[10px] font-extrabold uppercase tracking-wider bg-rose-200 text-rose-900 px-2 py-0.5 rounded-md flex items-center gap-1 mt-0.5 border border-rose-300">
                             <AlertCircle className="w-3 h-3 text-rose-700" />
-                            {sameDate ? "Already Scheduled" : `Scheduled (${appt?.date || "Other Date"})`}
+                            Already Scheduled
                           </span>
                         ) : isSelected ? (
                           <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-0.5">

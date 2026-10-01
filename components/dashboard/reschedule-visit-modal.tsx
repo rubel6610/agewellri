@@ -288,19 +288,20 @@ export function RescheduleVisitModal({
     }
   }, [appointment, isOpen, standardTimeSlots]);
 
-  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any; sameDate: boolean } => {
+  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
-    if (!slotRange) return { isBooked: false, sameDate: false };
+    if (!slotRange || !selectedDate) return { isBooked: false };
 
     for (const appt of otherActiveAppointments) {
+      const apptDate = getApptDateFormatted(appt);
+      if (apptDate !== selectedDate) continue;
+
       const apptRange = parseApptTimeSlotToMinutes(appt);
       if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
-        const apptDate = getApptDateFormatted(appt);
-        const isSameDate = selectedDate && apptDate === selectedDate;
-        return { isBooked: true, appt, sameDate: Boolean(isSameDate) };
+        return { isBooked: true, appt };
       }
     }
-    return { isBooked: false, sameDate: false };
+    return { isBooked: false };
   };
 
   const currentSlotStatus = useMemo(() => {
@@ -561,7 +562,7 @@ export function RescheduleVisitModal({
             {timeMode === "PRESET" ? (
               <div className={`grid gap-2 ${planDurationHours === 1 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
                 {standardTimeSlots.map((ts) => {
-                  const { isBooked, appt, sameDate } = checkTimeSlotBooked(ts);
+                  const { isBooked } = checkTimeSlotBooked(ts);
                   const isSelected = selectedTimeSlot === ts;
 
                   return (
@@ -581,7 +582,7 @@ export function RescheduleVisitModal({
                       <span>{ts}</span>
                       {isBooked ? (
                         <span className="text-[9px] font-extrabold uppercase bg-rose-200 text-rose-900 px-1.5 py-0.5 rounded mt-0.5 border border-rose-300">
-                          {sameDate ? "Already Scheduled" : `Scheduled (${appt?.date || "Other"})`}
+                          Already Scheduled
                         </span>
                       ) : isSelected ? (
                         <span className="text-[9px] font-extrabold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-0.5">
@@ -643,12 +644,10 @@ export function RescheduleVisitModal({
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <div>
                   <strong className="block font-bold text-rose-950">
-                    {currentSlotStatus.sameDate
-                      ? `Time Slot Conflict (${selectedDate})`
-                      : `Time Slot Already Scheduled (${currentSlotStatus.appt?.date || "Another Date"})`}
+                    Time Slot Conflict ({selectedDate})
                   </strong>
                   <p className="text-rose-800 text-[11px] mt-0.5">
-                    Another visit is already scheduled at <strong>{currentSlotStatus.appt?.timeSlot || selectedTimeSlot}</strong> on <strong>{currentSlotStatus.appt?.date || selectedDate}</strong>. The same time slot cannot be scheduled on the same or different dates. Please select another time window.
+                    Another visit is already scheduled at <strong>{currentSlotStatus.appt?.timeSlot || selectedTimeSlot}</strong> on <strong>{selectedDate}</strong>. The same client cannot be scheduled for two visits at the same time on the same date. Please select another time window or date.
                   </p>
                 </div>
               </div>
