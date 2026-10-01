@@ -157,14 +157,14 @@ export default function SubscriptionsAdminPage() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
-          <button
+          {/* <button
             onClick={handleTriggerRenewalReminders}
             disabled={isTriggeringReminders}
             className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             <Clock className="w-4 h-4" />
             <span>Check Renewals Now</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
