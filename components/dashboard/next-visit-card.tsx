@@ -85,7 +85,7 @@ export function NextVisitCard({
               Visit Requested
             </span>
           ) : (
-            <span className="text-xs font-bold uppercase tracking-wider text-[#5E8FB2] bg-white/10 px-3 py-1 rounded-full border border-white/15">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#fff] bg-white/10 px-3 py-1 rounded-full border border-white/15">
               Your Next Visit
             </span>
           )}

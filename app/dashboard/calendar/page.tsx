@@ -17,6 +17,7 @@ import {
   Layers,
   HeartPulse,
   ClipboardCheck,
+  CheckCircle2,
 } from "lucide-react";
 import {
   useGetMyAppointmentsQuery,
@@ -525,23 +526,35 @@ export default function ClientCalendarPage() {
                       {/* Appointments Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
                         {cell.appointments.map((appt) => {
-                          const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
-                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
-                          const Icon = style.icon;
+                          const statusLower = (appt.status || "").toLowerCase();
+                          const isCompleted = statusLower === "completed";
+                          const statusLabel = isCompleted ? "Complete" : "Scheduled";
                           const timeShort = appt.timeSlot ? appt.timeSlot.split("–")[0].trim() : "";
+                          const Icon = isCompleted ? CheckCircle2 : Clock;
 
                           return (
                             <button
                               key={appt.id}
                               onClick={() => setSelectedAppointment(appt)}
-                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center justify-between gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${style.cellBg} ${style.cellText} border ${style.cellBorder}`}
+                              title={`${appt.serviceType} (${statusLabel}) - ${appt.timeSlot}`}
+                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center justify-between gap-1 transition-all hover:scale-[1.02] cursor-pointer shadow-2xs ${
+                                isCompleted
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100/80"
+                                  : "bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 hover:bg-[#D9EAF4]"
+                              }`}
                             >
                               <div className="flex items-center gap-1 truncate min-w-0">
-                                <Icon className={`w-2.5 h-2.5 ${style.iconColor} shrink-0`} />
-                                <span className="truncate">{appt.serviceType}</span>
+                                <Icon className={`w-3 h-3 shrink-0 ${isCompleted ? "text-emerald-600" : "text-[#294B68]"}`} />
+                                <span className="truncate font-black">{statusLabel}</span>
                               </div>
                               {timeShort && (
-                                <span className="text-[9px] font-mono font-bold shrink-0 opacity-80 bg-white/60 px-1 rounded">
+                                <span
+                                  className={`text-[9px] font-mono font-bold shrink-0 px-1 py-0.5 rounded ${
+                                    isCompleted
+                                      ? "bg-white/80 text-emerald-900 border border-emerald-200"
+                                      : "bg-white/80 text-[#243746] border border-[#294B68]/15"
+                                  }`}
+                                >
                                   {timeShort}
                                 </span>
                               )}
@@ -575,10 +588,10 @@ export default function ClientCalendarPage() {
                   const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
                   const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                   const Icon = style.icon;
-                  const isScheduled =
-                    appt.status === "scheduled" ||
-                    appt.status === "confirmed" ||
-                    appt.status === "rescheduled";
+                  const statusLower = (appt.status || "").toLowerCase();
+                  const isCompleted = statusLower === "completed";
+                  const isScheduled = !isCompleted;
+                  const statusLabel = isCompleted ? "Complete" : "Schedule";
 
                   return (
                     <div
@@ -587,7 +600,7 @@ export default function ClientCalendarPage() {
                       className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-4 hover:shadow-md hover:-translate-y-0.5 ${
                         isScheduled
                           ? "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]"
-                          : "border-[#E2E8F0] bg-[#F8FAFC] opacity-90"
+                          : "border-emerald-200 bg-emerald-50/20 hover:border-emerald-300"
                       }`}
                     >
                       <div className="space-y-2.5">
@@ -600,13 +613,13 @@ export default function ClientCalendarPage() {
                           </span>
 
                           <span
-                            className={`text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
-                              isScheduled
-                                ? "bg-sky-50 text-sky-800 border border-sky-200"
-                                : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                              isCompleted
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-sky-50 text-sky-800 border border-sky-200"
                             }`}
                           >
-                            {appt.status}
+                            {statusLabel}
                           </span>
                         </div>
 
@@ -659,16 +672,36 @@ export default function ClientCalendarPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-[#D9E4EC]/70 pb-4">
               <div className="flex items-center gap-2.5">
-                <span className="p-2.5 rounded-xl bg-[#EAF3F8] text-[#294B68]">
-                  <ShieldCheck className="w-6 h-6" />
+                <span
+                  className={`p-2.5 rounded-xl ${
+                    (selectedAppointment.status || "").toLowerCase() === "completed"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-[#EAF3F8] text-[#294B68]"
+                  }`}
+                >
+                  {(selectedAppointment.status || "").toLowerCase() === "completed" ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <ShieldCheck className="w-6 h-6" />
+                  )}
                 </span>
                 <div>
-                  <h3 className="text-lg font-black text-[#243746]">
-                    {selectedAppointment.serviceType}
-                  </h3>
-                  {/* <p className="text-xs text-[#5E8FB2] font-semibold">
-                    Appointment ID: #{selectedAppointment.id}
-                  </p> */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-black text-[#243746]">
+                      {selectedAppointment.serviceType}
+                    </h3>
+                    <span
+                      className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                        (selectedAppointment.status || "").toLowerCase() === "completed"
+                          ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          : "bg-sky-50 text-sky-800 border border-sky-200"
+                      }`}
+                    >
+                      {(selectedAppointment.status || "").toLowerCase() === "completed"
+                        ? "Complete"
+                        : "Schedule"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
