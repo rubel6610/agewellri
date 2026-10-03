@@ -145,8 +145,8 @@ export function AgreementPreviewModal({
           {/* <span className="text-xs text-[#64748B]">
             Official legal service agreement record for <strong>{agreement.clientName}</strong>
           </span> */}
-          <div className="flex items-center gap-2">
-            {authDocUrl ? (
+          {/* <div className="flex items-center gap-2"> */}
+            {/* {authDocUrl ? (
               <button
                 type="button"
                 onClick={() =>
@@ -161,7 +161,7 @@ export function AgreementPreviewModal({
                 <Download className="w-3.5 h-3.5 text-emerald-700" />
                 <span>Authority Doc</span>
               </button>
-            ) : null}
+            ) : null} */}
 
             {/* <button
               type="button"
@@ -184,7 +184,7 @@ export function AgreementPreviewModal({
             >
               Close
             </button> */}
-          </div>
+          {/* </div> */}
         {/* </div> */}
       </div>
     </div>

@@ -81,7 +81,7 @@ const AGEWELL_OFFICER_NAME = "Cory Poplaski";
 const AGEWELL_OFFICER_TITLE = "Founder & Director";
 const AGEWELL_COMPANY_NAME = "AgeWellRI LLC";
 
-const OWNER_SIGNATURE_SVG ="/signature.png"
+const OWNER_SIGNATURE_SVG = "/signature.png";
 
 async function svgToPngDataUrl(
   svgStr: string,
@@ -147,7 +147,7 @@ function formatCapacity(cap?: string | null): string {
 // }
 
 /**
- * Generates and downloads a vector-based, high-fidelity PDF of the AgeWellRI Hybrid Services Agreement (16-Section Rhode Island Version).
+ * Generates and downloads a vector-based, high-fidelity PDF of the AGEWELLRI HOME SAFETY SERVICES AGREEMENT (16-Section Rhode Island Version).
  */
 export async function downloadAgreementPdf(
   agreement: AgreementPdfData,
@@ -335,11 +335,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.8);
   doc.setTextColor(255, 255, 255);
-  doc.text(
-    "AGEWELLRI HYBRID SERVICES AGREEMENT",
-    margin + 4,
-    y + 6.5,
-  );
+  doc.text("AGEWELLRI HOME SAFETY SERVICES AGREEMENT", margin + 4, y + 6.5);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
@@ -633,11 +629,7 @@ export async function downloadAgreementPdf(
   doc.setTextColor(...greenText);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.2);
-  doc.text(
-    "Authorized for Confirmed Scheduled Visits",
-    margin + 95,
-    y + 8.5,
-  );
+  doc.text("Authorized for Confirmed Scheduled Visits", margin + 95, y + 8.5);
 
   doc.setFontSize(6.2);
   doc.setFont("helvetica", "normal");
@@ -657,7 +649,7 @@ export async function downloadAgreementPdf(
   // SECTION 1: PARTIES, PLANS, & SCOPE OF SERVICE
   drawSectionHeader("1. PARTIES, PLANS, & SCOPE OF SERVICE", 4.5);
   renderParagraph(
-    `This Hybrid Services Agreement (the "Agreement") is entered into by and between AgeWellRI LLC ("Company") and the undersigned client and/or responsible family representative ("Client"): ${clientFullName}, residing at ${dispAddress}. Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.`,
+    `This Home Safety Services Agreement is entered into by and between AgeWellRI LLC ("Company") and the undersigned client and/or responsible family representative ("Client"): ${clientFullName}, residing at ${dispAddress}. Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.`,
     3.5,
   );
 
@@ -707,11 +699,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  doc.text(
-    `Rate: $295.00 per month`,
-    margin + 4,
-    p1Y,
-  );
+  doc.text(`Rate: $295.00 per month`, margin + 4, p1Y);
 
   p1Y += 4.2;
   doc.setFont("helvetica", "normal");
@@ -755,11 +743,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  doc.text(
-    `Rate: $${planPrice}.00 per month`,
-    margin + 4,
-    p2Y,
-  );
+  doc.text(`Rate: $${planPrice}.00 per month`, margin + 4, p2Y);
 
   p2Y += 4.2;
   doc.setFont("helvetica", "normal");
@@ -906,10 +890,7 @@ export async function downloadAgreementPdf(
   );
 
   // SECTION 10
-  drawSectionHeader(
-    "10. CLIENT CANCELLATION & RISK TERMINATION POLICY",
-    4.5,
-  );
+  drawSectionHeader("10. CLIENT CANCELLATION & RISK TERMINATION POLICY", 4.5);
   renderSubsection(
     "Right to Cancel:",
     "Client may cancel this Agreement at any time by submitting a request via email to agewellri@gmail.com or through the client dashboard. A cancellation request is deemed received, and Company will begin processing it, immediately upon submission. A Client who cancels before their service commencement date under Section 9 owes nothing and is not subject to the notice period below, since no charge has yet processed and no services have yet been scheduled.",
@@ -928,20 +909,13 @@ export async function downloadAgreementPdf(
   );
 
   // SECTION 11
-  drawSectionHeader(
-    "11. PAPER INVOICE COMPLIANCE (RHODE ISLAND ONLY)",
-    4.5,
-  );
+  drawSectionHeader("11. PAPER INVOICE COMPLIANCE (RHODE ISLAND ONLY)", 4.5);
   renderParagraph(
     "In strict compliance with the Rhode Island Senior Savings Protection Act (R.I. Gen. Laws § 6-40.1-2), if the Client or senior resident is sixty-five (65) years of age or older and requests a printed, physical paper invoice sent via United States Postal Service mail rather than electronic delivery, Company will provide such physical mailings completely free of charge. No handling, processing, environmental, or printing fees will ever be applied to physical mailings.",
   );
 
   // SECTION 12
-  drawSectionHeader(
-    "12. REQUIRED AUTHORIZATIONS",
-    4.5,
-  );
-  
+  drawSectionHeader("12. REQUIRED AUTHORIZATIONS", 4.5);
 
   renderSubsection(
     "Section 12.2: Emergency Right of Entry Authorization",
@@ -1247,12 +1221,9 @@ export async function downloadAgreementPdf(
       margin,
       pageHeight - 6,
     );
-    doc.text(
-      `Page ${p} of ${totalPages}`,
-      pageWidth - margin,
-      pageHeight - 6,
-      { align: "right" },
-    );
+    doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, pageHeight - 6, {
+      align: "right",
+    });
   }
 
   // Save PDF file
