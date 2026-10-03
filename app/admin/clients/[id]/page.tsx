@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, useMemo, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -249,7 +249,14 @@ export default function ClientDetailPage({
   const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
 
   const client = clientRes?.data;
-  const clientAppointments = clientApptsRes?.data || [];
+  const clientAppointments = useMemo(() => {
+    const list = [...(clientApptsRes?.data || [])];
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [clientApptsRes?.data]);
 
   const handleDeleteClient = async () => {
     if (!client) return;

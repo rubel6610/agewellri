@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -82,7 +82,14 @@ function AppointmentsAdminContent() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const allAppointments = apptsRes?.data || [];
+  const allAppointments = useMemo(() => {
+    const list = [...(apptsRes?.data || [])];
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [apptsRes?.data]);
 
   // Filter based on active tab and search
   const requestedCount = allAppointments.filter((a) => a.status === "requested" || (!a.technicianId && a.status !== "cancelled")).length;
@@ -90,24 +97,32 @@ function AppointmentsAdminContent() {
   const completedCount = allAppointments.filter((a) => a.status === "completed").length;
   const cancelledCount = allAppointments.filter((a) => (a.status || "").toLowerCase() === "cancelled").length;
 
-  const filteredAppointments = allAppointments.filter((appt) => {
-    const statusLower = (appt.status || "").toLowerCase();
-    const isReq = statusLower === "requested" || (!appt.technicianId && statusLower !== "cancelled");
+  const filteredAppointments = useMemo(() => {
+    const list = allAppointments.filter((appt) => {
+      const statusLower = (appt.status || "").toLowerCase();
+      const isReq = statusLower === "requested" || (!appt.technicianId && statusLower !== "cancelled");
 
-    if (activeTab === "REQUESTS") {
-      return isReq;
-    }
-    if (activeTab === "SCHEDULED") {
-      return ["scheduled", "confirmed", "rescheduled"].includes(statusLower) && Boolean(appt.technicianId);
-    }
-    if (activeTab === "COMPLETED") {
-      return statusLower === "completed";
-    }
-    if (activeTab === "CANCELLED") {
-      return statusLower === "cancelled";
-    }
-    return true; // "ALL"
-  });
+      if (activeTab === "REQUESTS") {
+        return isReq;
+      }
+      if (activeTab === "SCHEDULED") {
+        return ["scheduled", "confirmed", "rescheduled"].includes(statusLower) && Boolean(appt.technicianId);
+      }
+      if (activeTab === "COMPLETED") {
+        return statusLower === "completed";
+      }
+      if (activeTab === "CANCELLED") {
+        return statusLower === "cancelled";
+      }
+      return true; // "ALL"
+    });
+
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [allAppointments, activeTab]);
 
   const totalItems = filteredAppointments.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
