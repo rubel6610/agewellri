@@ -356,9 +356,9 @@ export default function AdminOverviewPage() {
                 <Calendar className="w-5 h-5 text-[#294B68]" />
                 <span>Upcoming Field Visits (Next 7 Days)</span>
               </h3>
-              <p className="text-xs text-[#64748B]">
+              {/* <p className="text-xs text-[#64748B]">
                 Scheduled safety oversight and hazard-mitigation visits
-              </p>
+              </p> */}
             </div>
             <Link
               href="/admin/appointments"
@@ -541,7 +541,7 @@ export default function AdminOverviewPage() {
                       key={planName}
                       className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
                     >
-                      <span>{planName}:</span>
+                      <span>{planName.split("_").join(" ")}</span>
                       <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px]">
                         {count}
                       </span>
@@ -649,7 +649,7 @@ export default function AdminOverviewPage() {
                         {client.state}
                       </td>
                       <td className="py-3 px-3.5 font-medium text-[#64748B]">
-                        {client.planName}
+                        {client.planName.split("_").join(" ")}
                       </td>
                       <td className="py-3 px-3.5">
                         <ClientStatusBadge status={client.status} />
@@ -675,7 +675,7 @@ export default function AdminOverviewPage() {
           <div className="pb-2 border-b border-[#D9E4EC]/60">
             <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#294B68]" />
-              <span>Live Activity Stream</span>
+              <span>Live Activity</span>
             </h3>
             <p className="text-xs text-[#64748B]">
               Real-time operational audit log
