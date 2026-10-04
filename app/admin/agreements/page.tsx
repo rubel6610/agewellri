@@ -169,7 +169,7 @@ export default function AgreementsAdminPage() {
               <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider bg-[#F8FAFC]">
                 <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Client</th>
                 <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Primary Contact</th>
-                <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Agreement Document</th>
+                {/* <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Agreement Document</th> */}
                 <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Signer / Authority</th>
                 <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Status</th>
                 <th className="py-3.5 sm:py-4 px-4 sm:px-5 whitespace-nowrap">Signed Date</th>
@@ -247,10 +247,10 @@ export default function AgreementsAdminPage() {
                       </td>
 
                       {/* Agreement Document */}
-                      <td className="py-4 sm:py-4.5 px-4 sm:px-5">
+                      {/* <td className="py-4 sm:py-4.5 px-4 sm:px-5">
                         <span className="text-[#294B68] font-bold block">{agr.title}</span>
-                        <span className="text-xs text-[#64748B] font-mono">Version: {agr.version}</span>
-                      </td>
+                        {/* <span className="text-xs text-[#64748B] font-mono">Version: {agr.version}</span> */}
+                      {/* </td> */} 
 
                       {/* Signer / Authority */}
                       <td className="py-4 sm:py-4.5 px-4 sm:px-5 text-xs">
@@ -259,7 +259,7 @@ export default function AgreementsAdminPage() {
                           {agr.signerRole.replace(/_/g, " ").toLowerCase()}{" "}
                           {agr.legalAuthority ? `(${agr.legalAuthority.replace(/_/g, " ")})` : ""}
                         </span>
-                        {(agr.authorityDocumentUrl || agr.documentUrl) ? (
+                        {/* {(agr.authorityDocumentUrl || agr.documentUrl) ? (
                           <div className="mt-1">
                             <button
                               type="button"
@@ -278,7 +278,7 @@ export default function AgreementsAdminPage() {
                               <Download className="w-2.5 h-2.5 text-emerald-700 ml-0.5" />
                             </button>
                           </div>
-                        ) : null}
+                        ) : null} */}
                       </td>
 
                       {/* Status */}

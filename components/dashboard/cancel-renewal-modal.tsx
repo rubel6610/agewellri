@@ -232,13 +232,23 @@ export function CancelRenewalModal({
                   </span>
                   <span>
                     To stop next month&apos;s charge, cancellation must be
-                    submitted at least 10 days before month-end. If it&apos;s
-                    within 10 days of month-end, next month processes as
-                    scheduled and service ends after that final paid month.
+                    submitted at least 10 days before the 1st of next month (by the 20th of the current month).
                   </span>
                 </li>
               </ul>
             </div>
+
+            {new Date().getDate() > 20 && (
+              <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                <div className="font-extrabold flex items-center gap-1.5 text-amber-900">
+                  <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>10-Day Cutoff Deadline Passed</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-amber-800">
+                  Auto-renewal cancellation must be requested at least 10 days prior to the 1st of the next month (on or before the 20th of the current month). Because today is past the 20th, cancellation for the upcoming renewal cannot be processed.
+                </p>
+              </div>
+            )}
 
             <div>
               <label
@@ -253,8 +263,8 @@ export function CancelRenewalModal({
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Let us know how we can improve our services..."
                 rows={2}
-                disabled={isLoading}
-                className="w-full p-3 text-xs font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-colors"
+                disabled={isLoading || new Date().getDate() > 20}
+                className="w-full p-3 text-xs font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-colors disabled:opacity-50"
               />
             </div>
 
@@ -272,8 +282,13 @@ export function CancelRenewalModal({
               <button
                 type="button"
                 onClick={handleConfirm}
-                disabled={isLoading}
-                className="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer order-1 sm:order-2 disabled:opacity-60"
+                disabled={isLoading || new Date().getDate() > 20}
+                title={
+                  new Date().getDate() > 20
+                    ? "Cancellation cutoff has passed (must cancel by the 20th of the month)"
+                    : "Confirm Cancellation"
+                }
+                className="w-full sm:w-auto px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>

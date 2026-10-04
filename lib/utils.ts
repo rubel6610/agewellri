@@ -52,3 +52,14 @@ export function formatTimeAgo(dateString?: string | Date | null): string {
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
 }
+
+/**
+ * Standard Email Validation Regex & Helper
+ * Validates standard email address formats (e.g., user@example.com).
+ */
+export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+export function isValidEmail(email?: string | null): boolean {
+  if (!email || typeof email !== "string") return false;
+  return EMAIL_REGEX.test(email.trim());
+}

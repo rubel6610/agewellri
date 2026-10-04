@@ -35,6 +35,11 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
       ? plan.completedVisits
       : safetyCompleted;
 
+  const scheduledVisits =
+    plan.scheduledVisits !== undefined && plan.scheduledVisits >= 0
+      ? plan.scheduledVisits
+      : (billing as any)?.visitEntitlements?.[0]?.scheduled || 0;
+
   const remainingVisits =
     plan.remainingVisits !== undefined && plan.totalVisits > 0
       ? plan.remainingVisits
@@ -68,12 +73,10 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
               )}
             </div>
 
-            <span
+            {/* <span
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border shadow-2xs shrink-0 ${
                 isCancelled
                   ? "bg-amber-50 text-amber-800 border-amber-300"
-                  : billing?.isPendingFirstBilling
-                  ? "bg-sky-50 text-sky-800 border-sky-300"
                   : "bg-[#EAF3F8] text-[#166534] border-emerald-300"
               }`}
             >
@@ -82,18 +85,13 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>Ending Period</span>
                 </>
-              ) : billing?.isPendingFirstBilling ? (
-                <>
-                  <Clock className="w-3.5 h-3.5 text-sky-600" />
-                  <span>Schedule on 1st</span>
-                </>
               ) : (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   <span>Active Coverage</span>
                 </>
               )}
-            </span>
+            </span> */}
           </div>
 
           {/* Subscription Key Metrics Overview (Price, Next Billing, Auto-Renewal) */}
@@ -107,7 +105,11 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
 
             <div>
               <span className="text-[11px] text-[#64748B] font-semibold block">
-                {isCancelled ? "Service End Date" : "Next Billing Date"}
+                {isCancelled
+                  ? "Service End Date"
+                  : billing?.isPendingFirstBilling
+                  ? "First Billing Date"
+                  : "Next Billing Date"}
               </span>
               <span className="text-sm font-bold text-[#294B68] mt-0.5 block">
                 {isCancelled && billing?.cancellationEffectiveAt
@@ -119,6 +121,8 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
                         year: "numeric",
                       },
                     )
+                  : billing?.isPendingFirstBilling
+                  ? billing?.firstBillingDate || billing?.serviceCommencementDate || plan.renewalDate
                   : billing?.nextPaymentDate || plan.renewalDate}
               </span>
             </div>
@@ -183,7 +187,7 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-2">
+        <div className="grid grid-cols-3 gap-3 pt-2">
           <div className="p-3.5 rounded-2xl bg-white border border-[#D9E4EC] text-center shadow-2xs">
             <span className="text-xs text-[#64748B] font-bold uppercase tracking-wider block">Completed</span>
             {isLoading ? (
@@ -191,6 +195,17 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
             ) : (
               <span className="text-2xl font-black text-[#243746]">
                 {completedVisits}
+              </span>
+            )}
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-[#F0F7FF] border border-[#BBE1FA]/70 text-center shadow-2xs">
+            <span className="text-xs text-[#0284C7] font-bold uppercase tracking-wider block">Scheduled</span>
+            {isLoading ? (
+              <div className="h-6 bg-[#E2E8F0] rounded-md w-8 mx-auto mt-1 animate-pulse" />
+            ) : (
+              <span className="text-2xl font-black text-[#0369A1]">
+                {scheduledVisits}
               </span>
             )}
           </div>
@@ -209,7 +224,7 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
       </div>
 
       {/* Breakdown per service type */}
-      <div className="pt-3 border-t border-[#D9E4EC] flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#64748B]">
+      {/* <div className="pt-3 border-t border-[#D9E4EC] flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#64748B]">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-[#294B68]" />
           <span>
@@ -217,7 +232,7 @@ export function PlanCard({ plan, isLoading = false, billing, onRefresh }: PlanCa
             {isLoading ? "..." : `${safetyCompleted} / ${safetyTotal}`}
           </span>
         </div>
-      </div>
+      </div> */}
     </div>
 
     <CancelRenewalModal

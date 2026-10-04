@@ -209,15 +209,15 @@ export function AccessMethodsCard() {
                             Default Method
                           </span>
                         )}
-                        <span className="text-[11px] font-semibold text-[#64748B] bg-[#EAF3F8] px-2 py-0.5 rounded-md">
+                        {/* <span className="text-[11px] font-semibold text-[#64748B] bg-[#EAF3F8] px-2 py-0.5 rounded-md">
                           {getMethodBadgeLabel(method.type)}
-                        </span>
+                        </span> */}
                       </div>
-                      {method.instructions && (
+                      {/* {method.instructions && (
                         <p className="text-xs sm:text-sm text-[#64748B] mt-1 leading-relaxed">
                           {method.instructions}
                         </p>
-                      )}
+                      )} */}
                     </div>
                   </div>
 
@@ -301,12 +301,12 @@ export function AccessMethodsCard() {
       )}
 
       {/* Security note footer */}
-      <div className="flex items-center gap-2 pt-2 text-xs text-[#64748B]">
+      {/* <div className="flex items-center gap-2 pt-2 text-xs text-[#64748B]">
         <ShieldCheck className="w-4 h-4 text-[#3F8F6B] shrink-0" />
         <span>
           Access codes are encrypted and selectively delivered to dispatched specialists on scheduled visit dates.
         </span>
-      </div>
+      </div> */}
 
       {/* Add / Edit Modal */}
       <AccessMethodModal

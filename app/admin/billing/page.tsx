@@ -285,7 +285,7 @@ export default function BillingAdminPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          {/* <button
             onClick={handleManualTriggerReminders}
             disabled={isTriggeringReminders}
             className="px-4 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
@@ -297,7 +297,7 @@ export default function BillingAdminPage() {
               <Bell className="w-4 h-4 text-[#5E8FB2]" />
             )}
             <span>Scan &amp; Send Renewal Notices</span>
-          </button>
+          </button> */}
 
           <button
             onClick={() => {

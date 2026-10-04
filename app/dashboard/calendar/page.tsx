@@ -1,30 +1,23 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import Link from "next/link";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
   UserCheck,
-  Plus,
   ShieldCheck,
   Sparkles,
-  CheckCircle2,
   CalendarDays,
-  ListFilter,
-  Eye,
   X,
-  MapPin,
-  Check,
-  AlertCircle,
   ArrowRight,
   Loader2,
   Trash2,
   Layers,
   HeartPulse,
   ClipboardCheck,
+  CheckCircle2,
 } from "lucide-react";
 import {
   useGetMyAppointmentsQuery,
@@ -33,6 +26,8 @@ import {
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
+import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
+import { VisitDetailsModal } from "@/components/dashboard/visit-details-modal";
 import {
   confirmDelete,
   showSuccessAlert,
@@ -118,21 +113,25 @@ export default function ClientCalendarPage() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
+  const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
+
+  // Filter out cancelled, no_show, and declined appointments
+  const activeAppointments = useMemo(() => {
+    return appointments.filter((a) => {
+      const st = (a.status || "").toLowerCase();
+      return st !== "cancelled" && st !== "no_show" && st !== "declined";
+    });
+  }, [appointments]);
 
   // Next upcoming active appointment
   const nextAppointment = useMemo(() => {
-    const active = appointments.filter(
-      (a) =>
-        a.status === "scheduled" ||
-        a.status === "confirmed" ||
-        a.status === "rescheduled"
-    );
-    if (active.length === 0) return null;
+    if (activeAppointments.length === 0) return null;
 
-    return [...active].sort(
+    return [...activeAppointments].sort(
       (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
     )[0];
-  }, [appointments]);
+  }, [activeAppointments]);
 
   // Calendar Date Calculations
   const year = currentDate.getFullYear();
@@ -162,29 +161,37 @@ export default function ClientCalendarPage() {
     return `${y}-${mm}-${dd}`;
   };
 
-  // Helper to extract "YYYY-MM-DD" from appointment startAt
+  // Helper to extract "YYYY-MM-DD" from appointment startAt or date
   const getApptDateKey = (appt: AppointmentItem): string => {
-    if (appt.startAt) {
-      const d = new Date(appt.startAt);
+    if (appt.startAt && typeof appt.startAt === "string" && /^\d{4}-\d{2}-\d{2}/.test(appt.startAt)) {
+      return appt.startAt.split("T")[0];
+    }
+    if (appt.date && typeof appt.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(appt.date.trim())) {
+      return appt.date.trim();
+    }
+    if (appt.date && typeof appt.date === "string") {
+      const d = new Date(appt.date);
       if (!isNaN(d.getTime())) {
         return formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
       }
     }
-    return appt.date || "";
+    return "";
   };
 
-  // Map appointments by dateKey
+  // Map active (non-cancelled) appointments by dateKey
   const appointmentsByDate = useMemo(() => {
     const map: Record<string, AppointmentItem[]> = {};
-    for (const appt of appointments) {
+    for (const appt of activeAppointments) {
       const key = getApptDateKey(appt);
-      if (!map[key]) {
-        map[key] = [];
+      if (key) {
+        if (!map[key]) {
+          map[key] = [];
+        }
+        map[key].push(appt);
       }
-      map[key].push(appt);
     }
     return map;
-  }, [appointments]);
+  }, [activeAppointments]);
 
   // Generate 42 calendar grid cells (6 weeks)
   const calendarCells = useMemo(() => {
@@ -249,6 +256,7 @@ export default function ClientCalendarPage() {
     if (!confirmed) return;
 
     try {
+      showToast("Cancelling scheduled visit...", "info");
       await cancelAppointment({
         id: appt.id,
         reason: "Client cancelled from Calendar portal",
@@ -268,7 +276,6 @@ export default function ClientCalendarPage() {
     }
   };
 
-  const planName = entitlementData?.planName || "Service Plan";
   const totalRemaining = entitlementData?.totalRemaining ?? 0;
   const totalAllocated = entitlementData?.totalAllocated ?? totalRemaining;
   const entitlementsList = entitlementData?.entitlements || [];
@@ -278,36 +285,31 @@ export default function ClientCalendarPage() {
       {/* Top Header & Scheduling CTA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/60">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
-              Safety Oversight Calendar
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#D9E4EC]">
-              {planName}
-            </span>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-[#243746]">
+            Safety Oversight Calendar
+          </h1>
           <p className="text-xs sm:text-sm text-[#5E8FB2] font-medium mt-1">
             View upcoming and past safety check-ins and manage your scheduled visits
           </p>
         </div>
 
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          <Link
+        {/* <div className="flex items-center gap-3 self-start sm:self-auto"> */}
+          {/* <Link
             href="/dashboard/appointments"
             className="px-4 py-2.5 bg-white hover:bg-[#F0F5F9] border border-[#D9E4EC] text-[#243746] font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shadow-2xs"
           >
             <Eye className="w-4 h-4 text-[#5E8FB2]" />
             <span>List View</span>
-          </Link>
-
+          </Link> */}
+{/* 
           <button
             onClick={() => setIsScheduleModalOpen(true)}
             className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>Schedule Safety Visit</span>
-          </button>
-        </div>
+          </button> */}
+        {/* </div> */}
       </div>
 
       {/* Plan Quota & Next Visit Status Ribbon */}
@@ -361,7 +363,7 @@ export default function ClientCalendarPage() {
               Monthly Visit Quotas
             </span>
             <span className="text-xs font-black text-[#294B68]">
-              {totalRemaining} of {totalAllocated} Remaining
+              {totalRemaining} of {totalAllocated} Remaining to be scheduled
             </span>
           </div>
 
@@ -379,9 +381,7 @@ export default function ClientCalendarPage() {
                         <ShieldCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
                         <span className="truncate">{item.serviceName}:</span>
                       </span>
-                      <span className="text-[#294B68] shrink-0">
-                        {item.completed}/{item.allocated} done ({item.remaining} left)
-                      </span>
+                 
                     </div>
                     <div className="w-full bg-[#EAF3F8] h-2 rounded-full overflow-hidden">
                       <div
@@ -404,36 +404,38 @@ export default function ClientCalendarPage() {
       {/* Main Calendar Card */}
       <div className="bg-white rounded-3xl border border-[#D9E4EC] p-5 sm:p-7 shadow-xs space-y-6">
         {/* Controls Bar: Month Selector, View Switcher & Filters */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#D9E4EC]/70">
-          {/* Month / Year Navigator */}
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-black text-[#243746] tracking-tight min-w-[180px]">
-              {monthName} {year}
-            </h2>
+        <div className={`flex flex-col lg:flex-row lg:items-center ${viewMode === "month" ? "justify-between" : "justify-end"} gap-4 pb-4 border-b border-[#D9E4EC]/70`}>
+          {/* Month / Year Navigator (Only for Month view) */}
+          {viewMode === "month" && (
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-black text-[#243746] tracking-tight min-w-[180px]">
+                {monthName} {year}
+              </h2>
 
-            <div className="flex items-center gap-1 border border-[#D9E4EC] rounded-xl p-1 bg-[#F8FAFC]">
-              <button
-                onClick={prevMonth}
-                aria-label="Previous Month"
-                className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={goToToday}
-                className="px-2.5 py-1 text-xs font-black text-[#243746] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
-              >
-                Today
-              </button>
-              <button
-                onClick={nextMonth}
-                aria-label="Next Month"
-                className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 border border-[#D9E4EC] rounded-xl p-1 bg-[#F8FAFC]">
+                <button
+                  onClick={prevMonth}
+                  aria-label="Previous Month"
+                  className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={goToToday}
+                  className="px-2.5 py-1 text-xs font-black text-[#243746] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
+                >
+                  Today
+                </button>
+                <button
+                  onClick={nextMonth}
+                  aria-label="Next Month"
+                  className="p-1.5 hover:bg-[#EAF3F8] hover:text-[#294B68] rounded-lg text-[#64748B] transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* View Modes */}
           <div className="flex items-center gap-3 flex-wrap">
@@ -486,18 +488,24 @@ export default function ClientCalendarPage() {
             ) : (
               <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
                 {calendarCells.map((cell, idx) => {
+                  if (!cell.isCurrentMonth) {
+                    return (
+                      <div
+                        key={idx}
+                        className="min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border border-[#EAEFF4]/50 bg-[#F8FAFC]/30"
+                      />
+                    );
+                  }
+
                   const isToday =
-                    cell.isCurrentMonth &&
                     new Date().toDateString() === new Date(year, month, cell.dayNumber).toDateString();
 
                   return (
                     <div
                       key={idx}
-                      className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
-                        cell.isCurrentMonth
-                          ? "bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs"
-                          : "bg-[#F8FAFC]/70 border-[#EAEFF4] text-[#94A3B8]"
-                      } ${isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""}`}
+                      className={`min-h-[85px] sm:min-h-[105px] p-2 rounded-2xl border transition-all flex flex-col justify-between bg-white border-[#D9E4EC] hover:border-[#5E8FB2] hover:shadow-xs ${
+                        isToday ? "ring-2 ring-[#294B68] bg-[#F0F7FD]/50" : ""
+                      }`}
                     >
                       {/* Date Number */}
                       <div className="flex items-center justify-between">
@@ -505,9 +513,7 @@ export default function ClientCalendarPage() {
                           className={`text-xs font-black rounded-lg w-6 h-6 flex items-center justify-center ${
                             isToday
                               ? "bg-[#294B68] text-white shadow-2xs"
-                              : cell.isCurrentMonth
-                              ? "text-[#243746]"
-                              : "text-[#94A3B8]"
+                              : "text-[#243746]"
                           }`}
                         >
                           {cell.dayNumber}
@@ -521,18 +527,38 @@ export default function ClientCalendarPage() {
                       {/* Appointments Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
                         {cell.appointments.map((appt) => {
-                          const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
-                          const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
-                          const Icon = style.icon;
+                          const statusLower = (appt.status || "").toLowerCase();
+                          const isCompleted = statusLower === "completed";
+                          const statusLabel = isCompleted ? "Complete" : "Scheduled";
+                          const timeShort = appt.timeSlot ? appt.timeSlot.split("–")[0].trim() : "";
+                          const Icon = isCompleted ? CheckCircle2 : Clock;
 
                           return (
                             <button
                               key={appt.id}
                               onClick={() => setSelectedAppointment(appt)}
-                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center gap-1 transition-transform hover:scale-[1.02] cursor-pointer shadow-2xs ${style.cellBg} ${style.cellText} border ${style.cellBorder}`}
+                              title={`${appt.serviceType} (${statusLabel}) - ${appt.timeSlot}`}
+                              className={`w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-extrabold truncate flex items-center justify-between gap-1 transition-all hover:scale-[1.02] cursor-pointer shadow-2xs ${
+                                isCompleted
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100/80"
+                                  : "bg-[#EAF3F8] text-[#294B68] border border-[#294B68]/20 hover:bg-[#D9EAF4]"
+                              }`}
                             >
-                              <Icon className={`w-2.5 h-2.5 ${style.iconColor} shrink-0`} />
-                              <span className="truncate">{appt.serviceType}</span>
+                              <div className="flex items-center gap-1 truncate min-w-0">
+                                <Icon className={`w-3 h-3 shrink-0 ${isCompleted ? "text-emerald-600" : "text-[#294B68]"}`} />
+                                <span className="truncate font-black">{statusLabel}</span>
+                              </div>
+                              {timeShort && (
+                                <span
+                                  className={`text-[9px] font-mono font-bold shrink-0 px-1 py-0.5 rounded ${
+                                    isCompleted
+                                      ? "bg-white/80 text-emerald-900 border border-emerald-200"
+                                      : "bg-white/80 text-[#243746] border border-[#294B68]/15"
+                                  }`}
+                                >
+                                  {timeShort}
+                                </span>
+                              )}
                             </button>
                           );
                         })}
@@ -553,20 +579,20 @@ export default function ClientCalendarPage() {
                 <Loader2 className="w-7 h-7 animate-spin text-[#294B68]" />
                 <span className="font-bold text-xs">Loading appointments...</span>
               </div>
-            ) : appointments.length === 0 ? (
+            ) : activeAppointments.length === 0 ? (
               <div className="p-12 text-center bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] text-sm text-[#64748B]">
-                No visits scheduled yet.
+                No active visits scheduled yet.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {appointments.map((appt) => {
+                {activeAppointments.map((appt) => {
                   const cat = appt.serviceCategory || "SAFETY_OVERSIGHT";
                   const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES.SAFETY_OVERSIGHT;
                   const Icon = style.icon;
-                  const isScheduled =
-                    appt.status === "scheduled" ||
-                    appt.status === "confirmed" ||
-                    appt.status === "rescheduled";
+                  const statusLower = (appt.status || "").toLowerCase();
+                  const isCompleted = statusLower === "completed";
+                  const isScheduled = !isCompleted;
+                  const statusLabel = isCompleted ? "Complete" : "Schedule";
 
                   return (
                     <div
@@ -575,7 +601,7 @@ export default function ClientCalendarPage() {
                       className={`p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between space-y-4 hover:shadow-md hover:-translate-y-0.5 ${
                         isScheduled
                           ? "border-[#D9E4EC] bg-white hover:border-[#5E8FB2]"
-                          : "border-[#E2E8F0] bg-[#F8FAFC] opacity-90"
+                          : "border-emerald-200 bg-emerald-50/20 hover:border-emerald-300"
                       }`}
                     >
                       <div className="space-y-2.5">
@@ -588,13 +614,13 @@ export default function ClientCalendarPage() {
                           </span>
 
                           <span
-                            className={`text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full ${
-                              isScheduled
-                                ? "bg-sky-50 text-sky-800 border border-sky-200"
-                                : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            className={`text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                              isCompleted
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : "bg-sky-50 text-sky-800 border border-sky-200"
                             }`}
                           >
-                            {appt.status}
+                            {statusLabel}
                           </span>
                         </div>
 
@@ -635,132 +661,38 @@ export default function ClientCalendarPage() {
         )}
       </div>
 
-      {/* VISIT DETAILS MODAL / DRAWER */}
-      {selectedAppointment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setSelectedAppointment(null)}
-          />
-
-          <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl z-10 space-y-6 animate-in zoom-in-95 duration-200 border border-[#D9E4EC]">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-[#D9E4EC]/70 pb-4">
-              <div className="flex items-center gap-2.5">
-                <span className="p-2.5 rounded-xl bg-[#EAF3F8] text-[#294B68]">
-                  <ShieldCheck className="w-6 h-6" />
-                </span>
-                <div>
-                  <h3 className="text-lg font-black text-[#243746]">
-                    {selectedAppointment.serviceType}
-                  </h3>
-                  <p className="text-xs text-[#5E8FB2] font-semibold">
-                    Appointment ID: #{selectedAppointment.id}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedAppointment(null)}
-                aria-label="Close"
-                className="p-1.5 rounded-xl border border-[#D9E4EC] text-[#64748B] hover:text-[#243746] cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Visit Details Grid */}
-            <div className="space-y-4 text-xs font-semibold text-[#243746]">
-              <div className="grid grid-cols-2 gap-3 p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]">
-                <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
-                    Scheduled Date
-                  </span>
-                  <span className="text-sm font-black text-[#243746] mt-0.5 block">
-                    {selectedAppointment.date}
-                  </span>
-                </div>
-                <div>
-                  <span className="block text-[11px] uppercase tracking-wider text-[#64748B] font-bold">
-                    Time Window
-                  </span>
-                  <span className="text-sm font-black text-[#243746] mt-0.5 block">
-                    {selectedAppointment.timeSlot}
-                  </span>
-                </div>
-              </div>
-
-              {/* Safety Specialist Profile */}
-              <div className="p-4 rounded-2xl border border-[#D9E4EC] bg-white space-y-2">
-                <div className="text-[11px] uppercase tracking-wider text-[#5E8FB2] font-extrabold">
-                  Assigned Safety Specialist
-                </div>
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-10 h-10 rounded-full text-white flex items-center justify-center font-black text-sm shadow-xs"
-                    style={{
-                      backgroundColor: selectedAppointment.technicianColor || "#294B68",
-                    }}
-                  >
-                    {selectedAppointment.technicianName.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-sm font-black text-[#243746]">
-                      {selectedAppointment.technicianName}
-                    </div>
-                    <div className="text-xs text-[#5E8FB2]">
-                      {selectedAppointment.technicianTitle}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="p-3 bg-[#F8FAFC] rounded-xl border border-[#D9E4EC] flex items-center gap-2 text-xs text-[#243746]">
-                <MapPin className="w-4 h-4 text-[#5E8FB2] shrink-0" />
-                <span>{selectedAppointment.location || selectedAppointment.clientAddress}</span>
-              </div>
-
-              {selectedAppointment.notes && (
-                <div className="p-3 bg-amber-50/80 rounded-xl border border-amber-200 text-amber-900 text-xs">
-                  <strong>Member Notes:</strong> {selectedAppointment.notes}
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#D9E4EC]/70">
-              <div>
-                {selectedAppointment.status !== "cancelled" &&
-                  selectedAppointment.status !== "completed" && (
-                    <button
-                      type="button"
-                      disabled={isCancelling}
-                      onClick={() => handleCancelAppointment(selectedAppointment)}
-                      className="text-xs font-bold text-red-600 hover:text-red-700 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Cancel Visit</span>
-                    </button>
-                  )}
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSelectedAppointment(null)}
-                className="w-full sm:w-auto px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-extrabold text-xs rounded-xl shadow-xs cursor-pointer"
-              >
-                Close Details
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* VISIT DETAILS MODAL */}
+      <VisitDetailsModal
+        isOpen={Boolean(selectedAppointment)}
+        onClose={() => setSelectedAppointment(null)}
+        appointment={selectedAppointment}
+        onReschedule={(appt) => {
+          setSelectedAppointment(null);
+          setRescheduleTargetAppt(appt);
+          setIsRescheduleModalOpen(true);
+        }}
+        onSuccess={() => {
+          refetchAppointments();
+        }}
+      />
 
       {/* Schedule Visit Modal Integration */}
       <ScheduleVisitModal
         isOpen={isScheduleModalOpen}
         onClose={() => setIsScheduleModalOpen(false)}
+      />
+
+      {/* Reschedule Visit Modal Integration */}
+      <RescheduleVisitModal
+        isOpen={isRescheduleModalOpen}
+        onClose={() => {
+          setIsRescheduleModalOpen(false);
+          setRescheduleTargetAppt(null);
+        }}
+        appointment={rescheduleTargetAppt}
+        onSuccess={() => {
+          refetchAppointments();
+        }}
       />
     </div>
   );

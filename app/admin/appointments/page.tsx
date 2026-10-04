@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -8,22 +8,21 @@ import {
   useUpdateAppointmentStatusMutation,
   useCancelAppointmentMutation,
   useDeclineVisitRequestMutation,
+  useDeleteAppointmentMutation,
 } from "@/redux/features/appointment/appointmentApi";
 import {
   CalendarCheck,
-  Plus,
   Search,
   CheckCircle2,
   FileUp,
   Download,
-  Eye,
-  FileText,
   Clock,
   RefreshCw,
   UserCheck,
   AlertCircle,
   XCircle,
-  Calendar,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 import { ReportUploadModal } from "@/components/admin/report-upload-modal";
@@ -62,13 +61,14 @@ function AppointmentsAdminContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data: apptsRes, isLoading, refetch } = useGetAdminAppointmentsQuery({
+  const { data: apptsRes, isLoading, isFetching, refetch } = useGetAdminAppointmentsQuery({
     search: search || undefined,
   });
 
   const [updateStatusMutation] = useUpdateAppointmentStatusMutation();
   const [cancelAppointmentMutation] = useCancelAppointmentMutation();
   const [declineVisitRequestMutation] = useDeclineVisitRequestMutation();
+  const [deleteAppointmentMutation] = useDeleteAppointmentMutation();
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(undefined);
@@ -80,7 +80,16 @@ function AppointmentsAdminContent() {
   const [reportUploadModalOpen, setReportUploadModalOpen] = useState(false);
   const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
 
-  const allAppointments = apptsRes?.data || [];
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const allAppointments = useMemo(() => {
+    const list = [...(apptsRes?.data || [])];
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [apptsRes?.data]);
 
   // Filter based on active tab and search
   const requestedCount = allAppointments.filter((a) => a.status === "requested" || (!a.technicianId && a.status !== "cancelled")).length;
@@ -88,24 +97,32 @@ function AppointmentsAdminContent() {
   const completedCount = allAppointments.filter((a) => a.status === "completed").length;
   const cancelledCount = allAppointments.filter((a) => (a.status || "").toLowerCase() === "cancelled").length;
 
-  const filteredAppointments = allAppointments.filter((appt) => {
-    const statusLower = (appt.status || "").toLowerCase();
-    const isReq = statusLower === "requested" || (!appt.technicianId && statusLower !== "cancelled");
+  const filteredAppointments = useMemo(() => {
+    const list = allAppointments.filter((appt) => {
+      const statusLower = (appt.status || "").toLowerCase();
+      const isReq = statusLower === "requested" || (!appt.technicianId && statusLower !== "cancelled");
 
-    if (activeTab === "REQUESTS") {
-      return isReq;
-    }
-    if (activeTab === "SCHEDULED") {
-      return ["scheduled", "confirmed", "rescheduled"].includes(statusLower) && Boolean(appt.technicianId);
-    }
-    if (activeTab === "COMPLETED") {
-      return statusLower === "completed";
-    }
-    if (activeTab === "CANCELLED") {
-      return statusLower === "cancelled";
-    }
-    return true; // "ALL"
-  });
+      if (activeTab === "REQUESTS") {
+        return isReq;
+      }
+      if (activeTab === "SCHEDULED") {
+        return ["scheduled", "confirmed", "rescheduled"].includes(statusLower) && Boolean(appt.technicianId);
+      }
+      if (activeTab === "COMPLETED") {
+        return statusLower === "completed";
+      }
+      if (activeTab === "CANCELLED") {
+        return statusLower === "cancelled";
+      }
+      return true; // "ALL"
+    });
+
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [allAppointments, activeTab]);
 
   const totalItems = filteredAppointments.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -194,6 +211,28 @@ function AppointmentsAdminContent() {
     }
   };
 
+  const handleDeleteVisit = async (appt: any) => {
+    const confirmed = await confirmCriticalAction({
+      title: `Permanently Delete Visit?`,
+      text: `Are you sure you want to permanently delete this cancelled visit for ${appt.clientName} (${appt.date})? This action cannot be undone.`,
+      confirmButtonText: "Yes, Delete Visit",
+      isDestructive: true,
+    });
+
+    if (!confirmed) return;
+
+    setDeletingId(appt.id);
+    try {
+      await deleteAppointmentMutation(appt.id).unwrap();
+      refetch();
+      showSuccessAlert("Visit Deleted", "The cancelled appointment record has been permanently deleted.");
+    } catch (err: any) {
+      showErrorAlert("Delete Failed", err?.data?.message || "Failed to delete appointment.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleDownloadPdf = (reportId: string, clientName?: string, serviceType?: string) => {
     downloadReportPdf(reportId, `${clientName || "Client"}_${serviceType || "Visit"}_Report.pdf`);
   };
@@ -210,6 +249,7 @@ function AppointmentsAdminContent() {
             Review client visit requests, assign certified specialists, dispatch scheduled visits, and upload completed reports.
           </p>
         </div>
+
       </div>
 
       {/* Tabs & Search Filter Bar */}
@@ -303,7 +343,7 @@ function AppointmentsAdminContent() {
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-2xl border border-[#D9E4EC] p-3.5 flex items-center justify-between shadow-2xs">
+        <div className="bg-white rounded-2xl border border-[#D9E4EC] p-3.5 flex items-center justify-between gap-3 shadow-2xs">
           <div className="relative w-full sm:w-96">
             <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -317,6 +357,17 @@ function AppointmentsAdminContent() {
               className="w-full pl-9 pr-3 py-2 text-xs bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#294B68]"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching || isLoading}
+            className="p-2 sm:px-3 sm:py-2 bg-[#F8FAFC] hover:bg-[#EAF3F8] border border-[#D9E4EC] text-[#243746] rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Refresh appointments"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching || isLoading ? "animate-spin text-[#294B68]" : "text-[#5E8FB2]"}`} />
+            <span className="hidden sm:inline">{isFetching ? "Refreshing..." : "Refresh"}</span>
+          </button>
         </div>
       </div>
 
@@ -331,7 +382,7 @@ function AppointmentsAdminContent() {
                 <th className="py-3.5 px-4">Service Type</th>
                 <th className="py-3.5 px-4">Assigned Specialist</th>
                 <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4">Report Status</th>
+                {/* <th className="py-3.5 px-4">Report Status</th> */}
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -483,7 +534,7 @@ function AppointmentsAdminContent() {
                       </td>
 
                       {/* Report Status */}
-                      <td className="py-4 px-4">
+                      {/* <td className="py-4 px-4">
                         {isCompleted ? (
                           hasReport ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -499,7 +550,7 @@ function AppointmentsAdminContent() {
                         ) : (
                           <span className="text-xs text-[#94A3B8]">—</span>
                         )}
-                      </td>
+                      </td> */}
 
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">
@@ -607,16 +658,22 @@ function AppointmentsAdminContent() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
-                              onClick={() => {
-                                setSelectedClientId(appt.clientId);
-                                setSelectedClientName(appt.clientName);
-                                setScheduleModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] text-xs font-bold rounded-lg transition-colors cursor-pointer"
-                              title="Rebook new visit for this client"
+                              onClick={() => handleDeleteVisit(appt)}
+                              disabled={deletingId === appt.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 text-xs font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              title="Permanently delete this cancelled visit record"
                             >
-                              <Plus className="w-3 h-3" />
-                              <span>Rebook</span>
+                              {deletingId === appt.id ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
+                                  <span>Deleting...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                                  <span>Delete</span>
+                                </>
+                              )}
                             </button>
                           </div>
                         )}

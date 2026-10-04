@@ -154,7 +154,7 @@ export function Step8BillingSetup({
 
               <div className="flex items-start justify-between text-xs pt-2 border-t border-[#D9E4EC]">
                 <span className="text-[#64748B] font-medium flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#294B68]" /> Service Starts:
+              Service Starts:
                 </span>
                 <span className="font-bold text-[#294B68] text-right">
                   {commencementDateFormatted}
@@ -170,7 +170,7 @@ export function Step8BillingSetup({
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed">
-              You won't be charged today. Your first charge and your first visit will both be on <strong>{commencementDateFormatted}</strong>. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
+              You won't be charged today. Your subscription begins on  <strong>{commencementDateFormatted}</strong>. — that's your first charge and the start of your service. Once your service begins, you can schedule your two visits for that month at times that work for you. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
             </div>
           </div>
         </div>

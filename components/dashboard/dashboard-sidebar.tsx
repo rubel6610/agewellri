@@ -44,7 +44,7 @@ export function DashboardSidebar() {
     showSuccessAlert(
       "AgeWellRI Member Concierge",
       `Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nHours: Mon–Fri, 8am–6pm`
-    );  
+    );
   };
 
   const navItems = [

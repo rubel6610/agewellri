@@ -20,7 +20,7 @@ export function AdminHeader({
 
   const firstName = authUser?.firstName || "Sarah";
   const lastName = authUser?.lastName || "Jenkins";
-  const roleLabel = authUser?.role === "ADMIN" ? "System Administrator" : "Operations Manager";
+  const roleLabel = authUser?.role === "ADMIN" && "Admin" 
 
   return (
     <header className="h-16 sm:h-20 bg-white border-b border-[#D9E4EC] px-3 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 right-0 left-0 lg:left-64 z-30 shadow-xs box-border">
@@ -39,7 +39,7 @@ export function AdminHeader({
             AgeWellRI Administration
           </h2>
           <p className="text-[11px] sm:text-xs text-[#64748B] hidden md:block truncate">
-            Member Lifecycle, Dispatch &amp; Plan Management
+            Member Lifecycle  &amp; Plan Management
           </p>
         </div>
       </div>

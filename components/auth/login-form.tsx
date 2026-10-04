@@ -122,7 +122,7 @@ export function LoginForm() {
       if (response.success && response.data) {
         const user = response.data.user;
         setLoginSuccessMessage(
-          `Welcome back, ${user.firstName || "Member"}! Redirecting...`,
+          `Welcome, ${user.firstName || "Member"}! Redirecting...`,
         );
         handleRedirect(user);
       }
@@ -143,7 +143,7 @@ export function LoginForm() {
       <div className="flex flex-col items-center text-center space-y-4 mb-6">
         <div className="space-y-1 pt-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-[#243746] tracking-tight">
-            Welcome back
+            Welcome 
           </h1>
           <p className="text-sm sm:text-base text-[#64748B]">
             Sign in to access your AgeWellRI member portal.

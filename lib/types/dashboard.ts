@@ -15,6 +15,7 @@ export interface ServicePlan {
   renewalDate: string;
   totalVisits: number;
   completedVisits: number;
+  scheduledVisits?: number;
   remainingVisits: number;
   cleaningVisitsTotal: number;
   cleaningVisitsCompleted: number;

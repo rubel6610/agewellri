@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu, Plus, User } from "lucide-react";
+import { Menu, Plus, User, Mail } from "lucide-react";
 import { NotificationMenu } from "./notification-menu";
 import { NotificationItem, UserProfile } from "@/lib/types/dashboard";
 import { useAppSelector } from "@/redux/hooks";
@@ -12,6 +12,7 @@ interface DashboardHeaderProps {
   notifications: NotificationItem[];
   onOpenMobileMenu: () => void;
   onOpenScheduleModal: () => void;
+  onOpenContactModal?: () => void;
 }
 
 export function DashboardHeader({
@@ -19,6 +20,7 @@ export function DashboardHeader({
   notifications,
   onOpenMobileMenu,
   onOpenScheduleModal,
+  onOpenContactModal,
 }: DashboardHeaderProps) {
   const authUser = useAppSelector((state) => state.auth.user);
   const firstName = authUser?.firstName || user.firstName;
@@ -47,6 +49,19 @@ export function DashboardHeader({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-3 shrink-0">
+        {/* Contact Support Direct Message Button */}
+        {onOpenContactModal && (
+          <button
+            type="button"
+            onClick={onOpenContactModal}
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-[#F0F5F9] hover:bg-[#E2EDF4] border border-[#D9E4EC] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] shrink-0"
+            title="Send direct email inquiry to AgeWellRI management"
+          >
+            <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#294B68]" />
+            <span>Email Us</span>
+          </button>
+        )}
+
         {/* Schedule a Visit CTA Button */}
         <button
           onClick={onOpenScheduleModal}

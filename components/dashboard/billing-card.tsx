@@ -61,6 +61,60 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
     billing.subscriptionStatus === "CANCELLATION_REQUESTED" ||
     billing.subscriptionStatus === "CANCELLED";
 
+  const commencementDateStr = billing.serviceCommencementDate || billing.firstBillingDate;
+  const nextRenewalDisplayDate = (() => {
+    if (isCancelled && billing.cancellationEffectiveAt) {
+      const parsed = new Date(billing.cancellationEffectiveAt);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    const nextPaymentStr = billing.nextPaymentDate;
+    if (commencementDateStr && nextPaymentStr) {
+      const parsedCommencement = new Date(commencementDateStr);
+      const parsedNext = new Date(nextPaymentStr);
+
+      if (!isNaN(parsedCommencement.getTime()) && !isNaN(parsedNext.getTime())) {
+        if (parsedNext.getTime() > parsedCommencement.getTime()) {
+          return nextPaymentStr;
+        }
+        const nextMonth = new Date(
+          parsedCommencement.getFullYear(),
+          parsedCommencement.getMonth() + 1,
+          1
+        );
+        return nextMonth.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    if (commencementDateStr) {
+      const parsedCommencement = new Date(commencementDateStr);
+      if (!isNaN(parsedCommencement.getTime())) {
+        const nextMonth = new Date(
+          parsedCommencement.getFullYear(),
+          parsedCommencement.getMonth() + 1,
+          1
+        );
+        return nextMonth.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
+
+    return nextPaymentStr || "Not Scheduled";
+  })();
+
   return (
     <>
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
@@ -79,14 +133,12 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <span>{billing.currentPlanName}</span>
             </h3>
           </div>
-
+{/* 
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold self-start sm:self-auto border ${
               isCancelled
                 ? "bg-amber-50 text-amber-800 border-amber-200"
-                : billing.isPendingFirstBilling
-                ? "bg-sky-50 text-sky-800 border-sky-200"
-                : billing.subscriptionStatus === "ACTIVE"
+                : billing.subscriptionStatus === "ACTIVE" || billing.isPendingFirstBilling
                 ? "bg-[#EAF3F8] text-[#3F8F6B] border-[#3F8F6B]/20"
                 : "bg-slate-100 text-slate-700 border-slate-200"
             }`}
@@ -96,18 +148,13 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
                 <Clock className="w-3.5 h-3.5 text-amber-600" />
                 <span>Ending Period</span>
               </>
-            ) : billing.isPendingFirstBilling ? (
-              <>
-                <Clock className="w-3.5 h-3.5 text-sky-600" />
-                <span>Scheduled for 1st of Month</span>
-              </>
             ) : (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Active Account</span>
               </>
             )}
-          </span>
+          </span> */}
         </div>
 
         {/* Informational Banner for New Signups (First Billing Scheduled on 1st of Next Month) */}
@@ -119,7 +166,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               <p className="mt-0.5 text-sky-950">
                 You were not charged today. Your payment method is securely saved and your first charge of{" "}
                 <strong>{billing.nextPaymentAmount}</strong> will occur on{" "}
-                <strong>{billing.firstBillingDate || billing.nextPaymentDate}</strong>, which is also your official Service Commencement Date. After that, billing recurs automatically on the 1st of each month.
+                <strong>{billing.serviceCommencementDate || billing.firstBillingDate || billing.nextPaymentDate}</strong>, which is also your official Service Commencement Date. After that, billing recurs automatically on the 1st of each month.
               </p>
             </div>
           </div>
@@ -134,7 +181,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </span>
             <span className="text-base font-bold text-[#243746] mt-1 block">
               {billing.isPendingFirstBilling
-                ? (billing.serviceCommencementDate || billing.nextPaymentDate)
+                ? (billing.serviceCommencementDate || billing.firstBillingDate)
                 : (billing.currentPeriod || "Active Month")}
             </span>
             <span className="text-[11px] text-[#64748B]">Frequency: {billing.billingFrequency}</span>
@@ -163,7 +210,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </button>
           </div>
 
-          {/* Next Renewal / First Billing */}
+          {/* Next Renewal / First Billing Date */}
           <div className="p-4 bg-[#EAF3F8]/60 rounded-2xl border border-[#5E8FB2]/30">
             <span className="text-xs text-[#294B68] font-bold block">
               {isCancelled
@@ -175,7 +222,9 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             <div className="flex items-center gap-2 mt-1">
               <Calendar className="w-4 h-4 text-[#294B68]" />
               <span className="text-base font-extrabold text-[#294B68]">
-                {billing.nextPaymentDate}
+                {billing.isPendingFirstBilling
+                  ? (billing.firstBillingDate || billing.serviceCommencementDate || nextRenewalDisplayDate)
+                  : nextRenewalDisplayDate}
               </span>
             </div>
             <span className="text-xs font-semibold text-[#64748B] mt-0.5 block">
@@ -186,10 +235,10 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
 
         {/* Status / Auto-Renewal Bar */}
         {isCancelled ? (
-          <div className="p-4.5 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-amber-900">
-            <div className="flex items-start gap-3">
+          <div className="p-4 sm:p-4.5 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-xs text-amber-900">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
+              <div className="min-w-0 leading-relaxed">
                 <p className="font-bold text-sm">Automatic Renewal Cancelled</p>
                 <p className="text-amber-800 mt-0.5">
                   Your coverage remains active through {billing.nextPaymentDate}. You will not be charged again.
@@ -200,7 +249,7 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
               type="button"
               onClick={handleReactivate}
               disabled={isReactivating}
-              className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl transition-colors shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl transition-colors shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5 self-start xl:self-center whitespace-nowrap"
             >
               {isReactivating ? (
                 <>
@@ -216,32 +265,32 @@ export function BillingCard({ billing, onRefresh }: BillingCardProps) {
             </button>
           </div>
         ) : (
-          <div className="p-4.5 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="w-5 h-5 text-[#3F8F6B] shrink-0" />
-              <div className="text-xs sm:text-sm text-[#243746]">
+          <div className="p-4 sm:p-4.5 bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <ShieldCheck className="w-5 h-5 text-[#3F8F6B] shrink-0 mt-0.5" />
+              <div className="text-xs sm:text-sm text-[#243746] min-w-0 leading-relaxed">
                 <p>
-                  Automatic renewal is <strong>active</strong> for {billing.nextPaymentDate}.
+                  Your service begins <strong>{commencementDateStr || billing.nextPaymentDate}</strong>.
                 </p>
                 {billing.cancellationCutoffDate && (
                   <p className="text-xs text-[#64748B] mt-0.5">
-                    Cancellation deadline for upcoming renewal: <strong>{billing.cancellationCutoffDate}</strong> (10 days before month end).
+                    You were not charged at signup. You may cancel anytime before <strong>{(commencementDateStr || billing.nextPaymentDate).split(",")[0]}</strong> at no charge. After service begins, automatic monthly renewal applies, and you can cancel any future month by giving notice at least 10 days before month-end.
                   </p>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start xl:self-center">
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(true)}
-                className="px-4 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] font-bold text-lg rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs"
+                className="px-3.5 py-2 bg-white border border-[#D9E4EC] hover:bg-[#F0F5F9] text-[#243746] font-bold text-xs sm:text-sm rounded-xl transition-colors shrink-0 cursor-pointer shadow-2xs whitespace-nowrap"
               >
                 Update Payment Method
               </button>
               <button
                 type="button"
                 onClick={() => setIsCancelModalOpen(true)}
-                className="px-3.5 py-2 text-lg font-bold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-xl transition-colors cursor-pointer border border-red-200"
+                className="px-3.5 py-2 text-xs sm:text-sm font-bold text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-xl transition-colors cursor-pointer border border-red-200 whitespace-nowrap"
               >
                 Cancel Plan
               </button>

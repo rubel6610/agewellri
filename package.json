@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node api.js && next dev",
+    "build": "node api.js && next build",
+    "start": "node api.js && next start",
     "lint": "eslint"
   },
   "dependencies": {
@@ -29,7 +29,7 @@
     "@types/html2canvas": "^1.0.0",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
-    "@types/react": "^19",
+    "@types/react": "^19.2.18",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",

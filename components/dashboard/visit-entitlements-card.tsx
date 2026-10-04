@@ -56,13 +56,13 @@ export function VisitEntitlementsCard() {
             Your {data.planName} coverage for {periodFormatted}
           </p>
         </div>
-
+{/* 
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#EBF8F2] border border-[#3F8F6B]/30 text-xs font-bold text-[#166534] shrink-0 self-start sm:self-auto">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F6B]" />
           <span>
             {data.totalRemaining} of {data.totalAllocated} Total Visits Remaining
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Entitlement Service Items */}
@@ -84,13 +84,13 @@ export function VisitEntitlementsCard() {
                     {item.serviceName}
                   </h4>
                   <span className="text-xs font-semibold text-[#5E8FB2]">
-                    {formatDuration(item.durationMinutes)} / visit
+                 Up to   {formatDuration(item.durationMinutes)} / visit
                   </span>
                 </div>
 
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-[#294B68] text-white shrink-0 shadow-2xs">
+                {/* <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-black bg-[#294B68] text-white shrink-0 shadow-2xs">
                   {item.allocated} Included
-                </span>
+                </span> */}
               </div>
 
               {/* Progress Bar */}
@@ -107,7 +107,7 @@ export function VisitEntitlementsCard() {
                     {item.completed} completed • {item.scheduled} scheduled
                   </span>
                   <span className="font-extrabold text-[#294B68]">
-                    {item.remaining} remaining
+                    {item.remaining} remaining to be scheduled
                   </span>
                 </div>
               </div>

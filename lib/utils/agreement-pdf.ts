@@ -81,7 +81,7 @@ const AGEWELL_OFFICER_NAME = "Cory Poplaski";
 const AGEWELL_OFFICER_TITLE = "Founder & Director";
 const AGEWELL_COMPANY_NAME = "AgeWellRI LLC";
 
-const OWNER_SIGNATURE_SVG ="/signature.png"
+const OWNER_SIGNATURE_SVG = "/signature.png";
 
 async function svgToPngDataUrl(
   svgStr: string,
@@ -147,7 +147,7 @@ function formatCapacity(cap?: string | null): string {
 // }
 
 /**
- * Generates and downloads a vector-based, high-fidelity PDF of the AgeWellRI Hybrid Services Agreement (16-Section Rhode Island Version).
+ * Generates and downloads a vector-based, high-fidelity PDF of the AGEWELLRI HOME SAFETY SERVICES AGREEMENT (16-Section Rhode Island Version).
  */
 export async function downloadAgreementPdf(
   agreement: AgreementPdfData,
@@ -335,17 +335,13 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.8);
   doc.setTextColor(255, 255, 255);
-  doc.text(
-    "AGEWELLRI HYBRID SERVICES AGREEMENT",
-    margin + 4,
-    y + 6.5,
-  );
+  doc.text("AGEWELLRI HOME SAFETY SERVICES AGREEMENT", margin + 4, y + 6.5);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(190, 220, 240);
   doc.text(
-    "Company Name: © 2026 AgeWellRI LLC. All rights reserved.| Location: Westerly, Rhode Island",
+    "Company Name: © 2026 AgeWellRI LLC. All rights reserved.| Location: Westerly, Rhode Island - 02891",
     margin + 4,
     y + 12,
   );
@@ -365,12 +361,12 @@ export async function downloadAgreementPdf(
     y + 4.2,
   );
   doc.text(`Client ID: ${clientNumber}`, margin + 48, y + 4.2);
-  doc.text(
-    `Version: ${agreement.templateVersion || agreement.version || "v2.0"} (RI)`,
-    margin + 95,
-    y + 4.2,
-  );
-  doc.text(`Effective: ${formattedDate}`, margin + 140, y + 4.2);
+  // doc.text(
+  //   `Version: ${agreement.templateVersion || agreement.version || "v2.0"} (RI)`,
+  //   margin + 95,
+  //   y + 4.2,
+  // );
+  // doc.text(`Effective: ${formattedDate}`, margin + 140, y + 4.2);
 
   y += 9.5;
 
@@ -409,9 +405,9 @@ export async function downloadAgreementPdf(
 
   doc.setFontSize(7.5);
   doc.setTextColor(...darkText);
-  doc.text(agreement.phone || "On File", margin + 3.5, y + 18.5);
+  doc.text(agreement.phone || "N/A", margin + 3.5, y + 18.5);
   doc.text(
-    agreement.dob || agreement.dateOfBirth || "On File",
+    agreement.dob || agreement.dateOfBirth || "N/A",
     margin + 50,
     y + 18.5,
   );
@@ -627,17 +623,13 @@ export async function downloadAgreementPdf(
       ? "Digital Keypad / Smart Lock Access"
       : agreement.homeAccessType === "LOCKBOX"
         ? "Key Lockbox Access"
-        : "Resident Answers Door (Onsite Greeting)";
+        : "Resident Answers Door ";
   doc.text(accessDisplay, margin + 3.5, y + 8.5);
 
   doc.setTextColor(...greenText);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.2);
-  doc.text(
-    "Authorized for Confirmed Scheduled Visits",
-    margin + 95,
-    y + 8.5,
-  );
+  doc.text("Authorized for Confirmed Scheduled Visits", margin + 95, y + 8.5);
 
   doc.setFontSize(6.2);
   doc.setFont("helvetica", "normal");
@@ -657,7 +649,7 @@ export async function downloadAgreementPdf(
   // SECTION 1: PARTIES, PLANS, & SCOPE OF SERVICE
   drawSectionHeader("1. PARTIES, PLANS, & SCOPE OF SERVICE", 4.5);
   renderParagraph(
-    `This Hybrid Services Agreement (the "Agreement") is entered into by and between AgeWellRI LLC ("Company") and the undersigned client and/or responsible family representative ("Client"): ${clientFullName}, residing at ${dispAddress}. Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.`,
+    `This Home Safety Services Agreement is entered into by and between AgeWellRI LLC ("Company") and the undersigned client and/or responsible family representative ("Client"): ${clientFullName}, residing at ${dispAddress}. Company agrees to provide its recurring monthly subscription services based on the specific plan tier selected by the Client below. Both tiers operate on a biweekly rotation consisting of two (2) scheduled home visits per calendar month spaced approximately two weeks apart.`,
     3.5,
   );
 
@@ -687,10 +679,10 @@ export async function downloadAgreementPdf(
 
   let p1Y = y + 4.5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(...(isPlan1 ? lightNavy : darkText));
   doc.text(
-    `PLAN 1: THE PREMIUM SAFETY SAFEGUARD`,
+    `Plan 1 — Premium Safety Safeguard (Environmental Safety Oversight Only)`,
     margin + 4,
     p1Y,
   );
@@ -707,16 +699,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p1Times = formatPlanDuration(
-    (agreement as any).planTimes ||
-      (agreement as any).times ||
-      agreement.planSnapshot?.times,
-  );
-  doc.text(
-    `Rate: $295.00 per calendar month   •   Time: ${p1Times}   •   (Environmental Safety Oversight Only)`,
-    margin + 4,
-    p1Y,
-  );
+  doc.text(`Rate: $295.00 per month`, margin + 4, p1Y);
 
   p1Y += 4.2;
   doc.setFont("helvetica", "normal");
@@ -740,10 +723,10 @@ export async function downloadAgreementPdf(
 
   let p2Y = y + 4.5;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.0);
   doc.setTextColor(...(isPlan2 ? lightNavy : darkText));
   doc.text(
-    `PLAN 2: THE INDEPENDENCE & UPKEEP PLAN`,
+    `Plan 2 — Independence & Upkeep (Comprehensive Safety Oversight & Proactive Mitigation)`,
     margin + 4,
     p2Y,
   );
@@ -760,16 +743,7 @@ export async function downloadAgreementPdf(
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...lightNavy);
-  const p2Times = formatPlanDuration(
-    (agreement as any).planTimes ||
-      (agreement as any).times ||
-      agreement.planSnapshot?.times,
-  );
-  doc.text(
-    `Rate: $${planPrice}.00 per calendar month   •   Time: ${p2Times}   •   (Comprehensive Safety Oversight & Proactive Mitigation)`,
-    margin + 4,
-    p2Y,
-  );
+  doc.text(`Rate: $${planPrice}.00 per month`, margin + 4, p2Y);
 
   p2Y += 4.2;
   doc.setFont("helvetica", "normal");
@@ -916,10 +890,7 @@ export async function downloadAgreementPdf(
   );
 
   // SECTION 10
-  drawSectionHeader(
-    "10. CLIENT CANCELLATION & RISK TERMINATION POLICY",
-    4.5,
-  );
+  drawSectionHeader("10. CLIENT CANCELLATION & RISK TERMINATION POLICY", 4.5);
   renderSubsection(
     "Right to Cancel:",
     "Client may cancel this Agreement at any time by submitting a request via email to agewellri@gmail.com or through the client dashboard. A cancellation request is deemed received, and Company will begin processing it, immediately upon submission. A Client who cancels before their service commencement date under Section 9 owes nothing and is not subject to the notice period below, since no charge has yet processed and no services have yet been scheduled.",
@@ -938,20 +909,13 @@ export async function downloadAgreementPdf(
   );
 
   // SECTION 11
-  drawSectionHeader(
-    "11. PAPER INVOICE COMPLIANCE (RHODE ISLAND ONLY)",
-    4.5,
-  );
+  drawSectionHeader("11. PAPER INVOICE COMPLIANCE (RHODE ISLAND ONLY)", 4.5);
   renderParagraph(
     "In strict compliance with the Rhode Island Senior Savings Protection Act (R.I. Gen. Laws § 6-40.1-2), if the Client or senior resident is sixty-five (65) years of age or older and requests a printed, physical paper invoice sent via United States Postal Service mail rather than electronic delivery, Company will provide such physical mailings completely free of charge. No handling, processing, environmental, or printing fees will ever be applied to physical mailings.",
   );
 
   // SECTION 12
-  drawSectionHeader(
-    "12. REQUIRED AUTHORIZATIONS",
-    4.5,
-  );
-  
+  drawSectionHeader("12. REQUIRED AUTHORIZATIONS", 4.5);
 
   renderSubsection(
     "Section 12.2: Emergency Right of Entry Authorization",
@@ -1060,7 +1024,7 @@ export async function downloadAgreementPdf(
   );
   doc.setFontSize(5.5);
   doc.setTextColor(...greenText);
-  doc.text("✓ EXECUTED", margin + sigBoxW - 3.5, y + 4.5, { align: "right" });
+  doc.text("EXECUTED", margin + sigBoxW - 3.5, y + 4.5, { align: "right" });
 
   // White Signature Canvas Pad for Client
   const padX = margin + 3.5;
@@ -1142,14 +1106,14 @@ export async function downloadAgreementPdf(
     doc.text(`Execution Date: ${formattedDate}`, margin + 3.5, y + 33.5);
   }
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(5.2);
-  doc.setTextColor(...greenText);
-  doc.text(
-    "✓ Verified Digital E-Signature (ESIGN / UETA Compliant)",
-    margin + 3.5,
-    y + (isRepresentative ? 40.8 : 37.5),
-  );
+  // doc.setFont("helvetica", "bold");
+  // doc.setFontSize(5.2);
+  // doc.setTextColor(...greenText);
+  // doc.text(
+  //   "✓ Verified Digital E-Signature (ESIGN / UETA Compliant)",
+  //   margin + 3.5,
+  //   y + (isRepresentative ? 40.8 : 37.5),
+  // );
 
   // 2. AgeWellRI Provider Counter-Signature Box
   const providerX = margin + sigBoxW + 4;
@@ -1163,7 +1127,7 @@ export async function downloadAgreementPdf(
   doc.setTextColor(...greenText);
   doc.text("AgeWellRI Authorized Signature", providerX + 3.5, y + 4.5);
   doc.setFontSize(5.5);
-  doc.text("✓ AUTHORIZED", providerX + sigBoxW - 3.5, y + 4.5, {
+  doc.text("AUTHORIZED", providerX + sigBoxW - 3.5, y + 4.5, {
     align: "right",
   });
 
@@ -1229,14 +1193,14 @@ export async function downloadAgreementPdf(
     y + 37.5,
   );
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(5.2);
-  doc.setTextColor(...greenText);
-  doc.text(
-    "✓ Verified Provider Counter-Signature On File",
-    providerX + 3.5,
-    y + 40.8,
-  );
+  // doc.setFont("helvetica", "bold");
+  // doc.setFontSize(5.2);
+  // doc.setTextColor(...greenText);
+  // doc.text(
+  //   "✓ Verified Provider Counter-Signature On File",
+  //   providerX + 3.5,
+  //   y + 40.8,
+  // );
 
   y += sigBoxH + 4;
 
@@ -1253,15 +1217,13 @@ export async function downloadAgreementPdf(
     doc.setFontSize(6);
     doc.setTextColor(...mutedText);
     doc.text(
-      `AgeWellRI LLC • Client Service Agreement (${stateCode}) • Ref: ${agreement.id?.slice(-8)?.toUpperCase() || "AW-AG"}`,
+      "© 2026 AgeWellRI LLC. All rights reserved. • (401) 212-3002 • agewellri@gmail.com",
       margin,
       pageHeight - 6,
     );
-    doc.text(
-      `Page ${p} of ${totalPages}`,
-      pageWidth - margin - 20,
-      pageHeight - 6,
-    );
+    doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, pageHeight - 6, {
+      align: "right",
+    });
   }
 
   // Save PDF file

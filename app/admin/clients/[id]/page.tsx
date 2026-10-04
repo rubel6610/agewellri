@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, useMemo, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
@@ -116,7 +116,7 @@ function formatAuditDetails(action: string, details: any): string {
 
   if (act.includes("AGREEMENT_CREATED") || act.includes("AGREEMENT_SENT")) {
     const state = stateNames[data.state] || data.state || "Rhode Island";
-    const version = data.templateVersion || "v2.0";
+    const version = data.templateVersion;
     return `Client service agreement initiated (${version} for ${state}).`;
   }
 
@@ -249,7 +249,14 @@ export default function ClientDetailPage({
   const [selectedApptForReport, setSelectedApptForReport] = useState<any>(null);
 
   const client = clientRes?.data;
-  const clientAppointments = clientApptsRes?.data || [];
+  const clientAppointments = useMemo(() => {
+    const list = [...(clientApptsRes?.data || [])];
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [clientApptsRes?.data]);
 
   const handleDeleteClient = async () => {
     if (!client) return;
@@ -339,14 +346,12 @@ export default function ClientDetailPage({
                 <span className="font-mono text-xs font-bold text-[#294B68] bg-[#EAF3F8] px-2.5 py-1 rounded-md">
                   {client.id}
                 </span>
-                <span className="text-xs font-extrabold bg-[#294B68] text-white px-2 py-0.5 rounded-md">
+                {/* <span className="text-xs font-extrabold bg-[#294B68] text-white px-2 py-0.5 rounded-md">
                   {client.state}
-                </span>
+                </span> */}
               </div>
               <p className="text-xs text-[#64748B] flex flex-wrap items-center gap-2 mt-1">
                 <span>Plan: <strong>{client.planName}</strong></span>
-                <span>•</span>
-                <span>Role: <strong>{client.signerRole}</strong></span>
                 <span>•</span>
                 <span>Enrolled: {client.createdAt}</span>
               </p>
@@ -355,15 +360,15 @@ export default function ClientDetailPage({
 
           <div className="flex flex-wrap items-center gap-2.5">
             <ClientStatusBadge status={client.status} />
-            <button
+            {/* <button
               type="button"
               onClick={() => setScheduleModalOpen(true)}
               className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Schedule Visit</span>
-            </button>
-            <button
+            </button> */}
+            {/* <button
               type="button"
               onClick={handleDeleteClient}
               disabled={isDeleting}
@@ -376,7 +381,7 @@ export default function ClientDetailPage({
                 <Trash2 className="w-4 h-4 text-rose-600" />
               )}
               <span>Delete Client</span>
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -755,13 +760,13 @@ export default function ClientDetailPage({
                 </div>
               </div>
 
-              <button
+              {/* <button
                 onClick={() => setScheduleModalOpen(true)}
                 className="px-4 py-2 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Plus className="w-4 h-4" />
                 <span>Book / Schedule Visit</span>
-              </button>
+              </button> */}
             </div>
 
             {clientAppointments.length === 0 ? (

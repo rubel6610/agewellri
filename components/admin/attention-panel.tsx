@@ -95,9 +95,9 @@ export function AttentionPanel({ items = [] }: AttentionPanelProps) {
                   <span className="font-extrabold text-[#243746] text-sm group-hover:text-[#294B68]">
                     {item.title}
                   </span>
-                  <span className="px-2 py-0.5 bg-[#294B68] text-white text-xs font-bold rounded-full">
+                  {/* <span className="px-2 py-0.5 bg-[#294B68] text-white text-xs font-bold rounded-full">
                     {item.count}
-                  </span>
+                  </span> */}
                 </div>
                 <p className="text-xs text-[#64748B] mt-0.5">{item.description}</p>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, Mail, ArrowRight } from "lucide-react";
 
@@ -30,6 +30,22 @@ export function Step9Confirmation({
   commencementDateFormatted,
   userEmail,
 }: Step9ConfirmationProps) {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("agewellri_signup_wizard_state");
+        sessionStorage.removeItem("agewellri_signup_step1");
+        sessionStorage.removeItem("agewellri_signup_step3");
+        sessionStorage.removeItem("agewellri_signup_step4");
+        sessionStorage.removeItem("agewellri_signup_step5");
+        sessionStorage.removeItem("agewellri_signup_step6");
+        sessionStorage.removeItem("agewellri_signup_step7");
+        sessionStorage.removeItem("agewellri_register_form_draft");
+      } catch (e) {
+        console.error("Error clearing signup session storage:", e);
+      }
+    }
+  }, []);
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
       {/* Celebration Header */}
