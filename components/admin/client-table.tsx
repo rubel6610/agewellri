@@ -36,7 +36,6 @@ interface ClientTableProps {
 export function ClientTable({
   clients,
   isLoading = false,
-  onOpenAddClientModal,
   onOpenScheduleModal,
 }: ClientTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -126,108 +125,92 @@ export function ClientTable({
 
   return (
     <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 sm:p-8 shadow-xs space-y-6">
-      {/* Quick Status Filter Tabs */}
-      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-[#D9E4EC]/60">
-        <button
-          type="button"
-          onClick={() => setStatusFilter("ALL")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-            statusFilter === "ALL"
-              ? "bg-[#294B68] text-white shadow-2xs"
-              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
-          }`}
-        >
-          <span>All Clients</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-            statusFilter === "ALL" ? "bg-white/20 text-white" : "bg-[#EAF3F8] text-[#294B68]"
-          }`}>
-            {totalCount}
-          </span>
-        </button>
+      {/* Search and Quick Status Filter Pills Side-by-Side */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#D9E4EC]/60">
+        {/* Status Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusFilter("ALL")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === "ALL"
+                ? "bg-[#294B68] text-white shadow-2xs"
+                : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
+            }`}
+          >
+            <span>All Clients</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "ALL" ? "bg-white/20 text-white" : "bg-[#EAF3F8] text-[#294B68]"
+            }`}>
+              {totalCount}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("active")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-            statusFilter === "active"
-              ? "bg-[#166534] text-white shadow-2xs"
-              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#166534]"
-          }`}
-        >
-          <span>Active Members</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-            statusFilter === "active" ? "bg-white/20 text-white" : "bg-[#EBF8F2] text-[#166534]"
-          }`}>
-            {activeCount}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("active")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === "active"
+                ? "bg-[#166534] text-white shadow-2xs"
+                : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#166534]"
+            }`}
+          >
+            <span>Active Members</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "active" ? "bg-white/20 text-white" : "bg-[#EBF8F2] text-[#166534]"
+            }`}>
+              {activeCount}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("agreement_signed_payment_pending")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-            statusFilter === "agreement_signed_payment_pending"
-              ? "bg-[#C28A3A] text-white shadow-2xs"
-              : "bg-amber-50/60 border border-amber-200 text-amber-800 hover:bg-amber-100/60"
-          }`}
-          title="Clients who signed the agreement but have not yet submitted payment or activated subscription"
-        >
-          <span>Agreement Signed (Payment Pending)</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
-            statusFilter === "agreement_signed_payment_pending" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"
-          }`}>
-            {agreementSignedPaymentPendingCount}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("agreement_signed_payment_pending")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === "agreement_signed_payment_pending"
+                ? "bg-[#C28A3A] text-white shadow-2xs"
+                : "bg-amber-50/60 border border-amber-200 text-amber-800 hover:bg-amber-100/60"
+            }`}
+            title="Clients who signed the agreement but have not yet submitted payment or activated subscription"
+          >
+            <span>Payment Pending</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+              statusFilter === "agreement_signed_payment_pending" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"
+            }`}>
+              {agreementSignedPaymentPendingCount}
+            </span>
+          </button>
+{/* 
+          <button
+            type="button"
+            onClick={() => setStatusFilter("agreement_pending")}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              statusFilter === "agreement_pending"
+                ? "bg-[#294B68] text-white shadow-2xs"
+                : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
+            }`}
+          >
+            <span>Pending Signature</span>
+            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+              statusFilter === "agreement_pending" ? "bg-white/20 text-white" : "bg-[#F0F5F9] text-[#64748B]"
+            }`}>
+              {pendingAgreementCount}
+            </span>
+          </button> */}
+        </div>
 
-        <button
-          type="button"
-          onClick={() => setStatusFilter("agreement_pending")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-            statusFilter === "agreement_pending"
-              ? "bg-[#294B68] text-white shadow-2xs"
-              : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
-          }`}
-        >
-          <span>Pending Signature</span>
-          <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-            statusFilter === "agreement_pending" ? "bg-white/20 text-white" : "bg-[#F0F5F9] text-[#64748B]"
-          }`}>
-            {pendingAgreementCount}
-          </span>
-        </button>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="flex flex-1 flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1 max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
-              <Search className="w-4 h-4" />
-            </div>
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search clients by name, email, ID..."
-              className="w-full h-11 pl-10 pr-4 text-sm text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            />
+        {/* Search Bar */}
+        <div className="relative w-full lg:w-80 shrink-0">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
+            <Search className="w-4 h-4" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-11 px-3.5 text-xs font-bold text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="active">Active Members</option>
-              <option value="agreement_signed_payment_pending">Agreement Signed (Payment Pending)</option>
-              <option value="agreement_pending">Agreement Pending Signature</option>
-              <option value="agreement_executed">Agreement Executed</option>
-              <option value="payment_pending">Payment Pending</option>
-            </select>
-          </div>
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search clients by name, email, ID..."
+            className="w-full h-10 pl-10 pr-4 text-xs font-medium text-[#243746] bg-[#F7FAFC] border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all"
+          />
         </div>
       </div>
 

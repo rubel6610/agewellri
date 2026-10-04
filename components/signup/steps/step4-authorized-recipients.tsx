@@ -109,12 +109,12 @@ export function Step4AuthorizedRecipients({
         )}
 
         {/* Informational banner */}
-        <div className="p-4 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] flex items-start gap-3">
+        {/* <div className="p-4 bg-[#F0F5F9] rounded-2xl border border-[#D9E4EC] flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-[#294B68] shrink-0 mt-0.5" />
           <div className="text-xs text-[#475569] leading-relaxed">
             <strong>Family Peace of Mind:</strong> After every scheduled visit, our technicians upload photos and a completion checklist. Authorized recipients will receive automatic email updates with full visit details.
           </div>
-        </div>
+        </div> */}
 
         {/* Recipients List */}
         <div className="space-y-4">

@@ -126,9 +126,9 @@ export default function SubscriptionsAdminPage() {
   const filterTabs = [
     { label: "All Subscriptions", value: "ALL" },
     { label: "Active", value: "ACTIVE" },
-    { label: "Ending Soon", value: "CANCELLATION_REQUESTED" },
+    // { label: "Ending Soon", value: "CANCELLATION_REQUESTED" },
     { label: "Cancelled", value: "CANCELLED" },
-    { label: "Payment Failed", value: "PAYMENT_FAILED" },
+    // { label: "Payment Failed", value: "PAYMENT_FAILED" },
     { label: "Pending", value: "PENDING" },
   ];
 
@@ -157,14 +157,14 @@ export default function SubscriptionsAdminPage() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
-          <button
+          {/* <button
             onClick={handleTriggerRenewalReminders}
             disabled={isTriggeringReminders}
             className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer disabled:opacity-50"
           >
             <Clock className="w-4 h-4" />
             <span>Check Renewals Now</span>
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -295,7 +295,7 @@ export default function SubscriptionsAdminPage() {
                           {sub.planName}
                         </div>
                         <div className="text-xs font-semibold text-[#5E8FB2] mt-0.5">
-                          {sub.planPrice} • {sub.billingMethod === "AUTOMATIC" ? "Card Auto" : "Invoice"}
+                          {sub.planPrice}
                         </div>
                       </td>
 

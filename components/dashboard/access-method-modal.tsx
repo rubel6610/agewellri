@@ -29,7 +29,7 @@ interface AccessMethodModalProps {
 }
 
 const ACCESS_TYPES: Array<{
-  type: "LOCKBOX" | "DIGITAL_CODE" | "RESIDENT_ANSWERS" | "OTHER";
+  type: "RESIDENT_ANSWERS" | "DIGITAL_CODE";
   label: string;
   description: string;
   icon: React.ElementType;
@@ -38,40 +38,22 @@ const ACCESS_TYPES: Array<{
   placeholderInstructions: string;
 }> = [
   {
-    type: "LOCKBOX",
-    label: "Lockbox / Key Safe",
-    description: "Physical lockbox containing a spare key on property.",
-    icon: Key,
-    defaultTitle: "Front Door Lockbox",
-    placeholderCode: "e.g. 4921 or 1234",
-    placeholderInstructions: "e.g. Mounted on the handrail of the front porch. Turn dial to 4921 and pull down.",
-  },
-  {
-    type: "DIGITAL_CODE",
-    label: "Digital Keypad Code",
-    description: "Keyless door lock or smart keypad entry.",
-    icon: Hash,
-    defaultTitle: "Keypad Entry Code",
-    placeholderCode: "e.g. #1984 or *5829#",
-    placeholderInstructions: "e.g. Enter code on front door smart lock, then press the checkmark.",
-  },
-  {
     type: "RESIDENT_ANSWERS",
     label: "Resident Answers Door",
-    description: "Resident  is present and will open the door upon arrival.",
+    description: "Resident is present and will open the door upon arrival.",
     icon: Bell,
     defaultTitle: "Resident Answers Door",
     placeholderCode: "N/A (optional)",
     placeholderInstructions: "e.g. Ring front doorbell twice. Resident may need 1-2 minutes to reach the door.",
   },
   {
-    type: "OTHER",
-    label: "Custom / Other Method",
-    description: "Concierge, gate code, side entrance, or family coordinator.",
-    icon: HelpCircle,
-    defaultTitle: "Custom Access Method",
-    placeholderCode: "e.g. Gate code #7721 (optional)",
-    placeholderInstructions: "e.g. Check in with building front desk / concierge. They have a key for unit 4B.",
+    type: "DIGITAL_CODE",
+    label: "Digital Keypad Code",
+    description: "Keyless door lock or smart keypad entry.",
+    icon: Hash,
+    defaultTitle: "Digital Keypad Code",
+    placeholderCode: "e.g. #1984 or *5829#",
+    placeholderInstructions: "e.g. Enter code on front door smart lock, then press the checkmark.",
   },
 ];
 
@@ -87,7 +69,7 @@ export function AccessMethodModal({
   const isEditing = Boolean(methodToEdit);
   const isLoading = isAdding || isUpdating;
 
-  const [type, setType] = useState<"LOCKBOX" | "DIGITAL_CODE" | "RESIDENT_ANSWERS" | "OTHER">("LOCKBOX");
+  const [type, setType] = useState<"RESIDENT_ANSWERS" | "DIGITAL_CODE">("RESIDENT_ANSWERS");
   const [title, setTitle] = useState("");
   const [code, setCode] = useState("");
   const [instructions, setInstructions] = useState("");
@@ -95,14 +77,14 @@ export function AccessMethodModal({
 
   useEffect(() => {
     if (methodToEdit) {
-      setType(methodToEdit.type || "LOCKBOX");
+      setType((methodToEdit.type as any) === "DIGITAL_CODE" ? "DIGITAL_CODE" : "RESIDENT_ANSWERS");
       setTitle(methodToEdit.title || "");
       setCode(methodToEdit.code || "");
       setInstructions(methodToEdit.instructions || "");
       setIsDefault(Boolean(methodToEdit.isDefault));
     } else {
-      setType("LOCKBOX");
-      setTitle("Front Door Lockbox");
+      setType("RESIDENT_ANSWERS");
+      setTitle("Resident Answers Door");
       setCode("");
       setInstructions("");
       setIsDefault(false);
@@ -113,7 +95,7 @@ export function AccessMethodModal({
 
   const currentTypeConfig = ACCESS_TYPES.find((t) => t.type === type) || ACCESS_TYPES[0];
 
-  const handleTypeSelect = (selectedType: "LOCKBOX" | "DIGITAL_CODE" | "RESIDENT_ANSWERS" | "OTHER") => {
+  const handleTypeSelect = (selectedType: "RESIDENT_ANSWERS" | "DIGITAL_CODE") => {
     setType(selectedType);
     const config = ACCESS_TYPES.find((t) => t.type === selectedType);
     if (!isEditing && config) {
@@ -272,7 +254,7 @@ export function AccessMethodModal({
               <label className="block text-xs font-bold text-[#243746] flex items-center justify-between">
                 <span>Access Code / Combination</span>
                 <span className="text-[11px] text-[#64748B] font-normal">
-                  {type === "LOCKBOX" || type === "DIGITAL_CODE" ? "Required for automated entry" : "Optional"}
+                  {type === "DIGITAL_CODE" ? "Required for automated entry" : "Optional"}
                 </span>
               </label>
               <input
@@ -309,9 +291,9 @@ export function AccessMethodModal({
                 <Star className={`w-3.5 h-3.5 ${isDefault ? "text-amber-500 fill-amber-500" : "text-[#64748B]"}`} />
                 <span>Set as Default Access Method</span>
               </label>
-              <p className="text-[11px] text-[#64748B]">
+              {/* <p className="text-[11px] text-[#64748B]">
                 Automatically pre-select this entry method when scheduling safety visits.
-              </p>
+              </p> */}
             </div>
 
             <input
@@ -324,12 +306,12 @@ export function AccessMethodModal({
           </div>
 
           {/* Security & Confidentiality Notice */}
-          <div className="p-3 bg-[#EAF3F8]/60 rounded-xl border border-[#5E8FB2]/30 flex items-start gap-2.5 text-xs text-[#294B68]">
+          {/* <div className="p-3 bg-[#EAF3F8]/60 rounded-xl border border-[#5E8FB2]/30 flex items-start gap-2.5 text-xs text-[#294B68]">
             <ShieldCheck className="w-4 h-4 text-[#294B68] shrink-0 mt-0.5" />
             <p className="leading-relaxed">
               Your access codes and entry notes are securely encrypted and only shared with certified AgeWellRI specialists assigned to your scheduled visits.
             </p>
-          </div>
+          </div> */}
 
           {/* Footer Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#D9E4EC] shrink-0">

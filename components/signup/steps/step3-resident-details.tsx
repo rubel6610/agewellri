@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Home, User, Phone, Mail, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Step3ResidentDetailsProps {
@@ -43,6 +43,7 @@ export function Step3ResidentDetails({
   onSave,
   onBack,
 }: Step3ResidentDetailsProps) {
+  const [mounted, setMounted] = useState(false);
   const [isSameAsAccountHolder, setIsSameAsAccountHolder] = useState(
     initialData?.isSameAsAccountHolder ?? true
   );
@@ -58,6 +59,39 @@ export function Step3ResidentDetails({
     phone: initialData?.phone || (isSameAsAccountHolder ? accountHolder.phone : ""),
     email: initialData?.email || (isSameAsAccountHolder ? accountHolder.email : ""),
   });
+
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_signup_step3");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          if (typeof parsed.isSameAsAccountHolder === "boolean") {
+            setIsSameAsAccountHolder(parsed.isSameAsAccountHolder);
+          }
+          if (parsed.formData && typeof parsed.formData === "object") {
+            setFormData((prev) => ({ ...prev, ...parsed.formData }));
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore step3 form data:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem(
+          "agewellri_signup_step3",
+          JSON.stringify({ isSameAsAccountHolder, formData })
+        );
+      } catch (err) {
+        console.error("Failed to save step3 form data:", err);
+      }
+    }
+  }, [formData, isSameAsAccountHolder, mounted]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

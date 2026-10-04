@@ -58,9 +58,10 @@ export function MobileNavigation({
 
   const handleHelp = (e: React.MouseEvent) => {
     e.preventDefault();
+    onClose();
     showSuccessAlert(
       "AgeWellRI Member Concierge",
-      "24/7 Safety Support Line: (401) 555-AGEWELL (243-9355)\n\nEmail: agewellri@gmail.com\nDedicated Rhode Island Staff",
+      "Support Line: (401) 212-3002\nEmail: agewellri@gmail.com\nHours: Mon–Fri, 8am–6pm"
     );
   };
 

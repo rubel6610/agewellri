@@ -52,9 +52,9 @@ export default function AdminProfilePage() {
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
             Administrator Account 
           </h1>
-          <p className="text-sm text-[#64748B] mt-1">
+          {/* <p className="text-sm text-[#64748B] mt-1">
             Manage your personal administrative contact information and change account password.
-          </p>
+          </p> */}
         </div>
 
         <div className="flex items-center gap-3">
@@ -89,14 +89,14 @@ export default function AdminProfilePage() {
                 <h2 className="text-2xl sm:text-3xl font-black text-[#243746]">
                   {firstName} {lastName}
                 </h2>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/30">
+                {/* <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/30">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#294B68]" />
                   {role === "ADMIN" ? "System Administrator" : role}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   Active Account
-                </span>
+                </span> */}
               </div>
 
               <p className="text-xs sm:text-sm text-[#64748B] flex items-center gap-2 font-medium">
@@ -120,21 +120,21 @@ export default function AdminProfilePage() {
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-[#243746]">
-                Administrative Profile Details
+               Profile Details
               </h3>
-              <p className="text-xs text-[#64748B]">
+              {/* <p className="text-xs text-[#64748B]">
                 Primary contact channels used for dispatch &amp; operations
-              </p>
+              </p> */}
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => setIsEditProfileModalOpen(true)}
             className="px-3.5 py-1.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] text-xs font-extrabold rounded-lg border border-[#5E8FB2]/30 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Edit Profile</span>
-          </button>
+          </button> */}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -159,34 +159,34 @@ export default function AdminProfilePage() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" /> Administrative Email Address
+                <Mail className="w-3.5 h-3.5 text-[#5E8FB2]" /> Email Address
               </span>
-              <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1">
+              {/* <span className="text-[11px] font-semibold text-[#64748B] flex items-center gap-1">
                 <Lock className="w-3 h-3 text-[#64748B]" />
                 Read-only
-              </span>
+              </span> */}
             </div>
             <div className="p-4 bg-[#F1F5F9] rounded-2xl border border-[#D9E4EC] flex items-center justify-between">
               <span className="text-base font-bold text-[#243746]">{email}</span>
-              <span className="text-xs font-black uppercase px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
+              {/* <span className="text-xs font-black uppercase px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-md">
                 Verified
-              </span>
+              </span> */}
             </div>
-            <p className="text-[11px] text-[#64748B]">
+            {/* <p className="text-[11px] text-[#64748B]">
               Primary administrative account email used for authentication and system alerts.
-            </p>
+            </p> */}
           </div>
 
           <div className="space-y-1.5">
             <span className="text-xs font-extrabold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" /> Direct Phone Number
+              <Phone className="w-3.5 h-3.5 text-[#5E8FB2]" />Phone Number
             </span>
             <p className="text-base font-bold text-[#243746] p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC]">
               {phone}
             </p>
-            <p className="text-[11px] text-[#64748B]">
+            {/* <p className="text-[11px] text-[#64748B]">
               Direct line used for specialist coordination and high-priority member dispatch.
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

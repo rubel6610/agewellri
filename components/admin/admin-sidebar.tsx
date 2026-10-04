@@ -61,9 +61,9 @@ export function AdminSidebar() {
               className="w-full max-w-[170px] h-auto max-h-12 object-contain"
             />
           </Link>
-          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#294B68] text-white rounded-md tracking-wider shrink-0 shadow-xs">
+          {/* <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-[#294B68] text-white rounded-md tracking-wider shrink-0 shadow-xs">
             ADMIN
-          </span>
+          </span> */}
         </div>
 
         {/* Navigation items */}

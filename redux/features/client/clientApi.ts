@@ -202,6 +202,7 @@ export interface AdminDashboardStats {
     totalClientsCount: number;
     newClientsThisMonth: number;
     pendingOnboardingCount: number;
+    pendingPaymentsCount?: number;
     upcomingVisitsCount: number;
     completedVisitsCount: number;
     reportsPendingCount: number;

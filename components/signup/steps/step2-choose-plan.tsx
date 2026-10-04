@@ -89,11 +89,11 @@ export function Step2ChoosePlan({
         <h2 className="text-2xl sm:text-3xl font-extrabold text-[#243746]">
           Choose Your Service Plan
         </h2>
-        <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
+        {/* <p className="text-sm text-[#5E8FB2] max-w-lg mx-auto">
           Select the membership plan tailored to your household. Plans include
           dedicated home visits, safety inspections, and authorized family
           updates.
-        </p>
+        </p> */}
       </div>
 
       {isLoading ? (
@@ -119,9 +119,6 @@ export function Step2ChoosePlan({
             const isSelected =
               plan.id === (selectedPlan?.id || currentSelectedId) ||
               plan.code === (selectedPlan?.code || currentSelectedId);
-            const isPopular =
-              plan.code?.includes("PEACE_OF_MIND") ||
-              plan.name?.includes("Peace of Mind");
 
             return (
               <div
@@ -133,12 +130,12 @@ export function Step2ChoosePlan({
                     : "bg-[#F8FAFC] border-[#D9E4EC] hover:bg-white hover:border-[#5E8FB2] shadow-sm"
                 }`}
               >
-                {isPopular && (
+                {/* {isPopular && (
                   <div className="absolute -top-3.5 right-6 px-3.5 py-1 bg-[#294B68] text-white text-[11px] font-extrabold uppercase tracking-wider rounded-full shadow-md flex items-center gap-1">
                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                     <span>Most Popular</span>
                   </div>
-                )}
+                )} */}
 
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">

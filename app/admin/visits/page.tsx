@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import {
@@ -31,7 +31,14 @@ export default function VisitsAdminPage() {
     status: statusFilter || undefined,
   });
 
-  const appointments = apptsRes?.data || [];
+  const appointments = useMemo(() => {
+    const list = [...(apptsRes?.data || [])];
+    return list.sort((a: any, b: any) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
+      return timeB - timeA;
+    });
+  }, [apptsRes?.data]);
 
   const totalItems = appointments.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));

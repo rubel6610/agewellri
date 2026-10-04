@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   X,
   Download,
-  Printer,
   FileText,
   Loader2,
 } from "lucide-react";
@@ -42,13 +41,13 @@ export function AgreementPreviewModal({
     agreement.executedAt ||
     agreement.signedDate;
 
-  const formattedDate = rawDate
-    ? new Date(rawDate).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Executed & Active";
+  // const formattedDate = rawDate
+  //   ? new Date(rawDate).toLocaleDateString("en-US", {
+  //       year: "numeric",
+  //       month: "long",
+  //       day: "numeric",
+  //     })
+  //   : "Executed & Active";
 
   const handleDownload = async () => {
     try {
@@ -67,9 +66,7 @@ export function AgreementPreviewModal({
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-[#243746]/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
@@ -83,12 +80,12 @@ export function AgreementPreviewModal({
             <div>
               <h2 className="text-base sm:text-lg font-bold text-[#243746] flex items-center gap-2">
                 <span>{agreement.clientName}</span>
-                <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-[#294B68]/10 text-[#294B68]">
+                {/* <span className="text-xs px-2 py-0.5 rounded-md font-semibold bg-[#294B68]/10 text-[#294B68]">
                   {agreement.state} Agreement
-                </span>
+                </span> */}
               </h2>
               <p className="text-xs text-[#64748B]">
-                ID: {agreement.clientNumber} • Version {agreement.version || "v2.0"} • {formattedDate}
+                ID: {agreement.clientNumber}
               </p>
             </div>
           </div>
@@ -126,14 +123,7 @@ export function AgreementPreviewModal({
               <span>Download PDF</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#D9E4EC] bg-white hover:bg-[#F8FAFC] text-[#243746] text-xs font-bold transition-colors cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#64748B]" />
-              <span>Print</span>
-            </button>
+
 
             <button
               type="button"
@@ -151,12 +141,12 @@ export function AgreementPreviewModal({
         </div>
 
         {/* Modal Bottom Bar */}
-        <div className="px-6 py-4 border-t border-[#D9E4EC] bg-[#F7FAFC] flex items-center justify-between shrink-0">
-          <span className="text-xs text-[#64748B]">
+        {/* <div className="px-6 py-4 border-t border-[#D9E4EC] bg-[#F7FAFC] flex items-center justify-end shrink-0">
+          {/* <span className="text-xs text-[#64748B]">
             Official legal service agreement record for <strong>{agreement.clientName}</strong>
-          </span>
-          <div className="flex items-center gap-2">
-            {authDocUrl ? (
+          </span> */}
+          {/* <div className="flex items-center gap-2"> */}
+            {/* {authDocUrl ? (
               <button
                 type="button"
                 onClick={() =>
@@ -171,9 +161,9 @@ export function AgreementPreviewModal({
                 <Download className="w-3.5 h-3.5 text-emerald-700" />
                 <span>Authority Doc</span>
               </button>
-            ) : null}
+            ) : null} */}
 
-            <button
+            {/* <button
               type="button"
               onClick={handleDownload}
               disabled={isDownloading}
@@ -185,17 +175,17 @@ export function AgreementPreviewModal({
                 <Download className="w-3.5 h-3.5" />
               )}
               <span>Download Official PDF</span>
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 rounded-xl border border-[#D9E4EC] bg-white hover:bg-[#F8FAFC] text-[#243746] text-xs font-bold transition-colors cursor-pointer"
             >
               Close
-            </button>
-          </div>
-        </div>
+            </button> */}
+          {/* </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

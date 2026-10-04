@@ -129,6 +129,14 @@ export const appointmentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
     }),
+
+    deleteAppointment: builder.mutation<ApiResponse<{ id: string }>, string>({
+      query: (id) => ({
+        url: `/appointments/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+    }),
   }),
   overrideExisting: true,
 });
@@ -144,4 +152,5 @@ export const {
   useRescheduleAppointmentMutation,
   useCancelAppointmentMutation,
   useUpdateAppointmentStatusMutation,
+  useDeleteAppointmentMutation,
 } = appointmentApi;

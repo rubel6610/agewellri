@@ -67,8 +67,8 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Primary KPI Cards Grid Skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {[...Array(6)].map((_, idx) => (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, idx) => (
             <div
               key={idx}
               className="p-5 rounded-2xl border border-[#D9E4EC] bg-white flex flex-col justify-between space-y-3 shadow-xs"
@@ -296,44 +296,33 @@ export default function AdminOverviewPage() {
             <span>Good day, {greetingName}</span>
             <Sparkles className="w-6 h-6 text-[#5E8FB2]" />
           </h1>
-          <p className="text-xs sm:text-sm text-[#64748B] mt-1">
+          {/* <p className="text-xs sm:text-sm text-[#64748B] mt-1">
             Real-time operations &amp; safety oversight overview for{" "}
             <strong>{todayFormatted}</strong>.
-          </p>
+          </p> */}
         </div>
       </div>
 
       {/* Primary KPI Cards Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatKpiCard
           title="Active Clients"
           value={kpis?.activeClientsCount ?? 0}
-          subtitle={`+${kpis?.newClientsThisMonth ?? 0} this month`}
           icon={<Users className="w-5 h-5 text-[#294B68]" />}
           href="/admin/clients"
         />
 
         <StatKpiCard
-          title="Pending Intakes"
-          value={kpis?.pendingOnboardingCount ?? 0}
-          subtitle="Awaiting onboarding"
-          icon={<UserPlus className="w-5 h-5 text-[#C28A3A]" />}
-          href="/admin/clients"
-          urgent={(kpis?.pendingOnboardingCount ?? 0) > 0}
-        />
-
-        <StatKpiCard
-          title="Upcoming Visits"
-          value={kpis?.upcomingVisitsCount ?? 0}
-          subtitle="Next 7 days"
-          icon={<CalendarCheck className="w-5 h-5 text-[#294B68]" />}
-          href="/admin/appointments"
+          title="Pending Payments"
+          value={kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0}
+          icon={<CreditCard className="w-5 h-5 text-[#C28A3A]" />}
+          href="/admin/billing"
+          urgent={(kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0) > 0}
         />
 
         <StatKpiCard
           title="Pending Reports"
           value={kpis?.reportsPendingCount ?? 0}
-          subtitle="Completed visits"
           icon={<FileCheck2 className="w-5 h-5 text-[#C95C5C]" />}
           href="/admin/appointments?tab=COMPLETED"
           urgent={(kpis?.reportsPendingCount ?? 0) > 0}
@@ -342,7 +331,6 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Agreements Executed"
           value={kpis?.executedAgreementsCount ?? 0}
-          subtitle={`${kpis?.pendingAgreementsCount ?? 0} pending sign`}
           icon={<ShieldCheck className="w-5 h-5 text-[#3F8F6B]" />}
           href="/admin/agreements"
         />
@@ -350,7 +338,6 @@ export default function AdminOverviewPage() {
         <StatKpiCard
           title="Renewals in 30d"
           value={kpis?.renewalsUpcomingCount ?? 0}
-          subtitle="Monthly cycles"
           icon={<RefreshCw className="w-5 h-5 text-[#5E8FB2]" />}
           href="/admin/subscriptions"
         />
@@ -369,9 +356,9 @@ export default function AdminOverviewPage() {
                 <Calendar className="w-5 h-5 text-[#294B68]" />
                 <span>Upcoming Field Visits (Next 7 Days)</span>
               </h3>
-              <p className="text-xs text-[#64748B]">
+              {/* <p className="text-xs text-[#64748B]">
                 Scheduled safety oversight and hazard-mitigation visits
-              </p>
+              </p> */}
             </div>
             <Link
               href="/admin/appointments"
@@ -547,19 +534,19 @@ export default function AdminOverviewPage() {
                 Active Plan Tiers
               </span>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(stats.planDistribution || {}).map(
-                  ([planName, count]) => (
+                {Object.entries(stats.planDistribution || {})
+                  .filter(([planName]) => !planName.toLowerCase().includes("unassigned"))
+                  .map(([planName, count]) => (
                     <div
                       key={planName}
                       className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
                     >
-                      <span>{planName}:</span>
+                      <span>{planName.split("_").join(" ")}</span>
                       <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px]">
                         {count}
                       </span>
                     </div>
-                  ),
-                )}
+                  ))}
               </div>
             </div>
           </div>
@@ -662,7 +649,7 @@ export default function AdminOverviewPage() {
                         {client.state}
                       </td>
                       <td className="py-3 px-3.5 font-medium text-[#64748B]">
-                        {client.planName}
+                        {client.planName.split("_").join(" ")}
                       </td>
                       <td className="py-3 px-3.5">
                         <ClientStatusBadge status={client.status} />
@@ -688,7 +675,7 @@ export default function AdminOverviewPage() {
           <div className="pb-2 border-b border-[#D9E4EC]/60">
             <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#294B68]" />
-              <span>Live Activity Stream</span>
+              <span>Live Activity</span>
             </h3>
             <p className="text-xs text-[#64748B]">
               Real-time operational audit log

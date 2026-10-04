@@ -5,6 +5,7 @@ import Link from "next/link";
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 import { useRegisterMutation } from "@/redux/features/auth/authApi";
 import { useAppSelector } from "@/redux/hooks";
+import { isValidEmail } from "@/lib/utils";
 
 interface Step1CreateAccountProps {
   onSuccess: (accountData: {
@@ -25,9 +26,24 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
   const authUser = useAppSelector((state) => state.auth.user);
   const [registerUser, { isLoading }] = useRegisterMutation();
   const [mounted, setMounted] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    try {
+      const saved = sessionStorage.getItem("agewellri_signup_step1");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore step1 form data:", err);
+    }
   }, []);
 
   const [formData, setFormData] = useState({
@@ -39,6 +55,16 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
     confirmPassword: "",
     agreedToLegal: false,
   });
+
+  useEffect(() => {
+    if (mounted && typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("agewellri_signup_step1", JSON.stringify(formData));
+      } catch (err) {
+        console.error("Failed to persist step1 form data:", err);
+      }
+    }
+  }, [formData, mounted]);
 
   useEffect(() => {
     if (initialData?.email || authUser?.email) {
@@ -59,6 +85,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setEmailTouched(true);
 
     // If already authenticated and email matches, simply proceed
     if (authUser && authUser.email === formData.email) {
@@ -76,8 +103,9 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
       return;
     }
 
-    if (!formData.email.trim() || !formData.email.includes("@")) {
-      setErrorMessage("Please enter a valid email address.");
+    const cleanEmail = formData.email.trim().toLowerCase();
+    if (!cleanEmail || !isValidEmail(cleanEmail)) {
+      setErrorMessage("Please enter a valid email address (e.g. name@example.com).");
       return;
     }
 
@@ -125,7 +153,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
         err?.data?.message ||
         err?.message ||
         (typeof err?.data?.errors === "string" ? err.data.errors : null) ||
-        "An error occurred while creating your account. The email may already be in use.";
+        "An error occurred while creating your account. ";
       setErrorMessage(msg);
     }
   };
@@ -247,12 +275,25 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
                 type="email"
                 required
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (errorMessage?.includes("email")) setErrorMessage(null);
+                }}
+                onBlur={() => setEmailTouched(true)}
                 placeholder="eleanor@example.com"
-                className="w-full h-12 pl-11 pr-4 text-sm font-medium text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2] transition-all"
+                className={`w-full h-12 pl-11 pr-4 text-sm font-medium text-[#243746] bg-[#F8FAFC] border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
+                  emailTouched && formData.email && !isValidEmail(formData.email)
+                    ? "border-red-400 focus:ring-red-400 focus:border-red-500 bg-red-50/30"
+                    : "border-[#D9E4EC] focus:ring-[#5E8FB2]"
+                }`}
               />
               <Mail className="w-5 h-5 text-[#94A3B8] absolute left-3.5 top-3.5" />
             </div>
+            {emailTouched && formData.email && !isValidEmail(formData.email) && (
+              <p className="text-[11px] font-medium text-red-600 mt-1">
+                Please enter a valid email address (e.g. name@example.com).
+              </p>
+            )}
           </div>
         </div>
 
@@ -260,7 +301,7 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
-              Password * (Min 8 chars)
+              Password *
             </label>
             <div className="relative">
               <input
@@ -321,8 +362,6 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
               I agree to the{" "}
               <Link
                 href="/terms-of-use"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-[#294B68] font-bold underline hover:text-[#1E374D]"
               >
                 Terms of Use
@@ -330,8 +369,6 @@ export function Step1CreateAccount({ onSuccess, initialData }: Step1CreateAccoun
               and{" "}
               <Link
                 href="/privacy-policy"
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-[#294B68] font-bold underline hover:text-[#1E374D]"
               >
                 Privacy Policy
