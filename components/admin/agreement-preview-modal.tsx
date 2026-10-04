@@ -91,7 +91,7 @@ export function AgreementPreviewModal({
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
-            {authDocUrl ? (
+            {/* {authDocUrl ? (
               <button
                 type="button"
                 onClick={() =>
@@ -107,7 +107,7 @@ export function AgreementPreviewModal({
                 <Download className="w-3.5 h-3.5 text-emerald-700" />
                 <span>Authority Doc</span>
               </button>
-            ) : null}
+            ) : null} */}
 
             <button
               type="button"

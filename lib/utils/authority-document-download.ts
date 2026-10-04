@@ -2,7 +2,7 @@ import { getAuthToken } from "@/lib/auth/token";
 import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5173/api/v1"
 ).replace(/\/$/, "");
 const BACKEND_BASE = API_BASE.replace(/\/api\/v1$/, "");
 
@@ -11,6 +11,27 @@ export interface DownloadAuthorityDocOptions {
   agreementId?: string | null;
   fileName?: string | null;
   customName?: string | null;
+}
+
+/**
+ * Resolve any authority document URL to point to backend storage
+ */
+export function resolveBackendUrl(url?: string | null): string {
+  if (!url) return "";
+
+  // If url contains /uploads/, ensure it always resolves to BACKEND_BASE
+  if (url.includes("/uploads/")) {
+    const uploadPath = url.substring(url.indexOf("/uploads/"));
+    return `${BACKEND_BASE}${uploadPath}`;
+  }
+
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  // Relative path
+  const cleanPath = url.startsWith("/") ? url : `/${url}`;
+  return `${BACKEND_BASE}${cleanPath}`;
 }
 
 /**
@@ -29,17 +50,12 @@ export function getAuthorityDocumentDownloadUrl({
   const tokenParam = token ? `token=${encodeURIComponent(token)}` : "";
   const endpoint = inline ? "file" : "download";
 
-  if (agreementId) {
+  if (agreementId && !url) {
     return `${API_BASE}/agreements/${agreementId}/authority-document/${endpoint}${tokenParam ? `?${tokenParam}` : ""}`;
   }
 
   if (url) {
-    if (url.startsWith("http://") || url.startsWith("https://")) {
-      const separator = url.includes("?") ? "&" : "?";
-      return tokenParam ? `${url}${separator}${tokenParam}` : url;
-    }
-    // Direct static or relative backend path
-    const fullUrl = `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
+    const fullUrl = resolveBackendUrl(url);
     const separator = fullUrl.includes("?") ? "&" : "?";
     return tokenParam ? `${fullUrl}${separator}${tokenParam}` : fullUrl;
   }
@@ -79,14 +95,10 @@ export async function downloadAuthorityDocument({
 
     let targetUrl: string;
 
-    if (agreementId) {
+    if (agreementId && !url) {
       targetUrl = `${API_BASE}/agreements/${agreementId}/authority-document/download`;
     } else if (url) {
-      if (url.startsWith("http://") || url.startsWith("https://")) {
-        targetUrl = url;
-      } else {
-        targetUrl = `${BACKEND_BASE}${url.startsWith("/") ? "" : "/"}${url}`;
-      }
+      targetUrl = resolveBackendUrl(url);
     } else {
       targetUrl = `${API_BASE}/agreements/my-agreement/authority-document/download`;
     }

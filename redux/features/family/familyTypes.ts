@@ -8,6 +8,9 @@ export interface FamilyMemberItem {
   relationship: string;
   email: string;
   phone?: string | null;
+  legalCapacity?: string | null;
+  authorityDocumentUrl?: string | null;
+  authorityDocumentName?: string | null;
   reportAccess: boolean;
   portalAccess: boolean;
   billingAccess: boolean;
@@ -43,6 +46,9 @@ export interface CreateFamilyMemberRequest {
   relationship: string;
   email: string;
   phone?: string | null;
+  legalCapacity?: string | null;
+  authorityDocumentUrl?: string | null;
+  authorityDocumentName?: string | null;
   password?: string | null;
   reportAccess?: boolean;
   portalAccess?: boolean;
@@ -58,6 +64,9 @@ export interface UpdateFamilyMemberRequest {
   relationship?: string;
   email?: string;
   phone?: string | null;
+  legalCapacity?: string | null;
+  authorityDocumentUrl?: string | null;
+  authorityDocumentName?: string | null;
   password?: string | null;
   reportAccess?: boolean;
   portalAccess?: boolean;

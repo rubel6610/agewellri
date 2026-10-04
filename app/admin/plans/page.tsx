@@ -51,16 +51,8 @@ export default function AdminPlansPage() {
     useChangePlanStatusMutation();
   const [deletePlan, { isLoading: isDeleting }] = useDeletePlanMutation();
 
-  const sortedPlans = useMemo(() => {
-    return [...plans].sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      if (dateA && dateB && dateA !== dateB) return dateB - dateA;
-      return (b.displayOrder ?? 0) - (a.displayOrder ?? 0);
-    });
-  }, [plans]);
 
-  const filteredPlans = sortedPlans.filter((plan) => {
+  const filteredPlans = plans.filter((plan) => {
     const matchesSearch =
       plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       plan.code.toLowerCase().includes(searchTerm.toLowerCase()) ||

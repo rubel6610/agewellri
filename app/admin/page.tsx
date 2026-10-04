@@ -475,7 +475,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Regional State & Plan Intelligence (1 Col) */}
-        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-5 flex flex-col justify-between">
+        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs  flex flex-col justify-between">
           <div>
             <div className="pb-3 border-b border-[#D9E4EC]/60">
               <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
@@ -488,48 +488,9 @@ export default function AdminOverviewPage() {
             </div>
 
             {/* Service Jurisdiction */}
-            <div className="space-y-2.5 pt-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                Service Jurisdiction
-              </span>
-              <div className="space-y-2">
-                {[
-                  {
-                    state: "Rhode Island",
-                    code: "RI",
-                    count:
-                      stats.stateDistribution?.RI ||
-                      kpis?.totalClientsCount ||
-                      0,
-                    color: "bg-[#294B68]",
-                  },
-                ].map((item) => {
-                  const total = Math.max(1, item.count);
-                  const pct = 100;
-                  return (
-                    <div key={item.code} className="space-y-1">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className="text-[#243746] font-bold">
-                          {item.state} ({item.code})
-                        </span>
-                        <span className="text-[#294B68] font-bold">
-                          {item.count} Members ({pct}%)
-                        </span>
-                      </div>
-                      <div className="w-full bg-[#EAF3F8] h-2.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full ${item.color}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
+         
             {/* Plan Distribution */}
-            <div className="space-y-2.5 pt-5 border-t border-[#D9E4EC]/60">
+            <div className="space-y-2.5  border-t border-[#D9E4EC]/60">
               <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
                 Active Plan Tiers
               </span>
@@ -552,27 +513,7 @@ export default function AdminOverviewPage() {
           </div>
 
           {/* Revenue Highlight Subcard */}
-          <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold">
-                <DollarSign className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-[10px] uppercase font-bold text-emerald-800">
-                  Total Revenue Collected
-                </div>
-                <div className="text-base font-extrabold text-emerald-900">
-                  {kpis?.totalRevenueCollected || "$0.00"}
-                </div>
-              </div>
-            </div>
-            <Link
-              href="/admin/billing"
-              className="text-xs font-bold text-emerald-800 hover:text-emerald-950 underline"
-            >
-              Billing &amp; Invoices →
-            </Link>
-          </div>
+        
         </div>
       </div>
 

@@ -7,36 +7,27 @@ import {
   Mail,
   Phone,
   User,
-  Shield,
+  HeartHandshake,
   FileCheck,
-  CreditCard,
   AlertCircle,
   Loader2,
-  Send,
-  HeartHandshake,
-  CheckCircle2,
-  Lock,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  KeyRound,
+  UploadCloud,
+  Trash2,
+  Scale,
+  Download,
 } from "lucide-react";
-import {
-  useUpdateFamilyMemberMutation,
-  useInviteFamilyMemberMutation,
-} from "@/redux/features/family/familyApi";
+import { useUpdateFamilyMemberMutation } from "@/redux/features/family/familyApi";
+import { useUploadAuthorityDocumentMutation } from "@/redux/features/agreement/agreementApi";
 import { FamilyMember } from "@/redux/features/family/familyTypes";
-import {
-  showSuccessAlert,
-  showErrorAlert,
-  showToast,
-} from "@/lib/alerts/sweetalert";
+import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
+import { showErrorAlert, showToast } from "@/lib/alerts/sweetalert";
 
 interface EditFamilyMemberModalProps {
   isOpen: boolean;
   member: FamilyMember | null;
   onClose: () => void;
   onSuccess?: () => void;
+  forcedRole?: "REPRESENTATIVE" | "RECIPIENT";
 }
 
 const RELATIONSHIP_OPTIONS = [
@@ -52,64 +43,118 @@ const RELATIONSHIP_OPTIONS = [
   "Other",
 ];
 
-function generateRandomPassword() {
-  return "Agewell@" + Math.floor(1000 + Math.random() * 9000);
-}
+const LEGAL_CAPACITY_OPTIONS = [
+  { value: "ATTORNEY_IN_FACT", label: "Attorney-in-Fact (POA)" },
+  { value: "GUARDIAN", label: "Guardian" },
+  { value: "CONSERVATOR", label: "Conservator" },
+  { value: "HEALTHCARE_PROXY", label: "Healthcare Proxy" },
+  { value: "OTHER", label: "Other Authorized Legal Representative" },
+];
 
 export function EditFamilyMemberModal({
   isOpen,
   member,
   onClose,
   onSuccess,
+  forcedRole,
 }: EditFamilyMemberModalProps) {
   const [updateFamilyMember, { isLoading: isUpdating }] =
     useUpdateFamilyMemberMutation();
-  const [inviteFamilyMember, { isLoading: isInviting }] =
-    useInviteFamilyMemberMutation();
+  const [uploadAuthorityDoc, { isLoading: isUploadingDoc }] =
+    useUploadAuthorityDocumentMutation();
 
   const [formData, setFormData] = useState({
     name: "",
     relationship: "Daughter",
     customRelationship: "",
+    legalCapacity: "ATTORNEY_IN_FACT",
+    authorityDocumentUrl: "",
+    authorityDocumentName: "",
     email: "",
     phone: "",
-    password: "",
-    reportAccess: true,
-    portalAccess: false,
-    billingAccess: false,
-    isEmergencyContact: false,
-    sendCredentialsNow: true,
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (member) {
+    if (member && isOpen) {
       const isCustomRel = !RELATIONSHIP_OPTIONS.includes(member.relationship);
       setFormData({
         name: member.name || "",
         relationship: isCustomRel ? "Other" : member.relationship,
         customRelationship: isCustomRel ? member.relationship : "",
+        legalCapacity: member.legalCapacity || "ATTORNEY_IN_FACT",
+        authorityDocumentUrl: member.authorityDocumentUrl || "",
+        authorityDocumentName: member.authorityDocumentName || "",
         email: member.email || "",
         phone: member.phone || "",
-        password: "",
-        reportAccess: !!member.reportAccess,
-        portalAccess: !!member.portalAccess,
-        billingAccess: !!member.billingAccess,
-        isEmergencyContact: !!member.isEmergencyContact,
-        sendCredentialsNow: true,
       });
       setErrors({});
     }
-  }, [member]);
+  }, [member, isOpen, forcedRole]);
 
   if (!isOpen || !member) return null;
 
-  const handleGeneratePassword = () => {
+  const isRepresentative =
+    forcedRole === "REPRESENTATIVE" ||
+    (!forcedRole && Boolean(member.isEmergencyContact));
+
+  const modalTitle = isRepresentative
+    ? "Edit Representative"
+    : "Edit Authorized Report Recipient";
+
+  const modalSubtitle = isRepresentative
+    ? "Modify Representative legal authority and contact details"
+    : "Modify Authorized Report Recipient email & details";
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      setErrors((prev) => ({
+        ...prev,
+        authorityDoc: "File exceeds the 15MB size limit.",
+      }));
+      return;
+    }
+
+    setErrors((prev) => ({ ...prev, authorityDoc: "" }));
+
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+    uploadData.append("authorityDocument", file);
+
+    try {
+      const res = await uploadAuthorityDoc(uploadData).unwrap();
+      const docData = res?.data;
+      if (res?.success && docData?.fileUrl) {
+        setFormData((prev) => ({
+          ...prev,
+          authorityDocumentUrl: docData.fileUrl,
+          authorityDocumentName: docData.originalName || file.name,
+        }));
+        showToast("Authority document uploaded successfully", "success");
+      } else {
+        setErrors((prev) => ({
+          ...prev,
+          authorityDoc: res?.message || "Failed to upload authority document.",
+        }));
+      }
+    } catch (err: any) {
+      setErrors((prev) => ({
+        ...prev,
+        authorityDoc:
+          err?.data?.message || err?.message || "Error uploading authority document.",
+      }));
+    }
+  };
+
+  const handleRemoveDoc = () => {
     setFormData((prev) => ({
       ...prev,
-      password: generateRandomPassword(),
+      authorityDocumentUrl: "",
+      authorityDocumentName: "",
     }));
   };
 
@@ -117,7 +162,9 @@ export function EditFamilyMemberModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
+      newErrors.name = isRepresentative
+        ? "Representative full legal name is required"
+        : "Full name is required";
     }
 
     if (!formData.email.trim()) {
@@ -126,12 +173,8 @@ export function EditFamilyMemberModal({
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (formData.relationship === "Other" && !formData.customRelationship.trim()) {
+    if (!isRepresentative && formData.relationship === "Other" && !formData.customRelationship.trim()) {
       newErrors.customRelationship = "Please specify relationship";
-    }
-
-    if (formData.password && formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -143,22 +186,31 @@ export function EditFamilyMemberModal({
     if (!validate()) return;
 
     try {
-      const finalRelationship =
-        formData.relationship === "Other"
-          ? formData.customRelationship.trim()
-          : formData.relationship;
+      let finalRelationship = member.relationship;
+      if (isRepresentative) {
+        finalRelationship =
+          LEGAL_CAPACITY_OPTIONS.find((c) => c.value === formData.legalCapacity)?.label ||
+          member.relationship ||
+          "Representative";
+      } else {
+        finalRelationship =
+          formData.relationship === "Other"
+            ? formData.customRelationship.trim()
+            : formData.relationship;
+      }
 
       const payload = {
         name: formData.name.trim(),
         relationship: finalRelationship,
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim() || undefined,
-        password: formData.password.trim() || undefined,
-        reportAccess: formData.reportAccess,
-        portalAccess: formData.portalAccess,
-        billingAccess: formData.portalAccess ? formData.billingAccess : false,
-        isEmergencyContact: formData.isEmergencyContact,
-        sendCredentialsNow: formData.sendCredentialsNow,
+        legalCapacity: isRepresentative ? formData.legalCapacity : undefined,
+        authorityDocumentUrl: isRepresentative ? formData.authorityDocumentUrl || null : undefined,
+        authorityDocumentName: isRepresentative ? formData.authorityDocumentName || null : undefined,
+        reportAccess: true,
+        portalAccess: false,
+        billingAccess: false,
+        isEmergencyContact: isRepresentative,
       };
 
       const res = await updateFamilyMember({
@@ -167,46 +219,21 @@ export function EditFamilyMemberModal({
       }).unwrap();
 
       if (res.success) {
-        showToast("Family member updated successfully!", "success");
-        if (formData.password && formData.sendCredentialsNow) {
-          showSuccessAlert(
-            "New Credentials Emailed!",
-            `We emailed the new password and login URL to ${payload.email}.`
-          );
-        }
+        showToast(
+          isRepresentative
+            ? "Representative updated successfully!"
+            : "Report recipient updated successfully!",
+          "success"
+        );
         onSuccess?.();
         onClose();
       }
     } catch (err: any) {
       const message =
-        err?.data?.message || err?.message || "Failed to update family member.";
+        err?.data?.message || err?.message || "Failed to update contact.";
       showErrorAlert("Update Failed", message);
     }
   };
-
-  const handleSendCredentialsDirect = async () => {
-    const pass = formData.password.trim() || generateRandomPassword();
-    try {
-      const res = await inviteFamilyMember({
-        id: member.id,
-        password: pass,
-      }).unwrap();
-
-      if (res.success) {
-        showSuccessAlert(
-          "Credentials Emailed!",
-          `Portal login credentials (email: ${member.email}, password: ${pass}) have been sent directly to ${member.email}.`
-        );
-        onSuccess?.();
-      }
-    } catch (err: any) {
-      const message =
-        err?.data?.message || err?.message || "Failed to email login credentials.";
-      showErrorAlert("Email Error", message);
-    }
-  };
-
-  const isPortalActive = Boolean(member.portalAccess);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
@@ -222,14 +249,18 @@ export function EditFamilyMemberModal({
         <div className="sticky top-0 bg-white/95 backdrop-blur-xs px-6 py-5 border-b border-[#D9E4EC] flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center">
-              <Edit3 className="w-5 h-5" />
+              {isRepresentative ? (
+                <Scale className="w-5 h-5" />
+              ) : (
+                <FileCheck className="w-5 h-5" />
+              )}
             </div>
             <div>
               <h2 className="text-lg sm:text-xl font-black text-[#243746]">
-                Edit Family Member
+                {modalTitle}
               </h2>
               <p className="text-xs text-[#64748B]">
-                Modify contact info, manage permissions &amp; credentials
+                {modalSubtitle}
               </p>
             </div>
           </div>
@@ -244,49 +275,19 @@ export function EditFamilyMemberModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Member Status Pill Banner */}
-          <div className="p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#D9E4EC] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                Portal Access:
-              </span>
-              {isPortalActive ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Active Portal Access
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                  Reports Only
-                </span>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={handleSendCredentialsDirect}
-              disabled={isInviting}
-              className="px-3 py-1.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              {isInviting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Send className="w-3.5 h-3.5" />
-              )}
-              <span>Email Credentials</span>
-            </button>
-          </div>
-
-          {/* Member Details */}
+          {/* Contact Details */}
           <div className="space-y-4">
+            {/* Full Legal Name */}
             <div>
               <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                Full Name <span className="text-rose-500">*</span>
+                {isRepresentative ? "Representative Full Legal Name" : "Full Name"}{" "}
+                <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
                 <input
                   type="text"
-                  placeholder="e.g. Jane Doe"
+                  placeholder={isRepresentative ? "e.g. Sarah Vance" : "e.g. Jane Doe"}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -303,252 +304,268 @@ export function EditFamilyMemberModal({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Representative Legal Capacity (Representative only) */}
+            {isRepresentative && (
               <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  Relationship <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Scale className="w-3.5 h-3.5 text-[#294B68]" />
+                  <span>Representative Legal Capacity</span>
+                  <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative">
-                  <HeartHandshake className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                  <select
-                    value={formData.relationship}
-                    onChange={(e) =>
-                      setFormData({ ...formData, relationship: e.target.value })
-                    }
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] bg-white focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                  >
-                    {RELATIONSHIP_OPTIONS.map((rel) => (
-                      <option key={rel} value={rel}>
-                        {rel}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  Email Address <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                  <input
-                    type="email"
-                    placeholder="name@example.com"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                      errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
-                    }`}
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {formData.relationship === "Other" && (
-              <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  Specify Relationship <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Neighbor / Case Manager"
-                  value={formData.customRelationship}
+                <select
+                  value={formData.legalCapacity}
                   onChange={(e) =>
-                    setFormData({ ...formData, customRelationship: e.target.value })
+                    setFormData({ ...formData, legalCapacity: e.target.value })
                   }
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                    errors.customRelationship
-                      ? "border-rose-400 bg-rose-50/20"
-                      : "border-[#D9E4EC]"
-                  }`}
-                />
-                {errors.customRelationship && (
-                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" /> {errors.customRelationship}
-                  </p>
-                )}
+                  className="w-full px-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm font-semibold text-[#243746] bg-white focus:outline-none focus:ring-2 focus:ring-[#294B68] cursor-pointer"
+                >
+                  {LEGAL_CAPACITY_OPTIONS.map((cap) => (
+                    <option key={cap.value} value={cap.value}>
+                      {cap.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
-              </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                <input
-                  type="tel"
-                  placeholder="(401) 555-0123"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Access & Permissions Section */}
-          <div className="pt-4 border-t border-[#D9E4EC] space-y-3">
-            <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-              Access &amp; Permissions
-            </h3>
-
-            {/* Report Access Switch */}
-            <div className="flex items-start justify-between p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#D9E4EC] hover:bg-[#F1F5F9] transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0 mt-0.5">
-                  <FileCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <label htmlFor="editReportAccess" className="text-sm font-bold text-[#243746] cursor-pointer">
-                    Receive Safety Visit Reports
-                  </label>
-                  <p className="text-xs text-[#64748B] mt-0.5">
-                    Automatically sends completed visit PDF reports to their email.
-                  </p>
-                </div>
-              </div>
-              <input
-                id="editReportAccess"
-                type="checkbox"
-                checked={formData.reportAccess}
-                onChange={(e) =>
-                  setFormData({ ...formData, reportAccess: e.target.checked })
-                }
-                className="w-5 h-5 rounded border-[#CBD5E1] text-[#294B68] focus:ring-[#294B68] cursor-pointer mt-1"
-              />
-            </div>
-
-            {/* Portal Access Switch */}
-            <div className="flex items-start justify-between p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#D9E4EC] hover:bg-[#F1F5F9] transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0 mt-0.5">
-                  <Shield className="w-4 h-4" />
-                </div>
-                <div>
-                  <label htmlFor="editPortalAccess" className="text-sm font-bold text-[#243746] cursor-pointer">
-                    Client Portal Access
-                  </label>
-                  <p className="text-xs text-[#64748B] mt-0.5">
-                    Allow this family member to log in directly and view your safety dashboard.
-                  </p>
-                </div>
-              </div>
-              <input
-                id="editPortalAccess"
-                type="checkbox"
-                checked={formData.portalAccess}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setFormData({
-                    ...formData,
-                    portalAccess: checked,
-                    billingAccess: checked ? formData.billingAccess : false,
-                  });
-                }}
-                className="w-5 h-5 rounded border-[#CBD5E1] text-[#294B68] focus:ring-[#294B68] cursor-pointer mt-1"
-              />
-            </div>
-
-            {/* Reset / Set Password Section */}
-            {formData.portalAccess && (
-              <div className="p-4 rounded-2xl bg-[#EAF3F8]/60 border border-[#5E8FB2]/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-[#243746] uppercase tracking-wider flex items-center gap-1.5">
-                    <KeyRound className="w-3.5 h-3.5 text-[#294B68]" />
-                    <span>Set / Reset Portal Password</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleGeneratePassword}
-                    className="text-xs font-bold text-[#294B68] hover:underline inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Auto-Generate</span>
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter new password (or leave blank to keep current)"
-                    value={formData.password}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-[#D9E4EC] bg-white text-sm text-[#243746] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#64748B] hover:text-[#243746] cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs font-semibold text-rose-500">
-                    {errors.password}
-                  </p>
-                )}
-
-                {formData.password && (
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-2">
-                      <Send className="w-4 h-4 text-[#294B68]" />
-                      <span className="text-xs font-bold text-[#243746]">
-                        Email updated credentials to {formData.email || member.email}
-                      </span>
+            {/* Relationship (Report Recipient Only) */}
+            {!isRepresentative && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                      Relationship <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <HeartHandshake className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                      <select
+                        value={formData.relationship}
+                        onChange={(e) =>
+                          setFormData({ ...formData, relationship: e.target.value })
+                        }
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] bg-white focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                      >
+                        {RELATIONSHIP_OPTIONS.map((rel) => (
+                          <option key={rel} value={rel}>
+                            {rel}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                      Email Address <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                      <input
+                        type="email"
+                        placeholder="name@example.com"
+                        value={formData.email}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
+                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
+                          errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                        }`}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {formData.relationship === "Other" && (
+                  <div>
+                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                      Specify Relationship <span className="text-rose-500">*</span>
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={formData.sendCredentialsNow}
+                      type="text"
+                      placeholder="e.g. Neighbor / Case Manager"
+                      value={formData.customRelationship}
                       onChange={(e) =>
-                        setFormData({ ...formData, sendCredentialsNow: e.target.checked })
+                        setFormData({ ...formData, customRelationship: e.target.value })
                       }
-                      className="w-4 h-4 rounded border-[#CBD5E1] text-[#294B68] focus:ring-[#294B68] cursor-pointer"
+                      className={`w-full px-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
+                        errors.customRelationship
+                          ? "border-rose-400 bg-rose-50/20"
+                          : "border-[#D9E4EC]"
+                      }`}
                     />
+                    {errors.customRelationship && (
+                      <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" /> {errors.customRelationship}
+                      </p>
+                    )}
                   </div>
                 )}
+              </>
+            )}
+
+            {/* Email Address for Representative */}
+            {isRepresentative ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                    Email Address <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                    <input
+                      type="email"
+                      placeholder="name@example.com"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
+                        errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                      }`}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                    Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                    <input
+                      type="tel"
+                      placeholder="(401) 555-0123"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                  Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                  <input
+                    type="tel"
+                    placeholder="(401) 555-0123"
+                    value={formData.phone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                  />
+                </div>
               </div>
             )}
 
-            {/* Emergency Contact */}
-            <div className="flex items-start justify-between p-3.5 rounded-2xl bg-[#F8FAFC] border border-[#D9E4EC] hover:bg-[#F1F5F9] transition-colors">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <label htmlFor="editIsEmergencyContact" className="text-sm font-bold text-[#243746] cursor-pointer">
-                    Emergency Contact
+            {/* Upload Legal Authority Document (Representative Only) */}
+            {isRepresentative && (
+              <div className="pt-2 border-t border-[#D9E4EC] space-y-2">
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider flex items-center justify-between">
+                  <span>Legal Authority Document</span>
+                </label>
+
+                {formData.authorityDocumentUrl ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <div className="truncate">
+                        <p className="font-bold text-xs text-emerald-900 truncate">
+                          {formData.authorityDocumentName || "Legal Authority Document"}
+                        </p>
+                        <span className="text-[11px] text-emerald-700">
+                          Uploaded &bull; Verified
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          downloadAuthorityDocument({
+                            url: formData.authorityDocumentUrl,
+                            fileName:
+                              formData.authorityDocumentName ||
+                              "AgeWellRI_Legal_Authority_Document.pdf",
+                          })
+                        }
+                        className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
+                        title="Download / View document"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download</span>
+                      </button>
+                      <span className="text-emerald-300">|</span>
+                      <label className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer">
+                        Replace
+                        <input
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleRemoveDoc}
+                        className="p-1.5 text-rose-500 hover:text-rose-700 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer ml-1"
+                        title="Remove document"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="p-4 border-2 border-dashed border-[#CBD5E1] hover:border-[#294B68] rounded-2xl bg-[#F8FAFC] hover:bg-white flex flex-col items-center justify-center gap-1.5 cursor-pointer transition-all">
+                    <input
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    {isUploadingDoc ? (
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#294B68]">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Uploading authority document...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <UploadCloud className="w-6 h-6 text-[#5E8FB2]" />
+                        <span className="text-xs font-bold text-[#294B68]">
+                          Click to upload Legal Authority Document (POA, Guardianship)
+                        </span>
+                        <span className="text-[11px] text-[#64748B]">
+                          Optional for dashboard records
+                        </span>
+                      </>
+                    )}
                   </label>
-                  <p className="text-xs text-[#64748B] mt-0.5">
-                    Flag as a primary emergency contact for our Rhode Island safety specialists.
+                )}
+
+                {errors.authorityDoc && (
+                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {errors.authorityDoc}
                   </p>
-                </div>
+                )}
               </div>
-              <input
-                id="editIsEmergencyContact"
-                type="checkbox"
-                checked={formData.isEmergencyContact}
-                onChange={(e) =>
-                  setFormData({ ...formData, isEmergencyContact: e.target.checked })
-                }
-                className="w-5 h-5 rounded border-[#CBD5E1] text-[#294B68] focus:ring-[#294B68] cursor-pointer mt-1"
-              />
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -556,14 +573,14 @@ export function EditFamilyMemberModal({
             <button
               type="button"
               onClick={onClose}
-              disabled={isUpdating}
+              disabled={isUpdating || isUploadingDoc}
               className="px-5 py-2.5 rounded-xl border border-[#D9E4EC] text-sm font-bold text-[#64748B] hover:bg-[#F0F5F9] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isUpdating}
+              disabled={isUpdating || isUploadingDoc}
               className="px-6 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-sm font-bold rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isUpdating ? (
@@ -574,7 +591,7 @@ export function EditFamilyMemberModal({
               ) : (
                 <>
                   <Edit3 className="w-4 h-4" />
-                  <span>Save Changes</span>
+                  <span>Update Changes</span>
                 </>
               )}
             </button>

@@ -7,7 +7,6 @@ import {
   Mail,
   Phone,
   MapPin,
-  HeartHandshake,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -42,9 +41,6 @@ export function EditProfileModal({
     city: "",
     state: "",
     postalCode: "",
-    emergencyContactName: "",
-    emergencyContactPhone: "",
-    emergencyContactRelation: "",
   });
 
   const [errors, setErrors] = useState<{
@@ -68,9 +64,6 @@ export function EditProfileModal({
         city: user.client?.city || "",
         state: user.client?.state || "RI",
         postalCode: user.client?.postalCode || "",
-        emergencyContactName: user.client?.emergencyContactName || "",
-        emergencyContactPhone: user.client?.emergencyContactPhone || "",
-        emergencyContactRelation: user.client?.emergencyContactRelation || "",
       });
       setErrors({});
       setSuccessMessage(null);
@@ -105,7 +98,7 @@ export function EditProfileModal({
 
     const confirmed = await confirmEdit({
       title: "Save Profile Changes?",
-      text: "Update your contact information and emergency coordination details?",
+      text: "Update your personal contact information and address?",
       confirmButtonText: "Yes, Save Profile",
     });
 
@@ -122,17 +115,13 @@ export function EditProfileModal({
         city: formData.city.trim(),
         state: formData.state.trim(),
         postalCode: formData.postalCode.trim(),
-        emergencyContactName: formData.emergencyContactName.trim() || null,
-        emergencyContactPhone: formData.emergencyContactPhone.trim() || null,
-        emergencyContactRelation:
-          formData.emergencyContactRelation.trim() || null,
       }).unwrap();
 
       if (response.success) {
         setSuccessMessage("Profile updated successfully!");
         await showSuccessAlert(
           "Profile Updated",
-          "Your member details have been updated.",
+          "Your member details have been updated."
         );
         onClose();
       } else {
@@ -150,85 +139,82 @@ export function EditProfileModal({
         }
       )?.data;
 
-      if (errorData?.errors && typeof errorData.errors === "object") {
+      const message =
+        errorData?.message || "Something went wrong while updating profile.";
+
+      if (errorData?.errors) {
         const fieldErrors: typeof errors = {};
-        if (errorData.errors.firstName?.[0])
-          fieldErrors.firstName = errorData.errors.firstName[0];
-        if (errorData.errors.lastName?.[0])
-          fieldErrors.lastName = errorData.errors.lastName[0];
-        if (errorData.errors.phone?.[0])
-          fieldErrors.phone = errorData.errors.phone[0];
-        const genMsg = errorData.message || "Please check highlighted fields.";
-        fieldErrors.general = genMsg;
+        Object.entries(errorData.errors).forEach(([field, messages]) => {
+          if (Array.isArray(messages) && messages.length > 0) {
+            fieldErrors[field as keyof typeof errors] = messages[0];
+          }
+        });
         setErrors(fieldErrors);
-        showErrorAlert("Validation Error", genMsg);
       } else {
-        const genMsg =
-          errorData?.message ||
-          (err as { message?: string })?.message ||
-          "Unable to update profile. Please try again.";
-        setErrors({ general: genMsg });
-        showErrorAlert("Update Failed", genMsg);
+        setErrors({ general: message });
       }
+
+      showErrorAlert("Update Failed", message);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal Content */}
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#D9E4EC] z-10 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#D9E4EC] sticky top-0 bg-white z-10">
+      {/* Modal Container */}
+      <div className="relative bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto z-10 animate-in fade-in-0 zoom-in-95 duration-200">
+        {/* Modal Header */}
+        <div className="sticky top-0 bg-white/95 backdrop-blur-xs px-6 py-5 border-b border-[#D9E4EC] flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center">
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-[#243746]">
-                Edit Profile Information
+              <h2 className="text-lg sm:text-xl font-black text-[#243746]">
+                Edit Member Profile
               </h2>
               <p className="text-xs text-[#64748B]">
-                Update your personal information and coordination contacts
+                Update your personal info and service address
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[#64748B] hover:text-[#243746] hover:bg-[#F7FAFC] border border-[#D9E4EC] cursor-pointer"
+            className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl hover:bg-[#F0F5F9] transition-colors cursor-pointer"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {successMessage ? (
-          <div className="p-8 text-center space-y-3 my-6 bg-[#EAF3F8] rounded-2xl border border-[#5E8FB2]/30 animate-in fade-in">
-            <div className="w-12 h-12 bg-[#3F8F6B] text-white rounded-full flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <h3 className="font-bold text-[#243746] text-lg">
-              Profile Updated!
-            </h3>
-            <p className="text-sm text-[#64748B]">{successMessage}</p>
+        {/* Success Alert */}
+        {successMessage && (
+          <div className="mx-6 mt-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span>{successMessage}</span>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-            {errors.general && (
-              <div className="p-3.5 bg-red-50 border border-[#C95C5C]/30 rounded-xl text-sm font-medium text-[#C95C5C] flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <span>{errors.general}</span>
-              </div>
-            )}
+        )}
 
+        {/* General Error Alert */}
+        {errors.general && (
+          <div className="mx-6 mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{errors.general}</span>
+          </div>
+        )}
+
+        {/* Modal Form */}
+        {!successMessage && (
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Section 1: Basic Information */}
             <div className="space-y-4">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#64748B]">
-                Personal &amp; Contact Details
+                Personal Contact Details
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -347,47 +333,6 @@ export function EditProfileModal({
                   placeholder="02906"
                   value={formData.postalCode}
                   onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            {/* Section 3: Emergency & Family Contact */}
-            <div className="space-y-4 pt-4 border-t border-[#D9E4EC]">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#64748B] flex items-center gap-1.5">
-                <HeartHandshake className="w-4 h-4 text-[#294B68]" />
-                <span>Emergency Contact Details</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <AuthInput
-                  id="profile-emergencyName"
-                  name="emergencyContactName"
-                  type="text"
-                  label="Contact Name"
-                  placeholder="Sarah Jenkins"
-                  value={formData.emergencyContactName}
-                  onChange={handleChange}
-                />
-
-                <AuthInput
-                  id="profile-emergencyRel"
-                  name="emergencyContactRelation"
-                  type="text"
-                  label="Relationship"
-                  placeholder="Daughter"
-                  value={formData.emergencyContactRelation}
-                  onChange={handleChange}
-                />
-
-                <AuthInput
-                  id="profile-emergencyPhone"
-                  name="emergencyContactPhone"
-                  type="tel"
-                  label="Contact Phone"
-                  placeholder="(401) 555-0182"
-                  value={formData.emergencyContactPhone}
-                  onChange={handleChange}
-                  icon={<Phone className="w-5 h-5" />}
                 />
               </div>
             </div>

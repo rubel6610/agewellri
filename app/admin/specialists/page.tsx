@@ -99,7 +99,7 @@ export default function SpecialistsPage() {
     setEditingSpecialist(null);
     setFormData({
       name: "",
-      title: "Home Safety Specialist",
+      title: "",
       email: "",
       phone: "",
       shssCertified: false,

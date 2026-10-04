@@ -105,10 +105,7 @@ export function Step6AgreementSigning({
   );
 
   // Track B states
-  const [repFullName, setRepFullName] = useState(
-    initialData?.repFullName ||
-      `${accountHolder.firstName} ${accountHolder.lastName}`.trim(),
-  );
+  const [repFullName, setRepFullName] = useState("");
   const [repCapacity, setRepCapacity] = useState<
     "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR"
   >(initialData?.repCapacity || "ATTORNEY_IN_FACT");
@@ -1397,10 +1394,10 @@ export function Step6AgreementSigning({
 
             {/* Authority Document Upload Card */}
             <div className="space-y-1.5 pt-2">
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
+              {/* <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
                 Upload Legal Authority Document * (.PDF, .PNG, .JPG &bull; Max
                 15MB)
-              </label>
+              </label> */}
 
               {authorityDocumentUrl ? (
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1477,8 +1474,8 @@ export function Step6AgreementSigning({
         )}
 
         {/* Printed Name & Date Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
+        <div className="">
+          {/* <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
               Printed Signer Full Legal Name *
             </label>
@@ -1498,27 +1495,13 @@ export function Step6AgreementSigning({
               placeholder="Full Legal Name"
               className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
-          </div>
+          </div> */}
 
-          <div className="space-y-1.5">
-            <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center justify-between">
-              <span>Agreement Execution Date *</span>
-              <span className="text-[11px] font-normal text-[#94A3B8] normal-case">
-                (Today)
-              </span>
-            </label>
-            <input
-              type="date"
-              disabled
-              readOnly
-              value={todayStr}
-              className="w-full h-12 px-4 text-sm font-semibold text-[#64748B] bg-[#F1F5F9] border border-[#D9E4EC] rounded-xl cursor-not-allowed select-none"
-            />
-          </div>
+         
         </div>
 
         {/* HTML5 Canvas Signature Box */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
               Draw Electronic Signature *
@@ -1557,6 +1540,21 @@ export function Step6AgreementSigning({
                 </span>
               </div>
             )}
+          </div>
+           <div className="space-y-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center justify-between">
+              <span>Agreement Execution Date *</span>
+              <span className="text-[11px] font-normal text-[#94A3B8] normal-case">
+                (Today)
+              </span>
+            </label>
+            <input
+              type="date"
+              disabled
+              readOnly
+              value={todayStr}
+              className="w-full h-12 px-4 text-sm font-semibold text-[#64748B] bg-[#F1F5F9] border border-[#D9E4EC] rounded-xl cursor-not-allowed select-none"
+            />
           </div>
         </div>
 

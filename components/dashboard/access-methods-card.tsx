@@ -136,9 +136,9 @@ export function AccessMethodsCard() {
               Home Access Methods
             </h3>
           </div>
-          <p className="text-xs sm:text-sm text-[#64748B]">
+          {/* <p className="text-xs sm:text-sm text-[#64748B]">
             Provide entry instructions and lockbox codes for AgeWellRI specialists visiting your residence.
-          </p>
+          </p> */}
         </div>
 
         <button

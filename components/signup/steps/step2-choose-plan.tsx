@@ -38,30 +38,21 @@ export function Step2ChoosePlan({
 }: Step2ChoosePlanProps) {
   const { data: plans = [], isLoading } = useGetActivePlansQuery();
 
-  const displayPlans: ActivePlan[] = useMemo(() => {
-    if (!plans || plans.length === 0) return [];
-    return [...plans].sort((a, b) => {
-      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      if (dateA && dateB && dateA !== dateB) return dateB - dateA;
-      return (b.displayOrder ?? 0) - (a.displayOrder ?? 0);
-    });
-  }, [plans]);
 
   const [currentSelectedId, setCurrentSelectedId] = useState<string>(
-    selectedPlanId || displayPlans[0]?.id || displayPlans[0]?.code || "",
+    selectedPlanId || plans[0]?.id || plans[0]?.code || "",
   );
 
   useEffect(() => {
-    if (!currentSelectedId && displayPlans.length > 0) {
-      setCurrentSelectedId(displayPlans[0].id || displayPlans[0].code);
+    if (!currentSelectedId && plans.length > 0) {
+      setCurrentSelectedId(plans[0].id || plans[0].code);
     }
-  }, [displayPlans, currentSelectedId]);
+  }, [plans, currentSelectedId]);
 
   const selectedPlan =
-    displayPlans.find(
+    plans.find(
       (p) => p.id === currentSelectedId || p.code === currentSelectedId,
-    ) || displayPlans[0];
+    ) || plans[0];
 
   const handleContinue = () => {
     if (selectedPlan) {
@@ -103,7 +94,7 @@ export function Step2ChoosePlan({
             Loading available service plans...
           </p>
         </div>
-      ) : displayPlans.length === 0 ? (
+      ) : plans.length === 0 ? (
         <div className="py-16 text-center space-y-3 bg-[#F8FAFC] rounded-3xl border border-[#D9E4EC]">
           <Package className="w-10 h-10 text-[#5E8FB2] mx-auto" />
           <h3 className="text-base font-bold text-[#243746]">
@@ -115,7 +106,7 @@ export function Step2ChoosePlan({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {displayPlans.map((plan) => {
+          {plans.map((plan) => {
             const isSelected =
               plan.id === (selectedPlan?.id || currentSelectedId) ||
               plan.code === (selectedPlan?.code || currentSelectedId);

@@ -141,9 +141,9 @@ export function AgreementDocumentContent({
             src="/logo.png"
             alt="AgeWellRI"
             width={200}
-            height={50}
+            height={100}
             priority
-            className="h-auto w-auto max-h-11 object-contain"
+            className="h-auto w-auto max-h-16 object-contain"
           />
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#243746] tracking-tight">
