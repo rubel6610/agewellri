@@ -252,9 +252,9 @@ export default function ClientDetailPage({
   const clientAppointments = useMemo(() => {
     const list = [...(clientApptsRes?.data || [])];
     return list.sort((a: any, b: any) => {
-      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : (a.startAt ? new Date(a.startAt).getTime() : 0);
-      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : (b.startAt ? new Date(b.startAt).getTime() : 0);
-      return timeB - timeA;
+      const timeA = a.startAt ? new Date(a.startAt).getTime() : (a.date ? new Date(a.date).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0));
+      const timeB = b.startAt ? new Date(b.startAt).getTime() : (b.date ? new Date(b.date).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0));
+      return timeA - timeB;
     });
   }, [clientApptsRes?.data]);
 
