@@ -170,10 +170,20 @@ export default function DashboardHomePage() {
     cleaningVisitsCompleted: 0,
   };
 
-  // Next scheduled appointment
-  const nextVisit = realAppointments.find(
-    (a) => a.status === "scheduled" || a.status === "confirmed"
-  );
+  // Next scheduled appointment (earliest upcoming visit)
+  const nextVisit = [...realAppointments]
+    .filter(
+      (a) =>
+        a.status === "scheduled" ||
+        a.status === "confirmed" ||
+        a.status === "rescheduled" ||
+        a.status === "requested"
+    )
+    .sort((a, b) => {
+      const timeA = a.startAt ? new Date(a.startAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+      const timeB = b.startAt ? new Date(b.startAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+      return timeA - timeB;
+    })[0];
 
   return (
     <div className="space-y-8">

@@ -21,19 +21,32 @@ export default function AppointmentsPage() {
 
   const upcomingVisits = useMemo(
     () =>
-      appointments.filter(
-        (a) =>
-          a.status === "scheduled" ||
-          a.status === "confirmed" ||
-          a.status === "rescheduled" ||
-          a.status === "requested" ||
-          (!a.technicianId && a.status !== "cancelled" && a.status !== "completed")
-      ),
+      [...appointments]
+        .filter(
+          (a) =>
+            a.status === "scheduled" ||
+            a.status === "confirmed" ||
+            a.status === "rescheduled" ||
+            a.status === "requested" ||
+            (!a.technicianId && a.status !== "cancelled" && a.status !== "completed")
+        )
+        .sort((a, b) => {
+          const timeA = a.startAt ? new Date(a.startAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+          const timeB = b.startAt ? new Date(b.startAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+          return timeA - timeB;
+        }),
     [appointments]
   );
 
   const pastVisits = useMemo(
-    () => appointments.filter((a) => a.status === "completed"),
+    () =>
+      [...appointments]
+        .filter((a) => a.status === "completed")
+        .sort((a, b) => {
+          const timeA = a.startAt ? new Date(a.startAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+          const timeB = b.startAt ? new Date(b.startAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+          return timeB - timeA;
+        }),
     [appointments]
   );
 

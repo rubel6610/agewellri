@@ -116,21 +116,29 @@ export default function ClientCalendarPage() {
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
 
-  // Filter out cancelled, no_show, and declined appointments
+  // Filter out cancelled, no_show, and declined appointments, and sort chronologically by scheduled date (earliest first)
   const activeAppointments = useMemo(() => {
-    return appointments.filter((a) => {
-      const st = (a.status || "").toLowerCase();
-      return st !== "cancelled" && st !== "no_show" && st !== "declined";
-    });
+    return [...appointments]
+      .filter((a) => {
+        const st = (a.status || "").toLowerCase();
+        return st !== "cancelled" && st !== "no_show" && st !== "declined";
+      })
+      .sort((a, b) => {
+        const timeA = a.startAt ? new Date(a.startAt).getTime() : (a.date ? new Date(a.date).getTime() : 0);
+        const timeB = b.startAt ? new Date(b.startAt).getTime() : (b.date ? new Date(b.date).getTime() : 0);
+        return timeA - timeB;
+      });
   }, [appointments]);
 
-  // Next upcoming active appointment
+  // Next upcoming active appointment (earliest upcoming date)
   const nextAppointment = useMemo(() => {
     if (activeAppointments.length === 0) return null;
-
-    return [...activeAppointments].sort(
-      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
-    )[0];
+    const now = Date.now();
+    // Prefer upcoming from today onward, otherwise first scheduled
+    const futureAppt = activeAppointments.find(
+      (a) => (a.startAt ? new Date(a.startAt).getTime() : new Date(a.date).getTime()) >= now - 24 * 60 * 60 * 1000
+    );
+    return futureAppt || activeAppointments[0];
   }, [activeAppointments]);
 
   // Calendar Date Calculations
