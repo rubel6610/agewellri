@@ -122,7 +122,6 @@ export function AddFamilyMemberModal({
 
     const uploadData = new FormData();
     uploadData.append("file", file);
-    uploadData.append("authorityDocument", file);
 
     try {
       const res = await uploadAuthorityDoc(uploadData).unwrap();

@@ -126,7 +126,7 @@ export function Step8BillingSetup({
         <div className="md:col-span-5 space-y-4">
           <div className="p-6 bg-[#F8FAFC] rounded-3xl border border-[#D9E4EC] space-y-5">
             {/* $0 Due Today Badge */}
-            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1 text-emerald-950">
+            {/* <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-1 text-emerald-950">
               <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" /> Due Today at Signup
               </span>
@@ -134,6 +134,9 @@ export function Step8BillingSetup({
               <p className="text-base text-emerald-700">
                 Zero initial charge. Your payment method is authorized and securely stored.
               </p>
+            </div> */}
+             <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed text-justify">
+              You won't be charged today. Your subscription begins on  <strong>{commencementDateFormatted}</strong>. — that's your first charge and the start of your service. Once your service begins, you can schedule your two visits for that month at times that work for you. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
             </div>
 
             {/* Plan Terms */}
@@ -148,7 +151,7 @@ export function Step8BillingSetup({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[#64748B] font-medium">Monthly Rate:</span>
                 <span className="font-extrabold text-[#243746]">
-                  ${planDetails.planPrice}.00 / mo
+                  ${planDetails.planPrice} / mo
                 </span>
               </div>
 
@@ -169,9 +172,7 @@ export function Step8BillingSetup({
               </div>
             </div>
 
-            <div className="p-3 bg-white rounded-xl border border-[#D9E4EC] text-base text-[#64748B] leading-relaxed">
-              You won't be charged today. Your subscription begins on  <strong>{commencementDateFormatted}</strong>. — that's your first charge and the start of your service. Once your service begins, you can schedule your two visits for that month at times that work for you. After that, billing recurs automatically on the 1st of each month. You can cancel anytime in your member portal — canceling at least 10 days before month-end stops your next charge.
-            </div>
+           
           </div>
         </div>
 
