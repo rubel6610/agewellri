@@ -272,7 +272,6 @@ export default function AdminPlansPage() {
                 <th className="py-3.5 px-4">Plan Name &amp; Code</th>
                 <th className="py-3.5 px-4">Price &amp; Interval</th>
                 <th className="py-3.5 px-4">Visits &amp; Time</th>
-                <th className="py-3.5 px-4">Subscribers</th>
                 <th className="py-3.5 px-4">Status</th>
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
@@ -292,14 +291,8 @@ export default function AdminPlansPage() {
                     <td className="py-4 px-4 space-y-1.5">
                       <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
                     </td>
-                    <td className="py-4 px-4 space-y-1.5">
-                      <div className="h-4 bg-[#E2E8F0] rounded-md w-44"></div>
-                    </td>
                     <td className="py-4 px-4">
                       <div className="h-6 bg-[#E2E8F0] rounded-full w-20"></div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
                     </td>
                     <td className="py-4 px-4 text-right">
                       <div className="h-8 bg-[#E2E8F0] rounded-xl w-24 ml-auto"></div>
@@ -308,7 +301,7 @@ export default function AdminPlansPage() {
                 ))
               ) : filteredPlans.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-[#5E8FB2]">
+                  <td colSpan={5} className="py-16 text-center text-[#5E8FB2]">
                     <div className="flex flex-col items-center gap-2">
                       <Package className="w-10 h-10 text-[#D9E4EC]" />
                       <div className="text-base font-bold text-[#243746]">
@@ -360,17 +353,6 @@ export default function AdminPlansPage() {
                           {formatPlanDuration(plan.times)}
                         </span>
                       </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPlanForDetails(plan)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] hover:bg-[#D9E4EC] cursor-pointer transition-colors"
-                        title="View subscribed members"
-                      >
-                        <Users className="w-3.5 h-3.5" />
-                        {plan.activeSubscribersCount || 0} active
-                      </button>
                     </td>
                     <td className="py-4 px-4">
                       {plan.isActive ? (

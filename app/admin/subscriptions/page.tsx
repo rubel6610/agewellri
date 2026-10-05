@@ -142,7 +142,7 @@ export default function SubscriptionsAdminPage() {
             Client Subscriptions &amp; Renewal Lifecycle
           </h1>
           <p className="text-sm text-[#5E8FB2] mt-1 font-medium">
-          	Manage client subscriptions, oversee monthly renewal billing, process cancellations, and schedule each month's visits.
+          	Manage client subscriptions, oversee monthly renewal billing, process cancellations, and schedule each month&apos;s visits.
           </p>
         </div>
 

@@ -32,6 +32,8 @@ import {
   useGetClientAccessMethodsQuery,
   ClientAccessMethod,
 } from "@/redux/features/client/clientApi";
+import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
 import { AccessMethodModal } from "./access-method-modal";
 import {
   confirmCriticalAction,
@@ -185,6 +187,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
   const { data: accessMethodsRes, isLoading: isAccessMethodsLoading, refetch: refetchAccessMethods } = useGetClientAccessMethodsQuery(undefined, { skip: !isOpen });
   const { data: apptsRes } = useGetMyAppointmentsQuery(undefined, { skip: !isOpen });
+  const { data: offDays = [] } = useGetActiveOffDaysQuery(undefined, { skip: !isOpen });
   const [scheduleAppointmentMutation, { isLoading: isSubmitting }] = useScheduleAppointmentMutation();
 
   const entitlements = useMemo(
@@ -198,6 +201,10 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const existingAppointments = useMemo(
     () => apptsRes?.data || [],
     [apptsRes?.data]
+  );
+  const activeOffDays = useMemo(
+    () => offDays || [],
+    [offDays]
   );
 
   const activeAppointments = useMemo(() => {
@@ -269,7 +276,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     }
   }, [isOpen, isAdvanceBooking, periodStartDateStr]);
 
-  // Find first available working day (not Sun=0, not Wed=3) on or after commencement that DOES NOT have a scheduled visit
+  // Find first available working day (not Sun=0, not Wed=3, not off-day) on or after commencement that DOES NOT have a scheduled visit
   useEffect(() => {
     if (isOpen && !selectedDate) {
       const now = new Date();
@@ -281,10 +288,11 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
       }
 
-      // Loop until we find a working day (Mon, Tue, Thu, Fri, Sat) WITHOUT an active booked visit
+      // Loop until we find a working day (Mon, Tue, Thu, Fri, Sat) without off-day and without active booked visit
       while (
         d.getDay() === 0 ||
         d.getDay() === 3 ||
+        findMatchingOffDay(d, activeOffDays) ||
         activeAppointments.some((a) => {
           const y = d.getFullYear();
           const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -300,7 +308,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       const dayStr = String(d.getDate()).padStart(2, "0");
       setSelectedDate(`${yearStr}-${monthStr}-${dayStr}`);
     }
-  }, [isOpen, isAdvanceBooking, periodStartDateStr, selectedDate, activeAppointments]);
+  }, [isOpen, isAdvanceBooking, periodStartDateStr, selectedDate, activeAppointments, activeOffDays]);
 
   useEffect(() => {
     if (entitlements.length > 0 && !selectedServiceTypeId) {
@@ -402,6 +410,15 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       showErrorAlert(
         "No Remaining Visits",
         `You have 0 remaining visits available for ${selectedServiceName} in your current monthly plan.`
+      );
+      return;
+    }
+
+    const matchingOff = findMatchingOffDay(selectedDate, activeOffDays);
+    if (matchingOff) {
+      showErrorAlert(
+        "Date Unavailable",
+        `The selected date (${selectedDate}) is an official company off-day (${matchingOff.title}). Please choose another date.`
       );
       return;
     }
@@ -768,8 +785,10 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
 
                     const dayBookedAppts = activeAppointments.filter((a) => getApptDateFormatted(a) === dayStr);
                     const hasBookedVisits = dayBookedAppts.length > 0;
+                    const matchingOffDay = findMatchingOffDay(dayStr, activeOffDays);
+                    const isOffDay = Boolean(matchingOffDay);
 
-                    const isDisabled = Boolean(isWeekend || isPast || isBeforeCommence || hasBookedVisits);
+                    const isDisabled = Boolean(isWeekend || isPast || isBeforeCommence || hasBookedVisits || isOffDay);
                     const isSelected = selectedDate === dayStr;
                     const isToday = todayMidnight.getTime() === dayDate.getTime();
 
@@ -780,7 +799,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         disabled={isDisabled}
                         onClick={() => setSelectedDate(dayStr)}
                         title={
-                          isWeekend
+                          isOffDay
+                            ? `Office Closed: ${matchingOffDay?.title}${matchingOffDay?.description ? ` - ${matchingOffDay.description}` : ""}`
+                            : isWeekend
                             ? `${dayDate.toLocaleDateString("en-US", { weekday: "long" })} is a non-service weekend day.`
                             : isBeforeCommence
                             ? "Date is before your service commencement."
@@ -793,6 +814,8 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         className={`h-11 w-full rounded-xl text-xs flex flex-col items-center justify-center transition-all relative ${
                           isSelected
                             ? "bg-[#294B68] text-white font-extrabold shadow-sm ring-2 ring-[#294B68]"
+                            : isOffDay
+                            ? "bg-amber-50/90 text-amber-950 font-bold border-2 border-amber-300 cursor-not-allowed shadow-none"
                             : hasBookedVisits
                             ? "bg-rose-100/90 text-rose-950 font-bold border-2 border-rose-400 cursor-not-allowed shadow-none"
                             : isDisabled
@@ -805,13 +828,17 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         }`}
                       >
                         <span>{day}</span>
-                        {hasBookedVisits && (
+                        {isOffDay ? (
+                          <span className="text-[7.5px] font-extrabold uppercase px-1 py-0.2 rounded mt-0.5 leading-none bg-amber-200 text-amber-900 border border-amber-400 truncate max-w-[90%]">
+                            Closed
+                          </span>
+                        ) : hasBookedVisits ? (
                           <span className={`text-[8px] font-extrabold uppercase px-1 py-0.2 rounded mt-0.5 leading-none ${
                             isSelected ? "bg-rose-500 text-white" : "bg-rose-200 text-rose-900 border border-rose-400"
                           }`}>
                             Scheduled
                           </span>
-                        )}
+                        ) : null}
                       </button>
                     );
                   }
@@ -827,12 +854,16 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                   <span>Available (Mon, Tue, Thu, Fri, Sat)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-200 border border-amber-400" />
+                  <span className="text-amber-800 font-semibold">Office Closed / Holiday</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-200 border border-rose-400" />
-                  <span className="text-rose-800 font-semibold">Already Scheduled (Date Disabled)</span>
+                  <span className="text-rose-800 font-semibold">Already Scheduled</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-rose-100 border border-rose-300" />
-                  <span className="text-rose-700 font-semibold">Weekends: Sun &amp; Wed</span>
+                  <span className="text-rose-700 font-semibold">Weekends (Sun &amp; Wed)</span>
                 </div>
               </div>
             </div>

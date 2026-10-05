@@ -21,6 +21,8 @@ import {
   useRescheduleAppointmentMutation,
   useGetMyAppointmentsQuery,
 } from "@/redux/features/appointment/appointmentApi";
+import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import {
   confirmCriticalAction,
@@ -201,7 +203,10 @@ export function RescheduleVisitModal({
 }: RescheduleVisitModalProps) {
   const { data: entitlementsRes } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
   const { data: apptsRes } = useGetMyAppointmentsQuery(undefined, { skip: !isOpen });
+  const { data: offDays = [] } = useGetActiveOffDaysQuery(undefined, { skip: !isOpen });
   const [rescheduleAppointmentMutation, { isLoading: isSubmitting }] = useRescheduleAppointmentMutation();
+
+  const activeOffDays = useMemo(() => offDays || [], [offDays]);
 
   const otherActiveAppointments = useMemo(() => {
     const raw = apptsRes?.data || [];
@@ -358,6 +363,15 @@ export function RescheduleVisitModal({
       return;
     }
 
+    const matchingOff = findMatchingOffDay(selectedDate, activeOffDays);
+    if (matchingOff) {
+      showErrorAlert(
+        "Date Unavailable",
+        `The selected date (${selectedDate}) is an official company off-day (${matchingOff.title}). Please choose another date.`
+      );
+      return;
+    }
+
     const parts = selectedDate.split("-");
     if (parts.length === 3) {
       const chosen = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
@@ -507,7 +521,9 @@ export function RescheduleVisitModal({
                     const isWeekend = dayOfWeek === 0 || dayOfWeek === 3;
                     const isPast = todayMidnight.getTime() > dayDate.getTime();
                     const hasOtherAppt = otherActiveAppointments.some((a) => getApptDateFormatted(a) === dayStr);
-                    const isDisabled = isWeekend || isPast || hasOtherAppt;
+                    const matchingOffDay = findMatchingOffDay(dayStr, activeOffDays);
+                    const isOffDay = Boolean(matchingOffDay);
+                    const isDisabled = isWeekend || isPast || hasOtherAppt || isOffDay;
                     const isSelected = selectedDate === dayStr;
 
                     cells.push(
@@ -516,9 +532,22 @@ export function RescheduleVisitModal({
                         type="button"
                         disabled={isDisabled}
                         onClick={() => setSelectedDate(dayStr)}
+                        title={
+                          isOffDay
+                            ? `Office Closed: ${matchingOffDay?.title}`
+                            : hasOtherAppt
+                            ? "Another visit is already scheduled on this date."
+                            : isWeekend
+                            ? "Weekend non-service day."
+                            : isPast
+                            ? "Past date."
+                            : `${dayDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
+                        }
                         className={`h-9 w-full rounded-xl text-xs flex flex-col items-center justify-center transition-all ${
                           isSelected
                             ? "bg-[#294B68] text-white font-extrabold shadow-sm ring-2 ring-[#294B68]"
+                            : isOffDay
+                            ? "bg-amber-50 text-amber-950 font-bold border border-amber-300 cursor-not-allowed"
                             : hasOtherAppt
                             ? "bg-rose-100 text-rose-950 font-bold border border-rose-300 cursor-not-allowed"
                             : isDisabled
@@ -529,11 +558,15 @@ export function RescheduleVisitModal({
                         }`}
                       >
                         <span>{day}</span>
-                        {hasOtherAppt && (
+                        {isOffDay ? (
+                          <span className="text-[7px] font-black uppercase text-amber-900 leading-none">
+                            Closed
+                          </span>
+                        ) : hasOtherAppt ? (
                           <span className="text-[7px] font-black uppercase text-rose-700 leading-none">
                             Booked
                           </span>
-                        )}
+                        ) : null}
                       </button>
                     );
                   }

@@ -6,6 +6,8 @@ import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialis
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { useAdminScheduleAppointmentMutation, useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
+import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
 import { parsePlanDurationHours } from "@/redux/features/plan/planTypes";
 import {
   confirmCriticalAction,
@@ -234,7 +236,9 @@ export function AdminScheduleModal({
   const { data: clientsRes, isLoading: isClientsLoading } = useGetAdminClientsQuery({ limit: 100 }, { skip: !isOpen });
   const { data: activePlans = [] } = useGetActivePlansQuery(undefined, { skip: !isOpen });
   const { data: adminApptsRes } = useGetAdminAppointmentsQuery(undefined, { skip: !isOpen });
+  const { data: offDays = [] } = useGetActiveOffDaysQuery(undefined, { skip: !isOpen });
   const clientsList = clientsRes?.data || [];
+  const activeOffDays = useMemo(() => offDays || [], [offDays]);
 
   const adminAppointments = useMemo(() => {
     const raw = Array.isArray(adminApptsRes?.data)
@@ -419,13 +423,16 @@ export function AdminScheduleModal({
     });
   }, [date, selectedClient, selectedClientId, adminAppointments]);
 
+  const matchingOffDay = useMemo(() => findMatchingOffDay(date, activeOffDays), [date, activeOffDays]);
+  const isSelectedDateOffDay = Boolean(matchingOffDay);
+
   const hasDateConflict = Boolean(clientApptOnSelectedDate);
 
   const isTargetClientAgreementPaid = Boolean(selectedClient);
   const clientRemainingVisits = getRemainingVisitsForClient(selectedClient);
   const hasRemainingVisits = clientRemainingVisits > 0;
   const isTimeSlotValid = !currentSlotStatus.isBooked && !hasDateConflict;
-  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && !hasDateConflict && isTimeSlotValid;
+  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && !hasDateConflict && isTimeSlotValid && !isSelectedDateOffDay;
 
   if (!isOpen) return null;
 
@@ -481,6 +488,14 @@ export function AdminScheduleModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isSelectedDateOffDay) {
+      showErrorAlert(
+        "Company Off-Day / Closure",
+        `The selected date (${date}) is designated as an active company off-day (${matchingOffDay?.title}). Visits cannot be scheduled during office closures.`
+      );
+      return;
+    }
 
     if (hasDateConflict) {
       showErrorAlert(
@@ -1006,6 +1021,24 @@ export function AdminScheduleModal({
               </div>
             </div>
 
+            {/* Full-width Company Off-day Closure Alert Banner */}
+            {isSelectedDateOffDay && (
+              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl text-amber-950 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-950">
+                    Company Off-Day / Office Closure ({matchingOffDay?.title})
+                  </strong>
+                  <p className="text-amber-800 text-[11px] mt-0.5 leading-relaxed">
+                    <strong>{date}</strong> is designated as an official company closure (
+                    {matchingOffDay?.title}
+                    {matchingOffDay?.description ? `: ${matchingOffDay.description}` : ""}
+                    ). Visits cannot be scheduled on official off-days. Please choose an open operational date.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Full-width Date conflict alert banner */}
             {hasDateConflict && (
               <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
@@ -1054,9 +1087,9 @@ export function AdminScheduleModal({
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting || !isTargetClientEligible || hasDateConflict}
+                disabled={isSubmitting || !isTargetClientEligible || hasDateConflict || isSelectedDateOffDay}
                 className={`w-full py-3 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 ${
-                  !isTargetClientEligible || hasDateConflict
+                  !isTargetClientEligible || hasDateConflict || isSelectedDateOffDay
                     ? "bg-slate-100 text-[#94A3B8] border border-slate-200 cursor-not-allowed"
                     : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
                 }`}
@@ -1066,6 +1099,8 @@ export function AdminScheduleModal({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
+                ) : isSelectedDateOffDay ? (
+                  <span>Company Off-Day — Office Closed on this Date</span>
                 ) : hasDateConflict ? (
                   <span>Date Conflict — Client already has a visit on this date</span>
                 ) : !isTimeSlotValid ? (

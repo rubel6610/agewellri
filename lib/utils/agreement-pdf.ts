@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import { formatPlanDuration } from "@/redux/features/plan/planTypes";
 
 export interface AuthorizedRecipientItem {
   name: string;
@@ -682,7 +681,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(7.2);
   doc.setTextColor(...(isPlan1 ? lightNavy : darkText));
   doc.text(
-    `Plan 1 — Premium Safety Safeguard (Environmental Safety Oversight Only)`,
+    `Plan 1 — THE PREMIUM SAFETY SAFEGUARD (Environmental Safety Oversight Only)`,
     margin + 4,
     p1Y,
   );
@@ -726,7 +725,7 @@ export async function downloadAgreementPdf(
   doc.setFontSize(7.0);
   doc.setTextColor(...(isPlan2 ? lightNavy : darkText));
   doc.text(
-    `Plan 2 — Independence & Upkeep (Comprehensive Safety Oversight & Proactive Mitigation)`,
+    `Plan 2 — THE INDEPENDENCE & UPKEEP PLAN (Comprehensive Safety Oversight & Proactive Mitigation)`,
     margin + 4,
     p2Y,
   );

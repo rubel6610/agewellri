@@ -133,6 +133,7 @@ export const baseApi = createApi({
     "Service",
     "Specialist",
     "FamilyMember",
+    "OffDay",
   ],
   endpoints: () => ({}),
 });

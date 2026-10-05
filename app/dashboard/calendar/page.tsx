@@ -10,6 +10,8 @@ import {
   ShieldCheck,
   Sparkles,
   CalendarDays,
+  CalendarX,
+  AlertCircle,
   X,
   ArrowRight,
   Loader2,
@@ -24,6 +26,8 @@ import {
   useCancelAppointmentMutation,
 } from "@/redux/features/appointment/appointmentApi";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import { findMatchingOffDay, OffDayItem } from "@/redux/features/off-day/offDayTypes";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
 import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
@@ -102,19 +106,37 @@ export default function ClientCalendarPage() {
   } = useGetMyAppointmentsQuery();
   const { data: entitlementsRes, isLoading: isEntLoading } =
     useGetVisitEntitlementsQuery();
+  const { data: offDays = [] } = useGetActiveOffDaysQuery();
   const [cancelAppointment, { isLoading: isCancelling }] =
     useCancelAppointmentMutation();
 
   const appointments: AppointmentItem[] = apptRes?.data || [];
   const entitlementData = entitlementsRes?.data;
+  const activeOffDays: OffDayItem[] = useMemo(() => offDays || [], [offDays]);
 
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"month" | "agenda">("month");
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentItem | null>(null);
+  const [selectedOffDay, setSelectedOffDay] = useState<OffDayItem | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
+
+  // Active off-days occurring in the currently viewed month that have a client notice / description
+  const currentMonthOffDaysWithNotice = useMemo(() => {
+    return activeOffDays.filter((off) => {
+      if (!off.isActive || !off.description) return false;
+      const [sY, sM] = (off.startDate || "").split("-").map(Number);
+      const [eY, eM] = (off.endDate || off.startDate || "").split("-").map(Number);
+      const curY = currentDate.getFullYear();
+      const curM = currentDate.getMonth() + 1;
+      return (
+        (sY < curY || (sY === curY && sM <= curM)) &&
+        (eY > curY || (eY === curY && eM >= curM))
+      );
+    });
+  }, [activeOffDays, currentDate]);
 
   // Filter out cancelled, no_show, and declined appointments, and sort chronologically by scheduled date (earliest first)
   const activeAppointments = useMemo(() => {
@@ -218,6 +240,7 @@ export default function ClientCalendarPage() {
         isCurrentMonth: false,
         dateKey: prevDateKey,
         appointments: appointmentsByDate[prevDateKey] || [],
+        offDay: findMatchingOffDay(prevDateKey, activeOffDays),
       });
     }
 
@@ -229,6 +252,7 @@ export default function ClientCalendarPage() {
         isCurrentMonth: true,
         dateKey,
         appointments: appointmentsByDate[dateKey] || [],
+        offDay: findMatchingOffDay(dateKey, activeOffDays),
       });
     }
 
@@ -246,11 +270,12 @@ export default function ClientCalendarPage() {
         isCurrentMonth: false,
         dateKey: nextDateKey,
         appointments: appointmentsByDate[nextDateKey] || [],
+        offDay: findMatchingOffDay(nextDateKey, activeOffDays),
       });
     }
 
     return cells;
-  }, [year, month, firstDayOfMonth, daysInMonth, daysInPrevMonth, appointmentsByDate]);
+  }, [year, month, firstDayOfMonth, daysInMonth, daysInPrevMonth, appointmentsByDate, activeOffDays]);
 
   // Handle Cancel Appointment
   const handleCancelAppointment = async (appt: AppointmentItem) => {
@@ -475,7 +500,47 @@ export default function ClientCalendarPage() {
 
         {/* VIEW 1: MONTHLY GRID */}
         {viewMode === "month" && (
-          <div className="space-y-2">
+          <div className="space-y-3">
+            {/* Month Off-Day Notices Banner (if any off-day in this month has a notice) */}
+            {currentMonthOffDaysWithNotice.length > 0 && (
+              <div className="space-y-2">
+                {currentMonthOffDaysWithNotice.map((off) => (
+                  <div
+                    key={off.id}
+                    className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-start sm:items-center justify-between gap-3 text-amber-950 shadow-2xs"
+                  >
+                    <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                        <CalendarX className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 text-xs">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-amber-950">
+                            {off.title} ({off.formattedDateRange})
+                          </span>
+                          <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                            Notice
+                          </span>
+                        </div>
+                        {off.description && (
+                          <p className="text-amber-900 mt-0.5 text-xs line-clamp-2 font-medium">
+                            {off.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOffDay(off)}
+                      className="px-3 py-1.5 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold rounded-xl transition-all shrink-0 cursor-pointer shadow-2xs"
+                    >
+                      View Notice
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Weekday Column Headers */}
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs font-black uppercase tracking-wider text-[#5E8FB2] pb-2 border-b border-[#D9E4EC]">
               <span>Sun</span>
@@ -532,8 +597,27 @@ export default function ClientCalendarPage() {
                         )}
                       </div>
 
-                      {/* Appointments Stack inside cell */}
+                      {/* Appointments & Off-day Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
+                        {cell.offDay && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOffDay(cell.offDay || null)}
+                            title={`Company Closed: ${cell.offDay.title}${cell.offDay.description ? ` — Notice: ${cell.offDay.description}` : ""}`}
+                            className="w-full text-left p-1 sm:p-1.5 rounded-lg text-[10px] font-black truncate flex items-center justify-between gap-1 bg-amber-100 text-amber-950 border border-amber-300/80 shadow-2xs hover:bg-amber-200 hover:border-amber-400 transition-all cursor-pointer group"
+                          >
+                            <span className="truncate flex items-center gap-1 min-w-0">
+                              <CalendarX className="w-3 h-3 text-amber-800 shrink-0" />
+                              <span className="truncate">{cell.offDay.title}</span>
+                            </span>
+                            {cell.offDay.description && (
+                              <span className="shrink-0 text-[8px] font-bold bg-amber-200 text-amber-900 px-1 py-0.2 rounded border border-amber-400">
+                                Notice
+                              </span>
+                            )}
+                          </button>
+                        )}
+
                         {cell.appointments.map((appt) => {
                           const statusLower = (appt.status || "").toLowerCase();
                           const isCompleted = statusLower === "completed";
@@ -702,6 +786,91 @@ export default function ClientCalendarPage() {
           refetchAppointments();
         }}
       />
+
+      {/* OFF-DAY NOTICE DETAILS MODAL */}
+      {selectedOffDay && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            onClick={() => setSelectedOffDay(null)}
+          />
+
+          <div className="relative bg-white rounded-3xl border border-[#D9E4EC] shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto z-10 animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="sticky top-0 bg-white/95 backdrop-blur-xs px-6 py-5 border-b border-[#D9E4EC] flex items-center justify-between z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+                  <CalendarX className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-[#243746]">
+                    Company Off-Day Notice
+                  </h2>
+                  <p className="text-xs text-[#64748B]">
+                    {selectedOffDay.formattedDateRange}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOffDay(null)}
+                className="p-2 text-[#64748B] hover:text-[#243746] rounded-xl hover:bg-[#F0F5F9] transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="p-4 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-1.5">
+                <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+                  Off-Day Reason
+                </span>
+                <span className="text-base font-extrabold text-[#243746] block">
+                  {selectedOffDay.title}
+                </span>
+                <div className="flex items-center gap-2 pt-1 text-xs text-[#5E8FB2] font-semibold">
+                  <CalendarDays className="w-4 h-4" />
+                  <span>
+                    {selectedOffDay.formattedDateRange} ({selectedOffDay.isSingleDay ? "1 day" : `${selectedOffDay.durationDays} days`})
+                  </span>
+                </div>
+              </div>
+
+              {/* Notice text if any */}
+              {selectedOffDay.description ? (
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-bold text-amber-950">
+                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span>Special Notice / Details</span>
+                  </div>
+                  <p className="text-xs text-amber-900 leading-relaxed font-medium whitespace-pre-wrap">
+                    {selectedOffDay.description}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-[#F0F7FD] border border-[#D9E4EC] rounded-2xl text-xs text-[#5E8FB2]">
+                  No additional announcement notes for this off-day.
+                </div>
+              )}
+
+              {/* Policy note */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 leading-normal">
+                📌 <strong>Booking Information:</strong> Safety visits and appointments cannot be scheduled on this date. Regular service visits resume on the next operational business day.
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOffDay(null)}
+                  className="w-full py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl transition-all shadow-xs cursor-pointer"
+                >
+                  Close Notice
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

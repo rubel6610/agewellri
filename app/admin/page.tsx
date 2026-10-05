@@ -475,45 +475,106 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Regional State & Plan Intelligence (1 Col) */}
-        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs  flex flex-col justify-between">
-          <div>
+        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs flex flex-col justify-between space-y-5">
+          <div className="space-y-4">
             <div className="pb-3 border-b border-[#D9E4EC]/60">
               <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#294B68]" />
-                <span>Service Regional Distribution</span>
+                <span>Service &amp; Regional Distribution</span>
               </h3>
               <p className="text-xs text-[#64748B]">
-                Active state jurisdictions &amp; service plans
+                Active state jurisdictions &amp; service tier enrollment
               </p>
             </div>
 
             {/* Service Jurisdiction */}
-         
-            {/* Plan Distribution */}
-            <div className="space-y-2.5  border-t border-[#D9E4EC]/60">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
-                Active Plan Tiers
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {Object.entries(stats.planDistribution || {})
-                  .filter(([planName]) => !planName.toLowerCase().includes("unassigned"))
-                  .map(([planName, count]) => (
-                    <div
-                      key={planName}
-                      className="px-3 py-1.5 rounded-xl bg-[#F7FAFC] border border-[#D9E4EC] text-xs font-bold text-[#243746] flex items-center gap-2"
-                    >
-                      <span>{planName.split("_").join(" ")}</span>
-                      <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px]">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
+            {/* <div className="p-3.5 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#243746] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#294B68]" />
+                  <span>Rhode Island (RI)</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Primary State Coverage
+                </span>
               </div>
-            </div>
+              <div className="flex items-center justify-between text-[11px] text-[#64748B] pt-1 border-t border-[#D9E4EC]/50">
+                <span>Active Coverage Territory</span>
+                <span className="font-bold text-[#243746]">100% State-wide</span>
+              </div>
+            </div> */}
+
+            {/* Plan Distribution */}
+            {(() => {
+              const activePlanEntries = Object.entries(stats.planDistribution || {}).filter(
+                ([planName]) => !planName.toLowerCase().includes("unassigned")
+              );
+              const totalPlanClients = activePlanEntries.reduce(
+                (sum, [, count]) => sum + (count as number),
+                0
+              );
+
+              return (
+                <div className="space-y-3 pt-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-bold uppercase tracking-wider text-[#64748B]">
+                      Active Plan Tiers
+                    </span>
+                    <span className="text-xs font-semibold text-[#5E8FB2]">
+                      {totalPlanClients} total member{totalPlanClients !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {activePlanEntries.length === 0 ? (
+                      <p className="text-xs text-[#64748B] py-2">No active member subscriptions yet.</p>
+                    ) : (
+                      activePlanEntries.map(([planName, count]) => {
+                        const c = count as number;
+                        const pct =
+                          totalPlanClients > 0
+                            ? Math.round((c / totalPlanClients) * 100)
+                            : 0;
+
+                        return (
+                          <div
+                            key={planName}
+                            className="p-3 rounded-2xl bg-[#F8FAFC] border border-[#D9E4EC] space-y-2"
+                          >
+                            <div className="flex items-center justify-between text-xs font-bold text-[#243746]">
+                              <span className="truncate max-w-[190px]">
+                                {planName.split("_").join(" ")}
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md bg-[#294B68] text-white text-[10px] shrink-0 font-mono">
+                                {c} {c === 1 ? "member" : "members"}
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className="bg-[#294B68] h-full rounded-full transition-all duration-300"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Revenue Highlight Subcard */}
-        
+          {/* Manage Plans Link Footer */}
+          {/* <div className="pt-3 border-t border-[#D9E4EC]/60">
+            <Link
+              href="/admin/plans"
+              className="w-full py-2.5 px-3 bg-[#EAF3F8] hover:bg-[#D9EAF4] text-[#294B68] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <span>Manage Service Plans Directory</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div> */}
         </div>
       </div>
 
