@@ -110,7 +110,10 @@ export function Step6AgreementSigning({
 
   // Track B states
   const [repFullName, setRepFullName] = useState(
-    initialData?.repFullName || (!residentDetails.fullName.includes(accountHolder.firstName) ? `${accountHolder.firstName} ${accountHolder.lastName}`.trim() : "")
+    initialData?.repFullName ||
+      (!residentDetails.fullName.includes(accountHolder.firstName)
+        ? `${accountHolder.firstName} ${accountHolder.lastName}`.trim()
+        : ""),
   );
   const [repCapacity, setRepCapacity] = useState<
     "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR"
@@ -389,15 +392,15 @@ export function Step6AgreementSigning({
                 1. PARTIES, PLANS, &amp; SCOPE OF SERVICE
               </div>
               <p>
-                This Home Safety Services Agreement is
-                entered into by and between <strong>AgeWellRI LLC</strong>{" "}
-                (&ldquo;Company&rdquo;) and the undersigned client and/or
-                responsible family representative (&ldquo;Client&rdquo;).
-                Company agrees to provide its recurring monthly subscription
-                services based on the specific plan tier selected by the Client
-                below. Both tiers operate on a biweekly rotation consisting of
-                two (2) scheduled home visits per calendar month spaced
-                approximately two weeks apart.
+                This Home Safety Services Agreement is entered into by and
+                between <strong>AgeWellRI LLC</strong> (&ldquo;Company&rdquo;)
+                and the undersigned client and/or responsible family
+                representative (&ldquo;Client&rdquo;). Company agrees to provide
+                its recurring monthly subscription services based on the
+                specific plan tier selected by the Client below. Both tiers
+                operate on a biweekly rotation consisting of two (2) scheduled
+                home visits per calendar month spaced approximately two weeks
+                apart.
               </p>
 
               <div className="p-3.5 bg-white rounded-xl border border-[#D9E4EC] space-y-3">
@@ -424,8 +427,7 @@ export function Step6AgreementSigning({
                     laundry &mdash; to identify fall risks, hazards, and safety
                     concerns. The specialist documents each finding with photos,
                     notes recommended corrections, generates a standardized
-                    residential safety report, and delivers it to the
-                    Client&apos;s designated family dashboard the same day. This
+                    residential safety report, and delivers it to the Client's secure dashboard, and by email to the Client's Authorized Recipients, the same day. This
                     plan may include the complimentary minor safety courtesies
                     described in Section 7 (such as replacing a bulb, placing a
                     plug-in nightlight, or securing a loose cord). It does not
@@ -479,7 +481,7 @@ export function Step6AgreementSigning({
                     temporary caution marker, so the hazard does not persist
                     between visits. This plan does not include general or
                     routine housekeeping, laundry, meal preparation, or personal
-                    care of any kind.
+                    care of any kind. As with Plan 1, each visit generates a safety report delivered to the Client's secure dashboard and by email to the Client's Authorized Recipients.
                   </p>
                 </div>
               </div>
@@ -1037,9 +1039,10 @@ export function Step6AgreementSigning({
                 optimize home routing safety. It is never shared, sold, or
                 disclosed to third-party marketing entities without explicit
                 written consent except as required by law. Visit reports and
-                digital dashboards are securely accessible only to the client
-                and designated family care team members. Technicians must always
-                maintain strict client confidentiality.
+                dashboards are securely accessible only to the Client account
+                holder. Designated Authorized Recipients receive reports by
+                email. Technicians must always maintain strict client
+                confidentiality.
               </p>
               <p>
                 <strong>
@@ -1472,8 +1475,7 @@ export function Step6AgreementSigning({
                         downloadAuthorityDocument({
                           url: authorityDocumentUrl,
                           fileName:
-                            authorityDocumentName ||
-                            "Legal_Authority_Document",
+                            authorityDocumentName || "Legal_Authority_Document",
                         })
                       }
                       className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
@@ -1548,8 +1550,6 @@ export function Step6AgreementSigning({
               className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
             />
           </div> */}
-
-         
         </div>
 
         {/* HTML5 Canvas Signature Box */}
@@ -1593,7 +1593,7 @@ export function Step6AgreementSigning({
               </div>
             )}
           </div>
-           <div className="space-y-1.5">
+          <div className="space-y-1.5">
             <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B] flex items-center justify-between">
               <span>Agreement Execution Date *</span>
               <span className="text-[11px] font-normal text-[#94A3B8] normal-case">

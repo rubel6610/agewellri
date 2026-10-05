@@ -34,11 +34,13 @@ const RELATIONSHIP_OPTIONS = [
   "Son",
   "Spouse",
   "Power of Attorney",
+  "Legal Guardian",
+  "Healthcare Proxy",
   "Sister",
   "Brother",
   "Grandchild",
-  "Legal Guardian",
-  "Healthcare Proxy",
+  "Care Manager / Coordinator",
+  "Neighbor / Friend",
   "Other",
 ];
 
@@ -46,7 +48,6 @@ const LEGAL_CAPACITY_OPTIONS = [
   { value: "ATTORNEY_IN_FACT", label: "Attorney-in-Fact (POA)" },
   { value: "GUARDIAN", label: "Guardian" },
   { value: "CONSERVATOR", label: "Conservator" },
-  { value: "HEALTHCARE_PROXY", label: "Healthcare Proxy" },
   { value: "OTHER", label: "Other Authorized Legal Representative" },
 ];
 
@@ -171,7 +172,7 @@ export function AddFamilyMemberModal({
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (!isRepMode && formData.relationship === "Other" && !formData.customRelationship.trim()) {
+    if (formData.relationship === "Other" && !formData.customRelationship.trim()) {
       newErrors.customRelationship = "Please specify relationship";
     }
 
@@ -184,17 +185,10 @@ export function AddFamilyMemberModal({
     if (!validate()) return;
 
     try {
-      let finalRelationship = "Representative";
-      if (isRepMode) {
-        finalRelationship =
-          LEGAL_CAPACITY_OPTIONS.find((c) => c.value === formData.legalCapacity)?.label ||
-          "Representative";
-      } else {
-        finalRelationship =
-          formData.relationship === "Other"
-            ? formData.customRelationship.trim()
-            : formData.relationship;
-      }
+      const finalRelationship =
+        formData.relationship === "Other"
+          ? formData.customRelationship.trim()
+          : formData.relationship;
 
       const payload = {
         name: formData.name.trim(),
@@ -327,151 +321,102 @@ export function AddFamilyMemberModal({
               </div>
             )}
 
-            {/* Relationship (Report Recipient Only) */}
-            {!isRepMode && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                      Relationship <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <HeartHandshake className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                      <select
-                        value={formData.relationship}
-                        onChange={(e) =>
-                          setFormData({ ...formData, relationship: e.target.value })
-                        }
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] bg-white focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                      >
-                        {RELATIONSHIP_OPTIONS.map((rel) => (
-                          <option key={rel} value={rel}>
-                            {rel}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                      Email Address <span className="text-rose-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                      <input
-                        type="email"
-                        placeholder="name@example.com"
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                        className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                          errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
-                        }`}
-                      />
-                    </div>
-                    {errors.email && (
-                      <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {formData.relationship === "Other" && (
-                  <div>
-                    <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                      Specify Relationship <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Neighbor / Case Manager"
-                      value={formData.customRelationship}
-                      onChange={(e) =>
-                        setFormData({ ...formData, customRelationship: e.target.value })
-                      }
-                      className={`w-full px-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                        errors.customRelationship
-                          ? "border-rose-400 bg-rose-50/20"
-                          : "border-[#D9E4EC]"
-                      }`}
-                    />
-                    {errors.customRelationship && (
-                      <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" /> {errors.customRelationship}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Email Address for Representative (Full width or paired with Phone) */}
-            {isRepMode ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                    Email Address <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                    <input
-                      type="email"
-                      placeholder="name@example.com"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
-                        errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
-                      }`}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                    Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                    <input
-                      type="tel"
-                      placeholder="(401) 555-0123"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
+            {/* Relationship & Email Address */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
-                  Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <HeartHandshake className="w-3.5 h-3.5 text-[#294B68]" />
+                  <span>Relationship</span>
+                  <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
-                  <input
-                    type="tel"
-                    placeholder="(401) 555-0123"
-                    value={formData.phone}
+                  <select
+                    value={formData.relationship}
                     onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
+                      setFormData({ ...formData, relationship: e.target.value })
                     }
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
-                  />
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] bg-white focus:outline-none focus:ring-2 focus:ring-[#294B68] cursor-pointer"
+                  >
+                    {RELATIONSHIP_OPTIONS.map((rel) => (
+                      <option key={rel} value={rel}>
+                        {rel}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                  Email Address <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                  <input
+                    type="email"
+                    placeholder="name@example.com"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    className={`w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
+                      errors.email ? "border-rose-400 bg-rose-50/20" : "border-[#D9E4EC]"
+                    }`}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {errors.email}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Custom Relationship if 'Other' is selected */}
+            {formData.relationship === "Other" && (
+              <div>
+                <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                  Specify Relationship <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Neighbor / Case Manager"
+                  value={formData.customRelationship}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customRelationship: e.target.value })
+                  }
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68] ${
+                    errors.customRelationship
+                      ? "border-rose-400 bg-rose-50/20"
+                      : "border-[#D9E4EC]"
+                  }`}
+                />
+                {errors.customRelationship && (
+                  <p className="text-xs font-semibold text-rose-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" /> {errors.customRelationship}
+                  </p>
+                )}
+              </div>
             )}
+
+            {/* Phone Number */}
+            <div>
+              <label className="block text-xs font-bold text-[#243746] uppercase tracking-wider mb-1.5">
+                Phone Number <span className="text-xs font-normal text-[#64748B]">(Optional)</span>
+              </label>
+              <div className="relative">
+                <Phone className="w-4 h-4 text-[#64748B] absolute left-3.5 top-3.5" />
+                <input
+                  type="tel"
+                  placeholder="(401) 555-0123"
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#294B68]"
+                />
+              </div>
+            </div>
 
             {/* Upload Legal Authority Document (Representative Only) */}
             {isRepMode && (

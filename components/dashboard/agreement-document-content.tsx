@@ -565,8 +565,7 @@ export function AgreementDocumentContent({
                   &mdash; to identify fall risks, hazards, and safety concerns.
                   The specialist documents each finding with photos, notes
                   recommended corrections, generates a standardized residential
-                  safety report, and delivers it to the Client&apos;s designated
-                  family dashboard the same day. This plan may include the
+                  safety report, and delivers it to the Client's secure dashboard, and by email to the Client's Authorized Recipients, the same day. This plan may include the
                   complimentary minor safety courtesies described in Section 7
                   (such as replacing a bulb, placing a plug-in nightlight, or
                   securing a loose cord). It does not include the proactive
@@ -676,7 +675,7 @@ export function AgreementDocumentContent({
                   or placing a temporary caution marker, so the hazard does not
                   persist between visits. This plan does not include general or
                   routine housekeeping, laundry, meal preparation, or personal
-                  care of any kind.
+                  care of any kind. As with Plan 1, each visit generates a safety report delivered to the Client's secure dashboard and by email to the Client's Authorized Recipients.
                 </p>
               </div>
             </div>
@@ -1213,10 +1212,7 @@ export function AgreementDocumentContent({
               Client information is collected solely to deliver services and
               optimize home routing safety. It is never shared, sold, or
               disclosed to third-party marketing entities without explicit
-              written consent except as required by law. Visit reports and
-              digital dashboards are securely accessible only to the client and
-              designated family care team members. Technicians must always
-              maintain strict client confidentiality.
+              written consent except as required by law. Visit reports and dashboards are securely accessible only to the Client account holder. Designated Authorized Recipients receive reports by email. Technicians must always maintain strict client confidentiality.
             </p>
             <p>
               <strong>
