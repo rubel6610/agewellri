@@ -61,6 +61,8 @@ interface Step6AgreementSigningProps {
     repFullName?: string;
     repCapacity?: "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR" | null;
     repRelationship?: string;
+    repEmail?: string;
+    repPhone?: string;
     authorityDocumentUrl?: string | null;
     authorityDocumentName?: string | null;
     agreementDate?: string;
@@ -73,6 +75,8 @@ interface Step6AgreementSigningProps {
     repFullName?: string;
     repCapacity?: "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR" | null;
     repRelationship?: string;
+    repEmail?: string;
+    repPhone?: string;
     authorityDocumentUrl?: string | null;
     authorityDocumentName?: string | null;
     agreementDate: string;
@@ -105,12 +109,20 @@ export function Step6AgreementSigning({
   );
 
   // Track B states
-  const [repFullName, setRepFullName] = useState("");
+  const [repFullName, setRepFullName] = useState(
+    initialData?.repFullName || (!residentDetails.fullName.includes(accountHolder.firstName) ? `${accountHolder.firstName} ${accountHolder.lastName}`.trim() : "")
+  );
   const [repCapacity, setRepCapacity] = useState<
     "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR"
   >(initialData?.repCapacity || "ATTORNEY_IN_FACT");
   const [repRelationship, setRepRelationship] = useState(
-    initialData?.repRelationship || "Power of Attorney / Family Member",
+    initialData?.repRelationship || "Power of Attorney / Representative",
+  );
+  const [repEmail, setRepEmail] = useState(
+    initialData?.repEmail || accountHolder.email || "",
+  );
+  const [repPhone, setRepPhone] = useState(
+    initialData?.repPhone || accountHolder.phone || "",
   );
   const [authorityDocumentUrl, setAuthorityDocumentUrl] = useState<
     string | null
@@ -305,6 +317,8 @@ export function Step6AgreementSigning({
       repCapacity: signingTrack === "TRACK_B" ? repCapacity : null,
       repRelationship:
         signingTrack === "TRACK_B" ? repRelationship.trim() : undefined,
+      repEmail: signingTrack === "TRACK_B" ? repEmail.trim() : undefined,
+      repPhone: signingTrack === "TRACK_B" ? repPhone.trim() : undefined,
       authorityDocumentUrl:
         signingTrack === "TRACK_B" ? authorityDocumentUrl : null,
       authorityDocumentName:
@@ -1348,7 +1362,7 @@ export function Step6AgreementSigning({
           </div>
         </div>
 
-        {/* Track B Additional Requirements: Capacity & File Upload */}
+        {/* Track B Additional Requirements: Capacity, Info & File Upload */}
         {signingTrack === "TRACK_B" && (
           <div className="p-5 bg-[#F8FAFC] rounded-2xl border border-[#D9E4EC] space-y-4 animate-in fade-in">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1389,6 +1403,45 @@ export function Step6AgreementSigning({
                   className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
               </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Relationship to Resident
+                </label>
+                <input
+                  type="text"
+                  value={repRelationship}
+                  onChange={(e) => setRepRelationship(e.target.value)}
+                  placeholder="e.g. Daughter, Son, Legal Guardian"
+                  className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Representative Email Address
+                </label>
+                <input
+                  type="email"
+                  value={repEmail}
+                  onChange={(e) => setRepEmail(e.target.value)}
+                  placeholder="e.g. representative@email.com"
+                  className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                />
+              </div>
+
+              <div className="space-y-1.5 sm:col-span-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                  Representative Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={repPhone}
+                  onChange={(e) => setRepPhone(e.target.value)}
+                  placeholder="e.g. (401) 555-0199"
+                  className="w-full h-12 px-4 text-sm font-semibold text-[#243746] bg-white border border-[#D9E4EC] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
+                />
+              </div>
             </div>
 
             {/* Authority Document Upload Card */}
@@ -1420,7 +1473,7 @@ export function Step6AgreementSigning({
                           url: authorityDocumentUrl,
                           fileName:
                             authorityDocumentName ||
-                            "Legal_Authority_Document.pdf",
+                            "Legal_Authority_Document",
                         })
                       }
                       className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"

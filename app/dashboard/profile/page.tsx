@@ -55,15 +55,42 @@ export default function ProfilePage() {
   const [deleteFamilyMember, { isLoading: isDeleting }] = useDeleteFamilyMemberMutation();
 
   const user = meResponse?.data || authUser;
-  const familyMembers: FamilyMember[] = familyResponse?.data || [];
+  const rawFamilyMembers: FamilyMember[] = familyResponse?.data || [];
+
+  const clientFullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim().toLowerCase();
+  const clientEmail = (user?.email || "").trim().toLowerCase();
+
+  // Filter out the primary account holder so they never appear in their own representatives / recipients list
+  const familyMembers = rawFamilyMembers.filter((m) => {
+    if (m.userId && user?.id && m.userId === user.id) return false;
+    if (m.email && m.email.toLowerCase() === clientEmail) return false;
+    if (
+      m.name &&
+      m.name.trim().toLowerCase() === clientFullName &&
+      !m.authorityDocumentUrl &&
+      !m.legalCapacity
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   // Categorize family members into Representatives vs Authorized Report Recipients
   const representatives = familyMembers.filter(
-    (m) => Boolean(m.isEmergencyContact) || Boolean(m.portalAccess)
+    (m) =>
+      Boolean(m.authorityDocumentUrl) ||
+      Boolean(m.legalCapacity) ||
+      Boolean(m.isEmergencyContact) ||
+      Boolean(m.portalAccess)
   );
 
   const authorizedReportRecipients = familyMembers.filter(
-    (m) => Boolean(m.reportAccess) && !m.isEmergencyContact && !m.portalAccess
+    (m) =>
+      Boolean(m.reportAccess) &&
+      !m.isEmergencyContact &&
+      !m.portalAccess &&
+      !m.authorityDocumentUrl &&
+      !m.legalCapacity
   );
 
   if (isUserLoading && !user) {
@@ -304,7 +331,7 @@ export default function ProfilePage() {
                             url: rep.authorityDocumentUrl,
                             fileName:
                               rep.authorityDocumentName ||
-                              `${(rep.name || "Representative").replace(/[^a-zA-Z0-9.-]/g, "_")}_Authority_Document.pdf`,
+                              `${(rep.name || "Representative").replace(/[^a-zA-Z0-9.-]/g, "_")}_Authority_Document`,
                           })
                         }
                         className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all cursor-pointer shadow-2xs group"

@@ -187,6 +187,8 @@ export function SignupWizard({
     repFullName?: string;
     repCapacity?: "ATTORNEY_IN_FACT" | "GUARDIAN" | "CONSERVATOR" | null;
     repRelationship?: string;
+    repEmail?: string;
+    repPhone?: string;
     authorityDocumentUrl?: string | null;
     authorityDocumentName?: string | null;
     agreementDate: string;
@@ -198,6 +200,8 @@ export function SignupWizard({
     repFullName: "",
     repCapacity: null,
     repRelationship: "",
+    repEmail: "",
+    repPhone: "",
     authorityDocumentUrl: null,
     authorityDocumentName: null,
     agreementDate: new Date().toISOString().split("T")[0],
@@ -387,14 +391,42 @@ export function SignupWizard({
           signingData.signingTrack === "TRACK_B"
             ? signingData.repCapacity
             : null,
+        repFullName:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repFullName
+            : undefined,
+        repRelationship:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repRelationship
+            : undefined,
+        repEmail:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repEmail
+            : undefined,
+        repPhone:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repPhone
+            : undefined,
         authorityDocumentUrl:
           signingData.signingTrack === "TRACK_B"
             ? signingData.authorityDocumentUrl
+            : null,
+        authorityDocumentName:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.authorityDocumentName
             : null,
         signerName:
           signingData.signingTrack === "TRACK_B"
             ? signingData.repFullName
             : residentData.fullName,
+        signerEmail:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repEmail
+            : residentData.email || accountData.email,
+        signerPhone:
+          signingData.signingTrack === "TRACK_B"
+            ? signingData.repPhone
+            : residentData.phone,
         relationshipToClient:
           signingData.signingTrack === "TRACK_B"
             ? signingData.repRelationship

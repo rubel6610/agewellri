@@ -502,7 +502,7 @@ export function EditFamilyMemberModal({
                             url: formData.authorityDocumentUrl,
                             fileName:
                               formData.authorityDocumentName ||
-                              "AgeWellRI_Legal_Authority_Document.pdf",
+                              `${(formData.name || "Representative").replace(/[^a-zA-Z0-9.-]/g, "_")}_Authority_Document`,
                           })
                         }
                         className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"

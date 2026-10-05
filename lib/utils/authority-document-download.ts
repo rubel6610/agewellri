@@ -132,12 +132,28 @@ export async function downloadAuthorityDocument({
     const blob = await res.blob();
     const blobUrl = window.URL.createObjectURL(blob);
 
-    // Extract filename from header or fallback
-    let finalFileName =
-      customName ||
-      fileName ||
-      "AgeWellRI_Legal_Authority_Document.pdf";
+    // 1. Detect actual extension from the URL or MIME type
+    let actualExt = "";
+    const cleanUrl = (url || targetUrl).split("?")[0].split("#")[0];
+    const urlExtMatch = cleanUrl.match(/\.(pdf|png|jpe?g|webp|gif|svg|docx?)$/i);
+    if (urlExtMatch) {
+      actualExt = urlExtMatch[0].toLowerCase();
+      if (actualExt === ".jpeg") actualExt = ".jpg";
+    }
 
+    if (!actualExt) {
+      const mime = (res.headers.get("content-type") || blob.type || "").toLowerCase();
+      if (mime.includes("pdf")) actualExt = ".pdf";
+      else if (mime.includes("png")) actualExt = ".png";
+      else if (mime.includes("jpeg") || mime.includes("jpg")) actualExt = ".jpg";
+      else if (mime.includes("webp")) actualExt = ".webp";
+      else if (mime.includes("gif")) actualExt = ".gif";
+    }
+
+    if (!actualExt) actualExt = ".pdf";
+
+    // 2. Check if the server sent a filename in Content-Disposition
+    let finalFileName = "";
     const disposition = res.headers.get("content-disposition");
     if (disposition && disposition.includes("filename=")) {
       const match = disposition.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
@@ -148,10 +164,26 @@ export async function downloadAuthorityDocument({
           finalFileName = match[1];
         }
       }
-    } else if (url && !fileName && !customName) {
-      const rawName = url.split("/").pop()?.split("?")[0];
-      if (rawName) {
-        finalFileName = rawName;
+    }
+
+    // 3. Fallback to provided names, ensuring correct extension
+    if (!finalFileName) {
+      const providedName = (customName || fileName || "").trim();
+      if (providedName) {
+        // If providedName already has an extension, replace it with the true actualExt
+        const hasExt = /\.(pdf|png|jpe?g|webp|gif|svg|docx?)$/i.test(providedName);
+        if (hasExt) {
+          finalFileName = providedName.replace(/\.(pdf|png|jpe?g|webp|gif|svg|docx?)$/i, actualExt);
+        } else {
+          finalFileName = `${providedName}${actualExt}`;
+        }
+      } else {
+        const rawName = cleanUrl.split("/").pop();
+        if (rawName && /\.[a-z0-9]+$/i.test(rawName)) {
+          finalFileName = rawName;
+        } else {
+          finalFileName = `AgeWellRI_Legal_Authority_Document${actualExt}`;
+        }
       }
     }
 

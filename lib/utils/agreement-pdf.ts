@@ -667,7 +667,7 @@ export async function downloadAgreementPdf(
 
   // Plan 1 Full Card
   const p1FullScope =
-    "Scope: Each biweekly visit provides a dedicated, objective environmental safety assessment of the home. During the visit, an AgeWellRI specialist conducts a structured walkthrough of the home's key areas — stairs and circulation, bathrooms, exterior entry, bedrooms and living areas, life-safety systems, and kitchen and laundry — to identify fall risks, hazards, and safety concerns. The specialist documents each finding with photos, notes recommended corrections, generates a standardized residential safety report, and delivers it to the Client's designated family dashboard the same day. This plan may include the complimentary minor safety courtesies described in Section 7 (such as replacing a bulb, placing a plug-in nightlight, or securing a loose cord). It does not include the proactive hazard-clearing, item relocation, or expanded mitigation services offered under Plan 2, and does not include any general or routine housekeeping, laundry, meal preparation, or personal care of any kind.";
+    "Scope: Each biweekly visit provides a dedicated, objective environmental safety assessment of the home. During the visit, an AgeWellRI specialist conducts a structured walkthrough of the home's key areas — stairs and circulation, bathrooms, exterior entry, bedrooms and living areas, life-safety systems, and kitchen and laundry — to identify fall risks, hazards, and safety concerns. The specialist documents each finding with photos, notes recommended corrections, generates a standardized residential safety report, and delivers it to the Client's secure dashboard, and by email to the Client's Authorized Recipients, the same day. This plan may include the complimentary minor safety courtesies described in Section 7 (such as replacing a bulb, placing a plug-in nightlight, or securing a loose cord). It does not include the proactive hazard-clearing, item relocation, or expanded mitigation services offered under Plan 2, and does not include any general or routine housekeeping, laundry, meal preparation, or personal care of any kind.";
 
   const p1Lines = doc.splitTextToSize(p1FullScope, contentWidth - 8);
   const p1BoxH = 15 + p1Lines.length * 3.1 + 3;
@@ -938,7 +938,7 @@ export async function downloadAgreementPdf(
     4.5,
   );
   renderParagraph(
-    "Client information is collected solely to deliver services and optimize home routing safety. It is never shared, sold, or disclosed to third-party marketing entities without explicit written consent except as required by law. Visit reports and digital dashboards are securely accessible only to the client and designated family care team members. Technicians must always maintain strict client confidentiality.",
+    "Client information is collected solely to deliver services and optimize home routing safety. It is never shared, sold, or disclosed to third-party marketing entities without explicit written consent except as required by law. Visit reports and dashboards are securely accessible only to the Client account holder. Designated Authorized Recipients receive reports by email. Technicians must always maintain strict client confidentiality.",
   );
   renderSubsection(
     "13A. CLIENT REPRESENTATIONS & INDEMNIFICATION:",
