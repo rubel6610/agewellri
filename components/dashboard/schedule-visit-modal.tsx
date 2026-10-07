@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   X,
   Calendar as CalendarIcon,
@@ -7,12 +7,7 @@ import {
   ShieldCheck,
   Sparkles,
   Loader2,
-  UserCheck,
   AlertCircle,
-  Key,
-  Hash,
-  Bell,
-  HelpCircle,
   Plus,
   Star,
   Lock,
@@ -30,7 +25,6 @@ import {
 } from "@/redux/features/appointment/appointmentApi";
 import {
   useGetClientAccessMethodsQuery,
-  ClientAccessMethod,
 } from "@/redux/features/client/clientApi";
 import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
 import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
@@ -122,8 +116,6 @@ function formatMinutesToTimeString(totalMinutes: number): string {
   return `${String(displayHour).padStart(2, "0")}:${displayMinute} ${ampm}`;
 }
 
-
-
 function generateStandardTimeSlots(durationHours: number): string[] {
   if (durationHours === 1) {
     return [
@@ -183,6 +175,44 @@ function calculateEndTime(startStr: string, durationHours: number): string {
   return formatMinutesToTimeString(endMin);
 }
 
+function getInitialAvailableDate(
+  periodStartDateStr: string,
+  isAdvanceBooking: boolean,
+  activeOffDays: any[],
+  activeAppointments: any[]
+): string {
+  const now = new Date();
+  let d: Date;
+  if (isAdvanceBooking && periodStartDateStr) {
+    const pDate = new Date(periodStartDateStr);
+    d = new Date(pDate.getFullYear(), pDate.getMonth(), pDate.getDate());
+  } else {
+    d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  }
+
+  let loops = 0;
+  while (
+    loops < 365 &&
+    (d.getDay() === 0 ||
+      d.getDay() === 3 ||
+      findMatchingOffDay(d, activeOffDays) ||
+      activeAppointments.some((a) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return getApptDateFormatted(a) === `${y}-${m}-${day}`;
+      }))
+  ) {
+    d.setDate(d.getDate() + 1);
+    loops++;
+  }
+
+  const yearStr = d.getFullYear();
+  const monthStr = String(d.getMonth() + 1).padStart(2, "0");
+  const dayStr = String(d.getDate()).padStart(2, "0");
+  return `${yearStr}-${monthStr}-${dayStr}`;
+}
+
 export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModalProps) {
   const { data: entitlementsRes, isLoading: isEntitlementsLoading } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
   const { data: accessMethodsRes, isLoading: isAccessMethodsLoading, refetch: refetchAccessMethods } = useGetClientAccessMethodsQuery(undefined, { skip: !isOpen });
@@ -215,27 +245,22 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   }, [existingAppointments]);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string>("");
-  const [selectedServiceName, setSelectedServiceName] = useState<string>("Safety Oversight");
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("10:00 AM – 12:00 PM");
+  const [selectedServiceTypeIdOverride, setSelectedServiceTypeIdOverride] = useState<string>("");
+  const [selectedServiceNameOverride, setSelectedServiceNameOverride] = useState<string>("");
+  const [selectedDateOverride, setSelectedDateOverride] = useState<string>("");
   const [timeMode, setTimeMode] = useState<"PRESET" | "CUSTOM">("PRESET");
-  const [customStart, setCustomStart] = useState<string>("09:00 AM");
-  const [customEnd, setCustomEnd] = useState<string>("11:00 AM");
-  const [selectedAccessMethodId, setSelectedAccessMethodId] = useState<string>("");
+  const [selectedPresetSlotOverride, setSelectedPresetSlotOverride] = useState<string>("");
+  const [customStartOverride, setCustomStartOverride] = useState<string>("");
+  const [selectedAccessMethodIdOverride, setSelectedAccessMethodIdOverride] = useState<string>("");
+  const [viewDateOverride, setViewDateOverride] = useState<Date | null>(null);
   const [isNewAccessModalOpen, setIsNewAccessModalOpen] = useState(false);
   const [notes, setNotes] = useState("");
 
   const periodStartDateStr = entitlementsRes?.data?.billingPeriod?.startDate || "";
-  const periodEndDateStr = entitlementsRes?.data?.billingPeriod?.endDate || "";
 
   const periodStartDate = useMemo(() => {
     return periodStartDateStr ? new Date(periodStartDateStr) : null;
   }, [periodStartDateStr]);
-
-  const periodEndDate = useMemo(() => {
-    return periodEndDateStr ? new Date(periodEndDateStr) : null;
-  }, [periodEndDateStr]);
 
   const isAdvanceBooking = useMemo(() => {
     if (!periodStartDateStr) return false;
@@ -255,85 +280,69 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   }, [periodStartDateStr]);
 
   // Calendar month navigation state
-  const [viewDate, setViewDate] = useState<Date>(() => {
-    if (periodStartDateStr) {
+  const defaultViewDate = useMemo(() => {
+    if (isAdvanceBooking && periodStartDateStr) {
       const pDate = new Date(periodStartDateStr);
       return new Date(pDate.getFullYear(), pDate.getMonth(), 1);
     }
-    return new Date();
-  });
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }, [isAdvanceBooking, periodStartDateStr]);
 
-  // Sync viewDate when periodStartDate changes or modal opens
-  useEffect(() => {
-    if (isOpen) {
-      if (isAdvanceBooking && periodStartDateStr) {
-        const pDate = new Date(periodStartDateStr);
-        setViewDate(new Date(pDate.getFullYear(), pDate.getMonth(), 1));
-      } else {
-        const now = new Date();
-        setViewDate(new Date(now.getFullYear(), now.getMonth(), 1));
-      }
-    }
-  }, [isOpen, isAdvanceBooking, periodStartDateStr]);
+  const viewDate = viewDateOverride || defaultViewDate;
+  const setViewDate = (d: Date) => setViewDateOverride(d);
 
-  // Find first available working day (not Sun=0, not Wed=3, not off-day) on or after commencement that DOES NOT have a scheduled visit
-  useEffect(() => {
-    if (isOpen && !selectedDate) {
-      const now = new Date();
-      let d: Date;
-      if (isAdvanceBooking && periodStartDateStr) {
-        const pDate = new Date(periodStartDateStr);
-        d = new Date(pDate.getFullYear(), pDate.getMonth(), pDate.getDate());
-      } else {
-        d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-      }
+  // Default available working date
+  const defaultAvailableDate = useMemo(() => {
+    return getInitialAvailableDate(
+      periodStartDateStr,
+      isAdvanceBooking,
+      activeOffDays,
+      activeAppointments
+    );
+  }, [periodStartDateStr, isAdvanceBooking, activeOffDays, activeAppointments]);
 
-      // Loop until we find a working day (Mon, Tue, Thu, Fri, Sat) without off-day and without active booked visit
-      while (
-        d.getDay() === 0 ||
-        d.getDay() === 3 ||
-        findMatchingOffDay(d, activeOffDays) ||
-        activeAppointments.some((a) => {
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          return getApptDateFormatted(a) === `${y}-${m}-${day}`;
-        })
-      ) {
-        d.setDate(d.getDate() + 1);
-      }
+  const selectedDate = selectedDateOverride || defaultAvailableDate;
+  const setSelectedDate = (d: string) => setSelectedDateOverride(d);
 
-      const yearStr = d.getFullYear();
-      const monthStr = String(d.getMonth() + 1).padStart(2, "0");
-      const dayStr = String(d.getDate()).padStart(2, "0");
-      setSelectedDate(`${yearStr}-${monthStr}-${dayStr}`);
-    }
-  }, [isOpen, isAdvanceBooking, periodStartDateStr, selectedDate, activeAppointments, activeOffDays]);
-
-  useEffect(() => {
-    if (entitlements.length > 0 && !selectedServiceTypeId) {
-      const available = entitlements.find((e) => e.remaining > 0) || entitlements[0];
-      if (available) {
-        setSelectedServiceTypeId(available.serviceTypeId);
-        setSelectedServiceName(available.serviceName);
-      }
-    }
-  }, [entitlements, selectedServiceTypeId]);
-
-  useEffect(() => {
-    if (accessMethods.length > 0 && !selectedAccessMethodId) {
-      const def = accessMethods.find((m) => m.isDefault) || accessMethods[0];
-      if (def) setSelectedAccessMethodId(def.id);
-    }
-  }, [accessMethods, selectedAccessMethodId]);
+  // Active Entitlement & Service Type
+  const defaultEntitlement = useMemo(() => {
+    return entitlements.find((e) => e.remaining > 0) || entitlements[0] || null;
+  }, [entitlements]);
 
   const currentEntitlement = useMemo(() => {
-    return (
-      entitlements.find((e) => e.serviceTypeId === selectedServiceTypeId) ||
-      entitlements[0] ||
-      null
-    );
-  }, [entitlements, selectedServiceTypeId]);
+    if (selectedServiceTypeIdOverride) {
+      return (
+        entitlements.find((e) => e.serviceTypeId === selectedServiceTypeIdOverride) ||
+        defaultEntitlement
+      );
+    }
+    return defaultEntitlement;
+  }, [entitlements, selectedServiceTypeIdOverride, defaultEntitlement]);
+
+  const selectedServiceTypeId = currentEntitlement?.serviceTypeId || selectedServiceTypeIdOverride || "";
+  const selectedServiceName =
+    selectedServiceNameOverride ||
+    currentEntitlement?.serviceName ||
+    plan?.name ||
+    "Safety Oversight";
+
+  const setSelectedService = (serviceTypeId: string, serviceName: string) => {
+    setSelectedServiceTypeIdOverride(serviceTypeId);
+    setSelectedServiceNameOverride(serviceName);
+  };
+
+  // Active Access Method
+  const defaultAccessMethod = useMemo(() => {
+    return accessMethods.find((m) => m.isDefault) || accessMethods[0] || null;
+  }, [accessMethods]);
+
+  const selectedAccessMethodId = selectedAccessMethodIdOverride || defaultAccessMethod?.id || "";
+  const setSelectedAccessMethodId = (id: string) => setSelectedAccessMethodIdOverride(id);
+
+  const selectedAccessMethod = useMemo(() => {
+    return accessMethods.find((m) => m.id === selectedAccessMethodId) || defaultAccessMethod;
+  }, [accessMethods, selectedAccessMethodId, defaultAccessMethod]);
 
   const planDurationHours = useMemo(() => {
     if (currentEntitlement?.durationMinutes) {
@@ -346,14 +355,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     if (name.includes("1 hour") || name.includes("an hour") || name.includes("one hour")) return 1;
     if (name.includes("2 hour") || name.includes("two hour")) return 2;
     return 2;
-  }, [currentEntitlement?.durationMinutes, plan?.times, selectedServiceName, plan?.name]);
+  }, [currentEntitlement, plan, selectedServiceName]);
 
-  const bookedApptsOnSelectedDate = useMemo(() => {
-    if (!selectedDate) return [];
-    return activeAppointments.filter((a) => getApptDateFormatted(a) === selectedDate);
-  }, [activeAppointments, selectedDate]);
-
-  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
+  const checkTimeSlotBooked = useCallback((ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
     if (!slotRange || !selectedDate) return { isBooked: false };
 
@@ -367,7 +371,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       }
     }
     return { isBooked: false };
-  };
+  }, [activeAppointments, selectedDate]);
 
   const standardTimeSlots = useMemo(() => {
     return generateStandardTimeSlots(planDurationHours);
@@ -377,23 +381,45 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     return getAvailableStartTimes(planDurationHours);
   }, [planDurationHours]);
 
-  useEffect(() => {
-    const slots = generateStandardTimeSlots(planDurationHours);
-    if (timeMode === "PRESET") {
-      const isBooked = checkTimeSlotBooked(selectedTimeSlot).isBooked;
-      if (!slots.includes(selectedTimeSlot) || isBooked) {
-        const available = slots.find((s) => !checkTimeSlotBooked(s).isBooked);
-        setSelectedTimeSlot(available || slots[0] || "10:00 AM – 12:00 PM");
-      }
-    } else {
-      const starts = getAvailableStartTimes(planDurationHours);
-      const start = starts.includes(customStart) ? customStart : (starts[2] || starts[0] || "09:00 AM");
-      const end = calculateEndTime(start, planDurationHours);
-      setCustomStart(start);
-      setCustomEnd(end);
-      setSelectedTimeSlot(`${start} – ${end}`);
+  const defaultPresetSlot = useMemo(() => {
+    const available = standardTimeSlots.find((s) => !checkTimeSlotBooked(s).isBooked);
+    return available || standardTimeSlots[0] || "10:00 AM – 12:00 PM";
+  }, [standardTimeSlots, checkTimeSlotBooked]);
+
+  const selectedPresetSlot = useMemo(() => {
+    if (
+      selectedPresetSlotOverride &&
+      standardTimeSlots.includes(selectedPresetSlotOverride) &&
+      !checkTimeSlotBooked(selectedPresetSlotOverride).isBooked
+    ) {
+      return selectedPresetSlotOverride;
     }
-  }, [planDurationHours, timeMode, step, selectedDate, bookedApptsOnSelectedDate]);
+    return defaultPresetSlot;
+  }, [selectedPresetSlotOverride, standardTimeSlots, checkTimeSlotBooked, defaultPresetSlot]);
+
+  const defaultCustomStart = useMemo(() => {
+    return availableStartTimes.includes("09:00 AM")
+      ? "09:00 AM"
+      : availableStartTimes[2] || availableStartTimes[0] || "09:00 AM";
+  }, [availableStartTimes]);
+
+  const customStart = useMemo(() => {
+    if (customStartOverride && availableStartTimes.includes(customStartOverride)) {
+      return customStartOverride;
+    }
+    return defaultCustomStart;
+  }, [customStartOverride, availableStartTimes, defaultCustomStart]);
+
+  const customEnd = useMemo(() => {
+    return calculateEndTime(customStart, planDurationHours);
+  }, [customStart, planDurationHours]);
+
+  const selectedTimeSlot = useMemo(() => {
+    if (timeMode === "PRESET") {
+      return selectedPresetSlot;
+    }
+    return `${customStart} – ${customEnd}`;
+  }, [timeMode, selectedPresetSlot, customStart, customEnd]);
 
   if (!isOpen) return null;
 
@@ -402,8 +428,6 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const areAllServicesExhausted = entitlements.length > 0
     ? entitlements.every((e) => e.remaining <= 0)
     : (plan ? plan.remainingVisits <= 0 : false);
-
-  const selectedAccessMethod = accessMethods.find((m) => m.id === selectedAccessMethodId);
 
   const handleConfirm = async () => {
     if (isCurrentServiceExhausted) {
@@ -476,6 +500,14 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const resetAndClose = () => {
     setStep(1);
     setNotes("");
+    setSelectedServiceTypeIdOverride("");
+    setSelectedServiceNameOverride("");
+    setSelectedDateOverride("");
+    setSelectedPresetSlotOverride("");
+    setCustomStartOverride("");
+    setSelectedAccessMethodIdOverride("");
+    setViewDateOverride(null);
+    setTimeMode("PRESET");
     onClose();
   };
 
@@ -564,8 +596,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                     <div
                       key={srv.id}
                       onClick={() => {
-                        setSelectedServiceTypeId(srv.serviceTypeId);
-                        setSelectedServiceName(srv.serviceName);
+                        setSelectedService(srv.serviceTypeId, srv.serviceName);
                       }}
                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         isSelected
@@ -612,7 +643,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                   return (
                     <div
                       key={s.name}
-                      onClick={() => setSelectedServiceName(s.name)}
+                      onClick={() => setSelectedServiceNameOverride(s.name)}
                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer ${
                         selectedServiceName === s.name
                           ? isExhausted
@@ -965,11 +996,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
             <div className="flex p-1 bg-[#F1F5F9] rounded-xl border border-[#D9E4EC]">
               <button
                 type="button"
-                onClick={() => {
-                  setTimeMode("PRESET");
-                  const slots = generateStandardTimeSlots(planDurationHours);
-                  setSelectedTimeSlot(slots[0]);
-                }}
+                onClick={() => setTimeMode("PRESET")}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   timeMode === "PRESET"
                     ? "bg-white text-[#243746] shadow-2xs border border-[#D9E4EC]"
@@ -980,15 +1007,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setTimeMode("CUSTOM");
-                  const starts = getAvailableStartTimes(planDurationHours);
-                  const start = starts.includes(customStart) ? customStart : (starts[2] || starts[0] || "09:00 AM");
-                  const end = calculateEndTime(start, planDurationHours);
-                  setCustomStart(start);
-                  setCustomEnd(end);
-                  setSelectedTimeSlot(`${start} – ${end}`);
-                }}
+                onClick={() => setTimeMode("CUSTOM")}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   timeMode === "CUSTOM"
                     ? "bg-white text-[#243746] shadow-2xs border border-[#D9E4EC]"
@@ -1011,7 +1030,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                         key={ts}
                         type="button"
                         disabled={isBooked}
-                        onClick={() => setSelectedTimeSlot(ts)}
+                        onClick={() => setSelectedPresetSlotOverride(ts)}
                         title={
                           isBooked
                             ? `Already Scheduled: ${appt?.serviceType || "Visit"} is scheduled at ${ts} on this date`
@@ -1045,17 +1064,13 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-bold text-[#243746] block mb-1.5 flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-[#243746] flex items-center gap-1.5 mb-1.5">
                       <Clock className="w-3.5 h-3.5 text-[#294B68]" /> Start Time 
                     </label>
                     <select
                       value={customStart}
                       onChange={(e) => {
-                        const newStart = e.target.value;
-                        setCustomStart(newStart);
-                        const newEnd = calculateEndTime(newStart, planDurationHours);
-                        setCustomEnd(newEnd);
-                        setSelectedTimeSlot(`${newStart} – ${newEnd}`);
+                        setCustomStartOverride(e.target.value);
                       }}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#243746] font-semibold bg-white focus:outline-hidden focus:border-[#294B68]"
                     >
@@ -1072,7 +1087,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-[#243746] block mb-1.5 flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-[#243746] flex items-center gap-1.5 mb-1.5">
                       <Clock className="w-3.5 h-3.5 text-[#5E8FB2]" /> End Time 
                     </label>
                     <div className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9E4EC] text-sm text-[#294B68] font-bold bg-[#EAF3F8] flex items-center justify-between">
@@ -1172,7 +1187,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
             {/* Home Access Method Selector for Specialist */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#243746] flex items-center gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#243746] flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-[#294B68]" />
                   <span>Choose Home Access Method</span>
                 </label>
