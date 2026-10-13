@@ -241,8 +241,7 @@ export function AdminScheduleModal({
       }
     }
     return [
-      { start: "08:00", end: "12:00" },
-      { start: "12:00", end: "18:00" },
+      { start: "08:00", end: "18:00" },
     ];
   }, [dateAvailability, date, weeklyScheduleRes]);
 

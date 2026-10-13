@@ -24,7 +24,7 @@ interface DateDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   dayData: DayAvailability | null;
-  onOpenOverrideModal: (date: string, status?: "CLOSED" | "CUSTOM_HOURS" | "OPEN") => void;
+  onOpenOverrideModal: (date: string, status?: "CLOSED" | "CUSTOM_HOURS") => void;
   onOpenScheduleModal?: (date: string) => void;
 }
 
@@ -55,8 +55,6 @@ export function DateDetailsDrawer({
                   className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                     dayData.overrideStatus === "CUSTOM_HOURS"
                       ? "bg-purple-50 text-purple-700 border border-purple-200"
-                      : dayData.overrideStatus === "OPEN"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : dayData.isClosed
                       ? "bg-red-50 text-red-700 border border-red-200"
                       : "bg-emerald-50 text-emerald-700 border border-emerald-200"
@@ -64,11 +62,9 @@ export function DateDetailsDrawer({
                 >
                   {dayData.overrideStatus === "CUSTOM_HOURS"
                     ? "Custom Hours"
-                    : dayData.overrideStatus === "OPEN"
-                    ? "Force Open"
                     : dayData.isClosed
                     ? "Closed / Off-Day"
-                    : "Operational"}
+                    : "Operational (8 AM - 6 PM)"}
                 </span>
 
                 <span className="text-[11px] text-[#64748B]">
@@ -108,8 +104,6 @@ export function DateDetailsDrawer({
               className={`p-3.5 rounded-xl border ${
                 dayData.overrideStatus === "CUSTOM_HOURS"
                   ? "bg-purple-50/80 border-purple-200 text-purple-950"
-                  : dayData.overrideStatus === "OPEN"
-                  ? "bg-emerald-50/80 border-emerald-200 text-emerald-950"
                   : "bg-red-50/80 border-red-200 text-red-950"
               }`}
             >
@@ -118,15 +112,11 @@ export function DateDetailsDrawer({
                   className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
                     dayData.overrideStatus === "CUSTOM_HOURS"
                       ? "bg-purple-200 text-purple-900"
-                      : dayData.overrideStatus === "OPEN"
-                      ? "bg-emerald-200 text-emerald-900"
                       : "bg-red-200 text-red-900"
                   }`}
                 >
                   {dayData.overrideStatus === "CUSTOM_HOURS"
                     ? "Custom Hours"
-                    : dayData.overrideStatus === "OPEN"
-                    ? "Force Open"
                     : "Closed Override"}
                 </span>
                 <p className="text-xs font-bold">{dayData.overrideTitle}</p>
@@ -219,31 +209,6 @@ export function DateDetailsDrawer({
               </div>
             )}
           </div>
-
-          {/* Available Slots */}
-          {dayData.isOpen && (
-            <div>
-              <h4 className="text-xs font-bold text-[#243746] uppercase tracking-wider mb-2">
-                Available Time Slots ({dayData.availableSlots.length})
-              </h4>
-              {dayData.availableSlots.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {dayData.availableSlots.map((s, idx) => (
-                    <div
-                      key={idx}
-                      className="p-2 bg-emerald-50/70 border border-emerald-200 text-emerald-800 rounded-lg text-center text-xs font-bold"
-                    >
-                      {s.slot}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-[#64748B] italic">
-                  No slots available (fully booked or past date).
-                </p>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Quick Override Actions Footer */}
@@ -266,15 +231,6 @@ export function DateDetailsDrawer({
               className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg text-xs font-bold transition-colors"
             >
               Custom Hours
-            </button>
-            <button
-              onClick={() => {
-                onClose();
-                onOpenOverrideModal(dayData.date, "OPEN");
-              }}
-              className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors"
-            >
-              Force Open
             </button>
           </div>
           <button

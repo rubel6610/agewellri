@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Sliders,
   Flag,
   User,
   Layers,
@@ -56,7 +55,7 @@ export default function AdminCommandSchedulePage() {
   // Overrides Tab Search & Filters
   const [overrideSearch, setOverrideSearch] = useState("");
   const [overrideTypeFilter, setOverrideTypeFilter] = useState<"ALL" | "DATE" | "WEEK">("ALL");
-  const [overrideStatusFilter, setOverrideStatusFilter] = useState<"ALL" | "CLOSED" | "CUSTOM_HOURS" | "OPEN">("ALL");
+  const [overrideStatusFilter, setOverrideStatusFilter] = useState<"ALL" | "CLOSED" | "CUSTOM_HOURS">("ALL");
   const [overridePage, setOverridePage] = useState(1);
   const [overridePageSize, setOverridePageSize] = useState(10);
 
@@ -65,7 +64,7 @@ export default function AdminCommandSchedulePage() {
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [selectedOverrideItem, setSelectedOverrideItem] = useState<ScheduleOverrideItem | null>(null);
   const [overrideInitialDate, setOverrideInitialDate] = useState<string | null>(null);
-  const [overrideInitialStatus, setOverrideInitialStatus] = useState<"CLOSED" | "CUSTOM_HOURS" | "OPEN">("CLOSED");
+  const [overrideInitialStatus, setOverrideInitialStatus] = useState<"CLOSED" | "CUSTOM_HOURS">("CLOSED");
 
   const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
   const [selectedDrawerDay, setSelectedDrawerDay] = useState<DayAvailability | null>(null);
@@ -196,7 +195,7 @@ export default function AdminCommandSchedulePage() {
 
   const handleOpenCreateOverride = (
     date?: string,
-    statusOverride?: "CLOSED" | "CUSTOM_HOURS" | "OPEN"
+    statusOverride?: "CLOSED" | "CUSTOM_HOURS"
   ) => {
     setSelectedOverrideItem(null);
     setOverrideInitialDate(date || new Date().toISOString().split("T")[0]);
@@ -274,14 +273,6 @@ export default function AdminCommandSchedulePage() {
 
         <div className="flex flex-wrap items-center gap-2.5">
           <button
-            onClick={() => setIsWeeklyModalOpen(true)}
-            className="px-3.5 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] text-xs font-bold rounded-xl flex items-center gap-2 transition-all cursor-pointer border border-[#5E8FB2]/30"
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Default Weekly Hours</span>
-          </button>
-
-          <button
             onClick={() => handleOpenCreateOverride()}
             className="px-4 py-2.5 bg-[#294B68] hover:bg-[#203a52] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer"
           >
@@ -292,7 +283,7 @@ export default function AdminCommandSchedulePage() {
       </div>
 
       {/* Summary KPI Overview Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
@@ -324,40 +315,6 @@ export default function AdminCommandSchedulePage() {
           </div>
           <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
             <CalendarX className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] shadow-2xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-              Booked Visits
-            </p>
-            <p className="text-2xl sm:text-3xl font-black text-[#294B68] mt-1">
-              {calendarSummary.totalBookingsCount}
-            </p>
-            <p className="text-[11px] text-[#5E8FB2] font-semibold mt-0.5">
-              Confirmed in period
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-[#EAF3F8] text-[#294B68] flex items-center justify-center">
-            <CalendarCheck className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] shadow-2xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-              Available Slots
-            </p>
-            <p className="text-2xl sm:text-3xl font-black text-purple-700 mt-1">
-              {calendarSummary.totalAvailableSlotsCount}
-            </p>
-            <p className="text-[11px] text-purple-600 font-semibold mt-0.5">
-              Bookable open slots
-            </p>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
           </div>
         </div>
       </div>
@@ -540,8 +497,6 @@ export default function AdminCommandSchedulePage() {
                             ? "bg-slate-50/60 opacity-60 border-slate-200"
                             : day.overrideStatus === "CUSTOM_HOURS"
                             ? "bg-purple-50/50 border-purple-200 shadow-2xs"
-                            : day.overrideStatus === "OPEN"
-                            ? "bg-emerald-50/50 border-emerald-200 shadow-2xs"
                             : day.isClosed
                             ? "bg-red-50/40 border-red-200"
                             : "bg-white border-[#D9E4EC]"
@@ -565,8 +520,6 @@ export default function AdminCommandSchedulePage() {
                               className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none ${
                                 day.overrideStatus === "CUSTOM_HOURS"
                                   ? "bg-purple-100 text-purple-800 border border-purple-300"
-                                  : day.overrideStatus === "OPEN"
-                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                                   : day.isClosed
                                   ? "bg-red-100 text-red-700 border border-red-200"
                                   : "bg-emerald-100 text-emerald-700"
@@ -574,8 +527,6 @@ export default function AdminCommandSchedulePage() {
                             >
                               {day.overrideStatus === "CUSTOM_HOURS"
                                 ? "Custom"
-                                : day.overrideStatus === "OPEN"
-                                ? "Open"
                                 : day.isClosed
                                 ? "Closed"
                                 : "Open"}
@@ -596,8 +547,6 @@ export default function AdminCommandSchedulePage() {
                               className={`mt-1 px-1.5 py-0.5 text-[10px] font-bold rounded truncate ${
                                 day.overrideStatus === "CUSTOM_HOURS"
                                   ? "bg-purple-100/80 text-purple-900 border border-purple-200"
-                                  : day.overrideStatus === "OPEN"
-                                  ? "bg-emerald-100/80 text-emerald-900 border border-emerald-200"
                                   : "bg-red-100/80 text-red-900 border border-red-200"
                               }`}
                               title={day.overrideTitle}
@@ -633,7 +582,7 @@ export default function AdminCommandSchedulePage() {
 
                           {day.isOpen && (
                             <div className="flex items-center justify-between text-[10px] text-[#64748B] font-semibold px-1">
-                              <span>Available:</span>
+                              <span>Shift:</span>
                               <span
                                 className={`font-bold ${
                                   day.overrideStatus === "CUSTOM_HOURS"
@@ -641,7 +590,9 @@ export default function AdminCommandSchedulePage() {
                                     : "text-emerald-700"
                                 }`}
                               >
-                                {day.availableSlots.length} slots
+                                {day.overrideStatus === "CUSTOM_HOURS" && day.timeWindows?.[0]
+                                  ? `${format24hTo12h(day.timeWindows[0].start)} – ${format24hTo12h(day.timeWindows[0].end)}`
+                                  : "8 AM – 6 PM"}
                               </span>
                             </div>
                           )}
@@ -675,8 +626,6 @@ export default function AdminCommandSchedulePage() {
                         ? "ring-2 ring-[#294B68] bg-white border-[#294B68]"
                         : day.overrideStatus === "CUSTOM_HOURS"
                         ? "bg-purple-50/40 border-purple-200"
-                        : day.overrideStatus === "OPEN"
-                        ? "bg-emerald-50/40 border-emerald-200"
                         : day.isClosed
                         ? "bg-red-50/40 border-red-200"
                         : "bg-white border-[#D9E4EC]"
@@ -715,8 +664,6 @@ export default function AdminCommandSchedulePage() {
                           className={`mt-1.5 p-1 text-[10px] font-bold rounded-md truncate ${
                             day.overrideStatus === "CUSTOM_HOURS"
                               ? "bg-purple-100 border border-purple-300 text-purple-900"
-                              : day.overrideStatus === "OPEN"
-                              ? "bg-emerald-100 border border-emerald-300 text-emerald-900"
                               : "bg-red-100 border border-red-300 text-red-900"
                           }`}
                           title={day.overrideTitle}
@@ -736,8 +683,6 @@ export default function AdminCommandSchedulePage() {
                           className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
                             day.overrideStatus === "CUSTOM_HOURS"
                               ? "bg-purple-100 text-purple-800 border border-purple-300"
-                              : day.overrideStatus === "OPEN"
-                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                               : day.isClosed
                               ? "bg-red-100 text-red-700 border border-red-200"
                               : "bg-emerald-100 text-emerald-700"
@@ -745,8 +690,6 @@ export default function AdminCommandSchedulePage() {
                         >
                           {day.overrideStatus === "CUSTOM_HOURS"
                             ? "Custom Hours"
-                            : day.overrideStatus === "OPEN"
-                            ? "Open"
                             : day.isClosed
                             ? "Closed"
                             : "Open"}
@@ -784,7 +727,11 @@ export default function AdminCommandSchedulePage() {
                             : "bg-slate-100 text-slate-500"
                         }`}
                       >
-                        {day.isOpen ? `${day.availableSlots.length} Slots Open` : "Closed"}
+                        {day.isOpen
+                          ? day.overrideStatus === "CUSTOM_HOURS"
+                            ? "Custom Hours"
+                            : "8 AM – 6 PM"
+                          : "Closed"}
                       </button>
                     </div>
                   </div>
@@ -868,11 +815,23 @@ export default function AdminCommandSchedulePage() {
               </div>
             )}
 
-            {/* Time Slot Resolution Grid */}
+            {/* Day Appointments & Operational Hours */}
             <div className="space-y-3">
-              <h4 className="text-xs font-bold text-[#243746] uppercase tracking-wider">
-                Full Day Timeline Breakdown
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-[#243746] uppercase tracking-wider">
+                  Booked Visits ({singleDayData.bookedSlots.length})
+                </h4>
+                {singleDayData.isOpen && (
+                  <span className="text-xs font-bold text-[#294B68] bg-[#EAF3F8] px-2.5 py-1 rounded-lg">
+                    Shift Hours:{" "}
+                    {singleDayData.timeWindows && singleDayData.timeWindows.length > 0
+                      ? singleDayData.timeWindows
+                          .map((w) => `${format24hTo12h(w.start)} – ${format24hTo12h(w.end)}`)
+                          .join(", ")
+                      : "8:00 AM – 6:00 PM"}
+                  </span>
+                )}
+              </div>
 
               {singleDayData.isClosed ? (
                 <div className="p-12 text-center bg-red-50/50 border border-red-200 rounded-2xl">
@@ -884,9 +843,8 @@ export default function AdminCommandSchedulePage() {
                     {singleDayData.overrideTitle || "Designated non-working day or company closure."}
                   </p>
                 </div>
-              ) : (
+              ) : singleDayData.bookedSlots.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {/* Booked Visits */}
                   {singleDayData.bookedSlots.map((b) => (
                     <div
                       key={b.id}
@@ -907,30 +865,32 @@ export default function AdminCommandSchedulePage() {
                       </div>
                     </div>
                   ))}
-
-                  {/* Available Slots */}
-                  {singleDayData.availableSlots.map((s, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center justify-between"
-                    >
-                      <div>
-                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-emerald-200/80 rounded-md text-emerald-900">
-                          Available
-                        </span>
-                        <p className="text-sm font-bold text-[#243746] mt-1">{s.slot}</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setDispatchInitialDate(singleDayData.date);
-                          setIsAdminScheduleModalOpen(true);
-                        }}
-                        className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-2xs"
-                      >
-                        Book
-                      </button>
-                    </div>
-                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-white border border-[#D9E4EC] rounded-2xl space-y-2">
+                  <CalendarCheck className="w-8 h-8 text-[#5E8FB2] mx-auto" />
+                  <h4 className="text-sm font-bold text-[#243746]">
+                    No Booked Visits Scheduled
+                  </h4>
+                  <p className="text-xs text-[#64748B]">
+                    Working shift (
+                    {singleDayData.timeWindows && singleDayData.timeWindows.length > 0
+                      ? singleDayData.timeWindows
+                          .map((w) => `${format24hTo12h(w.start)} – ${format24hTo12h(w.end)}`)
+                          .join(", ")
+                      : "8:00 AM – 6:00 PM"}
+                    ) is fully open for visits.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setDispatchInitialDate(singleDayData.date);
+                      setIsAdminScheduleModalOpen(true);
+                    }}
+                    className="mt-2 px-4 py-2 bg-[#294B68] text-white text-xs font-bold rounded-xl hover:bg-[#203a52] transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Dispatch Visit</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -972,7 +932,6 @@ export default function AdminCommandSchedulePage() {
                   <option value="ALL">All Statuses</option>
                   <option value="CLOSED">Closed Only</option>
                   <option value="CUSTOM_HOURS">Custom Hours</option>
-                  <option value="OPEN">Open Only</option>
                 </select>
               </div>
             </div>

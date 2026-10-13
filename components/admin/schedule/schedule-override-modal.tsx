@@ -32,7 +32,7 @@ interface ScheduleOverrideModalProps {
   onClose: () => void;
   overrideItem?: ScheduleOverrideItem | null;
   initialDate?: string | null;
-  initialStatus?: "CLOSED" | "CUSTOM_HOURS" | "OPEN";
+  initialStatus?: "CLOSED" | "CUSTOM_HOURS";
 }
 
 const STANDARD_TIMES_24H = [
@@ -69,7 +69,7 @@ export function ScheduleOverrideModal({
 
   const [overrideType, setOverrideType] = useState<"DATE" | "WEEK">("DATE");
   const [dateMode, setDateMode] = useState<"SINGLE" | "RANGE">("SINGLE");
-  const [status, setStatus] = useState<"CLOSED" | "CUSTOM_HOURS" | "OPEN">("CLOSED");
+  const [status, setStatus] = useState<"CLOSED" | "CUSTOM_HOURS">("CLOSED");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -77,7 +77,7 @@ export function ScheduleOverrideModal({
   const [isRecurring, setIsRecurring] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [timeWindows, setTimeWindows] = useState<TimeWindow[]>([
-    { start: "09:00", end: "13:00" },
+    { start: "08:00", end: "18:00" },
   ]);
   const [conflicts, setConflicts] = useState<ConflictingAppointmentItem[]>([]);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -86,7 +86,7 @@ export function ScheduleOverrideModal({
     if (overrideItem) {
       setOverrideType(overrideItem.overrideType || "DATE");
       setDateMode(overrideItem.isSingleDay ? "SINGLE" : "RANGE");
-      setStatus(overrideItem.status || "CLOSED");
+      setStatus(overrideItem.status === "CUSTOM_HOURS" ? "CUSTOM_HOURS" : "CLOSED");
       setTitle(overrideItem.title);
       setDescription(overrideItem.description || "");
       setStartDate(overrideItem.startDate);
@@ -96,21 +96,19 @@ export function ScheduleOverrideModal({
       setTimeWindows(
         overrideItem.timeWindows?.length
           ? overrideItem.timeWindows
-          : [{ start: "09:00", end: "13:00" }]
+          : [{ start: "08:00", end: "18:00" }]
       );
       setFormErrors({});
     } else {
       const targetDate = initialDate || new Date().toISOString().split("T")[0];
-      const targetStatus = initialStatus || "CLOSED";
+      const targetStatus = initialStatus === "CUSTOM_HOURS" ? "CUSTOM_HOURS" : "CLOSED";
       setOverrideType("DATE");
       setDateMode("SINGLE");
       setStatus(targetStatus);
       const defaultTitle =
         targetStatus === "CLOSED"
           ? `Office Closed (${targetDate})`
-          : targetStatus === "CUSTOM_HOURS"
-          ? `Custom Hours (${targetDate})`
-          : `Special Opening (${targetDate})`;
+          : `Custom Hours (${targetDate})`;
       setTitle(defaultTitle);
       setDescription("");
       setStartDate(targetDate);
@@ -118,8 +116,7 @@ export function ScheduleOverrideModal({
       setIsRecurring(false);
       setIsActive(true);
       setTimeWindows([
-        { start: "09:00", end: "13:00" },
-        { start: "14:00", end: "17:00" },
+        { start: "08:00", end: "18:00" },
       ]);
       setConflicts([]);
       setFormErrors({});
@@ -246,11 +243,7 @@ export function ScheduleOverrideModal({
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-xs text-white ${
-                status === "CLOSED"
-                  ? "bg-red-600"
-                  : status === "CUSTOM_HOURS"
-                  ? "bg-purple-600"
-                  : "bg-emerald-600"
+                status === "CLOSED" ? "bg-red-600" : "bg-purple-600"
               }`}
             >
               {status === "CLOSED" ? (
@@ -284,52 +277,46 @@ export function ScheduleOverrideModal({
               <label className="block text-xs font-bold text-[#243746] mb-2 uppercase tracking-wider">
                 Availability Status on Overridden Dates *
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setStatus("CLOSED")}
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
+                  onClick={() => {
+                    setStatus("CLOSED");
+                    if (title.startsWith("Custom Hours")) {
+                      setTitle(`Office Closed (${startDate || "Date"})`);
+                    }
+                  }}
+                  className={`p-3.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     status === "CLOSED"
                       ? "bg-red-50 border-red-300 text-red-700 shadow-xs ring-2 ring-red-400/20"
                       : "bg-white border-[#D9E4EC] text-[#64748B] hover:bg-[#F8FAFC]"
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                  <span>Closed (Off-Day)</span>
-                  <span className="text-[10px] font-normal text-red-600/80">
+                  <span className="w-3.5 h-3.5 rounded-full bg-red-500"></span>
+                  <span className="text-sm">Office Closed</span>
+                  <span className="text-[11px] font-normal text-red-600/80">
                     No bookings allowed
                   </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setStatus("CUSTOM_HOURS")}
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
+                  onClick={() => {
+                    setStatus("CUSTOM_HOURS");
+                    if (title.startsWith("Office Closed")) {
+                      setTitle(`Custom Hours (${startDate || "Date"})`);
+                    }
+                  }}
+                  className={`p-3.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     status === "CUSTOM_HOURS"
                       ? "bg-purple-50 border-purple-300 text-purple-700 shadow-xs ring-2 ring-purple-400/20"
                       : "bg-white border-[#D9E4EC] text-[#64748B] hover:bg-[#F8FAFC]"
                   }`}
                 >
-                  <span className="w-3 h-3 rounded-full bg-purple-500"></span>
-                  <span>Custom Hours</span>
-                  <span className="text-[10px] font-normal text-purple-600/80">
+                  <span className="w-3.5 h-3.5 rounded-full bg-purple-500"></span>
+                  <span className="text-sm">Custom Hours</span>
+                  <span className="text-[11px] font-normal text-purple-600/80">
                     Specific time windows
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStatus("OPEN")}
-                  className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
-                    status === "OPEN"
-                      ? "bg-emerald-50 border-emerald-300 text-emerald-700 shadow-xs ring-2 ring-emerald-400/20"
-                      : "bg-white border-[#D9E4EC] text-[#64748B] hover:bg-[#F8FAFC]"
-                  }`}
-                >
-                  <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                  <span>Force Open</span>
-                  <span className="text-[10px] font-normal text-emerald-600/80">
-                    Open normal hours
                   </span>
                 </button>
               </div>

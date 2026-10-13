@@ -364,11 +364,11 @@ export function RescheduleVisitModal({
     if (parts.length === 3) {
       const chosen = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
       const dow = chosen.getDay();
-      if (dow === 0 || dow === 3) {
+      if ((dow === 0 || dow === 3) && dateAvailability?.overrideStatus !== "CUSTOM_HOURS") {
         const dayName = dow === 0 ? "Sunday" : "Wednesday";
         showErrorAlert(
-          "Weekend Non-Service Day",
-          `Visits cannot be rescheduled to ${dayName}s as they are non-service days. Working days are Monday, Tuesday, Thursday, Friday, and Saturday.`
+          "Non-Service Day",
+          `Visits cannot be rescheduled to ${dayName}s as they are non-service days by default. Working days are Monday, Tuesday, Thursday, Friday, and Saturday (8 AM – 6 PM).`
         );
         return;
       }
