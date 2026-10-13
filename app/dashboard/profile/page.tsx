@@ -45,19 +45,29 @@ export default function ProfilePage() {
 
   // Modal states for adding & editing contacts
   const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
-  const [addContactRole, setAddContactRole] = useState<"REPRESENTATIVE" | "RECIPIENT">("REPRESENTATIVE");
-  const [editingContact, setEditingContact] = useState<FamilyMember | null>(null);
-  const [editingContactRole, setEditingContactRole] = useState<"REPRESENTATIVE" | "RECIPIENT" | undefined>(undefined);
+  const [addContactRole, setAddContactRole] = useState<
+    "REPRESENTATIVE" | "RECIPIENT"
+  >("REPRESENTATIVE");
+  const [editingContact, setEditingContact] = useState<FamilyMember | null>(
+    null,
+  );
+  const [editingContactRole, setEditingContactRole] = useState<
+    "REPRESENTATIVE" | "RECIPIENT" | undefined
+  >(undefined);
 
   const authUser = useAppSelector((state) => state.auth.user);
   const { data: meResponse, isLoading: isUserLoading } = useGetMeQuery();
-  const { data: familyResponse, isLoading: isFamilyLoading } = useGetFamilyMembersQuery();
-  const [deleteFamilyMember, { isLoading: isDeleting }] = useDeleteFamilyMemberMutation();
+  const { data: familyResponse, isLoading: isFamilyLoading } =
+    useGetFamilyMembersQuery();
+  const [deleteFamilyMember, { isLoading: isDeleting }] =
+    useDeleteFamilyMemberMutation();
 
   const user = meResponse?.data || authUser;
   const rawFamilyMembers: FamilyMember[] = familyResponse?.data || [];
 
-  const clientFullName = `${user?.firstName || ""} ${user?.lastName || ""}`.trim().toLowerCase();
+  const clientFullName = `${user?.firstName || ""} ${user?.lastName || ""}`
+    .trim()
+    .toLowerCase();
   const clientEmail = (user?.email || "").trim().toLowerCase();
 
   // Filter out the primary account holder so they never appear in their own representatives / recipients list
@@ -81,7 +91,7 @@ export default function ProfilePage() {
       Boolean(m.authorityDocumentUrl) ||
       Boolean(m.legalCapacity) ||
       Boolean(m.isEmergencyContact) ||
-      Boolean(m.portalAccess)
+      Boolean(m.portalAccess),
   );
 
   const authorizedReportRecipients = familyMembers.filter(
@@ -90,7 +100,7 @@ export default function ProfilePage() {
       !m.isEmergencyContact &&
       !m.portalAccess &&
       !m.authorityDocumentUrl &&
-      !m.legalCapacity
+      !m.legalCapacity,
   );
 
   if (isUserLoading && !user) {
@@ -123,12 +133,18 @@ export default function ProfilePage() {
     setIsAddContactModalOpen(true);
   };
 
-  const handleOpenEditContact = (member: FamilyMember, role: "REPRESENTATIVE" | "RECIPIENT") => {
+  const handleOpenEditContact = (
+    member: FamilyMember,
+    role: "REPRESENTATIVE" | "RECIPIENT",
+  ) => {
     setEditingContact(member);
     setEditingContactRole(role);
   };
 
-  const handleDeleteContact = async (member: FamilyMember, roleLabel: string) => {
+  const handleDeleteContact = async (
+    member: FamilyMember,
+    roleLabel: string,
+  ) => {
     const confirmed = await confirmDelete({
       title: `Remove ${member.name}?`,
       text: `Are you sure you want to remove ${member.name} from your ${roleLabel.toLowerCase()} list? They will no longer receive notifications or safety reports.`,
@@ -145,7 +161,9 @@ export default function ProfilePage() {
       }
     } catch (err: any) {
       const message =
-        err?.data?.message || err?.message || `Failed to remove ${member.name}.`;
+        err?.data?.message ||
+        err?.message ||
+        `Failed to remove ${member.name}.`;
       showErrorAlert("Error", message);
     }
   };
@@ -158,7 +176,8 @@ export default function ProfilePage() {
           My Member Profile
         </h1>
         <p className="text-sm sm:text-base text-[#64748B] mt-1">
-          Manage your personal contact info, credentials, representatives, and authorized report recipients.
+          Manage your personal contact info, credentials, representatives, and
+          authorized report recipients.
         </p>
       </div>
 
@@ -182,7 +201,7 @@ export default function ProfilePage() {
               </div>
               <p className="text-xs text-[#64748B] flex items-center gap-1.5 mt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#3F8F6B]" />
-                AgeWellRI Active Member ID: <strong>{memberId}</strong>
+                AgeWellRI Member ID: <strong>{memberId}</strong>
               </p>
             </div>
           </div>
@@ -228,7 +247,8 @@ export default function ProfilePage() {
 
           <div className="sm:col-span-2 space-y-1">
             <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#5E8FB2]" /> Home Service Address
+              <MapPin className="w-3.5 h-3.5 text-[#5E8FB2]" /> Home Service
+              Address
             </span>
             <p className="text-base font-bold text-[#243746] p-3.5 bg-[#F7FAFC] rounded-xl border border-[#D9E4EC]">
               {address}
@@ -265,9 +285,12 @@ export default function ProfilePage() {
         ) : representatives.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border-2 border-dashed border-[#D9E4EC] bg-[#F8FAFC] space-y-3">
             <HeartHandshake className="w-10 h-10 text-[#5E8FB2] mx-auto opacity-70" />
-            <h3 className="text-base font-bold text-[#243746]">No Representatives Added</h3>
+            <h3 className="text-base font-bold text-[#243746]">
+              No Representatives Added
+            </h3>
             <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto">
-              Add a family coordinator or representative to receive all visit updates and notifications.
+              Add a family coordinator or representative to receive all visit
+              updates and notifications.
             </p>
             <button
               onClick={handleOpenAddRepresentative}
@@ -302,7 +325,9 @@ export default function ProfilePage() {
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
-                        onClick={() => handleOpenEditContact(rep, "REPRESENTATIVE")}
+                        onClick={() =>
+                          handleOpenEditContact(rep, "REPRESENTATIVE")
+                        }
                         className="p-2 text-[#64748B] hover:text-[#294B68] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer"
                         title="Edit representative"
                         aria-label="Edit representative"
@@ -310,7 +335,9 @@ export default function ProfilePage() {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteContact(rep, "Representative")}
+                        onClick={() =>
+                          handleDeleteContact(rep, "Representative")
+                        }
                         disabled={isDeleting}
                         className="p-2 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         title="Remove representative"
@@ -348,22 +375,12 @@ export default function ProfilePage() {
                   <div className="space-y-1.5 pt-2 text-xs sm:text-sm text-[#243746]">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-[#5E8FB2] shrink-0" />
-                      <a
-                        href={`mailto:${rep.email}`}
-                        className="hover:underline text-[#243746] font-semibold break-all"
-                      >
-                        {rep.email}
-                      </a>
+                      {rep.email}
                     </div>
                     {rep.phone && (
                       <div className="flex items-center gap-2">
                         <Phone className="w-4 h-4 text-[#5E8FB2] shrink-0" />
-                        <a
-                          href={`tel:${rep.phone}`}
-                          className="hover:underline text-[#64748B]"
-                        >
-                          {rep.phone}
-                        </a>
+                        {rep.phone}
                       </div>
                     )}
                   </div>
@@ -402,9 +419,12 @@ export default function ProfilePage() {
         ) : authorizedReportRecipients.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border-2 border-dashed border-[#D9E4EC] bg-[#F8FAFC] space-y-3">
             <FileCheck2 className="w-10 h-10 text-[#5E8FB2] mx-auto opacity-70" />
-            <h3 className="text-base font-bold text-[#243746]">No Report Recipients Added</h3>
+            <h3 className="text-base font-bold text-[#243746]">
+              No Report Recipients Added
+            </h3>
             <p className="text-xs sm:text-sm text-[#64748B] max-w-md mx-auto">
-              Add trusted family members or caregivers who should receive a copy of each completed visit safety report.
+              Add trusted family members or caregivers who should receive a copy
+              of each completed visit safety report.
             </p>
             <button
               onClick={handleOpenAddRecipient}
@@ -447,7 +467,9 @@ export default function ProfilePage() {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteContact(rec, "Report Recipient")}
+                        onClick={() =>
+                          handleDeleteContact(rec, "Report Recipient")
+                        }
                         disabled={isDeleting}
                         className="p-2 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                         title="Remove report recipient"
@@ -469,12 +491,8 @@ export default function ProfilePage() {
                   <div className="space-y-1.5 pt-2 text-xs sm:text-sm text-[#243746]">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4 text-[#5E8FB2] shrink-0" />
-                      <a
-                        href={`mailto:${rec.email}`}
-                        className="hover:underline text-[#243746] font-semibold break-all"
-                      >
-                        {rec.email}
-                      </a>
+
+                      {rec.email}
                     </div>
                     {rec.phone && (
                       <div className="flex items-center gap-2">
