@@ -12,7 +12,6 @@ import {
   Clock,
   ArrowRight,
   ShieldCheck,
-  Activity,
   MapPin,
   Sparkles,
   DollarSign,
@@ -24,10 +23,6 @@ import {
 import { useGetAdminDashboardStatsQuery } from "@/redux/features/client/clientApi";
 import { useAppSelector } from "@/redux/hooks";
 import { StatKpiCard } from "@/components/admin/stat-kpi-card";
-import {
-  AttentionPanel,
-  AttentionItem,
-} from "@/components/admin/attention-panel";
 import { ClientStatusBadge } from "@/components/admin/client-status-badge";
 
 export default function AdminOverviewPage() {
@@ -85,30 +80,7 @@ export default function AdminOverviewPage() {
           ))}
         </div>
 
-        {/* Attention Required Skeleton */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 bg-[#E2E8F0] rounded-md"></div>
-              <div className="h-5 bg-[#E2E8F0] rounded-md w-40"></div>
-            </div>
-            <div className="h-6 bg-[#E2E8F0] rounded-full w-28"></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-            {[...Array(2)].map((_, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl border border-[#D9E4EC] bg-[#F7FAFC] flex items-start gap-3"
-              >
-                <div className="w-10 h-10 bg-[#EAF3F8] rounded-xl shrink-0"></div>
-                <div className="space-y-2 flex-1 pt-1">
-                  <div className="h-4 bg-[#E2E8F0] rounded-md w-3/4"></div>
-                  <div className="h-3 bg-[#F1F5F9] rounded-md w-1/2"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         {/* Middle Grid: Upcoming Schedule & Regional Jurisdiction Skeletons */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -187,105 +159,60 @@ export default function AdminOverviewPage() {
           </div>
         </div>
 
-        {/* Bottom Grid: Recent Clients & Live Operational Audit Stream Skeletons */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#D9E4EC]/60">
-              <div className="space-y-1.5">
-                <div className="h-5 bg-[#E2E8F0] rounded-md w-48"></div>
-                <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
-              </div>
-              <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
+        {/* Recent Clients Directory Skeleton (Full Width) */}
+        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-[#D9E4EC]/60">
+            <div className="space-y-1.5">
+              <div className="h-5 bg-[#E2E8F0] rounded-md w-48"></div>
+              <div className="h-3 bg-[#F1F5F9] rounded-md w-40"></div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    <th className="py-3 px-3.5">Client ID</th>
-                    <th className="py-3 px-3.5">Client Name</th>
-                    <th className="py-3 px-3.5">State</th>
-                    <th className="py-3 px-3.5">Plan</th>
-                    <th className="py-3 px-3.5">Status</th>
-                    <th className="py-3 px-3.5 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#D9E4EC]/60">
-                  {[...Array(5)].map((_, i) => (
-                    <tr key={i}>
-                      <td className="py-3.5 px-3.5">
-                        <div className="h-4 bg-[#E2E8F0] rounded-md w-16"></div>
-                      </td>
-                      <td className="py-3.5 px-3.5 space-y-1.5">
-                        <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
-                        <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
-                      </td>
-                      <td className="py-3.5 px-3.5">
-                        <div className="h-4 bg-[#E2E8F0] rounded-md w-10"></div>
-                      </td>
-                      <td className="py-3.5 px-3.5">
-                        <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
-                      </td>
-                      <td className="py-3.5 px-3.5">
-                        <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
-                      </td>
-                      <td className="py-3.5 px-3.5 text-right">
-                        <div className="h-7 bg-[#E2E8F0] rounded-lg w-16 ml-auto"></div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="h-4 bg-[#E2E8F0] rounded-md w-24"></div>
           </div>
-
-          {/* Activity Stream Skeleton */}
-          <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-            <div className="pb-2 border-b border-[#D9E4EC]/60 space-y-1.5">
-              <div className="h-5 bg-[#E2E8F0] rounded-md w-36"></div>
-              <div className="h-3 bg-[#F1F5F9] rounded-md w-32"></div>
-            </div>
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-xl border border-[#D9E4EC]/70 bg-[#F7FAFC] space-y-2"
-                >
-                  <div className="flex justify-between">
-                    <div className="h-3 bg-[#E2E8F0] rounded-md w-24"></div>
-                    <div className="h-3 bg-[#F1F5F9] rounded-md w-12"></div>
-                  </div>
-                  <div className="h-3 bg-[#E2E8F0] rounded-md w-3/4"></div>
-                  <div className="h-2.5 bg-[#F1F5F9] rounded-md w-1/3"></div>
-                </div>
-              ))}
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                  <th className="py-3 px-3.5">Client ID</th>
+                  <th className="py-3 px-3.5">Client Name</th>
+                  <th className="py-3 px-3.5">State</th>
+                  <th className="py-3 px-3.5">Plan</th>
+                  <th className="py-3 px-3.5">Status</th>
+                  <th className="py-3 px-3.5 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D9E4EC]/60">
+                {[...Array(5)].map((_, i) => (
+                  <tr key={i}>
+                    <td className="py-3.5 px-3.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-16"></div>
+                    </td>
+                    <td className="py-3.5 px-3.5 space-y-1.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-28"></div>
+                      <div className="h-3 bg-[#F1F5F9] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-3.5 px-3.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-10"></div>
+                    </td>
+                    <td className="py-3.5 px-3.5">
+                      <div className="h-4 bg-[#E2E8F0] rounded-md w-20"></div>
+                    </td>
+                    <td className="py-3.5 px-3.5">
+                      <div className="h-5 bg-[#E2E8F0] rounded-full w-16"></div>
+                    </td>
+                    <td className="py-3.5 px-3.5 text-right">
+                      <div className="h-7 bg-[#E2E8F0] rounded-lg w-16 ml-auto"></div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     );
   }
 
-  // Convert attention items to AttentionItem type
-  const formattedAttentionItems: AttentionItem[] = (
-    stats.attentionItems || []
-  ).map((item) => ({
-    id: item.id,
-    title: item.title,
-    count: 1,
-    description: item.description,
-    href:
-      item.actionHref ||
-      (item.type === "REPORT" ? "/admin/appointments?tab=COMPLETED" : "/admin"),
-    type:
-      item.type === "AGREEMENT"
-        ? "agreement"
-        : item.type === "REPORT"
-          ? "report"
-          : item.type === "BILLING"
-            ? "payment"
-            : "onboarding",
-    urgency: item.urgency,
-  }));
+
 
   return (
     <div className="space-y-8">
@@ -341,8 +268,7 @@ export default function AdminOverviewPage() {
         />
       </div>
 
-      {/* Dynamic Attention Required Panel */}
-      <AttentionPanel items={formattedAttentionItems} />
+
 
       {/* Middle Grid: Upcoming Schedule & Regional Jurisdiction */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -576,30 +502,28 @@ export default function AdminOverviewPage() {
         </div>
       </div>
 
-      {/* Bottom Grid: Recent Clients & Live Operational Audit Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Clients Table (2 Cols) */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#D9E4EC]/60">
-            <div>
-              <h3 className="text-lg font-bold text-[#243746] flex items-center gap-2">
-                <Users className="w-5 h-5 text-[#294B68]" />
-                <span>Recent Clients Directory</span>
-              </h3>
-              <p className="text-xs text-[#64748B]">
-                Newly registered and enrolled AgeWellRI members
-              </p>
-            </div>
-            <Link
-              href="/admin/clients"
-              className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] flex items-center gap-1 hover:underline"
-            >
-              <span>View All Directory ({kpis?.totalClientsCount ?? 0})</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+      {/* Recent Clients Directory (Full Width) */}
+      <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#D9E4EC]/60">
+          <div>
+            <h3 className="text-lg font-bold text-[#243746] flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#294B68]" />
+              <span>Recent Clients Directory</span>
+            </h3>
+            <p className="text-xs text-[#64748B]">
+              Newly registered and enrolled AgeWellRI members
+            </p>
           </div>
+          <Link
+            href="/admin/clients"
+            className="text-xs font-bold text-[#5E8FB2] hover:text-[#294B68] flex items-center gap-1 hover:underline"
+          >
+            <span>View All Directory ({kpis?.totalClientsCount ?? 0})</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
 
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-[#D9E4EC] bg-[#F7FAFC]">
@@ -668,51 +592,6 @@ export default function AdminOverviewPage() {
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Live Operational Audit Stream (1 Col) */}
-        <div className="bg-white rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-4">
-          <div className="pb-2 border-b border-[#D9E4EC]/60">
-            <h3 className="text-base font-bold text-[#243746] flex items-center gap-2">
-              <Activity className="w-4 h-4 text-[#294B68]" />
-              <span>Live Activity</span>
-            </h3>
-            <p className="text-xs text-[#64748B]">
-              Real-time operational audit log
-            </p>
-          </div>
-
-          <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-            {stats.recentActivity.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#64748B]">
-                No recent activity recorded.
-              </div>
-            ) : (
-              stats.recentActivity.map((act) => (
-                <div
-                  key={act.id}
-                  className="p-3 rounded-xl border border-[#D9E4EC]/70 bg-[#F7FAFC] space-y-1 text-xs"
-                >
-                  <div className="flex items-center justify-between text-[10px] text-[#64748B]">
-                    <span className="font-bold text-[#294B68] capitalize">
-                      {act.action}
-                    </span>
-                    <span>{act.time}</span>
-                  </div>
-                  <p className="text-[#243746] font-medium text-[11px] leading-relaxed">
-                    {act.details}
-                  </p>
-                  <div className="text-[10px] text-[#64748B] pt-0.5">
-                    Actor:{" "}
-                    <strong className="text-[#243746]">
-                      {act.performedBy}
-                    </strong>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
