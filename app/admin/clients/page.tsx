@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { ClientTable } from "@/components/admin/client-table";
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
@@ -33,11 +33,13 @@ export default function ClientsDirectoryPage() {
         </div>
       </div>
 
-      <ClientTable
-        clients={clients}
-        isLoading={isLoading}
-        onOpenScheduleModal={handleOpenScheduleModal}
-      />
+      <Suspense fallback={<div className="h-48 flex items-center justify-center text-sm text-[#64748B]">Loading directory...</div>}>
+        <ClientTable
+          clients={clients}
+          isLoading={isLoading}
+          onOpenScheduleModal={handleOpenScheduleModal}
+        />
+      </Suspense>
 
       <AdminScheduleModal
         isOpen={scheduleModalOpen}

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   useGetAdminBillingOverviewQuery,
   useGetAdminInvoicesQuery,
@@ -43,14 +44,36 @@ import {
 import { TablePagination } from "@/components/ui/table-pagination";
 import { generateInvoicePdf } from "@/lib/pdf/invoice-pdf-generator";
 
-export default function BillingAdminPage() {
+function BillingAdminContent() {
+  const searchParams = useSearchParams();
+  const tabParam = (searchParams.get("tab") || searchParams.get("activeTab") || "").toLowerCase();
+  const statusParam = (searchParams.get("status") || "").toUpperCase();
+
   const [activeTab, setActiveTab] = useState<
     "invoices" | "subscriptions" | "renewals"
-  >("invoices");
+  >(() => {
+    if (tabParam === "subscriptions") return "subscriptions";
+    if (tabParam === "renewals") return "renewals";
+    return "invoices";
+  });
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(() => statusParam || "ALL");
   const [billingMethodFilter, setBillingMethodFilter] = useState("ALL");
   const [intervalFilter, setIntervalFilter] = useState("ALL");
+
+  useEffect(() => {
+    if (tabParam) {
+      if (tabParam === "subscriptions") setActiveTab("subscriptions");
+      else if (tabParam === "renewals") setActiveTab("renewals");
+      else if (tabParam === "invoices") setActiveTab("invoices");
+    }
+  }, [tabParam]);
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [statusParam]);
 
   // PDF downloading indicator state
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<
@@ -480,6 +503,8 @@ export default function BillingAdminPage() {
                 <option value="PAID">Paid</option>
                 <option value="FAILED">Failed</option>
                 <option value="OPEN">Open</option>
+                <option value="OVERDUE">Overdue</option>
+                <option value="DRAFT">Draft</option>
               </select>
             )}
 
@@ -933,5 +958,19 @@ export default function BillingAdminPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BillingAdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-sm font-semibold text-[#64748B]">
+          Loading billing operations...
+        </div>
+      }
+    >
+      <BillingAdminContent />
+    </Suspense>
   );
 }

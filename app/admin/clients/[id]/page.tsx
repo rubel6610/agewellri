@@ -390,7 +390,7 @@ export default function ClientDetailPage({
           {[
             { id: "overview", label: "Overview & Contacts" },
             { id: "visits", label: `Visits & Reports (${clientAppointments.length})` },
-            { id: "timeline", label: "Onboarding Timeline" },
+            // { id: "timeline", label: "Onboarding Timeline" },
             { id: "agreement", label: "Service Agreement" },
             { id: "billing", label: "Billing & Subscription" },
             { id: "activity", label: "Audit Log Trail" },

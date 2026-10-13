@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   CreditCard,
   RefreshCw,
@@ -38,11 +39,26 @@ import {
   showToast,
 } from "@/lib/alerts/sweetalert";
 
-export default function SubscriptionsAdminPage() {
+function SubscriptionsAdminContent() {
+  const searchParams = useSearchParams();
+  const statusParam = (searchParams.get("status") || searchParams.get("tab") || "ALL").toUpperCase();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(() => {
+    if (["ACTIVE", "CANCELLED", "PENDING"].includes(statusParam)) return statusParam;
+    return "ALL";
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    if (statusParam) {
+      if (["ACTIVE", "CANCELLED", "PENDING", "ALL"].includes(statusParam)) {
+        setStatusFilter(statusParam);
+        setCurrentPage(1);
+      }
+    }
+  }, [statusParam]);
 
   // Modals state
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -439,5 +455,19 @@ export default function SubscriptionsAdminPage() {
         onSuccess={refetch}
       />
     </div>
+  );
+}
+
+export default function SubscriptionsAdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-sm font-semibold text-[#64748B]">
+          Loading subscriptions...
+        </div>
+      }
+    >
+      <SubscriptionsAdminContent />
+    </Suspense>
   );
 }

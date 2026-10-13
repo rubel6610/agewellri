@@ -22,8 +22,25 @@ import {
   useGetMyAppointmentsQuery,
 } from "@/redux/features/appointment/appointmentApi";
 import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import {
+  useGetDateAvailabilityQuery,
+  useGetWeeklyScheduleQuery,
+} from "@/redux/features/schedule/scheduleApi";
 import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
+import { getUSHolidayForDate } from "@/lib/utils/us-holidays";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
+import {
+  timeToMinutes,
+  formatMinutesToTimeString,
+  format24hTo12h,
+  parseTimeSlotToMinutes,
+  isTimeOverlapping,
+  generateStandardTimeSlotsForWindows,
+  getAvailableStartTimesForWindows,
+  calculateEndTime,
+  isSlotWithinTimeWindows,
+  formatTimeWindowsSummary,
+} from "@/lib/utils/schedule-helpers";
 import {
   confirmCriticalAction,
   showSuccessAlert,
@@ -35,28 +52,6 @@ interface RescheduleVisitModalProps {
   onClose: () => void;
   appointment: AppointmentItem | any | null;
   onSuccess?: () => void;
-}
-
-function timeToMinutes(timeStr: string): number {
-  if (!timeStr) return 0;
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!match) return 0;
-  let hour = parseInt(match[1], 10);
-  const min = parseInt(match[2], 10);
-  const ampm = match[3].toUpperCase();
-  if (ampm === "PM" && hour < 12) hour += 12;
-  if (ampm === "AM" && hour === 12) hour = 0;
-  return hour * 60 + min;
-}
-
-function parseTimeSlotToMinutes(timeSlot: string): { startMin: number; endMin: number } | null {
-  if (!timeSlot) return null;
-  const parts = timeSlot.split(/\s*(?:–|—|-|to)\s*/i);
-  if (parts.length < 2) return null;
-  const startMin = timeToMinutes(parts[0]);
-  const endMin = timeToMinutes(parts[1]);
-  if (endMin <= startMin) return null;
-  return { startMin, endMin };
 }
 
 function parseApptTimeSlotToMinutes(appt: any): { startMin: number; endMin: number } | null {
@@ -74,13 +69,6 @@ function parseApptTimeSlotToMinutes(appt: any): { startMin: number; endMin: numb
     }
   }
   return null;
-}
-
-function isTimeOverlapping(
-  slot1: { startMin: number; endMin: number },
-  slot2: { startMin: number; endMin: number }
-): boolean {
-  return Math.max(slot1.startMin, slot2.startMin) < Math.min(slot1.endMin, slot2.endMin);
 }
 
 function getApptDateFormatted(appt: any): string {
@@ -101,15 +89,6 @@ function getApptDateFormatted(appt: any): string {
     }
   }
   return "";
-}
-
-function formatMinutesToTimeString(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
-  const displayMinute = String(minutes).padStart(2, "0");
-  return `${String(displayHour).padStart(2, "0")}:${displayMinute} ${ampm}`;
 }
 
 function parsePlanDurationHours(timesStr?: string): number {
@@ -136,65 +115,6 @@ function parsePlanDurationHours(timesStr?: string): number {
   return 2;
 }
 
-function generateStandardTimeSlots(durationHours: number): string[] {
-  if (durationHours === 1) {
-    return [
-      "08:00 AM – 09:00 AM",
-      "09:00 AM – 10:00 AM",
-      "10:00 AM – 11:00 AM",
-      "11:00 AM – 12:00 PM",
-      "12:00 PM – 01:00 PM",
-      "01:00 PM – 02:00 PM",
-      "02:00 PM – 03:00 PM",
-      "03:00 PM – 04:00 PM",
-      "04:00 PM – 05:00 PM",
-      "05:00 PM – 06:00 PM",
-    ];
-  }
-  if (durationHours === 2) {
-    return [
-      "08:00 AM – 10:00 AM",
-      "10:00 AM – 12:00 PM",
-      "12:00 PM – 02:00 PM",
-      "02:00 PM – 04:00 PM",
-      "04:00 PM – 06:00 PM",
-    ];
-  }
-  const slots: string[] = [];
-  const startMinute = 8 * 60;
-  const endMinute = 18 * 60;
-  const stepMinute = durationHours * 60;
-  for (let m = startMinute; m + stepMinute <= endMinute; m += stepMinute) {
-    slots.push(
-      `${formatMinutesToTimeString(m)} – ${formatMinutesToTimeString(m + stepMinute)}`
-    );
-  }
-  return slots.length > 0
-    ? slots
-    : [
-        "08:00 AM – 10:00 AM",
-        "10:00 AM – 12:00 PM",
-        "12:00 PM – 02:00 PM",
-        "02:00 PM – 04:00 PM",
-        "04:00 PM – 06:00 PM",
-      ];
-}
-
-function getAvailableStartTimes(durationHours: number): string[] {
-  const maxStartMin = (18 - durationHours) * 60;
-  const startTimes: string[] = [];
-  for (let m = 8 * 60; m <= maxStartMin; m += 30) {
-    startTimes.push(formatMinutesToTimeString(m));
-  }
-  return startTimes;
-}
-
-function calculateEndTime(startStr: string, durationHours: number): string {
-  const startMin = timeToMinutes(startStr);
-  const endMin = Math.min(18 * 60, startMin + durationHours * 60);
-  return formatMinutesToTimeString(endMin);
-}
-
 export function RescheduleVisitModal({
   isOpen,
   onClose,
@@ -204,18 +124,8 @@ export function RescheduleVisitModal({
   const { data: entitlementsRes } = useGetVisitEntitlementsQuery(undefined, { skip: !isOpen });
   const { data: apptsRes } = useGetMyAppointmentsQuery(undefined, { skip: !isOpen });
   const { data: offDays = [] } = useGetActiveOffDaysQuery(undefined, { skip: !isOpen });
+  const { data: weeklySchedule } = useGetWeeklyScheduleQuery(undefined, { skip: !isOpen });
   const [rescheduleAppointmentMutation, { isLoading: isSubmitting }] = useRescheduleAppointmentMutation();
-
-  const activeOffDays = useMemo(() => offDays || [], [offDays]);
-
-  const otherActiveAppointments = useMemo(() => {
-    const raw = apptsRes?.data || [];
-    return raw.filter((a) => {
-      const isSelf = appointment && (a.id === appointment.id || (a as any).appointmentId === appointment.id);
-      const st = (a.status || "").toLowerCase();
-      return !isSelf && st !== "cancelled" && st !== "no_show" && st !== "declined";
-    });
-  }, [apptsRes, appointment]);
 
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("10:00 AM – 12:00 PM");
@@ -265,13 +175,72 @@ export function RescheduleVisitModal({
     return 2;
   }, [entitlementsRes, appointment]);
 
+  // Authoritative Date Availability Query for selected reschedule date
+  const { data: dateAvailability } = useGetDateAvailabilityQuery(
+    {
+      date: selectedDate,
+      durationMinutes: planDurationHours * 60,
+    },
+    { skip: !isOpen || !selectedDate }
+  );
+
+  const activeOffDays = useMemo(() => offDays || [], [offDays]);
+
+  const otherActiveAppointments = useMemo(() => {
+    const raw = apptsRes?.data || [];
+    return raw.filter((a) => {
+      const isSelf = appointment && (a.id === appointment.id || (a as any).appointmentId === appointment.id);
+      const st = (a.status || "").toLowerCase();
+      return !isSelf && st !== "cancelled" && st !== "no_show" && st !== "declined";
+    });
+  }, [apptsRes, appointment]);
+
+  // Dynamic Effective Operational Windows
+  const effectiveTimeWindows = useMemo(() => {
+    if (dateAvailability?.timeWindows && dateAvailability.timeWindows.length > 0) {
+      return dateAvailability.timeWindows;
+    }
+    if (weeklySchedule?.days && selectedDate) {
+      const parts = selectedDate.split("-").map(Number);
+      if (parts.length === 3) {
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const dow = d.getDay();
+        const dayConfig = weeklySchedule.days.find((d: any) => d.dayOfWeek === dow);
+        if (dayConfig) {
+          return dayConfig.isOpen ? (dayConfig.timeWindows || [{ start: "08:00", end: "18:00" }]) : [];
+        }
+      }
+    }
+    return [{ start: "08:00", end: "18:00" }];
+  }, [dateAvailability, weeklySchedule, selectedDate]);
+
+  const isDateClosed = useMemo(() => {
+    if (dateAvailability) {
+      return dateAvailability.isClosed;
+    }
+    const matchingOff = findMatchingOffDay(selectedDate, activeOffDays);
+    if (matchingOff) return true;
+    if (weeklySchedule?.days && selectedDate) {
+      const parts = selectedDate.split("-").map(Number);
+      if (parts.length === 3) {
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        const dow = d.getDay();
+        const dayConfig = weeklySchedule.days.find((d: any) => d.dayOfWeek === dow);
+        if (dayConfig && !dayConfig.isOpen) return true;
+      }
+    }
+    return false;
+  }, [dateAvailability, selectedDate, activeOffDays, weeklySchedule]);
+
   const standardTimeSlots = useMemo(() => {
-    return generateStandardTimeSlots(planDurationHours);
-  }, [planDurationHours]);
+    if (isDateClosed) return [];
+    return generateStandardTimeSlotsForWindows(effectiveTimeWindows, planDurationHours);
+  }, [effectiveTimeWindows, planDurationHours, isDateClosed]);
 
   const availableStartTimes = useMemo(() => {
-    return getAvailableStartTimes(planDurationHours);
-  }, [planDurationHours]);
+    if (isDateClosed) return [];
+    return getAvailableStartTimesForWindows(effectiveTimeWindows, planDurationHours);
+  }, [effectiveTimeWindows, planDurationHours, isDateClosed]);
 
   // Calendar month view date
   const [viewDate, setViewDate] = useState<Date>(new Date());
@@ -291,7 +260,7 @@ export function RescheduleVisitModal({
         setViewDate(new Date());
       }
     }
-  }, [appointment, isOpen, standardTimeSlots]);
+  }, [appointment, isOpen]);
 
   const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
@@ -321,21 +290,24 @@ export function RescheduleVisitModal({
   useEffect(() => {
     if (timeMode === "PRESET") {
       const isBooked = checkTimeSlotBooked(selectedTimeSlot).isBooked;
-      if (!standardTimeSlots.includes(selectedTimeSlot) || isBooked) {
+      const isWithinWindows = isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows);
+      if (!standardTimeSlots.includes(selectedTimeSlot) || isBooked || !isWithinWindows) {
         const available = standardTimeSlots.find((s) => !checkTimeSlotBooked(s).isBooked);
         setSelectedTimeSlot(
-          available || standardTimeSlots[0] || (planDurationHours === 1 ? "08:00 AM – 09:00 AM" : "10:00 AM – 12:00 PM")
+          available || standardTimeSlots[0] || ""
         );
       }
     } else {
-      const starts = getAvailableStartTimes(planDurationHours);
-      const start = starts.includes(customStart) ? customStart : (starts[2] || starts[0] || "09:00 AM");
-      const end = calculateEndTime(start, planDurationHours);
+      const starts = availableStartTimes;
+      const start = starts.includes(customStart) ? customStart : (starts[0] || "");
+      const end = start ? calculateEndTime(start, planDurationHours) : "";
       setCustomStart(start);
       setCustomEnd(end);
-      setSelectedTimeSlot(`${start} – ${end}`);
+      if (start && end) {
+        setSelectedTimeSlot(`${start} – ${end}`);
+      }
     }
-  }, [planDurationHours, timeMode, selectedDate]);
+  }, [planDurationHours, timeMode, selectedDate, effectiveTimeWindows, standardTimeSlots, availableStartTimes]);
 
   if (!isOpen || !appointment) return null;
 
@@ -347,10 +319,26 @@ export function RescheduleVisitModal({
       return;
     }
 
+    if (isDateClosed) {
+      showErrorAlert(
+        "Date Unavailable",
+        `The selected date (${selectedDate}) is closed for scheduling (${dateAvailability?.overrideTitle || "Office Closure"}). Please choose another date.`
+      );
+      return;
+    }
+
     if (isDateConflicted) {
       showErrorAlert(
         "Date Already Scheduled",
         "You already have another visit scheduled on this date. Please choose an open date."
+      );
+      return;
+    }
+
+    if (!selectedTimeSlot || !isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows)) {
+      showErrorAlert(
+        "Invalid Time Window",
+        `The selected time window (${selectedTimeSlot}) is outside the operational hours for this date (${formatTimeWindowsSummary(effectiveTimeWindows)}). Please choose an available time slot.`
       );
       return;
     }
@@ -364,10 +352,10 @@ export function RescheduleVisitModal({
     }
 
     const matchingOff = findMatchingOffDay(selectedDate, activeOffDays);
-    if (matchingOff) {
+    if (matchingOff || dateAvailability?.isClosed) {
       showErrorAlert(
         "Date Unavailable",
-        `The selected date (${selectedDate}) is an official company off-day (${matchingOff.title}). Please choose another date.`
+        `The selected date (${selectedDate}) is closed for scheduling (${dateAvailability?.overrideTitle || matchingOff?.title || "Office Closure"}). Please choose another date.`
       );
       return;
     }
@@ -492,7 +480,7 @@ export function RescheduleVisitModal({
                 <span className="text-rose-500 font-extrabold">Sun</span>
                 <span className="text-[#64748B]">Mon</span>
                 <span className="text-[#64748B]">Tue</span>
-                <span className="text-rose-500 font-extrabold">Wed</span>
+                <span className="text-[#64748B]">Wed</span>
                 <span className="text-[#64748B]">Thu</span>
                 <span className="text-[#64748B]">Fri</span>
                 <span className="text-[#64748B]">Sat</span>
@@ -518,12 +506,14 @@ export function RescheduleVisitModal({
                     const dayOfWeek = dayDate.getDay();
                     const dayStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
-                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 3;
+                    const defaultDayConfig = weeklySchedule?.days?.find((d) => d.dayOfWeek === dayOfWeek);
+                    const isDefaultClosed = defaultDayConfig ? !defaultDayConfig.isOpen : dayOfWeek === 0 || dayOfWeek === 3;
                     const isPast = todayMidnight.getTime() > dayDate.getTime();
                     const hasOtherAppt = otherActiveAppointments.some((a) => getApptDateFormatted(a) === dayStr);
                     const matchingOffDay = findMatchingOffDay(dayStr, activeOffDays);
                     const isOffDay = Boolean(matchingOffDay);
-                    const isDisabled = isWeekend || isPast || hasOtherAppt || isOffDay;
+                    const holiday = getUSHolidayForDate(dayStr);
+                    const isDisabled = isDefaultClosed || isPast || hasOtherAppt || isOffDay;
                     const isSelected = selectedDate === dayStr;
 
                     cells.push(
@@ -535,15 +525,17 @@ export function RescheduleVisitModal({
                         title={
                           isOffDay
                             ? `Office Closed: ${matchingOffDay?.title}`
+                            : holiday
+                            ? `🇺🇸 ${holiday.name}`
                             : hasOtherAppt
                             ? "Another visit is already scheduled on this date."
-                            : isWeekend
-                            ? "Weekend non-service day."
+                            : isDefaultClosed
+                            ? "Weekly closed / non-operational day."
                             : isPast
                             ? "Past date."
                             : `${dayDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`
                         }
-                        className={`h-9 w-full rounded-xl text-xs flex flex-col items-center justify-center transition-all ${
+                        className={`h-9 w-full rounded-xl text-xs flex flex-col items-center justify-center transition-all relative ${
                           isSelected
                             ? "bg-[#294B68] text-white font-extrabold shadow-sm ring-2 ring-[#294B68]"
                             : isOffDay
@@ -551,7 +543,7 @@ export function RescheduleVisitModal({
                             : hasOtherAppt
                             ? "bg-rose-100 text-rose-950 font-bold border border-rose-300 cursor-not-allowed"
                             : isDisabled
-                            ? isWeekend
+                            ? isDefaultClosed
                               ? "bg-rose-50/50 text-rose-300 line-through cursor-not-allowed"
                               : "text-slate-300 bg-slate-100/40 cursor-not-allowed"
                             : "bg-white text-[#243746] font-semibold border border-[#D9E4EC]/70 hover:bg-[#EAF3F8] cursor-pointer"
@@ -565,6 +557,10 @@ export function RescheduleVisitModal({
                         ) : hasOtherAppt ? (
                           <span className="text-[7px] font-black uppercase text-rose-700 leading-none">
                             Booked
+                          </span>
+                        ) : holiday ? (
+                          <span className="text-[6.5px] font-bold text-amber-700 leading-none truncate max-w-[90%]">
+                            {holiday.name.split(" ")[0]}
                           </span>
                         ) : null}
                       </button>
@@ -592,74 +588,98 @@ export function RescheduleVisitModal({
               </button>
             </div>
 
-            {timeMode === "PRESET" ? (
-              <div className={`grid gap-2 ${planDurationHours === 1 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
-                {standardTimeSlots.map((ts) => {
-                  const { isBooked } = checkTimeSlotBooked(ts);
-                  const isSelected = selectedTimeSlot === ts;
+            {isDateClosed || effectiveTimeWindows.length === 0 ? (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-1.5">
+                <AlertCircle className="w-6 h-6 text-amber-600 mx-auto" />
+                <p className="font-bold text-amber-950 text-xs sm:text-sm">
+                  Date Unavailable for Scheduling
+                </p>
+                <p className="text-[11px] text-amber-800">
+                  {dateAvailability?.overrideTitle || "This date is non-operational / closed."} Please choose an open operational date from the calendar.
+                </p>
+              </div>
+            ) : timeMode === "PRESET" ? (
+              <div className="space-y-2">
+                {standardTimeSlots.length === 0 ? (
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-[#64748B]">
+                    No preset slots fit within the operational hours ({formatTimeWindowsSummary(effectiveTimeWindows)}) for a {planDurationHours}-hour session. Try Custom Time or choose another date.
+                  </div>
+                ) : (
+                  <div className={`grid gap-2 ${planDurationHours === 1 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
+                    {standardTimeSlots.map((ts) => {
+                      const { isBooked } = checkTimeSlotBooked(ts);
+                      const isSelected = selectedTimeSlot === ts;
 
-                  return (
-                    <button
-                      key={ts}
-                      type="button"
-                      disabled={isBooked}
-                      onClick={() => setSelectedTimeSlot(ts)}
-                      className={`p-3 rounded-xl border text-center font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-1 ${
-                        isBooked
-                          ? "bg-rose-100 border-rose-300 text-rose-900 cursor-not-allowed"
-                          : isSelected
-                          ? "border-[#294B68] bg-[#294B68] text-white shadow-xs cursor-pointer"
-                          : "border-[#D9E4EC] bg-white text-[#243746] hover:bg-[#EAF3F8] cursor-pointer"
-                      }`}
-                    >
-                      <span>{ts}</span>
-                      {isBooked ? (
-                        <span className="text-[9px] font-extrabold uppercase bg-rose-200 text-rose-900 px-1.5 py-0.5 rounded mt-0.5 border border-rose-300">
-                          Already Scheduled
-                        </span>
-                      ) : isSelected ? (
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-0.5">
-                          Selected Slot
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+                      return (
+                        <button
+                          key={ts}
+                          type="button"
+                          disabled={isBooked}
+                          onClick={() => setSelectedTimeSlot(ts)}
+                          className={`p-3 rounded-xl border text-center font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-1 ${
+                            isBooked
+                              ? "bg-rose-100 border-rose-300 text-rose-900 cursor-not-allowed"
+                              : isSelected
+                              ? "border-[#294B68] bg-[#294B68] text-white shadow-xs cursor-pointer"
+                              : "border-[#D9E4EC] bg-white text-[#243746] hover:bg-[#EAF3F8] cursor-pointer"
+                          }`}
+                        >
+                          <span>{ts}</span>
+                          {isBooked ? (
+                            <span className="text-[9px] font-extrabold uppercase bg-rose-200 text-rose-900 px-1.5 py-0.5 rounded mt-0.5 border border-rose-300">
+                              Already Scheduled
+                            </span>
+                          ) : isSelected ? (
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-0.5">
+                              Selected Slot
+                            </span>
+                          ) : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-3.5 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-[#64748B] block mb-1">Start Time</label>
-                    <select
-                      value={customStart}
-                      onChange={(e) => {
-                        const newStart = e.target.value;
-                        setCustomStart(newStart);
-                        const newEnd = calculateEndTime(newStart, planDurationHours);
-                        setCustomEnd(newEnd);
-                        setSelectedTimeSlot(`${newStart} – ${newEnd}`);
-                      }}
-                      className="w-full h-10 px-3 bg-white border border-[#D9E4EC] rounded-xl text-xs font-bold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2]"
-                    >
-                      {availableStartTimes.map((st) => {
-                        const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
-                        const { isBooked } = checkTimeSlotBooked(customSlotStr);
-                        return (
-                          <option key={st} value={st} disabled={isBooked} className={isBooked ? "text-rose-600 bg-rose-50" : ""}>
-                            {st} {isBooked ? "(Booked)" : ""}
-                          </option>
-                        );
-                      })}
-                    </select>
+                {availableStartTimes.length === 0 ? (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-[#64748B]">
+                    No custom start times fit within the operational hours ({formatTimeWindowsSummary(effectiveTimeWindows)}) for a {planDurationHours}-hour session.
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-[#64748B] block mb-1">End Time</label>
-                    <div className="w-full h-10 px-3 rounded-xl border border-[#D9E4EC] text-xs text-[#294B68] font-bold bg-[#EAF3F8] flex items-center justify-between">
-                      <span>{customEnd}</span>
+                ) : (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-[#64748B] block mb-1">Start Time</label>
+                      <select
+                        value={customStart}
+                        onChange={(e) => {
+                          const newStart = e.target.value;
+                          setCustomStart(newStart);
+                          const newEnd = calculateEndTime(newStart, planDurationHours);
+                          setCustomEnd(newEnd);
+                          setSelectedTimeSlot(`${newStart} – ${newEnd}`);
+                        }}
+                        className="w-full h-10 px-3 bg-white border border-[#D9E4EC] rounded-xl text-xs font-bold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2]"
+                      >
+                        {availableStartTimes.map((st) => {
+                          const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
+                          const { isBooked } = checkTimeSlotBooked(customSlotStr);
+                          return (
+                            <option key={st} value={st} disabled={isBooked} className={isBooked ? "text-rose-600 bg-rose-50" : ""}>
+                              {st} {isBooked ? "(Booked)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-bold text-[#64748B] block mb-1">End Time</label>
+                      <div className="w-full h-10 px-3 rounded-xl border border-[#D9E4EC] text-xs text-[#294B68] font-bold bg-[#EAF3F8] flex items-center justify-between">
+                        <span>{customEnd || "—"}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -667,7 +687,11 @@ export function RescheduleVisitModal({
             <div className="p-3 bg-[#EAF3F8] rounded-2xl border border-[#5E8FB2]/30 flex items-start gap-2.5 text-xs text-[#243746]">
               <AlertCircle className="w-4 h-4 text-[#294B68] shrink-0 mt-0.5" />
               <p className="text-[11px] leading-relaxed text-[#243746]">
-                Your plan includes up to <strong>{planDurationHours} {planDurationHours === 1 ? "hour" : "hours"}</strong> per scheduled visit. Visits can be scheduled between <strong>8:00 AM and 6:00 PM ET</strong> on available days (Monday, Tuesday, Thursday, Friday, and Saturday).
+                Operational Hours for this date: <strong>{formatTimeWindowsSummary(effectiveTimeWindows)}</strong>
+                {dateAvailability?.overrideStatus === "CUSTOM_HOURS" && (
+                  <span className="ml-1 text-amber-800 font-bold">({dateAvailability.overrideTitle || "Custom Hours"})</span>
+                )}
+                . Your plan includes up to <strong>{planDurationHours} {planDurationHours === 1 ? "hour" : "hours"}</strong> per scheduled visit.
               </p>
             </div>
 
@@ -711,9 +735,22 @@ export function RescheduleVisitModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !selectedDate || isDateConflicted || currentSlotStatus.isBooked}
+              disabled={
+                isSubmitting ||
+                !selectedDate ||
+                isDateClosed ||
+                isDateConflicted ||
+                !selectedTimeSlot ||
+                !isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows) ||
+                currentSlotStatus.isBooked
+              }
               className={`w-2/3 py-3 font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 ${
-                !selectedDate || isDateConflicted || currentSlotStatus.isBooked
+                !selectedDate ||
+                isDateClosed ||
+                isDateConflicted ||
+                !selectedTimeSlot ||
+                !isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows) ||
+                currentSlotStatus.isBooked
                   ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
                   : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
               }`}
@@ -723,8 +760,12 @@ export function RescheduleVisitModal({
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Updating Schedule...</span>
                 </>
+              ) : isDateClosed ? (
+                <span>Date Closed</span>
               ) : isDateConflicted ? (
                 <span>Date Already Booked</span>
+              ) : !selectedTimeSlot || !isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows) ? (
+                <span>Outside Operational Hours</span>
               ) : currentSlotStatus.isBooked ? (
                 <span>Time Slot Conflict</span>
               ) : (

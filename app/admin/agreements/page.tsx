@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   useGetAdminAgreementsQuery,
   useSendAgreementReminderMutation,
@@ -21,12 +22,22 @@ import { AgreementPreviewModal } from "@/components/admin/agreement-preview-moda
 import { downloadAgreementPdf } from "@/lib/utils/agreement-pdf";
 import { downloadAuthorityDocument } from "@/lib/utils/authority-document-download";
 
-export default function AgreementsAdminPage() {
+function AgreementsAdminContent() {
+  const searchParams = useSearchParams();
+  const statusParam = (searchParams.get("status") || searchParams.get("tab") || "ALL").toUpperCase();
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState(() => statusParam);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [previewAgreement, setPreviewAgreement] = useState<AdminAgreementRecord | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+  }, [statusParam]);
 
   const { data: agreementsRes, isLoading, isFetching, refetch } = useGetAdminAgreementsQuery({
     search: searchTerm,
@@ -38,6 +49,21 @@ export default function AgreementsAdminPage() {
     useDeleteAdminAgreementMutation();
 
   const agreements = agreementsRes?.data || [];
+
+  const executedCount = agreements.filter((agr) => {
+    const s = (agr.status || "").toUpperCase();
+    return s === "EXECUTED" || s === "SIGNED" || Boolean(agr.signedAt);
+  }).length;
+
+  const pendingCount = agreements.filter((agr) => {
+    const s = (agr.status || "").toUpperCase();
+    return (
+      s === "DRAFT" ||
+      s === "SENT" ||
+      s === "PENDING_SIGNATURE" ||
+      (!agr.signedAt && s !== "CANCELLED" && s !== "EXPIRED")
+    );
+  }).length;
 
   const handleDelete = async (agr: AdminAgreementRecord) => {
     const confirmed = await confirmDelete({
@@ -103,12 +129,33 @@ export default function AgreementsAdminPage() {
 
   const filteredAgreements = agreements.filter((agr) => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch =
       agr.clientName.toLowerCase().includes(term) ||
       agr.clientEmail.toLowerCase().includes(term) ||
       agr.state.toLowerCase().includes(term) ||
-      agr.signerName.toLowerCase().includes(term)
-    );
+      agr.signerName.toLowerCase().includes(term);
+
+    const statusUpper = (agr.status || "").toUpperCase();
+    const isExecuted =
+      statusUpper === "EXECUTED" ||
+      statusUpper === "SIGNED" ||
+      Boolean(agr.signedAt);
+    const isPending =
+      statusUpper === "DRAFT" ||
+      statusUpper === "SENT" ||
+      statusUpper === "PENDING_SIGNATURE" ||
+      (!agr.signedAt && statusUpper !== "CANCELLED" && statusUpper !== "EXPIRED");
+
+    let matchesStatus = true;
+    if (statusFilter === "EXECUTED" || statusFilter === "SIGNED") {
+      matchesStatus = isExecuted;
+    } else if (statusFilter === "PENDING" || statusFilter === "PENDING_SIGNATURE") {
+      matchesStatus = isPending;
+    } else if (statusFilter === "DRAFT" || statusFilter === "SENT") {
+      matchesStatus = statusUpper === "DRAFT" || statusUpper === "SENT";
+    }
+
+    return matchesSearch && matchesStatus;
   });
 
   const totalItems = filteredAgreements.length;
@@ -144,8 +191,70 @@ export default function AgreementsAdminPage() {
       </div>
 
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E4EC] p-6 shadow-xs space-y-6">
-        {/* Search */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        {/* Filter Tabs & Search */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#D9E4EC]/60">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("ALL");
+                setCurrentPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === "ALL"
+                  ? "bg-[#294B68] text-white shadow-2xs"
+                  : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#243746]"
+              }`}
+            >
+              <span>All Agreements</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                statusFilter === "ALL" ? "bg-white/20 text-white" : "bg-[#EAF3F8] text-[#294B68]"
+              }`}>
+                {agreements.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("EXECUTED");
+                setCurrentPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === "EXECUTED" || statusFilter === "SIGNED"
+                  ? "bg-[#166534] text-white shadow-2xs"
+                  : "bg-[#F7FAFC] border border-[#D9E4EC] text-[#64748B] hover:text-[#166534]"
+              }`}
+            >
+              <span>Executed / Signed</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                statusFilter === "EXECUTED" || statusFilter === "SIGNED" ? "bg-white/20 text-white" : "bg-[#EBF8F2] text-[#166534]"
+              }`}>
+                {executedCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("PENDING");
+                setCurrentPage(1);
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === "PENDING" || statusFilter === "PENDING_SIGNATURE"
+                  ? "bg-[#C28A3A] text-white shadow-2xs"
+                  : "bg-amber-50/60 border border-amber-200 text-amber-800 hover:bg-amber-100/60"
+              }`}
+            >
+              <span>Pending Signature</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                statusFilter === "PENDING" || statusFilter === "PENDING_SIGNATURE" ? "bg-white/20 text-white" : "bg-amber-200 text-amber-900"
+              }`}>
+                {pendingCount}
+              </span>
+            </button>
+          </div>
+
           <div className="relative flex-1 max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
               <Search className="w-4 h-4" />
@@ -377,5 +486,19 @@ export default function AgreementsAdminPage() {
         onClose={() => setPreviewAgreement(null)}
       />
     </div>
+  );
+}
+
+export default function AgreementsAdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-sm font-semibold text-[#64748B]">
+          Loading agreements...
+        </div>
+      }
+    >
+      <AgreementsAdminContent />
+    </Suspense>
   );
 }

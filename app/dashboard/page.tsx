@@ -9,7 +9,6 @@ import { useGetMyAppointmentsQuery } from "@/redux/features/appointment/appointm
 import { useGetVisitEntitlementsQuery, useGetBillingOverviewQuery } from "@/redux/features/payment/paymentApi";
 import { PlanCard } from "@/components/dashboard/plan-card";
 import { NextVisitCard } from "@/components/dashboard/next-visit-card";
-import { VisitEntitlementsCard } from "@/components/dashboard/visit-entitlements-card";
 import { OnboardingBanner } from "@/components/dashboard/onboarding-banner";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
 
@@ -247,9 +246,6 @@ export default function DashboardHomePage() {
           }}
         />
       </div>
-
-      {/* Level 1.5: Dynamic Visit Entitlements Breakdown */}
-      <VisitEntitlementsCard />
 
       {/* Schedule Visit Modal */}
       <ScheduleVisitModal

@@ -134,6 +134,7 @@ export const baseApi = createApi({
     "Specialist",
     "FamilyMember",
     "OffDay",
+    "Schedule",
   ],
   endpoints: () => ({}),
 });

@@ -196,10 +196,54 @@ export interface SendInvitationPayload {
   skipEmail?: boolean;
 }
 
+export interface AdminDomainStats {
+  clients: {
+    total: number;
+    active: number;
+    paymentPending: number;
+    agreementPending: number;
+    newThisMonth: number;
+  };
+  billing: {
+    totalInvoices: number;
+    paid: number;
+    open: number;
+    overdue: number;
+    draft: number;
+    totalRevenueCollected: string;
+    totalPendingAmount: string;
+  };
+  appointments: {
+    total: number;
+    requested: number;
+    scheduled: number;
+    completed: number;
+    cancelled: number;
+    reportsPending: number;
+  };
+  agreements: {
+    total: number;
+    executed: number;
+    pending: number;
+    cancelled: number;
+  };
+  subscriptions: {
+    total: number;
+    active: number;
+    pending: number;
+    cancelled: number;
+    upcomingRenewals: number;
+  };
+}
+
 export interface AdminDashboardStats {
   kpis: {
     activeClientsCount: number;
     totalClientsCount: number;
+    activeBillingCount?: number;
+    appointedClientsCount?: number;
+    confirmedAgreementsCount?: number;
+    subscriptionClientsCount?: number;
     newClientsThisMonth: number;
     pendingOnboardingCount: number;
     pendingPaymentsCount?: number;
@@ -215,6 +259,7 @@ export interface AdminDashboardStats {
     renewalsUpcomingCount: number;
     activeSubscriptionsCount: number;
   };
+  domainStats?: AdminDomainStats;
   upcomingSchedule: Array<{
     id: string;
     clientName: string;

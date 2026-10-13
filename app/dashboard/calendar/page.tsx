@@ -20,6 +20,7 @@ import {
   HeartPulse,
   ClipboardCheck,
   CheckCircle2,
+  Flag,
 } from "lucide-react";
 import {
   useGetMyAppointmentsQuery,
@@ -28,6 +29,7 @@ import {
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
 import { findMatchingOffDay, OffDayItem } from "@/redux/features/off-day/offDayTypes";
+import { getUSHolidayForDate } from "@/lib/utils/us-holidays";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
 import { ScheduleVisitModal } from "@/components/dashboard/schedule-visit-modal";
 import { RescheduleVisitModal } from "@/components/dashboard/reschedule-visit-modal";
@@ -123,14 +125,26 @@ export default function ClientCalendarPage() {
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [rescheduleTargetAppt, setRescheduleTargetAppt] = useState<AppointmentItem | null>(null);
 
-  // Active off-days occurring in the currently viewed month that have a client notice / description
+  // Active off-days & schedule overrides occurring in the currently viewed month that have a client notice / description
   const currentMonthOffDaysWithNotice = useMemo(() => {
     return activeOffDays.filter((off) => {
-      if (!off.isActive || !off.description) return false;
-      const [sY, sM] = (off.startDate || "").split("-").map(Number);
-      const [eY, eM] = (off.endDate || off.startDate || "").split("-").map(Number);
+      if (!off.isActive || !off.description?.trim()) return false;
       const curY = currentDate.getFullYear();
       const curM = currentDate.getMonth() + 1;
+
+      if (off.isRecurring) {
+        const sM = parseInt((off.startDate || "").split("T")[0].split("-")[1], 10);
+        const eM = parseInt((off.endDate || off.startDate || "").split("T")[0].split("-")[1], 10);
+        return !isNaN(sM) && (sM === curM || (!isNaN(eM) && sM <= curM && eM >= curM));
+      }
+
+      const sParts = (off.startDate || "").split("T")[0].split("-").map(Number);
+      const eParts = (off.endDate || off.startDate || "").split("T")[0].split("-").map(Number);
+      const sY = sParts[0];
+      const sM = sParts[1];
+      const eY = eParts[0] || sY;
+      const eM = eParts[1] || sM;
+
       return (
         (sY < curY || (sY === curY && sM <= curM)) &&
         (eY > curY || (eY === curY && eM >= curM))
@@ -241,6 +255,7 @@ export default function ClientCalendarPage() {
         dateKey: prevDateKey,
         appointments: appointmentsByDate[prevDateKey] || [],
         offDay: findMatchingOffDay(prevDateKey, activeOffDays),
+        holiday: getUSHolidayForDate(prevDateKey),
       });
     }
 
@@ -253,6 +268,7 @@ export default function ClientCalendarPage() {
         dateKey,
         appointments: appointmentsByDate[dateKey] || [],
         offDay: findMatchingOffDay(dateKey, activeOffDays),
+        holiday: getUSHolidayForDate(dateKey),
       });
     }
 
@@ -271,6 +287,7 @@ export default function ClientCalendarPage() {
         dateKey: nextDateKey,
         appointments: appointmentsByDate[nextDateKey] || [],
         offDay: findMatchingOffDay(nextDateKey, activeOffDays),
+        holiday: getUSHolidayForDate(nextDateKey),
       });
     }
 
@@ -599,6 +616,16 @@ export default function ClientCalendarPage() {
 
                       {/* Appointments & Off-day Stack inside cell */}
                       <div className="space-y-1 mt-1 overflow-hidden">
+                        {cell.holiday && (
+                          <div
+                            title={`${cell.holiday.name} (US Federal Holiday)`}
+                            className="w-full text-left p-1 rounded-lg text-[9px] font-bold truncate flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs"
+                          >
+                            <Flag className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                            <span className="truncate">{cell.holiday.name}</span>
+                          </div>
+                        )}
+
                         {cell.offDay && (
                           <button
                             type="button"

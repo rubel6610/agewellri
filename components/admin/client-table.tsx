@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   ArrowRight,
@@ -38,8 +39,39 @@ export function ClientTable({
   isLoading = false,
   onOpenScheduleModal,
 }: ClientTableProps) {
+  const searchParams = useSearchParams();
+  const urlStatus = (searchParams.get("status") || searchParams.get("tab") || "").toLowerCase();
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    if (urlStatus === "active") return "active";
+    if (
+      urlStatus === "payment_pending" ||
+      urlStatus === "agreement_signed_payment_pending"
+    ) {
+      return "agreement_signed_payment_pending";
+    }
+    if (urlStatus === "agreement_pending" || urlStatus === "pending") {
+      return "agreement_pending";
+    }
+    return "ALL";
+  });
+
+  useEffect(() => {
+    if (urlStatus) {
+      if (urlStatus === "active") setStatusFilter("active");
+      else if (
+        urlStatus === "payment_pending" ||
+        urlStatus === "agreement_signed_payment_pending"
+      ) {
+        setStatusFilter("agreement_signed_payment_pending");
+      } else if (urlStatus === "agreement_pending" || urlStatus === "pending") {
+        setStatusFilter("agreement_pending");
+      } else if (urlStatus === "all") {
+        setStatusFilter("ALL");
+      }
+    }
+  }, [urlStatus]);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
@@ -180,7 +212,7 @@ export function ClientTable({
               {agreementSignedPaymentPendingCount}
             </span>
           </button>
-{/* 
+
           <button
             type="button"
             onClick={() => setStatusFilter("agreement_pending")}
@@ -196,7 +228,7 @@ export function ClientTable({
             }`}>
               {pendingAgreementCount}
             </span>
-          </button> */}
+          </button>
         </div>
 
         {/* Search Bar */}

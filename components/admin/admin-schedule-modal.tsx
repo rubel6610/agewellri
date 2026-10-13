@@ -7,35 +7,26 @@ import { useGetAdminClientsQuery } from "@/redux/features/client/clientApi";
 import { useAdminScheduleAppointmentMutation, useGetAdminAppointmentsQuery } from "@/redux/features/appointment/appointmentApi";
 import { useGetActivePlansQuery } from "@/redux/features/plan/planApi";
 import { useGetActiveOffDaysQuery } from "@/redux/features/off-day/offDayApi";
+import { useGetDateAvailabilityQuery, useGetWeeklyScheduleQuery } from "@/redux/features/schedule/scheduleApi";
 import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
 import { parsePlanDurationHours } from "@/redux/features/plan/planTypes";
+import {
+  timeToMinutes,
+  formatMinutesToTimeString,
+  format24hTo12h,
+  parseTimeSlotToMinutes,
+  isTimeOverlapping,
+  generateStandardTimeSlotsForWindows,
+  getAvailableStartTimesForWindows,
+  calculateEndTime,
+  isSlotWithinTimeWindows,
+  formatTimeWindowsSummary,
+} from "@/lib/utils/schedule-helpers";
 import {
   confirmCriticalAction,
   showSuccessAlert,
   showErrorAlert,
 } from "@/lib/alerts/sweetalert";
-
-function timeToMinutes(timeStr: string): number {
-  if (!timeStr) return 0;
-  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-  if (!match) return 0;
-  let hour = parseInt(match[1], 10);
-  const min = parseInt(match[2], 10);
-  const ampm = match[3].toUpperCase();
-  if (ampm === "PM" && hour < 12) hour += 12;
-  if (ampm === "AM" && hour === 12) hour = 0;
-  return hour * 60 + min;
-}
-
-function parseTimeSlotToMinutes(timeSlot: string): { startMin: number; endMin: number } | null {
-  if (!timeSlot) return null;
-  const parts = timeSlot.split(/\s*(?:–|—|-|to)\s*/i);
-  if (parts.length < 2) return null;
-  const startMin = timeToMinutes(parts[0]);
-  const endMin = timeToMinutes(parts[1]);
-  if (endMin <= startMin) return null;
-  return { startMin, endMin };
-}
 
 function parseApptTimeSlotToMinutes(appt: any): { startMin: number; endMin: number } | null {
   if (appt?.timeSlot) {
@@ -52,13 +43,6 @@ function parseApptTimeSlotToMinutes(appt: any): { startMin: number; endMin: numb
     }
   }
   return null;
-}
-
-function isTimeOverlapping(
-  slot1: { startMin: number; endMin: number },
-  slot2: { startMin: number; endMin: number }
-): boolean {
-  return Math.max(slot1.startMin, slot2.startMin) < Math.min(slot1.endMin, slot2.endMin);
 }
 
 function getApptDateFormatted(appt: any): string {
@@ -79,74 +63,6 @@ function getApptDateFormatted(appt: any): string {
     }
   }
   return "";
-}
-
-function formatMinutesToTimeString(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
-  const displayMinute = String(minutes).padStart(2, "0");
-  return `${String(displayHour).padStart(2, "0")}:${displayMinute} ${ampm}`;
-}
-
-function generateStandardTimeSlots(durationHours: number): string[] {
-  if (durationHours === 1) {
-    return [
-      "08:00 AM – 09:00 AM",
-      "09:00 AM – 10:00 AM",
-      "10:00 AM – 11:00 AM",
-      "11:00 AM – 12:00 PM",
-      "12:00 PM – 01:00 PM",
-      "01:00 PM – 02:00 PM",
-      "02:00 PM – 03:00 PM",
-      "03:00 PM – 04:00 PM",
-      "04:00 PM – 05:00 PM",
-      "05:00 PM – 06:00 PM",
-    ];
-  }
-  if (durationHours === 2) {
-    return [
-      "08:00 AM – 10:00 AM",
-      "10:00 AM – 12:00 PM",
-      "12:00 PM – 02:00 PM",
-      "02:00 PM – 04:00 PM",
-      "04:00 PM – 06:00 PM",
-    ];
-  }
-  const slots: string[] = [];
-  const startMinute = 8 * 60;
-  const endMinute = 18 * 60;
-  const stepMinute = durationHours * 60;
-  for (let m = startMinute; m + stepMinute <= endMinute; m += stepMinute) {
-    slots.push(
-      `${formatMinutesToTimeString(m)} – ${formatMinutesToTimeString(m + stepMinute)}`
-    );
-  }
-  return slots.length > 0
-    ? slots
-    : [
-        "08:00 AM – 10:00 AM",
-        "10:00 AM – 12:00 PM",
-        "12:00 PM – 02:00 PM",
-        "02:00 PM – 04:00 PM",
-        "04:00 PM – 06:00 PM",
-      ];
-}
-
-function getAvailableStartTimes(durationHours: number): string[] {
-  const maxStartMin = (18 - durationHours) * 60;
-  const startTimes: string[] = [];
-  for (let m = 8 * 60; m <= maxStartMin; m += 30) {
-    startTimes.push(formatMinutesToTimeString(m));
-  }
-  return startTimes;
-}
-
-function calculateEndTime(startStr: string, durationHours: number): string {
-  const startMin = timeToMinutes(startStr);
-  const endMin = Math.min(18 * 60, startMin + durationHours * 60);
-  return formatMinutesToTimeString(endMin);
 }
 
 function getClientPlanDurationHours(client: any, activePlans: any[] = []): number {
@@ -223,6 +139,7 @@ interface AdminScheduleModalProps {
   defaultClientId?: string;
   clientName?: string;
   hideClientSelect?: boolean;
+  initialDate?: string;
 }
 
 export function AdminScheduleModal({
@@ -231,6 +148,7 @@ export function AdminScheduleModal({
   defaultClientId,
   clientName,
   hideClientSelect = false,
+  initialDate,
 }: AdminScheduleModalProps) {
   const { data: specialists = [], isLoading: isSpecialistsLoading } = useGetAllSpecialistsQuery(undefined, { skip: !isOpen });
   const { data: clientsRes, isLoading: isClientsLoading } = useGetAdminClientsQuery({ limit: 100 }, { skip: !isOpen });
@@ -264,16 +182,10 @@ export function AdminScheduleModal({
   const specialistDropdownRef = useRef<HTMLDivElement>(null);
 
   const [date, setDate] = useState(() => {
+    if (initialDate) return initialDate;
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     return nextWeek.toISOString().split("T")[0];
   });
-  const [timeSlot, setTimeSlot] = useState("10:00 AM – 12:00 PM");
-  const [isCustomTime, setIsCustomTime] = useState<boolean>(false);
-  const [customStart, setCustomStart] = useState("09:00 AM");
-  const [customEnd, setCustomEnd] = useState("11:00 AM");
-  const [notes, setNotes] = useState("");
-  const [adminScheduleAppointmentMutation, { isLoading: isSubmitting }] = useAdminScheduleAppointmentMutation();
-  const [success, setSuccess] = useState(false);
 
   // Filter out unassigned clients (clients without an assigned active plan)
   const assignedClients = useMemo(() => {
@@ -282,6 +194,83 @@ export function AdminScheduleModal({
       return plan !== "" && plan !== "unassigned" && !plan.includes("unassigned");
     });
   }, [clientsList]);
+
+  // Derive matched and selected client
+  const isLockedClient = Boolean(hideClientSelect || defaultClientId);
+
+  const matchedClient = (assignedClients.length > 0 ? assignedClients : clientsList).find(
+    (c) =>
+      c.id === (defaultClientId || selectedClientId) ||
+      c.clientNumber === (defaultClientId || selectedClientId) ||
+      c.userId === (defaultClientId || selectedClientId) ||
+      c.internalId === (defaultClientId || selectedClientId)
+  );
+
+  const selectedClient = matchedClient || assignedClients[0] || clientsList[0];
+
+  const selectedSpecialistObj =
+    specialists.find((s) => s.name === technicianName) ||
+    specialists.find((s) => s.id === technicianName) ||
+    specialists[0];
+
+  // Derive plan duration hours based on selected client's plan
+  const planDurationHours = useMemo(
+    () => getClientPlanDurationHours(selectedClient, activePlans),
+    [selectedClient, activePlans]
+  );
+
+  const { data: weeklyScheduleRes } = useGetWeeklyScheduleQuery(undefined, { skip: !isOpen });
+  const { data: dateAvailability, isLoading: isAvailabilityLoading } = useGetDateAvailabilityQuery(
+    { date, durationMinutes: planDurationHours * 60 },
+    { skip: !isOpen || !date }
+  );
+
+  const effectiveTimeWindows = useMemo(() => {
+    if (dateAvailability?.timeWindows && dateAvailability.timeWindows.length > 0) {
+      return dateAvailability.timeWindows;
+    }
+    if (date && weeklyScheduleRes?.days) {
+      const parts = date.split("-");
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        const dayOfWeek = d.getDay();
+        const found = weeklyScheduleRes.days.find((item: any) => item.dayOfWeek === dayOfWeek);
+        if (found && found.isOpen && found.timeWindows?.length > 0) {
+          return found.timeWindows;
+        }
+      }
+    }
+    return [
+      { start: "08:00", end: "12:00" },
+      { start: "12:00", end: "18:00" },
+    ];
+  }, [dateAvailability, date, weeklyScheduleRes]);
+
+  const matchingOffDay = useMemo(() => findMatchingOffDay(date, activeOffDays), [date, activeOffDays]);
+  const isSelectedDateOffDay = Boolean(matchingOffDay);
+
+  const isDateClosed = Boolean(
+    dateAvailability?.isClosed ||
+    isSelectedDateOffDay ||
+    (dateAvailability && dateAvailability.timeWindows && dateAvailability.timeWindows.length === 0)
+  );
+
+  const standardTimeSlots = useMemo(
+    () => generateStandardTimeSlotsForWindows(effectiveTimeWindows, planDurationHours),
+    [effectiveTimeWindows, planDurationHours]
+  );
+  const availableStartTimes = useMemo(
+    () => getAvailableStartTimesForWindows(effectiveTimeWindows, planDurationHours),
+    [effectiveTimeWindows, planDurationHours]
+  );
+
+  const [timeSlot, setTimeSlot] = useState("10:00 AM – 12:00 PM");
+  const [isCustomTime, setIsCustomTime] = useState<boolean>(false);
+  const [customStart, setCustomStart] = useState("09:00 AM");
+  const [customEnd, setCustomEnd] = useState("11:00 AM");
+  const [notes, setNotes] = useState("");
+  const [adminScheduleAppointmentMutation, { isLoading: isSubmitting }] = useAdminScheduleAppointmentMutation();
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     if (defaultClientId) {
@@ -311,24 +300,6 @@ export function AdminScheduleModal({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Derive matched and selected client
-  const isLockedClient = Boolean(hideClientSelect || defaultClientId);
-
-  const matchedClient = (assignedClients.length > 0 ? assignedClients : clientsList).find(
-    (c) =>
-      c.id === (defaultClientId || selectedClientId) ||
-      c.clientNumber === (defaultClientId || selectedClientId) ||
-      c.userId === (defaultClientId || selectedClientId) ||
-      c.internalId === (defaultClientId || selectedClientId)
-  );
-
-  const selectedClient = matchedClient || assignedClients[0] || clientsList[0];
-
-  const selectedSpecialistObj =
-    specialists.find((s) => s.name === technicianName) ||
-    specialists.find((s) => s.id === technicianName) ||
-    specialists[0];
 
   const checkSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
     const slotRange = parseTimeSlotToMinutes(ts);
@@ -363,33 +334,33 @@ export function AdminScheduleModal({
     return checkSlotBooked(timeSlot);
   }, [timeSlot, date, selectedClient, adminAppointments]);
 
+  const isSlotValidWithinOperatingHours = useMemo(() => {
+    if (!timeSlot || isDateClosed) return false;
+    return isSlotWithinTimeWindows(timeSlot, effectiveTimeWindows);
+  }, [timeSlot, effectiveTimeWindows, isDateClosed]);
+
   // Derive default serviceType from client plan
   const serviceType = selectedClient?.planName || "Home Safety & Oversight Visit";
 
-  // Derive plan duration hours, standard time slots, and available start times based on selected client's plan
-  const planDurationHours = useMemo(
-    () => getClientPlanDurationHours(selectedClient, activePlans),
-    [selectedClient, activePlans]
-  );
-  const standardTimeSlots = useMemo(() => generateStandardTimeSlots(planDurationHours), [planDurationHours]);
-  const availableStartTimes = useMemo(() => getAvailableStartTimes(planDurationHours), [planDurationHours]);
-
-  // Sync selected time slot with available plan slots when client or mode changes
+  // Sync selected time slot with available plan slots when client, date, windows or mode changes
   useEffect(() => {
     if (isCustomTime) {
-      const starts = getAvailableStartTimes(planDurationHours);
-      const start = starts.includes(customStart) ? customStart : (starts[2] || starts[0] || "09:00 AM");
+      const starts = getAvailableStartTimesForWindows(effectiveTimeWindows, planDurationHours);
+      if (starts.length === 0) return;
+      const start = starts.includes(customStart) ? customStart : starts[0];
       const end = calculateEndTime(start, planDurationHours);
       setCustomStart(start);
       setCustomEnd(end);
       setTimeSlot(`${start} – ${end}`);
     } else {
-      if (!standardTimeSlots.includes(timeSlot) || checkSlotBooked(timeSlot).isBooked) {
-        const firstAvailable = standardTimeSlots.find((s) => !checkSlotBooked(s).isBooked);
-        setTimeSlot(firstAvailable || standardTimeSlots[0] || (planDurationHours === 1 ? "08:00 AM – 09:00 AM" : "10:00 AM – 12:00 PM"));
+      if (standardTimeSlots.length > 0) {
+        if (!standardTimeSlots.includes(timeSlot) || checkSlotBooked(timeSlot).isBooked) {
+          const firstAvailable = standardTimeSlots.find((s) => !checkSlotBooked(s).isBooked);
+          setTimeSlot(firstAvailable || standardTimeSlots[0]);
+        }
       }
     }
-  }, [selectedClientId, planDurationHours, isCustomTime, standardTimeSlots, date, selectedSpecialistObj]);
+  }, [selectedClientId, planDurationHours, isCustomTime, standardTimeSlots, effectiveTimeWindows, date, selectedSpecialistObj]);
 
   const getRemainingVisitsForClient = (client: any) => {
     if (!client) return 1;
@@ -423,16 +394,13 @@ export function AdminScheduleModal({
     });
   }, [date, selectedClient, selectedClientId, adminAppointments]);
 
-  const matchingOffDay = useMemo(() => findMatchingOffDay(date, activeOffDays), [date, activeOffDays]);
-  const isSelectedDateOffDay = Boolean(matchingOffDay);
-
   const hasDateConflict = Boolean(clientApptOnSelectedDate);
 
   const isTargetClientAgreementPaid = Boolean(selectedClient);
   const clientRemainingVisits = getRemainingVisitsForClient(selectedClient);
   const hasRemainingVisits = clientRemainingVisits > 0;
-  const isTimeSlotValid = !currentSlotStatus.isBooked && !hasDateConflict;
-  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && !hasDateConflict && isTimeSlotValid && !isSelectedDateOffDay;
+  const isTimeSlotValid = !currentSlotStatus.isBooked && !hasDateConflict && isSlotValidWithinOperatingHours;
+  const isTargetClientEligible = isTargetClientAgreementPaid && hasRemainingVisits && !hasDateConflict && isTimeSlotValid && !isDateClosed;
 
   if (!isOpen) return null;
 
@@ -489,10 +457,18 @@ export function AdminScheduleModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isSelectedDateOffDay) {
+    if (isDateClosed) {
       showErrorAlert(
         "Company Off-Day / Closure",
-        `The selected date (${date}) is designated as an active company off-day (${matchingOffDay?.title}). Visits cannot be scheduled during office closures.`
+        `The selected date (${date}) is designated as closed for scheduling (${dateAvailability?.overrideTitle || matchingOffDay?.title || "Office Closure"}). Visits cannot be scheduled during office closures.`
+      );
+      return;
+    }
+
+    if (!isSlotWithinTimeWindows(timeSlot, effectiveTimeWindows)) {
+      showErrorAlert(
+        "Outside Operational Hours",
+        `The selected time slot (${timeSlot}) falls outside the scheduled operating hours (${formatTimeWindowsSummary(effectiveTimeWindows)}) for ${date}. Please select an available slot within operational hours.`
       );
       return;
     }
@@ -914,6 +890,17 @@ export function AdminScheduleModal({
                       : "border-[#D9E4EC] focus:ring-[#5E8FB2]"
                   }`}
                 />
+                {dateAvailability?.holiday && (
+                  <p className="text-[11px] font-bold text-amber-700 mt-1 flex items-center gap-1">
+                    <span>🇺🇸</span>
+                    <span>{dateAvailability.holiday.name} (US Holiday)</span>
+                  </p>
+                )}
+                {dateAvailability?.isClosed && !hasDateConflict && (
+                  <p className="text-[11px] font-semibold text-rose-600 mt-1">
+                    ⚠️ Marked Closed in Schedule ({dateAvailability.overrideTitle || "Closed day"}).
+                  </p>
+                )}
               </div>
 
               <div>
@@ -929,6 +916,14 @@ export function AdminScheduleModal({
                     <Edit3 className="w-3 h-3 text-[#5E8FB2]" />
                     <span>{isCustomTime ? "Choose Preset" : "Custom Time"}</span>
                   </button>
+                </div>
+
+                <div className="mt-1 flex items-center justify-between text-[11px] text-[#64748B] bg-[#F8FAFC] px-2.5 py-1 rounded-lg border border-[#E2E8F0] mb-2">
+                  <span>Operating Hours:</span>
+                  <span className="font-bold text-[#294B68]">
+                    {formatTimeWindowsSummary(effectiveTimeWindows)}
+                    {dateAvailability?.overrideTitle ? ` (${dateAvailability.overrideTitle})` : ""}
+                  </span>
                 </div>
 
                 {isCustomTime ? (
@@ -947,24 +942,28 @@ export function AdminScheduleModal({
                           }}
                           className="w-full h-10 px-3 bg-white border border-[#D9E4EC] rounded-xl text-xs font-bold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2]"
                         >
-                          {availableStartTimes.map((st) => {
-                            const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
-                            const { isBooked, appt } = checkSlotBooked(customSlotStr);
-                            let label = st;
-                            if (isBooked) {
-                              label += ` (Client already booked: ${appt?.timeSlot || customSlotStr})`;
-                            }
-                            return (
-                              <option
-                                key={st}
-                                value={st}
-                                disabled={isBooked}
-                                className={isBooked ? "text-rose-600 bg-rose-50 font-bold" : ""}
-                              >
-                                {label}
-                              </option>
-                            );
-                          })}
+                          {availableStartTimes.length === 0 ? (
+                            <option value="">No available start times</option>
+                          ) : (
+                            availableStartTimes.map((st) => {
+                              const customSlotStr = `${st} – ${calculateEndTime(st, planDurationHours)}`;
+                              const { isBooked, appt } = checkSlotBooked(customSlotStr);
+                              let label = st;
+                              if (isBooked) {
+                                label += ` (Client already booked: ${appt?.timeSlot || customSlotStr})`;
+                              }
+                              return (
+                                <option
+                                  key={st}
+                                  value={st}
+                                  disabled={isBooked}
+                                  className={isBooked ? "text-rose-600 bg-rose-50 font-bold" : ""}
+                                >
+                                  {label}
+                                </option>
+                              );
+                            })
+                          )}
                         </select>
                       </div>
                       <div>
@@ -985,6 +984,10 @@ export function AdminScheduleModal({
                         className="w-full h-9 px-3 bg-white border border-[#D9E4EC] rounded-xl text-xs font-medium text-[#243746] focus:ring-2 focus:ring-[#5E8FB2]"
                       />
                     </div>
+                  </div>
+                ) : standardTimeSlots.length === 0 ? (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium">
+                    No standard preset slots fit within operating hours ({formatTimeWindowsSummary(effectiveTimeWindows)}). Please switch to Custom Time.
                   </div>
                 ) : (
                   <select
@@ -1073,6 +1076,21 @@ export function AdminScheduleModal({
               </div>
             )}
 
+            {/* Full-width Outside Operating Hours Alert Banner */}
+            {!isDateClosed && !hasDateConflict && !isSlotValidWithinOperatingHours && (
+              <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl text-amber-950 text-xs flex items-start gap-2.5 animate-in fade-in duration-200 shadow-2xs w-full">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-950">
+                    Selected Time Outside Operating Hours
+                  </strong>
+                  <p className="text-amber-800 text-[11px] mt-0.5 leading-relaxed">
+                    The time slot <strong>{timeSlot}</strong> falls outside the commanding operational hours for {date} ({formatTimeWindowsSummary(effectiveTimeWindows)}). Please select an available slot within operational hours.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-bold text-[#243746] mb-1">Visit Notes (Optional)</label>
               <textarea
@@ -1087,9 +1105,9 @@ export function AdminScheduleModal({
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={isSubmitting || !isTargetClientEligible || hasDateConflict || isSelectedDateOffDay}
+                disabled={isSubmitting || !isTargetClientEligible || hasDateConflict || isDateClosed || !isSlotValidWithinOperatingHours}
                 className={`w-full py-3 font-bold text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 ${
-                  !isTargetClientEligible || hasDateConflict || isSelectedDateOffDay
+                  !isTargetClientEligible || hasDateConflict || isDateClosed || !isSlotValidWithinOperatingHours
                     ? "bg-slate-100 text-[#94A3B8] border border-slate-200 cursor-not-allowed"
                     : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
                 }`}
@@ -1099,10 +1117,12 @@ export function AdminScheduleModal({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Dispatching Specialist...</span>
                   </>
-                ) : isSelectedDateOffDay ? (
+                ) : isDateClosed ? (
                   <span>Company Off-Day — Office Closed on this Date</span>
                 ) : hasDateConflict ? (
                   <span>Date Conflict — Client already has a visit on this date</span>
+                ) : !isSlotValidWithinOperatingHours ? (
+                  <span>Outside Operating Hours — Choose Valid Time Slot</span>
                 ) : !isTimeSlotValid ? (
                   <span>Time Slot Conflict — Choose Another Time</span>
                 ) : !isTargetClientAgreementPaid ? (

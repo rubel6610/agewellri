@@ -306,38 +306,36 @@ export default function AdminOverviewPage() {
       {/* Primary KPI Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatKpiCard
-          title="Active Clients"
-          value={kpis?.activeClientsCount ?? 0}
+          title="Clients"
+          value={kpis?.totalClientsCount ?? 0}
           icon={<Users className="w-5 h-5 text-[#294B68]" />}
           href="/admin/clients"
         />
 
         <StatKpiCard
-          title="Pending Payments"
-          value={kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0}
+          title="Billing"
+          value={kpis?.activeBillingCount ?? kpis?.activeClientsCount ?? 0}
           icon={<CreditCard className="w-5 h-5 text-[#C28A3A]" />}
           href="/admin/billing"
-          urgent={(kpis?.pendingPaymentsCount ?? kpis?.paymentsDueCount ?? 0) > 0}
         />
 
         <StatKpiCard
-          title="Pending Reports"
-          value={kpis?.reportsPendingCount ?? 0}
-          icon={<FileCheck2 className="w-5 h-5 text-[#C95C5C]" />}
-          href="/admin/appointments?tab=COMPLETED"
-          urgent={(kpis?.reportsPendingCount ?? 0) > 0}
+          title="Appointments"
+          value={kpis?.appointedClientsCount ?? kpis?.upcomingVisitsCount ?? 0}
+          icon={<CalendarCheck className="w-5 h-5 text-[#294B68]" />}
+          href="/admin/appointments"
         />
 
         <StatKpiCard
-          title="Agreements Executed"
-          value={kpis?.executedAgreementsCount ?? 0}
+          title="Agreements"
+          value={kpis?.confirmedAgreementsCount ?? kpis?.executedAgreementsCount ?? 0}
           icon={<ShieldCheck className="w-5 h-5 text-[#3F8F6B]" />}
           href="/admin/agreements"
         />
 
         <StatKpiCard
-          title="Renewals in 30d"
-          value={kpis?.renewalsUpcomingCount ?? 0}
+          title="Subscriptions"
+          value={kpis?.subscriptionClientsCount ?? kpis?.activeSubscriptionsCount ?? 0}
           icon={<RefreshCw className="w-5 h-5 text-[#5E8FB2]" />}
           href="/admin/subscriptions"
         />
