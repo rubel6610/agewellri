@@ -209,7 +209,7 @@ export default function AdminPlansPage() {
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
+        {/* <div className="bg-white p-5 rounded-2xl border border-[#D9E4EC] shadow-xs flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
             <ShieldCheck className="w-6 h-6" />
           </div>
@@ -224,7 +224,7 @@ export default function AdminPlansPage() {
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Filters & Search */}

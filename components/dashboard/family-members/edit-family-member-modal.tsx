@@ -104,7 +104,8 @@ export function EditFamilyMemberModal({
 
   const isRepresentative =
     forcedRole === "REPRESENTATIVE" ||
-    (!forcedRole && Boolean(member.isEmergencyContact));
+    (forcedRole !== "RECIPIENT" &&
+      (Boolean(member.authorityDocumentUrl) || Boolean(member.legalCapacity)));
 
   const modalTitle = isRepresentative
     ? "Edit Representative"

@@ -70,10 +70,9 @@ export default function ProfilePage() {
     .toLowerCase();
   const clientEmail = (user?.email || "").trim().toLowerCase();
 
-  // Filter out the primary account holder so they never appear in their own representatives / recipients list
+  // Filter out the primary resident account holder only if they appear as self without representative credentials
   const familyMembers = rawFamilyMembers.filter((m) => {
-    if (m.userId && user?.id && m.userId === user.id) return false;
-    if (m.email && m.email.toLowerCase() === clientEmail) return false;
+    if (m.userId && user?.id && m.userId === user.id && !m.legalCapacity && !m.authorityDocumentUrl) return false;
     if (
       m.name &&
       m.name.trim().toLowerCase() === clientFullName &&
@@ -85,23 +84,141 @@ export default function ProfilePage() {
     return true;
   });
 
+  // Fallback / initial representative credentials from onboarding signup data
+  const clientOnboarding = (user?.client?.onboardingData as any) || {};
+  const clientSigningData = clientOnboarding.signingData || {};
+  const initialRepName = (
+    clientSigningData.repFullName ||
+    clientOnboarding.repFullName ||
+    (user?.client?.signerRole !== "RESIDENT" &&
+    user?.client?.primaryContactName?.trim().toLowerCase() !== clientFullName
+      ? user?.client?.primaryContactName
+      : null)
+  )?.trim();
+
+  // A member is strictly a Legal Representative if they hold legal authority credentials
+  // (authority document or legal capacity) or signed as the legal representative on behalf of the client during signup.
+  // Report recipients (even if relationship text says "Power of Attorney", etc.) are NOT legal representatives.
+  const isLegalRepresentative = (m: FamilyMember): boolean => {
+    // 1. Legal authority documentation or explicit legal capacity
+    if (Boolean(m.authorityDocumentUrl)) return true;
+    if (Boolean(m.legalCapacity)) return true;
+
+    // 2. Matches initial signing representative from onboarding/signup wizard
+    if (
+      initialRepName &&
+      m.name &&
+      m.name.trim().toLowerCase() === initialRepName.toLowerCase()
+    ) {
+      return true;
+    }
+
+    // 3. Explicit representative billing role without report-recipient-only role
+    if (Boolean(m.billingAccess) && !Boolean(m.reportAccess)) {
+      return true;
+    }
+
+    return false;
+  };
+
   // Categorize family members into Representatives vs Authorized Report Recipients
-  const representatives = familyMembers.filter(
-    (m) =>
-      Boolean(m.authorityDocumentUrl) ||
-      Boolean(m.legalCapacity) ||
-      Boolean(m.isEmergencyContact) ||
-      Boolean(m.portalAccess),
+  const representatives = familyMembers.filter(isLegalRepresentative);
+
+  // Authorized report recipients are members who have report access and are NOT legal representatives
+  const authorizedReportRecipients = familyMembers.filter(
+    (m) => Boolean(m.reportAccess) && !isLegalRepresentative(m),
   );
 
-  const authorizedReportRecipients = familyMembers.filter(
-    (m) =>
-      Boolean(m.reportAccess) &&
-      !m.isEmergencyContact &&
-      !m.portalAccess &&
-      !m.authorityDocumentUrl &&
-      !m.legalCapacity,
-  );
+  const displayRepresentatives: FamilyMember[] =
+    representatives.length > 0
+      ? representatives
+      : initialRepName
+      ? [
+          {
+            id: "initial-rep-wizard",
+            clientId: user?.client?.id || "",
+            name: initialRepName,
+            relationship:
+              clientSigningData.repRelationship?.trim() ||
+              clientOnboarding.repRelationship?.trim() ||
+              clientSigningData.repCapacity ||
+              clientOnboarding.representativeCapacity ||
+              "Legal Representative / Power of Attorney",
+            email:
+              clientSigningData.repEmail?.trim() ||
+              clientOnboarding.repEmail?.trim() ||
+              user?.email ||
+              "",
+            phone:
+              clientSigningData.repPhone?.trim() ||
+              clientOnboarding.repPhone?.trim() ||
+              user?.phone ||
+              null,
+            legalCapacity:
+              clientSigningData.repCapacity ||
+              clientOnboarding.representativeCapacity ||
+              user?.client?.legalAuthority ||
+              "ATTORNEY_IN_FACT",
+            authorityDocumentUrl:
+              clientSigningData.authorityDocumentUrl ||
+              clientOnboarding.authorityDocumentUrl ||
+              null,
+            authorityDocumentName:
+              clientSigningData.authorityDocumentName ||
+              clientOnboarding.authorityDocumentName ||
+              null,
+            reportAccess: true,
+            portalAccess: false,
+            billingAccess: true,
+            isEmergencyContact: true,
+            invitationStatus: "PENDING" as any,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ]
+      : [];
+
+  // Fallback: If no report recipients in familyMembers yet, check clientOnboarding.authorizedRecipients
+  const onboardingRecipients: any[] = Array.isArray(
+    clientOnboarding.authorizedRecipients,
+  )
+    ? clientOnboarding.authorizedRecipients
+    : [];
+
+  const displayAuthorizedReportRecipients: FamilyMember[] =
+    authorizedReportRecipients.length > 0
+      ? authorizedReportRecipients
+      : onboardingRecipients
+          .filter((rec) => {
+            if (!rec || !rec.name || !rec.email) return false;
+            if (rec.email.trim().toLowerCase() === clientEmail) return false;
+            if (rec.name.trim().toLowerCase() === clientFullName) return false;
+            if (
+              initialRepName &&
+              rec.name.trim().toLowerCase() === initialRepName.toLowerCase()
+            ) {
+              return false;
+            }
+            return true;
+          })
+          .map((rec, idx) => ({
+            id: `onboarding-recipient-${idx}`,
+            clientId: user?.client?.id || "",
+            name: rec.name.trim(),
+            relationship: rec.relationship?.trim() || "Report Recipient",
+            email: rec.email.trim(),
+            phone: rec.phone?.trim() || null,
+            legalCapacity: null,
+            authorityDocumentUrl: null,
+            authorityDocumentName: null,
+            reportAccess: true,
+            portalAccess: false,
+            billingAccess: false,
+            isEmergencyContact: false,
+            invitationStatus: "PENDING" as any,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
 
   if (isUserLoading && !user) {
     return (
@@ -145,6 +262,22 @@ export default function ProfilePage() {
     member: FamilyMember,
     roleLabel: string,
   ) => {
+    if (member.id === "initial-rep-wizard") {
+      showErrorAlert(
+        "Agreement Signer",
+        `${member.name} signed the legal service agreement for this client during signup. Their information can be updated via the Edit button.`,
+      );
+      return;
+    }
+
+    if (member.id.startsWith("onboarding-recipient")) {
+      showErrorAlert(
+        "Report Recipient",
+        `${member.name} was added during signup. You can update their contact details using the Edit button.`,
+      );
+      return;
+    }
+
     const confirmed = await confirmDelete({
       title: `Remove ${member.name}?`,
       text: `Are you sure you want to remove ${member.name} from your ${roleLabel.toLowerCase()} list? They will no longer receive notifications or safety reports.`,
@@ -282,7 +415,7 @@ export default function ProfilePage() {
             <Loader2 className="w-5 h-5 animate-spin text-[#294B68]" />
             <span>Loading representatives...</span>
           </div>
-        ) : representatives.length === 0 ? (
+        ) : displayRepresentatives.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border-2 border-dashed border-[#D9E4EC] bg-[#F8FAFC] space-y-3">
             <HeartHandshake className="w-10 h-10 text-[#5E8FB2] mx-auto opacity-70" />
             <h3 className="text-base font-bold text-[#243746]">
@@ -302,7 +435,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {representatives.map((rep) => (
+            {displayRepresentatives.map((rep) => (
               <div
                 key={rep.id}
                 className="p-5 rounded-2xl border border-[#D9E4EC] bg-[#F8FAFC] hover:bg-white hover:border-[#5E8FB2]/50 transition-all shadow-2xs flex flex-col justify-between gap-4"
@@ -416,7 +549,7 @@ export default function ProfilePage() {
             <Loader2 className="w-5 h-5 animate-spin text-[#294B68]" />
             <span>Loading authorized report recipients...</span>
           </div>
-        ) : authorizedReportRecipients.length === 0 ? (
+        ) : displayAuthorizedReportRecipients.length === 0 ? (
           <div className="p-8 text-center rounded-2xl border-2 border-dashed border-[#D9E4EC] bg-[#F8FAFC] space-y-3">
             <FileCheck2 className="w-10 h-10 text-[#5E8FB2] mx-auto opacity-70" />
             <h3 className="text-base font-bold text-[#243746]">
@@ -436,7 +569,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {authorizedReportRecipients.map((rec) => (
+            {displayAuthorizedReportRecipients.map((rec) => (
               <div
                 key={rec.id}
                 className="p-5 rounded-2xl border border-[#D9E4EC] bg-[#F8FAFC] hover:bg-white hover:border-[#5E8FB2]/50 transition-all shadow-2xs flex flex-col justify-between gap-4"

@@ -48,6 +48,7 @@ export interface ClientProfile {
   hasCleaningAddon?: boolean;
   hasCompletedAgreement?: boolean;
   onboardingStatus?: OnboardingStatus;
+  onboardingData?: any;
   isArchived?: boolean;
   createdAt?: string;
   updatedAt?: string;

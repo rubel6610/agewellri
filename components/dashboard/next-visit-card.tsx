@@ -146,14 +146,25 @@ export function NextVisitCard({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsDetailsOpen(true)}
-          className="w-full py-3 px-4 bg-white hover:bg-[#EAF3F8] text-[#294B68] font-bold text-base rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <span>View Visit Details</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsDetailsOpen(true)}
+            className="w-full py-2.5 px-3 bg-white hover:bg-[#EAF3F8] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>View Visit Details</span>
+            <ArrowRight className="w-4 h-4 shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onScheduleVisit}
+            className="w-full py-2.5 px-3 bg-white hover:bg-[#EAF3F8] text-[#294B68] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4 shrink-0 text-[#294B68]" />
+            <span>Schedule Another Visit</span>
+          </button>
+        </div>
       </div>
 
       {/* Interactive Visit Details Modal */}
