@@ -88,23 +88,33 @@ export function ScheduleOverrideModal({
 
   useEffect(() => {
     if (overrideItem) {
+      const cleanStart = overrideItem.startDate
+        ? String(overrideItem.startDate).split("T")[0]
+        : "";
+      const cleanEnd = overrideItem.endDate
+        ? String(overrideItem.endDate).split("T")[0]
+        : cleanStart;
+      const isSingle = overrideItem.isSingleDay ?? (cleanStart === cleanEnd);
+
       setOverrideType(overrideItem.overrideType || "DATE");
-      setDateMode(overrideItem.isSingleDay ? "SINGLE" : "RANGE");
-      setStatus(overrideItem.status === "CUSTOM_HOURS" ? "CUSTOM_HOURS" : "CLOSED");
-      setTitle(overrideItem.title);
+      setDateMode(isSingle ? "SINGLE" : "RANGE");
+      setStatus(overrideItem.status === "CLOSED" ? "CLOSED" : "CUSTOM_HOURS");
+      setTitle(overrideItem.title || "");
       setDescription(overrideItem.description || "");
-      setStartDate(overrideItem.startDate);
-      setEndDate(overrideItem.endDate);
-      setIsRecurring(overrideItem.isRecurring || false);
-      setIsActive(overrideItem.isActive);
+      setStartDate(cleanStart);
+      setEndDate(cleanEnd);
+      setIsRecurring(Boolean(overrideItem.isRecurring));
+      setIsActive(overrideItem.isActive !== false);
       setTimeWindows(
-        overrideItem.timeWindows?.length
-          ? overrideItem.timeWindows
+        Array.isArray(overrideItem.timeWindows) && overrideItem.timeWindows.length > 0
+          ? overrideItem.timeWindows.map((w) => ({ start: w.start, end: w.end }))
           : [{ start: "08:00", end: "18:00" }]
       );
       setFormErrors({});
     } else {
-      const targetDate = initialDate || new Date().toISOString().split("T")[0];
+      const targetDate = initialDate
+        ? String(initialDate).split("T")[0]
+        : new Date().toISOString().split("T")[0];
       const targetStatus = initialStatus === "CUSTOM_HOURS" ? "CUSTOM_HOURS" : "CLOSED";
       const initialWindows = [{ start: "08:00", end: "18:00" }];
       setOverrideType("DATE");
@@ -154,7 +164,7 @@ export function ScheduleOverrideModal({
   const handleAddTimeWindow = () => {
     setTimeWindows((prev) => {
       const next = [...prev, { start: "14:00", end: "18:00" }];
-      if (isAutoTitle(title)) {
+      if (!isEditing && isAutoTitle(title)) {
         setTitle(
           `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
         );
@@ -166,7 +176,7 @@ export function ScheduleOverrideModal({
   const handleRemoveTimeWindow = (idx: number) => {
     setTimeWindows((prev) => {
       const next = prev.filter((_, i) => i !== idx);
-      if (isAutoTitle(title)) {
+      if (!isEditing && isAutoTitle(title)) {
         setTitle(
           `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
         );
@@ -183,7 +193,7 @@ export function ScheduleOverrideModal({
     setTimeWindows((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [field]: value };
-      if (isAutoTitle(title)) {
+      if (!isEditing && isAutoTitle(title)) {
         setTitle(
           `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
         );
@@ -305,7 +315,7 @@ export function ScheduleOverrideModal({
                   type="button"
                   onClick={() => {
                     setStatus("CLOSED");
-                    if (isAutoTitle(title)) {
+                    if (!isEditing && isAutoTitle(title)) {
                       setTitle(`Office Closed (${startDate || "Date"})`);
                     }
                   }}
@@ -326,7 +336,7 @@ export function ScheduleOverrideModal({
                   type="button"
                   onClick={() => {
                     setStatus("CUSTOM_HOURS");
-                    if (isAutoTitle(title)) {
+                    if (!isEditing && isAutoTitle(title)) {
                       setTitle(
                         `${isDefaultShift(timeWindows) ? "Open" : "Custom Open"} (${startDate || "Date"})`
                       );
@@ -432,7 +442,7 @@ export function ScheduleOverrideModal({
                       if (dateMode === "SINGLE" && overrideType === "DATE") {
                         setEndDate(newStart);
                       }
-                      if (isAutoTitle(title)) {
+                      if (!isEditing && isAutoTitle(title)) {
                         if (status === "CLOSED") {
                           setTitle(`Office Closed (${newStart || "Date"})`);
                         } else {

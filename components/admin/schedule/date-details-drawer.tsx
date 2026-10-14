@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Flag,
 } from "lucide-react";
-import { DayAvailability } from "@/redux/features/schedule/scheduleTypes";
+import { DayAvailability, ScheduleOverrideItem } from "@/redux/features/schedule/scheduleTypes";
 import {
   format24hTo12h,
   isDefaultShift,
@@ -30,6 +30,7 @@ interface DateDetailsDrawerProps {
   onClose: () => void;
   dayData: DayAvailability | null;
   onOpenOverrideModal: (date: string, status?: "CLOSED" | "CUSTOM_HOURS") => void;
+  onOpenEditOverride?: (item: ScheduleOverrideItem) => void;
   onOpenScheduleModal?: (date: string) => void;
 }
 
@@ -38,6 +39,7 @@ export function DateDetailsDrawer({
   onClose,
   dayData,
   onOpenOverrideModal,
+  onOpenEditOverride,
   onOpenScheduleModal,
 }: DateDetailsDrawerProps) {
   if (!isOpen || !dayData) return null;
@@ -116,23 +118,39 @@ export function DateDetailsDrawer({
                   : "bg-red-50/80 border-red-200 text-red-950"
               }`}
             >
-              <div className="flex items-center gap-2">
-                <span
-                  className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
-                    dayData.overrideStatus === "CUSTOM_HOURS"
-                      ? isDefaultShift(dayData.timeWindows)
-                        ? "bg-emerald-200 text-emerald-900"
-                        : "bg-purple-200 text-purple-900"
-                      : "bg-red-200 text-red-900"
-                  }`}
-                >
-                  {dayData.overrideStatus === "CUSTOM_HOURS"
-                    ? getCustomOpenLabel(dayData.timeWindows)
-                    : "Closed Override"}
-                </span>
-                <p className="text-xs font-bold">
-                  {formatOverrideTitle(dayData.overrideTitle, dayData.timeWindows)}
-                </p>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
+                      dayData.overrideStatus === "CUSTOM_HOURS"
+                        ? isDefaultShift(dayData.timeWindows)
+                          ? "bg-emerald-200 text-emerald-900"
+                          : "bg-purple-200 text-purple-900"
+                        : "bg-red-200 text-red-900"
+                    }`}
+                  >
+                    {dayData.overrideStatus === "CUSTOM_HOURS"
+                      ? getCustomOpenLabel(dayData.timeWindows)
+                      : "Closed Override"}
+                  </span>
+                  <p className="text-xs font-bold">
+                    {formatOverrideTitle(dayData.overrideTitle, dayData.timeWindows)}
+                  </p>
+                </div>
+                {onOpenEditOverride && dayData.overrideItem && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenEditOverride(dayData.overrideItem!);
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#EAF3F8] text-[#294B68] rounded-lg text-xs font-bold border border-[#D9E4EC] shadow-2xs transition-colors shrink-0"
+                    title="Edit this schedule override"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Override</span>
+                  </button>
+                )}
               </div>
               {dayData.overrideDescription && (
                 <p className="text-[11px] mt-1 opacity-90 font-medium">
@@ -227,10 +245,29 @@ export function DateDetailsDrawer({
         {/* Quick Override Actions Footer */}
         <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#D9E4EC] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
+            {onOpenEditOverride && dayData.overrideItem && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onOpenEditOverride(dayData.overrideItem!);
+                }}
+                className="px-3.5 py-1.5 bg-[#294B68] text-white hover:bg-[#203a52] rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Override</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 onClose();
-                onOpenOverrideModal(dayData.date, "CLOSED");
+                if (dayData.overrideItem && onOpenEditOverride) {
+                  onOpenEditOverride({
+                    ...dayData.overrideItem,
+                    status: "CLOSED",
+                  });
+                } else {
+                  onOpenOverrideModal(dayData.date, "CLOSED");
+                }
               }}
               className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 rounded-lg text-xs font-bold transition-colors"
             >
@@ -239,7 +276,11 @@ export function DateDetailsDrawer({
             <button
               onClick={() => {
                 onClose();
-                onOpenOverrideModal(dayData.date, "CUSTOM_HOURS");
+                if (dayData.overrideItem && onOpenEditOverride) {
+                  onOpenEditOverride(dayData.overrideItem);
+                } else {
+                  onOpenOverrideModal(dayData.date, "CUSTOM_HOURS");
+                }
               }}
               className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg text-xs font-bold transition-colors"
             >

@@ -97,6 +97,7 @@ export interface DayAvailability {
   overrideTitle?: string;
   overrideDescription?: string;
   overrideStatus?: "CLOSED" | "CUSTOM_HOURS" | "OPEN";
+  overrideItem?: ScheduleOverrideItem | null;
   timeWindows: TimeWindow[];
   holiday: USHoliday | null;
   isHoliday: boolean;
