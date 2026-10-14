@@ -254,7 +254,7 @@ export default function AdminCommandSchedulePage() {
   }, [allOverrides, overridePage, overridePageSize]);
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1400px] mx-auto min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6  min-h-screen">
       {/* Page Title & Actions Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#D9E4EC] shadow-xs">
         <div className="flex items-center gap-4">
@@ -266,13 +266,13 @@ export default function AdminCommandSchedulePage() {
               <h1 className="text-xl sm:text-2xl font-black text-[#243746] tracking-tight">
                 Command Schedule
               </h1>
-              <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#294B68]/10 text-[#294B68] rounded-full">
+              {/* <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 bg-[#294B68]/10 text-[#294B68] rounded-full">
                 Unified Availability
-              </span>
+              </span> */}
             </div>
-            <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
+            {/* <p className="text-xs sm:text-sm text-[#64748B] mt-0.5">
               Authoritative availability engine, weekly operating hours, date overrides & client bookings.
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function AdminCommandSchedulePage() {
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] shadow-2xs flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-              Closed / Off-Days
+              Closed 
             </p>
             <p className="text-2xl sm:text-3xl font-black text-red-700 mt-1">
               {calendarSummary.closedDaysCount}
@@ -781,7 +781,7 @@ export default function AdminCommandSchedulePage() {
                 >
                   Custom Open
                 </button>
-                <button
+                {/* <button
                   onClick={() => {
                     setDispatchInitialDate(singleDayData.date);
                     setIsAdminScheduleModalOpen(true);
@@ -790,7 +790,7 @@ export default function AdminCommandSchedulePage() {
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Dispatch Visit</span>
-                </button>
+                </button> */}
               </div>
             </div>
 
@@ -973,7 +973,7 @@ export default function AdminCommandSchedulePage() {
                   <thead>
                     <tr className="bg-[#F8FAFC] border-b border-[#D9E4EC] text-[#64748B] font-bold uppercase tracking-wider">
                       <th className="p-3.5">Title & Reason</th>
-                      <th className="p-3.5">Scope</th>
+                      {/* <th className="p-3.5">Scope</th> */}
                       <th className="p-3.5">Effective Dates</th>
                       <th className="p-3.5">Status</th>
                       <th className="p-3.5">Time Windows</th>
@@ -991,9 +991,9 @@ export default function AdminCommandSchedulePage() {
                             </p>
                           )}
                         </td>
-                        <td className="p-3.5 font-semibold text-[#64748B]">
+                        {/* <td className="p-3.5 font-semibold text-[#64748B]">
                           {item.overrideType}
-                        </td>
+                        </td> */}
                         <td className="p-3.5 font-semibold text-[#243746]">
                           {item.formattedDateRange}
                           {item.isRecurring && (
