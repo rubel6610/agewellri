@@ -18,7 +18,12 @@ import {
   Flag,
 } from "lucide-react";
 import { DayAvailability } from "@/redux/features/schedule/scheduleTypes";
-import { format24hTo12h } from "@/lib/utils/schedule-helpers";
+import {
+  format24hTo12h,
+  isDefaultShift,
+  getCustomOpenLabel,
+  formatOverrideTitle,
+} from "@/lib/utils/schedule-helpers";
 
 interface DateDetailsDrawerProps {
   isOpen: boolean;
@@ -54,14 +59,16 @@ export function DateDetailsDrawer({
                 <span
                   className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                     dayData.overrideStatus === "CUSTOM_HOURS"
-                      ? "bg-purple-50 text-purple-700 border border-purple-200"
+                      ? isDefaultShift(dayData.timeWindows)
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-purple-50 text-purple-700 border border-purple-200"
                       : dayData.isClosed
                       ? "bg-red-50 text-red-700 border border-red-200"
                       : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                   }`}
                 >
                   {dayData.overrideStatus === "CUSTOM_HOURS"
-                    ? "Custom Hours"
+                    ? getCustomOpenLabel(dayData.timeWindows)
                     : dayData.isClosed
                     ? "Closed / Off-Day"
                     : "Operational (8 AM - 6 PM)"}
@@ -103,7 +110,9 @@ export function DateDetailsDrawer({
             <div
               className={`p-3.5 rounded-xl border ${
                 dayData.overrideStatus === "CUSTOM_HOURS"
-                  ? "bg-purple-50/80 border-purple-200 text-purple-950"
+                  ? isDefaultShift(dayData.timeWindows)
+                    ? "bg-emerald-50/80 border-emerald-200 text-emerald-950"
+                    : "bg-purple-50/80 border-purple-200 text-purple-950"
                   : "bg-red-50/80 border-red-200 text-red-950"
               }`}
             >
@@ -111,15 +120,19 @@ export function DateDetailsDrawer({
                 <span
                   className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
                     dayData.overrideStatus === "CUSTOM_HOURS"
-                      ? "bg-purple-200 text-purple-900"
+                      ? isDefaultShift(dayData.timeWindows)
+                        ? "bg-emerald-200 text-emerald-900"
+                        : "bg-purple-200 text-purple-900"
                       : "bg-red-200 text-red-900"
                   }`}
                 >
                   {dayData.overrideStatus === "CUSTOM_HOURS"
-                    ? "Custom Hours"
+                    ? getCustomOpenLabel(dayData.timeWindows)
                     : "Closed Override"}
                 </span>
-                <p className="text-xs font-bold">{dayData.overrideTitle}</p>
+                <p className="text-xs font-bold">
+                  {formatOverrideTitle(dayData.overrideTitle, dayData.timeWindows)}
+                </p>
               </div>
               {dayData.overrideDescription && (
                 <p className="text-[11px] mt-1 opacity-90 font-medium">
@@ -230,7 +243,7 @@ export function DateDetailsDrawer({
               }}
               className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg text-xs font-bold transition-colors"
             >
-              Custom Hours
+              Custom Open
             </button>
           </div>
           <button

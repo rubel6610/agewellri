@@ -196,3 +196,48 @@ export function formatTimeWindowsSummary(windows: TimeWindow[]): string {
     .map((w) => `${format24hTo12h(w.start)} – ${format24hTo12h(w.end)}`)
     .join(", ");
 }
+
+/**
+ * Checks whether the time windows correspond to the standard default 8 AM - 6 PM shift.
+ * Standard default shift is 1 window from 08:00 to 18:00 (480 min to 1080 min).
+ */
+export function isDefaultShift(
+  windows?: { start: string; end: string }[] | null
+): boolean {
+  if (!windows || windows.length !== 1) return false;
+  const w = windows[0];
+  const startMin = timeToMinutes(w.start);
+  const endMin = timeToMinutes(w.end);
+  return startMin === 480 && endMin === 1080;
+}
+
+/**
+ * Returns the label for a day or override opened by custom open:
+ * If the time window is 8 AM to 6 PM, returns "Open",
+ * otherwise returns "Custom Open".
+ */
+export function getCustomOpenLabel(
+  windows?: { start: string; end: string }[] | null
+): "Open" | "Custom Open" {
+  return isDefaultShift(windows) ? "Open" : "Custom Open";
+}
+
+/**
+ * Formats an override title: replaces legacy "Custom Hours" or "Default Shift Open" with "Open" or "Custom Open"
+ * based on whether the time windows match 8 AM - 6 PM.
+ */
+export function formatOverrideTitle(
+  title?: string | null,
+  windows?: { start: string; end: string }[] | null
+): string {
+  if (!title) return "";
+  if (title.startsWith("Custom Hours") || title.startsWith("Default Shift Open")) {
+    const isDef = isDefaultShift(windows);
+    return title
+      .replace(/^Custom Hours/, isDef ? "Open" : "Custom Open")
+      .replace(/^Default Shift Open/, isDef ? "Open" : "Custom Open");
+  }
+  return title;
+}
+
+

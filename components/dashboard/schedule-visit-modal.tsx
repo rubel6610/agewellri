@@ -43,6 +43,8 @@ import {
   calculateEndTime,
   isSlotWithinTimeWindows,
   formatTimeWindowsSummary,
+  isDefaultShift,
+  formatOverrideTitle,
 } from "@/lib/utils/schedule-helpers";
 import { AccessMethodModal } from "./access-method-modal";
 import {
@@ -1129,7 +1131,9 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               <span>
                 Operational Hours for this date: <strong>{formatTimeWindowsSummary(effectiveTimeWindows)}</strong>
                 {dateAvailability?.overrideStatus === "CUSTOM_HOURS" && (
-                  <span className="ml-1 text-amber-800 font-bold">({dateAvailability.overrideTitle || "Custom Hours"})</span>
+                  <span className="ml-1 text-amber-800 font-bold">
+                    ({formatOverrideTitle(dateAvailability.overrideTitle, effectiveTimeWindows) || (isDefaultShift(effectiveTimeWindows) ? "Open" : "Custom Open")})
+                  </span>
                 )}
                 . Your plan includes up to <strong>{planDurationHours} {planDurationHours === 1 ? "hour" : "hours"}</strong> per scheduled visit.
               </span>

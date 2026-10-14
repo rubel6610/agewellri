@@ -42,7 +42,12 @@ import { DateDetailsDrawer } from "@/components/admin/schedule/date-details-draw
 import { AdminScheduleModal } from "@/components/admin/admin-schedule-modal";
 import { confirmDelete, showToast, showErrorAlert } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { format24hTo12h } from "@/lib/utils/schedule-helpers";
+import {
+  format24hTo12h,
+  isDefaultShift,
+  getCustomOpenLabel,
+  formatOverrideTitle,
+} from "@/lib/utils/schedule-helpers";
 
 export default function AdminCommandSchedulePage() {
   // Calendar Navigation State
@@ -270,16 +275,6 @@ export default function AdminCommandSchedulePage() {
             </p>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => handleOpenCreateOverride()}
-            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#203a52] text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-xs transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Schedule Override</span>
-          </button>
-        </div>
       </div>
 
       {/* Summary KPI Overview Cards */}
@@ -448,7 +443,7 @@ export default function AdminCommandSchedulePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-              <span>Custom Hours</span>
+              <span>Custom Open</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
@@ -519,14 +514,18 @@ export default function AdminCommandSchedulePage() {
                             <span
                               className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md leading-none ${
                                 day.overrideStatus === "CUSTOM_HOURS"
-                                  ? "bg-purple-100 text-purple-800 border border-purple-300"
+                                  ? isDefaultShift(day.timeWindows)
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                    : "bg-purple-100 text-purple-800 border border-purple-300"
                                   : day.isClosed
                                   ? "bg-red-100 text-red-700 border border-red-200"
                                   : "bg-emerald-100 text-emerald-700"
                               }`}
                             >
                               {day.overrideStatus === "CUSTOM_HOURS"
-                                ? "Custom"
+                                ? isDefaultShift(day.timeWindows)
+                                  ? "Open"
+                                  : "Custom Open"
                                 : day.isClosed
                                 ? "Closed"
                                 : "Open"}
@@ -546,12 +545,14 @@ export default function AdminCommandSchedulePage() {
                             <div
                               className={`mt-1 px-1.5 py-0.5 text-[10px] font-bold rounded truncate ${
                                 day.overrideStatus === "CUSTOM_HOURS"
-                                  ? "bg-purple-100/80 text-purple-900 border border-purple-200"
+                                  ? isDefaultShift(day.timeWindows)
+                                    ? "bg-emerald-100/80 text-emerald-900 border border-emerald-200"
+                                    : "bg-purple-100/80 text-purple-900 border border-purple-200"
                                   : "bg-red-100/80 text-red-900 border border-red-200"
                               }`}
-                              title={day.overrideTitle}
+                              title={formatOverrideTitle(day.overrideTitle, day.timeWindows)}
                             >
-                              {day.overrideTitle}
+                              {formatOverrideTitle(day.overrideTitle, day.timeWindows)}
                             </div>
                           )}
 
@@ -586,7 +587,9 @@ export default function AdminCommandSchedulePage() {
                               <span
                                 className={`font-bold ${
                                   day.overrideStatus === "CUSTOM_HOURS"
-                                    ? "text-purple-700"
+                                    ? isDefaultShift(day.timeWindows)
+                                      ? "text-emerald-700"
+                                      : "text-purple-700"
                                     : "text-emerald-700"
                                 }`}
                               >
@@ -663,12 +666,14 @@ export default function AdminCommandSchedulePage() {
                         <div
                           className={`mt-1.5 p-1 text-[10px] font-bold rounded-md truncate ${
                             day.overrideStatus === "CUSTOM_HOURS"
-                              ? "bg-purple-100 border border-purple-300 text-purple-900"
+                              ? isDefaultShift(day.timeWindows)
+                                ? "bg-emerald-100 border border-emerald-300 text-emerald-900"
+                                : "bg-purple-100 border border-purple-300 text-purple-900"
                               : "bg-red-100 border border-red-300 text-red-900"
                           }`}
-                          title={day.overrideTitle}
+                          title={formatOverrideTitle(day.overrideTitle, day.timeWindows)}
                         >
-                          {day.overrideTitle}
+                          {formatOverrideTitle(day.overrideTitle, day.timeWindows)}
                         </div>
                       )}
                       {day.overrideDescription && (
@@ -682,14 +687,18 @@ export default function AdminCommandSchedulePage() {
                         <span
                           className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md ${
                             day.overrideStatus === "CUSTOM_HOURS"
-                              ? "bg-purple-100 text-purple-800 border border-purple-300"
+                              ? isDefaultShift(day.timeWindows)
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : "bg-purple-100 text-purple-800 border border-purple-300"
                               : day.isClosed
                               ? "bg-red-100 text-red-700 border border-red-200"
                               : "bg-emerald-100 text-emerald-700"
                           }`}
                         >
                           {day.overrideStatus === "CUSTOM_HOURS"
-                            ? "Custom Hours"
+                            ? isDefaultShift(day.timeWindows)
+                              ? "Open"
+                              : "Custom Open"
                             : day.isClosed
                             ? "Closed"
                             : "Open"}
@@ -721,7 +730,9 @@ export default function AdminCommandSchedulePage() {
                         onClick={() => handleOpenDayDetails(day)}
                         className={`w-full py-1.5 text-[11px] font-bold rounded-lg transition-colors ${
                           day.overrideStatus === "CUSTOM_HOURS"
-                            ? "bg-purple-100 hover:bg-purple-200 text-purple-800"
+                            ? isDefaultShift(day.timeWindows)
+                              ? "bg-emerald-100 hover:bg-emerald-200 text-emerald-800"
+                              : "bg-purple-100 hover:bg-purple-200 text-purple-800"
                             : day.isOpen
                             ? "bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68]"
                             : "bg-slate-100 text-slate-500"
@@ -729,7 +740,9 @@ export default function AdminCommandSchedulePage() {
                       >
                         {day.isOpen
                           ? day.overrideStatus === "CUSTOM_HOURS"
-                            ? "Custom Hours"
+                            ? isDefaultShift(day.timeWindows)
+                              ? "Open"
+                              : "Custom Open"
                             : "8 AM – 6 PM"
                           : "Closed"}
                       </button>
@@ -751,7 +764,7 @@ export default function AdminCommandSchedulePage() {
                 </h3>
                 <p className="text-xs text-[#64748B] mt-0.5">
                   Availability Source: {singleDayData.source.replace("_", " ")}
-                  {singleDayData.overrideTitle ? ` (${singleDayData.overrideTitle})` : ""}
+                  {singleDayData.overrideTitle ? ` (${formatOverrideTitle(singleDayData.overrideTitle, singleDayData.timeWindows)})` : ""}
                 </p>
               </div>
 
@@ -766,7 +779,7 @@ export default function AdminCommandSchedulePage() {
                   onClick={() => handleOpenCreateOverride(singleDayData.date, "CUSTOM_HOURS")}
                   className="px-3 py-1.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-xl text-xs font-bold transition-colors"
                 >
-                  Custom Hours
+                  Custom Open
                 </button>
                 <button
                   onClick={() => {
@@ -931,7 +944,7 @@ export default function AdminCommandSchedulePage() {
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="CLOSED">Closed Only</option>
-                  <option value="CUSTOM_HOURS">Custom Hours</option>
+                  <option value="CUSTOM_HOURS">Custom Open</option>
                 </select>
               </div>
             </div>
@@ -971,7 +984,7 @@ export default function AdminCommandSchedulePage() {
                     {paginatedOverrides.map((item) => (
                       <tr key={item.id} className="hover:bg-[#F8FAFC] transition-colors">
                         <td className="p-3.5 font-bold text-[#243746]">
-                          <p>{item.title}</p>
+                          <p>{formatOverrideTitle(item.title, item.timeWindows)}</p>
                           {item.description && (
                             <p className="text-[11px] text-[#64748B] font-normal">
                               {item.description}
@@ -995,11 +1008,19 @@ export default function AdminCommandSchedulePage() {
                               item.status === "CLOSED"
                                 ? "bg-red-50 text-red-700 border border-red-200"
                                 : item.status === "CUSTOM_HOURS"
-                                ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                ? isDefaultShift(item.timeWindows)
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : "bg-purple-50 text-purple-700 border border-purple-200"
                                 : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             }`}
                           >
-                            {item.status}
+                            {item.status === "CUSTOM_HOURS"
+                              ? isDefaultShift(item.timeWindows)
+                                ? "Open"
+                                : "Custom Open"
+                              : item.status === "CLOSED"
+                              ? "Closed"
+                              : item.status}
                           </span>
                         </td>
                         <td className="p-3.5 text-[#64748B]">
