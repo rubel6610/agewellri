@@ -57,6 +57,68 @@ const CORE_AUTOMATIC_COMPETENCIES = [
   },
 ];
 
+/**
+ * Safely extract ISO/string date from string, Date, or Mongo $date object.
+ */
+const extractDateString = (val: any): string => {
+  if (!val) return "";
+  if (typeof val === "string") return val.trim();
+  if (val?.$date) {
+    return typeof val.$date === "string"
+      ? val.$date.trim()
+      : new Date(val.$date).toISOString();
+  }
+  if (val instanceof Date) return val.toISOString();
+  return String(val).trim();
+};
+
+/**
+ * Format date for input[type="date"] (YYYY-MM-DD), resilient to timezone offsets.
+ */
+const formatDateForInput = (val: any): string => {
+  const str = extractDateString(val);
+  if (!str) return "";
+  const match = str.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split("T")[0];
+    }
+  } catch {}
+  return "";
+};
+
+/**
+ * Format date for UI display with custom options.
+ */
+const formatDateDisplay = (
+  val: any,
+  options: Intl.DateTimeFormatOptions = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  },
+): string => {
+  const str = extractDateString(val);
+  if (!str) return "";
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const d = new Date(year, month, day);
+    return d.toLocaleDateString("en-US", options);
+  }
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", options);
+    }
+  } catch {}
+  return str;
+};
+
 export default function SpecialistsPage() {
   const {
     data: specialists = [],
@@ -64,17 +126,22 @@ export default function SpecialistsPage() {
     isFetching,
     refetch,
   } = useGetAllSpecialistsQuery(undefined, { refetchOnMountOrArgChange: true });
-  const [createSpecialist, { isLoading: isCreating }] = useCreateSpecialistMutation();
-  const [updateSpecialist, { isLoading: isUpdating }] = useUpdateSpecialistMutation();
-  const [deleteSpecialist, { isLoading: isDeleting }] = useDeleteSpecialistMutation();
+  const [createSpecialist, { isLoading: isCreating }] =
+    useCreateSpecialistMutation();
+  const [updateSpecialist, { isLoading: isUpdating }] =
+    useUpdateSpecialistMutation();
+  const [deleteSpecialist, { isLoading: isDeleting }] =
+    useDeleteSpecialistMutation();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSpecialist, setEditingSpecialist] = useState<SpecialistItem | null>(null);
-  const [viewingSpecialist, setViewingSpecialist] = useState<SpecialistItem | null>(null);
+  const [editingSpecialist, setEditingSpecialist] =
+    useState<SpecialistItem | null>(null);
+  const [viewingSpecialist, setViewingSpecialist] =
+    useState<SpecialistItem | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -85,7 +152,9 @@ export default function SpecialistsPage() {
     shssCertified: false,
     shssRenewalDate: "",
     cprCertified: false,
+    cprExpiryDate: "",
     aedCertified: false,
+    aedExpiryDate: "",
     backgroundChecked: true,
     bilingualSpanish: false,
     color: "#294B68",
@@ -96,6 +165,7 @@ export default function SpecialistsPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const openCreateModal = () => {
+    setViewingSpecialist(null);
     setEditingSpecialist(null);
     setFormData({
       name: "",
@@ -105,7 +175,9 @@ export default function SpecialistsPage() {
       shssCertified: false,
       shssRenewalDate: "",
       cprCertified: false,
+      cprExpiryDate: "",
       aedCertified: false,
+      aedExpiryDate: "",
       backgroundChecked: true,
       bilingualSpanish: false,
       color: "#294B68",
@@ -117,44 +189,59 @@ export default function SpecialistsPage() {
   };
 
   const openEditModal = (specialist: SpecialistItem) => {
+    if (!specialist) return;
+    setViewingSpecialist(null);
     setEditingSpecialist(specialist);
 
     // Fallback checks from legacy specialties string arrays if boolean flags not yet stored
-    const legacySpecs = (specialist.specialties || []).map((s) => s.toLowerCase());
+    const legacySpecs = (specialist.specialties || []).map((s) =>
+      typeof s === "string" ? s.toLowerCase() : String(s || "").toLowerCase(),
+    );
+    const titleLower = String(specialist.title || "").toLowerCase();
+
     const hasShss =
-      specialist.shssCertified ??
-      legacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
+      Boolean(specialist.shssCertified) ||
+      titleLower.includes("senior home safety") ||
+      titleLower.includes("shss") ||
+      legacySpecs.some(
+        (s) => s.includes("shss") || s.includes("senior home safety"),
+      );
+
     const hasCpr =
-      specialist.cprCertified ?? legacySpecs.some((s) => s.includes("cpr"));
+      Boolean(specialist.cprCertified) ||
+      titleLower.includes("cpr") ||
+      legacySpecs.some((s) => s.includes("cpr"));
+
     const hasAed =
-      specialist.aedCertified ?? legacySpecs.some((s) => s.includes("aed"));
+      Boolean(specialist.aedCertified) ||
+      titleLower.includes("aed") ||
+      legacySpecs.some((s) => s.includes("aed"));
+
     const hasBg =
-      specialist.backgroundChecked ??
-      (legacySpecs.some((s) => s.includes("background")) || true);
+      specialist.backgroundChecked !== undefined &&
+      specialist.backgroundChecked !== null
+        ? Boolean(specialist.backgroundChecked)
+        : legacySpecs.some((s) => s.includes("background")) || true;
+
     const hasBilingual =
-      specialist.bilingualSpanish ??
+      Boolean(specialist.bilingualSpanish) ||
       legacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
 
-    let renewalDateStr = "";
-    if (specialist.shssRenewalDate) {
-      try {
-        renewalDateStr = new Date(specialist.shssRenewalDate)
-          .toISOString()
-          .split("T")[0];
-      } catch {
-        renewalDateStr = String(specialist.shssRenewalDate);
-      }
-    }
+    const renewalDateStr = formatDateForInput(specialist.shssRenewalDate);
+    const cprExpiryDateStr = formatDateForInput(specialist.cprExpiryDate);
+    const aedExpiryDateStr = formatDateForInput(specialist.aedExpiryDate);
 
     setFormData({
-      name: specialist.name,
+      name: specialist.name || "",
       title: specialist.title || "Home Safety Specialist",
       email: specialist.email || "",
       phone: specialist.phone || "",
       shssCertified: Boolean(hasShss),
       shssRenewalDate: renewalDateStr,
       cprCertified: Boolean(hasCpr),
+      cprExpiryDate: cprExpiryDateStr,
       aedCertified: Boolean(hasAed),
+      aedExpiryDate: aedExpiryDateStr,
       backgroundChecked: Boolean(hasBg),
       bilingualSpanish: Boolean(hasBilingual),
       color: specialist.color || "#294B68",
@@ -173,11 +260,15 @@ export default function SpecialistsPage() {
     }
 
     const confirmed = await confirmEdit({
-      title: editingSpecialist ? `Update "${formData.name}"?` : `Add "${formData.name}"?`,
+      title: editingSpecialist
+        ? `Update "${formData.name}"?`
+        : `Add "${formData.name}"?`,
       text: editingSpecialist
         ? "Save changes to this specialist's qualifications & directory profile?"
         : "Add this specialist to your active team directory?",
-      confirmButtonText: editingSpecialist ? "Yes, Update" : "Yes, Add Specialist",
+      confirmButtonText: editingSpecialist
+        ? "Yes, Update"
+        : "Yes, Add Specialist",
     });
 
     if (!confirmed) return;
@@ -196,8 +287,10 @@ export default function SpecialistsPage() {
       }
       if (formData.cprCertified) capabilitiesList.push("CPR Certified");
       if (formData.aedCertified) capabilitiesList.push("AED Certified");
-      if (formData.backgroundChecked) capabilitiesList.push("Background-Checked");
-      if (formData.bilingualSpanish) capabilitiesList.push("Bilingual (English & Spanish)");
+      if (formData.backgroundChecked)
+        capabilitiesList.push("Background-Checked");
+      if (formData.bilingualSpanish)
+        capabilitiesList.push("Bilingual (English & Spanish)");
 
       const payload = {
         name: formData.name.trim(),
@@ -211,7 +304,15 @@ export default function SpecialistsPage() {
             ? formData.shssRenewalDate
             : null,
         cprCertified: formData.cprCertified,
+        cprExpiryDate:
+          formData.cprCertified && formData.cprExpiryDate
+            ? formData.cprExpiryDate
+            : null,
         aedCertified: formData.aedCertified,
+        aedExpiryDate:
+          formData.aedCertified && formData.aedExpiryDate
+            ? formData.aedExpiryDate
+            : null,
         backgroundChecked: formData.backgroundChecked,
         bilingualSpanish: formData.bilingualSpanish,
         color: formData.color,
@@ -226,20 +327,21 @@ export default function SpecialistsPage() {
         }).unwrap();
         await showSuccessAlert(
           "Specialist Updated",
-          `"${formData.name}" profile & credentials have been updated.`
+          `"${formData.name}" profile & credentials have been updated.`,
         );
       } else {
         await createSpecialist(payload).unwrap();
         await showSuccessAlert(
           "Specialist Added",
-          `"${formData.name}" has been added to the specialist roster.`
+          `"${formData.name}" has been added to the specialist roster.`,
         );
       }
 
       setIsModalOpen(false);
       refetch();
     } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "Failed to save specialist.";
+      const msg =
+        err?.data?.message || err?.message || "Failed to save specialist.";
       setFormError(msg);
       showErrorAlert("Save Failed", msg);
     }
@@ -259,7 +361,7 @@ export default function SpecialistsPage() {
       showToast(`"${specialist.name}" has been deleted.`, "success");
       await showSuccessAlert(
         "Specialist Deleted",
-        `"${specialist.name}" has been removed from the directory.`
+        `"${specialist.name}" has been removed from the directory.`,
       );
       if (isModalOpen) {
         setIsModalOpen(false);
@@ -268,7 +370,7 @@ export default function SpecialistsPage() {
     } catch (err: any) {
       showErrorAlert(
         "Delete Failed",
-        err?.data?.message || err?.message || "Failed to delete specialist."
+        err?.data?.message || err?.message || "Failed to delete specialist.",
       );
     }
   };
@@ -280,10 +382,12 @@ export default function SpecialistsPage() {
       s.title.toLowerCase().includes(term) ||
       (s.phone && s.phone.includes(term)) ||
       (s.email && s.email.toLowerCase().includes(term)) ||
-      (s.shssCertified && (term.includes("shss") || term.includes("safety specialist"))) ||
+      (s.shssCertified &&
+        (term.includes("shss") || term.includes("safety specialist"))) ||
       (s.cprCertified && term.includes("cpr")) ||
       (s.aedCertified && term.includes("aed")) ||
-      (s.bilingualSpanish && (term.includes("bilingual") || term.includes("spanish"))) ||
+      (s.bilingualSpanish &&
+        (term.includes("bilingual") || term.includes("spanish"))) ||
       s.specialties.some((spec) => spec.toLowerCase().includes(term));
 
     const matchesStatus =
@@ -313,7 +417,8 @@ export default function SpecialistsPage() {
             </h1>
           </div>
           <p className="text-sm text-[#64748B] mt-1">
-            Manage certified field technicians, track qualifications (SHSS, CPR, AED, Background-Checked, Bilingual), and monitor renewal cycles.
+            Manage certified field technicians, track qualifications (SHSS, CPR,
+            AED, Background-Checked, Bilingual), and monitor renewal cycles.
           </p>
         </div>
 
@@ -349,7 +454,7 @@ export default function SpecialistsPage() {
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
             <input
               type="search"
-              placeholder="Search by name, certification (SHSS, CPR, AED), role, or phone..."
+              placeholder="Search by name, phone..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -384,8 +489,12 @@ export default function SpecialistsPage() {
         ) : filteredSpecialists.length === 0 ? (
           <div className="p-12 text-center bg-[#F7FAFC] rounded-2xl border border-[#D9E4EC] space-y-3">
             <UserCheck className="w-12 h-12 text-[#5E8FB2] mx-auto opacity-50" />
-            <h3 className="text-base font-bold text-[#243746]">No specialists found</h3>
-            <p className="text-xs text-[#64748B]">Try adjusting your search query or status filter.</p>
+            <h3 className="text-base font-bold text-[#243746]">
+              No specialists found
+            </h3>
+            <p className="text-xs text-[#64748B]">
+              Try adjusting your search query or status filter.
+            </p>
           </div>
         ) : (
           /* Table View */
@@ -396,7 +505,10 @@ export default function SpecialistsPage() {
                   <tr className="border-b border-[#D9E4EC] text-xs font-bold text-[#64748B] uppercase tracking-wider">
                     <th className="py-3.5 px-4">Specialist</th>
                     <th className="py-3.5 px-4">Contact Info</th>
-                    <th className="py-3.5 px-4"> Specific Qualifications & Certifications</th>
+                    <th className="py-3.5 px-4">
+                      {" "}
+                      Specific Qualifications & Certifications
+                    </th>
                     <th className="py-3.5 px-4">Assignments</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
@@ -404,23 +516,49 @@ export default function SpecialistsPage() {
                 </thead>
                 <tbody className="divide-y divide-[#D9E4EC]/60 text-sm font-medium text-[#243746]">
                   {paginatedSpecialists.map((specialist) => {
-                    const legacySpecs = (specialist.specialties || []).map((s) => s.toLowerCase());
+                    const legacySpecs = (specialist.specialties || []).map(
+                      (s) =>
+                        typeof s === "string"
+                          ? s.toLowerCase()
+                          : String(s || "").toLowerCase(),
+                    );
+                    const titleLower = String(
+                      specialist.title || "",
+                    ).toLowerCase();
                     const isShss =
-                      specialist.shssCertified ??
-                      legacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
+                      Boolean(specialist.shssCertified) ||
+                      titleLower.includes("senior home safety") ||
+                      titleLower.includes("shss") ||
+                      legacySpecs.some(
+                        (s) =>
+                          s.includes("shss") ||
+                          s.includes("senior home safety"),
+                      );
                     const isCpr =
-                      specialist.cprCertified ?? legacySpecs.some((s) => s.includes("cpr"));
+                      Boolean(specialist.cprCertified) ||
+                      titleLower.includes("cpr") ||
+                      legacySpecs.some((s) => s.includes("cpr"));
                     const isAed =
-                      specialist.aedCertified ?? legacySpecs.some((s) => s.includes("aed"));
+                      Boolean(specialist.aedCertified) ||
+                      titleLower.includes("aed") ||
+                      legacySpecs.some((s) => s.includes("aed"));
                     const isBg =
-                      specialist.backgroundChecked ??
-                      (legacySpecs.some((s) => s.includes("background")) || true);
+                      specialist.backgroundChecked !== undefined &&
+                      specialist.backgroundChecked !== null
+                        ? Boolean(specialist.backgroundChecked)
+                        : legacySpecs.some((s) => s.includes("background")) ||
+                          true;
                     const isBilingual =
-                      specialist.bilingualSpanish ??
-                      legacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
+                      Boolean(specialist.bilingualSpanish) ||
+                      legacySpecs.some(
+                        (s) => s.includes("bilingual") || s.includes("spanish"),
+                      );
 
                     return (
-                      <tr key={specialist.id} className="hover:bg-[#F7FAFC] transition-colors">
+                      <tr
+                        key={specialist.id}
+                        className="hover:bg-[#F7FAFC] transition-colors"
+                      >
                         {/* Specialist Name & Avatar */}
                         <td className="py-4 px-4">
                           <button
@@ -430,7 +568,9 @@ export default function SpecialistsPage() {
                           >
                             <div
                               className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs group-hover:scale-105 transition-transform"
-                              style={{ backgroundColor: specialist.color || "#294B68" }}
+                              style={{
+                                backgroundColor: specialist.color || "#294B68",
+                              }}
                             >
                               {specialist.name
                                 .split(" ")
@@ -473,12 +613,15 @@ export default function SpecialistsPage() {
                                 <Award className="w-3 h-3 text-[#294B68]" />
                                 <span>SHSS Certified</span>
                                 {specialist.shssRenewalDate && (
-                                   <span className="text-[10px] text-[#5E8FB2] ml-0.5 font-semibold">
-                                    (Renews:{" "}
-                                    {new Date(specialist.shssRenewalDate).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
+                                  <span className="text-[10px] text-[#5E8FB2] ml-0.5 font-semibold">
+                                    (Exp:{" "}
+                                    {formatDateDisplay(
+                                      specialist.shssRenewalDate,
+                                      {
+                                        month: "short",
+                                        year: "numeric",
+                                      },
+                                    )}
                                     )
                                   </span>
                                 )}
@@ -490,6 +633,19 @@ export default function SpecialistsPage() {
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
                                 <HeartPulse className="w-3 h-3 text-rose-600" />
                                 <span>CPR</span>
+                                {specialist.cprExpiryDate && (
+                                  <span className="text-[10px] text-rose-700 ml-0.5 font-semibold">
+                                    (Exp:{" "}
+                                    {formatDateDisplay(
+                                      specialist.cprExpiryDate,
+                                      {
+                                        month: "short",
+                                        year: "numeric",
+                                      },
+                                    )}
+                                    )
+                                  </span>
+                                )}
                               </span>
                             ) : null}
 
@@ -498,6 +654,19 @@ export default function SpecialistsPage() {
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
                                 <Zap className="w-3 h-3 text-amber-600" />
                                 <span>AED</span>
+                                {specialist.aedExpiryDate && (
+                                  <span className="text-[10px] text-amber-700 ml-0.5 font-semibold">
+                                    (Exp:{" "}
+                                    {formatDateDisplay(
+                                      specialist.aedExpiryDate,
+                                      {
+                                        month: "short",
+                                        year: "numeric",
+                                      },
+                                    )}
+                                    )
+                                  </span>
+                                )}
                               </span>
                             ) : null}
 
@@ -532,7 +701,9 @@ export default function SpecialistsPage() {
                         <td className="py-4 px-4">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
                             <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                            <span>{specialist.activeAssignmentsCount} visits</span>
+                            <span>
+                              {specialist.activeAssignmentsCount} visits
+                            </span>
                           </span>
                         </td>
 
@@ -609,10 +780,15 @@ export default function SpecialistsPage() {
               <div>
                 <h3 className="font-black text-lg text-[#243746] flex items-center gap-2">
                   <UserCheck className="w-5 h-5 text-[#294B68]" />
-                  <span>{editingSpecialist ? "Edit Specialist Profile" : "Add New Specialist"}</span>
+                  <span>
+                    {editingSpecialist
+                      ? "Edit Specialist Profile"
+                      : "Add New Specialist"}
+                  </span>
                 </h3>
                 <p className="text-xs text-[#64748B] mt-0.5">
-                  Configure qualifications, certified skills, and SHSS renewal tracking.
+                  Configure qualifications, certified skills, and certification
+                  expiry tracking.
                 </p>
               </div>
               <button
@@ -647,7 +823,9 @@ export default function SpecialistsPage() {
                       required
                       placeholder="e.g. Cory Poplaski"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     />
                   </div>
@@ -660,7 +838,9 @@ export default function SpecialistsPage() {
                       type="text"
                       placeholder="e.g. Senior Home Safety Specialist"
                       value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     />
                   </div>
@@ -675,7 +855,9 @@ export default function SpecialistsPage() {
                       type="tel"
                       placeholder="(401) 555-0144"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     />
                   </div>
@@ -688,7 +870,9 @@ export default function SpecialistsPage() {
                       type="email"
                       placeholder="mark.johnson@agewellri.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     />
                   </div>
@@ -709,8 +893,12 @@ export default function SpecialistsPage() {
                       }
                       className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                     >
-                      <option value="ACTIVE">Active (Available for Visits)</option>
-                      <option value="INACTIVE">Inactive (Off-Duty / Archived)</option>
+                      <option value="ACTIVE">
+                        Active (Available for Visits)
+                      </option>
+                      <option value="INACTIVE">
+                        Inactive (Off-Duty / Archived)
+                      </option>
                     </select>
                   </div>
 
@@ -722,7 +910,9 @@ export default function SpecialistsPage() {
                       <input
                         type="color"
                         value={formData.color}
-                        onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, color: e.target.value })
+                        }
                         className="w-10 h-10 p-0.5 rounded-xl border border-[#D9E4EC] cursor-pointer bg-white"
                       />
                       <span className="text-xs font-mono text-[#64748B]">
@@ -772,7 +962,7 @@ export default function SpecialistsPage() {
                             <span>Senior Home Safety Specialist (SHSS)</span>
                           </div>
                           <p className="text-[11px] text-[#64748B] mt-0.5">
-                           Certified by Age Safe® America.
+                            Certified by Age Safe® America.
                           </p>
                         </div>
                       </div>
@@ -788,12 +978,12 @@ export default function SpecialistsPage() {
                       </span>
                     </label>
 
-                    {/* SHSS Renewal Date Tracking Field (shown when checked) */}
+                    {/* SHSS Renewal / Expiry Date Tracking Field (shown when checked) */}
                     {formData.shssCertified && (
                       <div className="mt-3 pt-3 border-t border-[#D9E4EC] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                         <div className="flex items-center gap-1.5 text-xs font-bold text-[#243746]">
                           <Calendar className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                          <span>SHSS Certificate Renewal Date:</span>
+                          <span>SHSS Certificate Expiry Date:</span>
                         </div>
                         <input
                           type="date"
@@ -811,86 +1001,134 @@ export default function SpecialistsPage() {
                   </div>
 
                   {/* 2. CPR Certified */}
-                  <label
-                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                  <div
+                    className={`p-3.5 rounded-2xl border transition-all ${
                       formData.cprCertified
                         ? "bg-rose-50/60 border-rose-300 shadow-xs"
                         : "bg-[#F8FAFC] border-[#D9E4EC]"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={formData.cprCertified}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            cprCertified: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 mt-0.5 text-rose-600 rounded-md cursor-pointer shrink-0"
-                      />
-                      <div>
-                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
-                          <HeartPulse className="w-4 h-4 text-rose-600" />
-                          <span>CPR Certified</span>
+                    <label className="flex items-start justify-between gap-3 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.cprCertified}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              cprCertified: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 mt-0.5 text-rose-600 rounded-md cursor-pointer shrink-0"
+                        />
+                        <div>
+                          <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                            <HeartPulse className="w-4 h-4 text-rose-600" />
+                            <span>CPR Certified</span>
+                          </div>
+                          <p className="text-[11px] text-[#64748B] mt-0.5">
+                            Active Cardiopulmonary Resuscitation certified
+                            credential.
+                          </p>
                         </div>
-                        <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Active Cardiopulmonary Resuscitation certified credential.
-                        </p>
                       </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        formData.cprCertified
-                          ? "bg-rose-600 text-white"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {formData.cprCertified ? "Certified" : "Not Held"}
-                    </span>
-                  </label>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          formData.cprCertified
+                            ? "bg-rose-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {formData.cprCertified ? "Certified" : "Not Held"}
+                      </span>
+                    </label>
+
+                    {/* CPR Expiry Date Tracking Field (shown when checked) */}
+                    {formData.cprCertified && (
+                      <div className="mt-3 pt-3 border-t border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#243746]">
+                          <Calendar className="w-3.5 h-3.5 text-rose-500" />
+                          <span>CPR Certificate Expiry Date:</span>
+                        </div>
+                        <input
+                          type="date"
+                          value={formData.cprExpiryDate}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              cprExpiryDate: e.target.value,
+                            })
+                          }
+                          className="px-3 py-1.5 bg-white border border-rose-200 rounded-xl text-xs font-semibold text-[#243746] focus:outline-none focus:ring-2 focus:ring-rose-400"
+                        />
+                      </div>
+                    )}
+                  </div>
 
                   {/* 3. AED Certified */}
-                  <label
-                    className={`flex items-start justify-between gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                  <div
+                    className={`p-3.5 rounded-2xl border transition-all ${
                       formData.aedCertified
                         ? "bg-amber-50/60 border-amber-300 shadow-xs"
                         : "bg-[#F8FAFC] border-[#D9E4EC]"
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={formData.aedCertified}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            aedCertified: e.target.checked,
-                          })
-                        }
-                        className="w-4 h-4 mt-0.5 text-amber-600 rounded-md cursor-pointer shrink-0"
-                      />
-                      <div>
-                        <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
-                          <Zap className="w-4 h-4 text-amber-600" />
-                          <span>AED Certified</span>
+                    <label className="flex items-start justify-between gap-3 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          checked={formData.aedCertified}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              aedCertified: e.target.checked,
+                            })
+                          }
+                          className="w-4 h-4 mt-0.5 text-amber-600 rounded-md cursor-pointer shrink-0"
+                        />
+                        <div>
+                          <div className="flex items-center gap-1.5 font-extrabold text-[#243746] text-xs">
+                            <Zap className="w-4 h-4 text-amber-600" />
+                            <span>AED Certified</span>
+                          </div>
+                          <p className="text-[11px] text-[#64748B] mt-0.5">
+                            Automated External Defibrillator operation
+                            certified.
+                          </p>
                         </div>
-                        <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Automated External Defibrillator operation certified.
-                        </p>
                       </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        formData.aedCertified
-                          ? "bg-amber-600 text-white"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {formData.aedCertified ? "Certified" : "Not Held"}
-                    </span>
-                  </label>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          formData.aedCertified
+                            ? "bg-amber-600 text-white"
+                            : "bg-slate-200 text-slate-600"
+                        }`}
+                      >
+                        {formData.aedCertified ? "Certified" : "Not Held"}
+                      </span>
+                    </label>
+
+                    {/* AED Expiry Date Tracking Field (shown when checked) */}
+                    {formData.aedCertified && (
+                      <div className="mt-3 pt-3 border-t border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#243746]">
+                          <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                          <span>AED Certificate Expiry Date:</span>
+                        </div>
+                        <input
+                          type="date"
+                          value={formData.aedExpiryDate}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              aedExpiryDate: e.target.value,
+                            })
+                          }
+                          className="px-3 py-1.5 bg-white border border-amber-200 rounded-xl text-xs font-semibold text-[#243746] focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        />
+                      </div>
+                    )}
+                  </div>
 
                   {/* 4. Background-Checked */}
                   <label
@@ -918,7 +1156,8 @@ export default function SpecialistsPage() {
                           <span>Background-Checked</span>
                         </div>
                         <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Multi-state criminal history and vulnerable elder registry verified.
+                          Multi-state criminal history and vulnerable elder
+                          registry verified.
                         </p>
                       </div>
                     </div>
@@ -959,7 +1198,8 @@ export default function SpecialistsPage() {
                           <span>Bilingual — English &amp; Spanish</span>
                         </div>
                         <p className="text-[11px] text-[#64748B] mt-0.5">
-                          Fluent in English and Spanish for native Spanish-speaking clients.
+                          Fluent in English and Spanish for native
+                          Spanish-speaking clients.
                         </p>
                       </div>
                     </div>
@@ -980,10 +1220,13 @@ export default function SpecialistsPage() {
               <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
                   <Sparkles className="w-4 h-4 text-[#5E8FB2]" />
-                  <span>Core Standard Competencies (Included for All Specialists)</span>
+                  <span>
+                    Core Standard Competencies (Included for All Specialists)
+                  </span>
                 </div>
                 <p className="text-[11px] text-[#64748B]">
-                  All AgeWellRI specialists are standard-trained and verified across these 3 foundational pillars:
+                  All AgeWellRI specialists are standard-trained and verified
+                  across these 3 foundational pillars:
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
@@ -1013,7 +1256,9 @@ export default function SpecialistsPage() {
                   rows={2}
                   placeholder="e.g. Primary territory: South County / Washington County..."
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, notes: e.target.value })
+                  }
                   className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#5E8FB2]"
                 />
               </div>
@@ -1053,7 +1298,11 @@ export default function SpecialistsPage() {
                         <span>Saving...</span>
                       </>
                     ) : (
-                      <span>{editingSpecialist ? "Update Specialist" : "Create Specialist"}</span>
+                      <span>
+                        {editingSpecialist
+                          ? "Update Specialist"
+                          : "Create Specialist"}
+                      </span>
                     )}
                   </button>
                 </div>
@@ -1064,377 +1313,462 @@ export default function SpecialistsPage() {
       )}
 
       {/* View Specialist Details Modal */}
-      {viewingSpecialist && (() => {
-        const vLegacySpecs = (viewingSpecialist.specialties || []).map((s) => s.toLowerCase());
-        const vIsShss =
-          viewingSpecialist.shssCertified ??
-          vLegacySpecs.some((s) => s.includes("shss") || s.includes("senior home safety"));
-        const vIsCpr =
-          viewingSpecialist.cprCertified ?? vLegacySpecs.some((s) => s.includes("cpr"));
-        const vIsAed =
-          viewingSpecialist.aedCertified ?? vLegacySpecs.some((s) => s.includes("aed"));
-        const vIsBg =
-          viewingSpecialist.backgroundChecked ??
-          (vLegacySpecs.some((s) => s.includes("background")) || true);
-        const vIsBilingual =
-          viewingSpecialist.bilingualSpanish ??
-          vLegacySpecs.some((s) => s.includes("bilingual") || s.includes("spanish"));
+      {viewingSpecialist &&
+        (() => {
+          const vLegacySpecs = (viewingSpecialist.specialties || []).map((s) =>
+            typeof s === "string"
+              ? s.toLowerCase()
+              : String(s || "").toLowerCase(),
+          );
+          const vTitleLower = String(
+            viewingSpecialist.title || "",
+          ).toLowerCase();
 
-        let shssRenewalFormatted = null;
-        if (viewingSpecialist.shssRenewalDate) {
-          try {
-            shssRenewalFormatted = new Date(viewingSpecialist.shssRenewalDate).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            });
-          } catch {
-            shssRenewalFormatted = String(viewingSpecialist.shssRenewalDate);
-          }
-        }
+          const vIsShss =
+            Boolean(viewingSpecialist.shssCertified) ||
+            vTitleLower.includes("senior home safety") ||
+            vTitleLower.includes("shss") ||
+            vLegacySpecs.some(
+              (s) => s.includes("shss") || s.includes("senior home safety"),
+            );
 
-        return (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl border border-[#D9E4EC] max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-start justify-between border-b border-[#D9E4EC] pb-4">
-                <div className="flex items-center gap-3.5">
-                  <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 shadow-md"
-                    style={{ backgroundColor: viewingSpecialist.color || "#294B68" }}
-                  >
-                    {viewingSpecialist.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-black text-xl text-[#243746]">
-                        {viewingSpecialist.name}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          viewingSpecialist.status === "ACTIVE"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-100 text-slate-600 border border-slate-200"
-                        }`}
-                      >
-                        {viewingSpecialist.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#5E8FB2] font-bold mt-0.5">
-                      {viewingSpecialist.title || "Home Safety Specialist"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setViewingSpecialist(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+          const vIsCpr =
+            Boolean(viewingSpecialist.cprCertified) ||
+            vTitleLower.includes("cpr") ||
+            vLegacySpecs.some((s) => s.includes("cpr"));
 
-              {/* Quick Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
-                      Phone Number
-                    </span>
-                    {viewingSpecialist.phone ? (
-                      <a
-                        href={`tel:${viewingSpecialist.phone}`}
-                        className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
-                      >
-                        {viewingSpecialist.phone}
-                      </a>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium">Not provided</span>
-                    )}
-                  </div>
-                </div>
+          const vIsAed =
+            Boolean(viewingSpecialist.aedCertified) ||
+            vTitleLower.includes("aed") ||
+            vLegacySpecs.some((s) => s.includes("aed"));
 
-                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
-                      Email Address
-                    </span>
-                    {viewingSpecialist.email ? (
-                      <a
-                        href={`mailto:${viewingSpecialist.email}`}
-                        className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
-                      >
-                        {viewingSpecialist.email}
-                      </a>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium">Not provided</span>
-                    )}
-                  </div>
-                </div>
+          const vIsBg =
+            viewingSpecialist.backgroundChecked !== undefined &&
+            viewingSpecialist.backgroundChecked !== null
+              ? Boolean(viewingSpecialist.backgroundChecked)
+              : vLegacySpecs.some((s) => s.includes("background")) || true;
 
-                <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
-                    <CalendarCheck className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
-                      Active Assignments
-                    </span>
-                    <span className="text-xs font-bold text-[#243746] block">
-                      {viewingSpecialist.activeAssignmentsCount} visits assigned
-                    </span>
-                  </div>
-                </div>
-              </div>
+          const vIsBilingual =
+            Boolean(viewingSpecialist.bilingualSpanish) ||
+            vLegacySpecs.some(
+              (s) => s.includes("bilingual") || s.includes("spanish"),
+            );
 
-              {/* Section 1: Specific Qualifications & Certifications */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-[#294B68] flex items-center gap-1.5">
-                    <Award className="w-4 h-4 text-[#294B68]" />
-                    <span>Specific Qualifications &amp; Certifications</span>
-                  </h4>
-                  <span className="text-[11px] font-semibold text-[#5E8FB2]">
-                    Verified Credentials
-                  </span>
-                </div>
+          const shssRenewalFormatted = viewingSpecialist.shssRenewalDate
+            ? formatDateDisplay(viewingSpecialist.shssRenewalDate, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })
+            : null;
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* SHSS */}
-                  <div
-                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
-                      vIsShss
-                        ? "bg-[#F0F5F9] border-[#294B68]"
-                        : "bg-slate-50 border-slate-200 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <Award className={`w-4 h-4 mt-0.5 shrink-0 ${vIsShss ? "text-[#294B68]" : "text-slate-400"}`} />
-                      <div>
-                        <span className="font-extrabold text-xs text-[#243746] block">
-                          Senior Home Safety Specialist (SHSS)
-                        </span>
-                        {vIsShss && shssRenewalFormatted ? (
-                          <span className="text-[11px] font-semibold text-[#5E8FB2] flex items-center gap-1 mt-1">
-                            <Calendar className="w-3 h-3" />
-                            <span>Renewal Date: {shssRenewalFormatted}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-[#64748B] mt-0.5 block">
-                            {vIsShss ? "Certification Active" : "Not Held"}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        vIsShss ? "bg-[#294B68] text-white" : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {vIsShss ? "Certified" : "No"}
-                    </span>
-                  </div>
+          const cprExpiryFormatted = viewingSpecialist.cprExpiryDate
+            ? formatDateDisplay(viewingSpecialist.cprExpiryDate, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })
+            : null;
 
-                  {/* CPR */}
-                  <div
-                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
-                      vIsCpr
-                        ? "bg-rose-50 border-rose-200"
-                        : "bg-slate-50 border-slate-200 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <HeartPulse className={`w-4 h-4 mt-0.5 shrink-0 ${vIsCpr ? "text-rose-600" : "text-slate-400"}`} />
-                      <div>
-                        <span className="font-extrabold text-xs text-[#243746] block">
-                          CPR Certified
-                        </span>
-                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
-                          {vIsCpr ? "Cardiopulmonary Resuscitation" : "Not Held"}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        vIsCpr ? "bg-rose-600 text-white" : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {vIsCpr ? "Certified" : "No"}
-                    </span>
-                  </div>
+          const aedExpiryFormatted = viewingSpecialist.aedExpiryDate
+            ? formatDateDisplay(viewingSpecialist.aedExpiryDate, {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })
+            : null;
 
-                  {/* AED */}
-                  <div
-                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
-                      vIsAed
-                        ? "bg-amber-50 border-amber-200"
-                        : "bg-slate-50 border-slate-200 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <Zap className={`w-4 h-4 mt-0.5 shrink-0 ${vIsAed ? "text-amber-600" : "text-slate-400"}`} />
-                      <div>
-                        <span className="font-extrabold text-xs text-[#243746] block">
-                          AED Certified
-                        </span>
-                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
-                          {vIsAed ? "Defibrillator Operation" : "Not Held"}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        vIsAed ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {vIsAed ? "Certified" : "No"}
-                    </span>
-                  </div>
-
-                  {/* Background-Checked */}
-                  <div
-                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
-                      vIsBg
-                        ? "bg-emerald-50 border-emerald-200"
-                        : "bg-slate-50 border-slate-200 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <ShieldCheck className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBg ? "text-emerald-600" : "text-slate-400"}`} />
-                      <div>
-                        <span className="font-extrabold text-xs text-[#243746] block">
-                          Background-Checked
-                        </span>
-                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
-                          {vIsBg ? "Multi-State & Elder Registry Verified" : "Pending"}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        vIsBg ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {vIsBg ? "Verified" : "Pending"}
-                    </span>
-                  </div>
-
-                  {/* Bilingual */}
-                  <div
-                    className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 sm:col-span-2 ${
-                      vIsBilingual
-                        ? "bg-purple-50 border-purple-200"
-                        : "bg-slate-50 border-slate-200 opacity-60"
-                    }`}
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <Languages className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBilingual ? "text-purple-600" : "text-slate-400"}`} />
-                      <div>
-                        <span className="font-extrabold text-xs text-[#243746] block">
-                          Bilingual — English &amp; Spanish
-                        </span>
-                        <span className="text-[10px] text-[#64748B] mt-0.5 block">
-                          {vIsBilingual ? "Fluent in English and Spanish for native Spanish-speaking clients" : "English Only"}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
-                        vIsBilingual ? "bg-purple-600 text-white" : "bg-slate-200 text-slate-500"
-                      }`}
-                    >
-                      {vIsBilingual ? "Bilingual (EN/ES)" : "English Only"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 2: Core Standard Competencies (Automatic) */}
-              <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5">
-                <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-[#5E8FB2]" />
-                  <span>Core Standard Competencies (Included for All Specialists)</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-                  {CORE_AUTOMATIC_COMPETENCIES.map((core, cidx) => (
+          return (
+            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white rounded-3xl border border-[#D9E4EC] max-w-2xl w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                {/* Header */}
+                <div className="flex items-start justify-between border-b border-[#D9E4EC] pb-4">
+                  <div className="flex items-center gap-3.5">
                     <div
-                      key={cidx}
-                      className="p-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs space-y-0.5"
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 shadow-md"
+                      style={{
+                        backgroundColor: viewingSpecialist.color || "#294B68",
+                      }}
                     >
-                      <div className="flex items-center gap-1 font-bold text-[#243746] text-[11px]">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{core.title}</span>
+                      {viewingSpecialist.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-xl text-[#243746]">
+                          {viewingSpecialist.name}
+                        </h3>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                            viewingSpecialist.status === "ACTIVE"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-slate-100 text-slate-600 border border-slate-200"
+                          }`}
+                        >
+                          {viewingSpecialist.status}
+                        </span>
                       </div>
-                      <p className="text-[10px] text-[#64748B] leading-tight">
-                        {core.desc}
+                      <p className="text-xs text-[#5E8FB2] font-bold mt-0.5">
+                        {viewingSpecialist.title || "Home Safety Specialist"}
                       </p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Section 3: Notes & Metadata */}
-              {viewingSpecialist.notes && (
-                <div className="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-bold text-[#243746] uppercase tracking-wider block">
-                    Internal Administrative Notes
-                  </span>
-                  <p className="text-xs text-[#64748B] font-medium leading-relaxed">
-                    {viewingSpecialist.notes}
-                  </p>
-                </div>
-              )}
-
-              {/* Modal Footer Actions */}
-              <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#D9E4EC]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const target = viewingSpecialist;
-                    setViewingSpecialist(null);
-                    handleDeleteSpecialist(target);
-                  }}
-                  disabled={isDeleting}
-                  className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Delete Specialist</span>
-                </button>
-
-                <div className="flex items-center gap-2.5">
+                  </div>
                   <button
-                    type="button"
                     onClick={() => setViewingSpecialist(null)}
-                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
                   >
-                    Close
+                    <X className="w-5 h-5" />
                   </button>
+                </div>
+
+                {/* Quick Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                        Phone Number
+                      </span>
+                      {viewingSpecialist.phone ? (
+                        <a
+                          href={`tel:${viewingSpecialist.phone}`}
+                          className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
+                        >
+                          {viewingSpecialist.phone}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium">
+                          Not provided
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                        Email Address
+                      </span>
+                      {viewingSpecialist.email ? (
+                        <a
+                          href={`mailto:${viewingSpecialist.email}`}
+                          className="text-xs font-bold text-[#243746] hover:text-[#5E8FB2] transition-colors truncate block"
+                        >
+                          {viewingSpecialist.email}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium">
+                          Not provided
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#EAF3F8] text-[#294B68] flex items-center justify-center shrink-0">
+                      <CalendarCheck className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider block">
+                        Active Assignments
+                      </span>
+                      <span className="text-xs font-bold text-[#243746] block">
+                        {viewingSpecialist.activeAssignmentsCount} visits
+                        assigned
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 1: Specific Qualifications & Certifications */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#294B68] flex items-center gap-1.5">
+                      <Award className="w-4 h-4 text-[#294B68]" />
+                      <span>Specific Qualifications &amp; Certifications</span>
+                    </h4>
+                    <span className="text-[11px] font-semibold text-[#5E8FB2]">
+                      Verified Credentials
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* SHSS */}
+                    <div
+                      className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                        vIsShss
+                          ? "bg-[#F0F5F9] border-[#294B68]/30"
+                          : "bg-slate-50 border-slate-200 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <Award
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${vIsShss ? "text-[#294B68]" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="font-extrabold text-xs text-[#243746] block">
+                            Senior Home Safety Specialist (SHSS)
+                          </span>
+                          {vIsShss && shssRenewalFormatted ? (
+                            <span className="text-[11px] font-semibold text-[#5E8FB2] flex items-center gap-1 mt-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>Expiry Date: {shssRenewalFormatted}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                              {vIsShss ? "Certification Active" : "Not Held"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          vIsShss
+                            ? "bg-[#294B68] text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {vIsShss ? "Certified" : "No"}
+                      </span>
+                    </div>
+
+                    {/* CPR */}
+                    <div
+                      className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                        vIsCpr
+                          ? "bg-rose-50 border-rose-200"
+                          : "bg-slate-50 border-slate-200 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <HeartPulse
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${vIsCpr ? "text-rose-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="font-extrabold text-xs text-[#243746] block">
+                            CPR Certified
+                          </span>
+                          {vIsCpr && cprExpiryFormatted ? (
+                            <span className="text-[11px] font-semibold text-rose-600 flex items-center gap-1 mt-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>Expiry Date: {cprExpiryFormatted}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                              {vIsCpr
+                                ? "Cardiopulmonary Resuscitation"
+                                : "Not Held"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          vIsCpr
+                            ? "bg-rose-600 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {vIsCpr ? "Certified" : "No"}
+                      </span>
+                    </div>
+
+                    {/* AED */}
+                    <div
+                      className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                        vIsAed
+                          ? "bg-amber-50 border-amber-200"
+                          : "bg-slate-50 border-slate-200 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <Zap
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${vIsAed ? "text-amber-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="font-extrabold text-xs text-[#243746] block">
+                            AED Certified
+                          </span>
+                          {vIsAed && aedExpiryFormatted ? (
+                            <span className="text-[11px] font-semibold text-amber-600 flex items-center gap-1 mt-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>Expiry Date: {aedExpiryFormatted}</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                              {vIsAed ? "Defibrillator Operation" : "Not Held"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          vIsAed
+                            ? "bg-amber-600 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {vIsAed ? "Certified" : "No"}
+                      </span>
+                    </div>
+
+                    {/* Background-Checked */}
+                    <div
+                      className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 ${
+                        vIsBg
+                          ? "bg-emerald-50 border-emerald-200"
+                          : "bg-slate-50 border-slate-200 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <ShieldCheck
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBg ? "text-emerald-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="font-extrabold text-xs text-[#243746] block">
+                            Background-Checked
+                          </span>
+                          <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                            {vIsBg
+                              ? "Multi-State & Elder Registry Verified"
+                              : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          vIsBg
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {vIsBg ? "Verified" : "Pending"}
+                      </span>
+                    </div>
+
+                    {/* Bilingual */}
+                    <div
+                      className={`p-3.5 rounded-2xl border flex items-start justify-between gap-3 sm:col-span-2 ${
+                        vIsBilingual
+                          ? "bg-purple-50 border-purple-200"
+                          : "bg-slate-50 border-slate-200 opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <Languages
+                          className={`w-4 h-4 mt-0.5 shrink-0 ${vIsBilingual ? "text-purple-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="font-extrabold text-xs text-[#243746] block">
+                            Bilingual — English &amp; Spanish
+                          </span>
+                          <span className="text-[10px] text-[#64748B] mt-0.5 block">
+                            {vIsBilingual
+                              ? "Fluent in English and Spanish for native Spanish-speaking clients"
+                              : "English Only"}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md shrink-0 ${
+                          vIsBilingual
+                            ? "bg-purple-600 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {vIsBilingual ? "Bilingual (EN/ES)" : "English Only"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Core Standard Competencies (Automatic) */}
+                <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2.5">
+                  <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-[#5E8FB2]" />
+                    <span>
+                      Core Standard Competencies (Included for All Specialists)
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    {CORE_AUTOMATIC_COMPETENCIES.map((core, cidx) => (
+                      <div
+                        key={cidx}
+                        className="p-2.5 bg-white rounded-xl border border-[#D9E4EC] text-xs space-y-0.5"
+                      >
+                        <div className="flex items-center gap-1 font-bold text-[#243746] text-[11px]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{core.title}</span>
+                        </div>
+                        <p className="text-[10px] text-[#64748B] leading-tight">
+                          {core.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Section 3: Notes & Metadata */}
+                {viewingSpecialist.notes && (
+                  <div className="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl space-y-1">
+                    <span className="text-[10px] font-bold text-[#243746] uppercase tracking-wider block">
+                      Internal Administrative Notes
+                    </span>
+                    <p className="text-xs text-[#64748B] font-medium leading-relaxed">
+                      {viewingSpecialist.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-between gap-3 pt-3 border-t border-[#D9E4EC]">
                   <button
                     type="button"
                     onClick={() => {
                       const target = viewingSpecialist;
                       setViewingSpecialist(null);
-                      openEditModal(target);
+                      handleDeleteSpecialist(target);
                     }}
-                    className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                    disabled={isDeleting}
+                    className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 cursor-pointer flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    <span>Edit Profile</span>
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <span>Delete Specialist</span>
                   </button>
+
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewingSpecialist(null)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#64748B] hover:bg-slate-100 cursor-pointer"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = viewingSpecialist;
+                        setViewingSpecialist(null);
+                        openEditModal(target);
+                      }}
+                      className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit Profile</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
     </div>
   );
 }

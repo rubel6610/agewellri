@@ -8,7 +8,9 @@ export interface SpecialistItem {
   shssCertified?: boolean;
   shssRenewalDate?: string | null;
   cprCertified?: boolean;
+  cprExpiryDate?: string | null;
   aedCertified?: boolean;
+  aedExpiryDate?: string | null;
   backgroundChecked?: boolean;
   bilingualSpanish?: boolean;
   color: string;
@@ -29,7 +31,9 @@ export interface CreateSpecialistPayload {
   shssCertified?: boolean;
   shssRenewalDate?: string | null;
   cprCertified?: boolean;
+  cprExpiryDate?: string | null;
   aedCertified?: boolean;
+  aedExpiryDate?: string | null;
   backgroundChecked?: boolean;
   bilingualSpanish?: boolean;
   color?: string;
@@ -47,7 +51,9 @@ export interface UpdateSpecialistPayload {
   shssCertified?: boolean;
   shssRenewalDate?: string | null;
   cprCertified?: boolean;
+  cprExpiryDate?: string | null;
   aedCertified?: boolean;
+  aedExpiryDate?: string | null;
   backgroundChecked?: boolean;
   bilingualSpanish?: boolean;
   color?: string;
