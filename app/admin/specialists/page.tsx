@@ -21,7 +21,6 @@ import {
   AlertCircle,
   X,
   CalendarCheck,
-  Check,
   RefreshCw,
   ShieldCheck,
   HeartPulse,
