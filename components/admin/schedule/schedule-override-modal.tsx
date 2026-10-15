@@ -30,6 +30,7 @@ import {
   format24hTo12h,
   isDefaultShift,
   getCustomOpenLabel,
+  isAutoTitle,
 } from "@/lib/utils/schedule-helpers";
 
 interface ScheduleOverrideModalProps {
@@ -47,15 +48,7 @@ const STANDARD_TIMES_24H = [
   "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00",
 ];
 
-function isAutoTitle(t: string): boolean {
-  return (
-    t.startsWith("Office Closed") ||
-    t.startsWith("Custom Hours") ||
-    t.startsWith("Custom Open") ||
-    t.startsWith("Default Shift Open") ||
-    t.startsWith("Open")
-  );
-}
+
 
 export function ScheduleOverrideModal({
   isOpen,
@@ -99,7 +92,8 @@ export function ScheduleOverrideModal({
       setOverrideType(overrideItem.overrideType || "DATE");
       setDateMode(isSingle ? "SINGLE" : "RANGE");
       setStatus(overrideItem.status === "CLOSED" ? "CLOSED" : "CUSTOM_HOURS");
-      setTitle(overrideItem.title || "");
+      const existingTitle = overrideItem.title || "";
+      setTitle(isAutoTitle(existingTitle) ? "" : existingTitle);
       setDescription(overrideItem.description || "");
       setStartDate(cleanStart);
       setEndDate(cleanEnd);
@@ -120,13 +114,7 @@ export function ScheduleOverrideModal({
       setOverrideType("DATE");
       setDateMode("SINGLE");
       setStatus(targetStatus);
-      const defaultTitle =
-        targetStatus === "CLOSED"
-          ? `Office Closed (${targetDate})`
-          : isDefaultShift(initialWindows)
-          ? `Open (${targetDate})`
-          : `Custom Open (${targetDate})`;
-      setTitle(defaultTitle);
+      setTitle("");
       setDescription("");
       setStartDate(targetDate);
       setEndDate(targetDate);
@@ -162,27 +150,11 @@ export function ScheduleOverrideModal({
   if (!isOpen) return null;
 
   const handleAddTimeWindow = () => {
-    setTimeWindows((prev) => {
-      const next = [...prev, { start: "14:00", end: "18:00" }];
-      if (!isEditing && isAutoTitle(title)) {
-        setTitle(
-          `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
-        );
-      }
-      return next;
-    });
+    setTimeWindows((prev) => [...prev, { start: "14:00", end: "18:00" }]);
   };
 
   const handleRemoveTimeWindow = (idx: number) => {
-    setTimeWindows((prev) => {
-      const next = prev.filter((_, i) => i !== idx);
-      if (!isEditing && isAutoTitle(title)) {
-        setTitle(
-          `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
-        );
-      }
-      return next;
-    });
+    setTimeWindows((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleTimeChange = (
@@ -193,11 +165,6 @@ export function ScheduleOverrideModal({
     setTimeWindows((prev) => {
       const next = [...prev];
       next[idx] = { ...next[idx], [field]: value };
-      if (!isEditing && isAutoTitle(title)) {
-        setTitle(
-          `${isDefaultShift(next) ? "Open" : "Custom Open"} (${startDate || "Date"})`
-        );
-      }
       return next;
     });
   };
@@ -206,9 +173,6 @@ export function ScheduleOverrideModal({
     e.preventDefault();
     const errors: Record<string, string> = {};
 
-    if (!title.trim()) {
-      errors.title = "Title / Reason is required.";
-    }
     if (!startDate) {
       errors.startDate = "Start date is required.";
     }
@@ -313,12 +277,7 @@ export function ScheduleOverrideModal({
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setStatus("CLOSED");
-                    if (!isEditing && isAutoTitle(title)) {
-                      setTitle(`Office Closed (${startDate || "Date"})`);
-                    }
-                  }}
+                  onClick={() => setStatus("CLOSED")}
                   className={`p-3.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     status === "CLOSED"
                       ? "bg-red-50 border-red-300 text-red-700 shadow-xs ring-2 ring-red-400/20"
@@ -334,14 +293,7 @@ export function ScheduleOverrideModal({
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setStatus("CUSTOM_HOURS");
-                    if (!isEditing && isAutoTitle(title)) {
-                      setTitle(
-                        `${isDefaultShift(timeWindows) ? "Open" : "Custom Open"} (${startDate || "Date"})`
-                      );
-                    }
-                  }}
+                  onClick={() => setStatus("CUSTOM_HOURS")}
                   className={`p-3.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all text-xs font-bold cursor-pointer ${
                     status === "CUSTOM_HOURS"
                       ? "bg-purple-50 border-purple-300 text-purple-700 shadow-xs ring-2 ring-purple-400/20"
@@ -397,8 +349,8 @@ export function ScheduleOverrideModal({
             </div>
 
             {/* Date Range Selector */}
-            <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-xl space-y-3">
-              {overrideType === "DATE" && (
+            <div className="rounded-xl space-y-3">
+              {/* {overrideType === "DATE" && (
                 <div className="flex items-center gap-4 text-xs font-semibold text-[#243746]">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -424,7 +376,7 @@ export function ScheduleOverrideModal({
                     <span>Date Range (Multi-day)</span>
                   </label>
                 </div>
-              )}
+              )} */}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -441,15 +393,6 @@ export function ScheduleOverrideModal({
                       setStartDate(newStart);
                       if (dateMode === "SINGLE" && overrideType === "DATE") {
                         setEndDate(newStart);
-                      }
-                      if (!isEditing && isAutoTitle(title)) {
-                        if (status === "CLOSED") {
-                          setTitle(`Office Closed (${newStart || "Date"})`);
-                        } else {
-                          setTitle(
-                            `${isDefaultShift(timeWindows) ? "Open" : "Custom Open"} (${newStart || "Date"})`
-                          );
-                        }
                       }
                     }}
                     className="w-full px-3 py-2 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2] focus:outline-none"
@@ -486,11 +429,12 @@ export function ScheduleOverrideModal({
             {/* Title & Reason */}
             <div>
               <label className="block text-xs font-bold text-[#243746] mb-1">
-                Title / Reason *
+                 Reason <span className="text-[11px] font-normal text-[#64748B]">(optional)</span>
               </label>
               <input
                 type="text"
                 value={title}
+              
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Independence Day Office Closure, Staff Workshop, Weekend Hours"
                 className="w-full px-3.5 py-2.5 bg-white border border-[#D9E4EC] rounded-xl text-xs font-semibold text-[#243746] focus:ring-2 focus:ring-[#5E8FB2] focus:outline-none"
@@ -505,7 +449,7 @@ export function ScheduleOverrideModal({
             {/* Description / Notes */}
             <div>
               <label className="block text-xs font-bold text-[#243746] mb-1">
-                Optional Notes / Client Message
+                Description (optional)
               </label>
               <textarea
                 value={description}

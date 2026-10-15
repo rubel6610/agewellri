@@ -10,7 +10,6 @@ import {
   ShieldAlert,
   CheckCircle2,
   CalendarX,
-  Edit3,
   Trash2,
   Plus,
   Sparkles,
@@ -23,6 +22,7 @@ import {
   isDefaultShift,
   getCustomOpenLabel,
   formatOverrideTitle,
+  isAutoTitle,
 } from "@/lib/utils/schedule-helpers";
 
 interface DateDetailsDrawerProps {
@@ -133,24 +133,12 @@ export function DateDetailsDrawer({
                       ? getCustomOpenLabel(dayData.timeWindows)
                       : "Closed Override"}
                   </span>
-                  <p className="text-xs font-bold">
-                    {formatOverrideTitle(dayData.overrideTitle, dayData.timeWindows)}
-                  </p>
+                  {dayData.overrideTitle && !isAutoTitle(dayData.overrideTitle) && (
+                    <p className="text-xs font-bold">
+                      {dayData.overrideTitle}
+                    </p>
+                  )}
                 </div>
-                {onOpenEditOverride && dayData.overrideItem && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onClose();
-                      onOpenEditOverride(dayData.overrideItem!);
-                    }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#EAF3F8] text-[#294B68] rounded-lg text-xs font-bold border border-[#D9E4EC] shadow-2xs transition-colors shrink-0"
-                    title="Edit this schedule override"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Edit Override</span>
-                  </button>
-                )}
               </div>
               {dayData.overrideDescription && (
                 <p className="text-[11px] mt-1 opacity-90 font-medium">
@@ -189,7 +177,7 @@ export function DateDetailsDrawer({
               <h4 className="text-xs font-bold text-[#243746] uppercase tracking-wider">
                 Booked Visits ({dayData.bookedSlots.length})
               </h4>
-              {onOpenScheduleModal && dayData.isOpen && (
+              {/* {onOpenScheduleModal && dayData.isOpen && (
                 <button
                   onClick={() => {
                     onClose();
@@ -200,7 +188,7 @@ export function DateDetailsDrawer({
                   <Plus className="w-3.5 h-3.5" />
                   <span>Dispatch Visit</span>
                 </button>
-              )}
+              )} */}
             </div>
 
             {dayData.bookedSlots.length > 0 ? (
@@ -245,18 +233,6 @@ export function DateDetailsDrawer({
         {/* Quick Override Actions Footer */}
         <div className="px-6 py-4 bg-[#F8FAFC] border-t border-[#D9E4EC] flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {onOpenEditOverride && dayData.overrideItem && (
-              <button
-                onClick={() => {
-                  onClose();
-                  onOpenEditOverride(dayData.overrideItem!);
-                }}
-                className="px-3.5 py-1.5 bg-[#294B68] text-white hover:bg-[#203a52] rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-2xs"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Override</span>
-              </button>
-            )}
             <button
               onClick={() => {
                 onClose();

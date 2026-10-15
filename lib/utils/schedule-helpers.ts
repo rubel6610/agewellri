@@ -240,4 +240,20 @@ export function formatOverrideTitle(
   return title;
 }
 
+/**
+ * Checks whether an override title is an auto-generated title (e.g. "Custom Open (2026-10-14)", "Office Closed (...)")
+ * rather than an admin-entered title.
+ */
+export function isAutoTitle(t?: string | null): boolean {
+  if (!t) return false;
+  return (
+    t.startsWith("Office Closed") ||
+    t.startsWith("Custom Hours") ||
+    t.startsWith("Custom Open") ||
+    t.startsWith("Default Shift Open") ||
+    t.startsWith("Open (") ||
+    t === "Open"
+  );
+}
+
 

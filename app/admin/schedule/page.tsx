@@ -4,28 +4,11 @@ import React, { useState, useMemo } from "react";
 import {
   CalendarClock,
   Calendar as CalendarIcon,
-  CalendarCheck,
-  CalendarX,
-  Clock,
-  Plus,
-  Search,
   RefreshCw,
-  Edit3,
-  Trash2,
-  AlertCircle,
-  CheckCircle2,
-  ShieldAlert,
   Loader2,
-  X,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Flag,
-  User,
-  Layers,
-  Filter,
-  Info,
-  MessageSquare,
 } from "lucide-react";
 import {
   useGetCalendarScheduleQuery,
@@ -300,15 +283,18 @@ export default function AdminCommandSchedulePage() {
   ): ScheduleOverrideItem | null => {
     if (!day) return null;
     if (day.overrideItem) return day.overrideItem;
+    const targetDate = day.date.split("T")[0];
     return (
-      allOverrides.find(
-        (o) => o.startDate <= day.date && o.endDate >= day.date && o.isActive,
-      ) || null
+      allOverrides.find((o) => {
+        const s = String(o.startDate).split("T")[0];
+        const e = String(o.endDate || o.startDate).split("T")[0];
+        return s <= targetDate && e >= targetDate && o.isActive;
+      }) || null
     );
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6  min-h-screen">
+    <div className="p-4  space-y-3  min-h-screen">
       {/* Page Title & Actions Header */}
   
 
