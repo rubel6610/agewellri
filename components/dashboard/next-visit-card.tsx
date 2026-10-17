@@ -130,17 +130,27 @@ export function NextVisitCard({
           </div>
 
           <div className="flex items-center gap-2.5 text-xs sm:text-sm text-white/90 pt-1 border-t border-white/10">
-            <UserCheck className="w-4 h-4 text-[#5E8FB2]" />
-            <div>
-              <span className="font-bold block">
+            <UserCheck className="w-4 h-4 text-[#5E8FB2] shrink-0" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold block truncate">
+                  {appointment.technicianName &&
+                  appointment.technicianName !== "Unassigned Specialist"
+                    ? appointment.technicianName
+                    : "Pending Specialist Assignment"}
+                </span>
+                {isRequested && appointment.technicianId && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-200 border border-amber-300/40 px-2 py-0.5 rounded-md">
+                    Reserved
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-white/70 block">
                 {isRequested
-                  ? "Pending Admin Specialist Assignment"
-                  : appointment.technicianName}
-              </span>
-              <span className="text-xs text-white/70">
-                {isRequested
-                  ? "Our team is assigning a specialist"
-                  : appointment.technicianTitle}
+                  ? appointment.technicianId
+                    ? "Reserved Specialist (Pending Admin Confirmation)"
+                    : "Our team is assigning a specialist"
+                  : appointment.technicianTitle || "Senior Home Safety Specialist®"}
               </span>
             </div>
           </div>

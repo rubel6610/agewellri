@@ -67,6 +67,12 @@ export interface AvailableSlotItem {
   startMinutes: number;
   endMinutes: number;
   windowIndex: number;
+  totalCapacity?: number;
+  bookedCount?: number;
+  remainingCapacity?: number;
+  isAvailable?: boolean;
+  availableTechnicianIds?: string[];
+  availableTechnicians?: Array<{ id: string; name: string; title?: string }>;
 }
 
 export interface BookedSlotItem {
@@ -103,6 +109,8 @@ export interface DayAvailability {
   isHoliday: boolean;
   isPastDate: boolean;
   isToday: boolean;
+  totalCapacity?: number;
+  availableTechnicians?: Array<{ id: string; name: string; title?: string }>;
   availableSlots: AvailableSlotItem[];
   bookedSlots: BookedSlotItem[];
   allPossibleSlots?: AvailableSlotItem[];
@@ -110,6 +118,7 @@ export interface DayAvailability {
     totalPossibleSlots?: number;
     availableCount: number;
     bookedCount: number;
+    totalCapacity?: number;
   };
 }
 

@@ -85,12 +85,20 @@ export function VisitCard({ appointment, onReschedule }: VisitCardProps) {
           <span>{appointment.timeSlot}</span>
         </div>
         <div className="flex items-center gap-2 pt-1 border-t border-[#D9E4EC]/60 text-xs">
-          <UserCheck className="w-3.5 h-3.5 text-[#294B68]" />
-          <span>
+          <UserCheck className="w-3.5 h-3.5 text-[#294B68] shrink-0" />
+          <span className="flex items-center gap-1.5 flex-wrap">
             Specialist:{" "}
-            <strong className={isRequested ? "text-amber-700 font-semibold italic" : "text-[#243746]"}>
-              {isRequested ? "Pending Specialist Assignment" : appointment.technicianName}
+            <strong className="text-[#243746] font-bold">
+              {appointment.technicianName &&
+              appointment.technicianName !== "Unassigned Specialist"
+                ? appointment.technicianName
+                : "Pending Specialist Assignment"}
             </strong>
+            {isRequested && appointment.technicianId && (
+              <span className="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded font-medium">
+                Reserved
+              </span>
+            )}
           </span>
         </div>
       </div>
