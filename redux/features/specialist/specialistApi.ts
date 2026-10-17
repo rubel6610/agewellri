@@ -40,7 +40,12 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "Specialist", id: "LIST" }, "Specialist"],
+      invalidatesTags: [
+        { type: "Specialist", id: "LIST" },
+        "Specialist",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     updateSpecialist: builder.mutation<
@@ -56,6 +61,8 @@ export const specialistApi = baseApi.injectEndpoints({
         { type: "Specialist", id },
         { type: "Specialist", id: "LIST" },
         "Specialist",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
       ],
     }),
 
@@ -68,6 +75,8 @@ export const specialistApi = baseApi.injectEndpoints({
         { type: "Specialist", id },
         { type: "Specialist", id: "LIST" },
         "Specialist",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
       ],
     }),
 
@@ -77,7 +86,12 @@ export const specialistApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Specialist", "Appointment"],
+      invalidatesTags: [
+        "Specialist",
+        "Appointment",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
   }),
   overrideExisting: true,

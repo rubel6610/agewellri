@@ -91,9 +91,25 @@ export function VisitDetailsModal({
     }
   };
 
-  const technicianName = appointment.technicianName || (isRequested ? "Specialist Assignment Pending" : "Assigned Specialist");
-  const technicianTitle = appointment.technicianTitle || (isRequested ? "Our team is assigning a certified specialist to your visit" : "Senior Home Safety Specialist® certified by Age Safe® America.");
-  const avatarColor = appointment.technicianColor || "#D97706";
+  const hasAssignedTech = Boolean(
+    appointment.technicianName &&
+      appointment.technicianName !== "Unassigned Specialist"
+  );
+  const technicianName = hasAssignedTech
+    ? appointment.technicianName
+    : isRequested
+    ? "Specialist Assignment Pending"
+    : "Assigned Specialist";
+  const technicianTitle = hasAssignedTech
+    ? appointment.technicianTitle ||
+      (isRequested
+        ? "Reserved Safety Specialist (Pending Admin Confirmation)"
+        : "Senior Home Safety Specialist® certified by Age Safe® America.")
+    : isRequested
+    ? "Our team is assigning a certified specialist to your visit"
+    : "Senior Home Safety Specialist® certified by Age Safe® America.";
+  const avatarColor =
+    appointment.technicianColor || (hasAssignedTech ? "#294B68" : "#D97706");
   const initial = technicianName ? technicianName.trim().charAt(0).toUpperCase() : "S";
 
   return (
@@ -178,8 +194,15 @@ export function VisitDetailsModal({
 
           {/* Card 2: Assigned Safety Specialist */}
           <div className="p-4 sm:p-5 rounded-2xl border border-[#D9E4EC] bg-white space-y-2.5">
-            <div className="text-xs uppercase tracking-wider text-[#5E8FB2] font-extrabold">
-              ASSIGNED SAFETY SPECIALIST
+            <div className="flex items-center justify-between">
+              <div className="text-xs uppercase tracking-wider text-[#5E8FB2] font-extrabold">
+                ASSIGNED SAFETY SPECIALIST
+              </div>
+              {isRequested && hasAssignedTech && (
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-amber-300 text-amber-800 bg-amber-50">
+                  Reserved (Pending Approval)
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3.5">
               <div

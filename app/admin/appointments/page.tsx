@@ -487,13 +487,26 @@ function AppointmentsAdminContent() {
                       <td className="py-4 px-4">
                         {isRequested ? (
                           <div className="space-y-0.5">
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700">
-                              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-                              Unassigned
-                            </span>
-                            <span className="block text-[10px] font-semibold text-amber-600">
-                              Needs Specialist Assignment
-                            </span>
+                            {appt.technicianId ? (
+                              <>
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#243746]">
+                                  {appt.technicianName}
+                                </span>
+                                <span className="block text-[10px] font-semibold text-amber-600">
+                                  ★ Auto-Reserved (Pending Approval)
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-700">
+                                  <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
+                                  Unassigned
+                                </span>
+                                <span className="block text-[10px] font-semibold text-amber-600">
+                                  Needs Specialist Assignment
+                                </span>
+                              </>
+                            )}
                           </div>
                         ) : isCancelled ? (
                           <span className="text-xs text-rose-700 font-semibold italic">
@@ -533,25 +546,6 @@ function AppointmentsAdminContent() {
                         )}
                       </td>
 
-                      {/* Report Status */}
-                      {/* <td className="py-4 px-4">
-                        {isCompleted ? (
-                          hasReport ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Report Uploaded</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                              <Clock className="w-3.5 h-3.5" />
-                              <span>Not Uploaded</span>
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-xs text-[#94A3B8]">—</span>
-                        )}
-                      </td> */}
-
                       {/* Actions */}
                       <td className="py-4 px-4 text-right">
                         {isRequested ? (
@@ -566,7 +560,7 @@ function AppointmentsAdminContent() {
                               title="Accept visit request and assign specialist"
                             >
                               <UserCheck className="w-3.5 h-3.5" />
-                              <span>Accept &amp; Assign</span>
+                              <span>{appt.technicianId ? "Confirm & Book" : "Accept & Assign"}</span>
                             </button>
 
                             <button

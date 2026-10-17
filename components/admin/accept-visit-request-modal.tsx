@@ -89,8 +89,10 @@ export function AcceptVisitRequestModal({
       }
       setAdminNotes("");
 
-      // Auto-suggest specialist matching category
-      if (specialists.length > 0) {
+      // Auto-suggest specialist matching category, prioritizing the reserved technician
+      if (appointment.technicianId) {
+        setSelectedSpecialistId(appointment.technicianId);
+      } else if (specialists.length > 0) {
         const matched = specialists.find((s) =>
           s.specialties?.some((sp: string) =>
             sp.toLowerCase().includes("safety") || sp.toLowerCase().includes("fall") || sp.toLowerCase().includes("audit")
@@ -238,6 +240,20 @@ export function AcceptVisitRequestModal({
             </div>
           </div>
 
+          {appointment.technicianName && (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 border border-blue-200 text-xs text-[#243746]">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-800 bg-blue-100 px-2 py-0.5 rounded-md border border-blue-200">
+                  Reserved Specialist
+                </span>
+                <span className="font-extrabold text-[#294B68]">{appointment.technicianName}</span>
+              </div>
+              <span className="text-[10px] text-blue-700 font-bold bg-white px-2 py-0.5 rounded-md border border-blue-200">
+                Pending Final Confirmation
+              </span>
+            </div>
+          )}
+
           {/* <div className="flex items-start gap-1.5 pt-1 text-[11px]">
             <MapPin className="w-3.5 h-3.5 text-[#5E8FB2] shrink-0 mt-0.5" />
             <span className="line-clamp-2">{appointment.clientAddress}</span>
@@ -298,11 +314,14 @@ export function AcceptVisitRequestModal({
                   <option value="" disabled>
                     -- Select Specialist to Assign --
                   </option>
-                  {specialists.map((spec) => (
-                    <option key={spec.id} value={spec.id}>
-                      {spec.name} • {spec.title}
-                    </option>
-                  ))}
+                  {specialists.map((spec) => {
+                    const isReserved = spec.id === appointment.technicianId;
+                    return (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.name} {isReserved ? "★ [Reserved for this Slot]" : ""} • {spec.title}
+                      </option>
+                    );
+                  })}
                 </select>
 
                 {/* Selected Specialist Preview Card */}
@@ -455,7 +474,7 @@ export function AcceptVisitRequestModal({
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Accept &amp; Assign Specialist</span>
+                  <span>Confirm &amp; Book Visit</span>
                 </>
               )}
             </button>

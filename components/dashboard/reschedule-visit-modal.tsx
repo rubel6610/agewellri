@@ -5,11 +5,7 @@ import {
   X,
   Calendar as CalendarIcon,
   Clock,
-  CheckCircle2,
-  ShieldCheck,
-  Sparkles,
   Loader2,
-  UserCheck,
   AlertCircle,
   ChevronLeft,
   ChevronRight,
@@ -30,9 +26,6 @@ import { findMatchingOffDay } from "@/redux/features/off-day/offDayTypes";
 import { getUSHolidayForDate } from "@/lib/utils/us-holidays";
 import { useGetVisitEntitlementsQuery } from "@/redux/features/payment/paymentApi";
 import {
-  timeToMinutes,
-  formatMinutesToTimeString,
-  format24hTo12h,
   parseTimeSlotToMinutes,
   isTimeOverlapping,
   generateStandardTimeSlotsForWindows,
@@ -178,7 +171,7 @@ export function RescheduleVisitModal({
   }, [entitlementsRes, appointment]);
 
   // Authoritative Date Availability Query for selected reschedule date
-  const { data: dateAvailability } = useGetDateAvailabilityQuery(
+  const { data: dateAvailability, refetch: refetchDateAvailability } = useGetDateAvailabilityQuery(
     {
       date: selectedDate,
       durationMinutes: planDurationHours * 60,
@@ -264,19 +257,64 @@ export function RescheduleVisitModal({
     }
   }, [appointment, isOpen]);
 
-  const checkTimeSlotBooked = (ts: string): { isBooked: boolean; appt?: any } => {
+  const checkTimeSlotBooked = (ts: string): {
+    isBooked: boolean;
+    isClientBooked?: boolean;
+    isFull?: boolean;
+    remainingCapacity?: number;
+    totalCapacity?: number;
+    appt?: any;
+  } => {
     const slotRange = parseTimeSlotToMinutes(ts);
     if (!slotRange || !selectedDate) return { isBooked: false };
 
+    // 1. Check if client has another appointment on this date
     for (const appt of otherActiveAppointments) {
       const apptDate = getApptDateFormatted(appt);
       if (apptDate !== selectedDate) continue;
 
       const apptRange = parseApptTimeSlotToMinutes(appt);
       if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
-        return { isBooked: true, appt };
+        return { isBooked: true, isClientBooked: true, appt };
       }
     }
+
+    // 2. Authoritative backend availability
+    if (dateAvailability?.allPossibleSlots && dateAvailability.allPossibleSlots.length > 0) {
+      const matching = dateAvailability.allPossibleSlots.find(
+        (s: any) => s.slot === ts || s.startTime === ts.split(" – ")[0]
+      );
+      if (matching) {
+        if (!matching.isAvailable || (matching.remainingCapacity ?? 0) <= 0) {
+          return {
+            isBooked: true,
+            isFull: true,
+            remainingCapacity: matching.remainingCapacity,
+            totalCapacity: matching.totalCapacity,
+          };
+        }
+        return {
+          isBooked: false,
+          remainingCapacity: matching.remainingCapacity,
+          totalCapacity: matching.totalCapacity,
+        };
+      }
+
+      if (dateAvailability.bookedSlots) {
+        const overlapping = dateAvailability.bookedSlots.filter((b: any) =>
+          b.appointmentId !== appointment.id &&
+          Math.max(slotRange.startMin, b.startMinutes) < Math.min(slotRange.endMin, b.endMinutes)
+        );
+        const occupiedTechs = new Set(overlapping.map((b: any) => b.technicianId).filter(Boolean));
+        const totalCap = dateAvailability.totalCapacity || 1;
+        const remaining = Math.max(0, totalCap - occupiedTechs.size);
+        if (remaining <= 0) {
+          return { isBooked: true, isFull: true, remainingCapacity: 0, totalCapacity: totalCap };
+        }
+        return { isBooked: false, remainingCapacity: remaining, totalCapacity: totalCap };
+      }
+    }
+
     return { isBooked: false };
   };
 
@@ -403,7 +441,25 @@ export function RescheduleVisitModal({
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
-      showErrorAlert("Reschedule Failed", err?.data?.message || err?.message || "Unable to reschedule appointment.");
+      const isConflict =
+        err?.status === 409 ||
+        err?.data?.statusCode === 409 ||
+        err?.data?.message?.includes("booked") ||
+        err?.data?.message?.includes("full") ||
+        err?.data?.message?.includes("busy") ||
+        err?.data?.message?.includes("available");
+      const errMsg =
+        err?.data?.message || err?.message || "Unable to reschedule appointment.";
+
+      if (isConflict) {
+        showErrorAlert(
+          "Slot No Longer Available",
+          `${errMsg}\n\nPlease choose another time slot or date.`
+        );
+        refetchDateAvailability?.();
+      } else {
+        showErrorAlert("Reschedule Failed", errMsg);
+      }
     }
   };
 

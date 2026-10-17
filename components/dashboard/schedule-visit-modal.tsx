@@ -281,7 +281,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   }, [currentEntitlement, plan, selectedServiceName]);
 
   // Authoritative Date Availability Query for the selected date & duration
-  const { data: dateAvailability, isLoading: isAvailabilityLoading } = useGetDateAvailabilityQuery(
+  const { data: dateAvailability, refetch: refetchDateAvailability } = useGetDateAvailabilityQuery(
     {
       date: selectedDate,
       durationMinutes: planDurationHours * 60,
@@ -326,21 +326,69 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
     return false;
   }, [dateAvailability, selectedDate, activeOffDays, weeklySchedule]);
 
-  const checkTimeSlotBooked = useCallback((ts: string): { isBooked: boolean; appt?: any } => {
-    const slotRange = parseTimeSlotToMinutes(ts);
-    if (!slotRange || !selectedDate) return { isBooked: false };
+  const checkTimeSlotBooked = useCallback(
+    (ts: string): {
+      isBooked: boolean;
+      isClientBooked?: boolean;
+      isFull?: boolean;
+      remainingCapacity?: number;
+      totalCapacity?: number;
+      appt?: any;
+    } => {
+      const slotRange = parseTimeSlotToMinutes(ts);
+      if (!slotRange || !selectedDate) return { isBooked: false };
 
-    for (const appt of activeAppointments) {
-      const apptDate = getApptDateFormatted(appt);
-      if (apptDate !== selectedDate) continue;
+      // 1. Check if the current client already has a visit scheduled on this date
+      for (const appt of activeAppointments) {
+        const apptDate = getApptDateFormatted(appt);
+        if (apptDate !== selectedDate) continue;
 
-      const apptRange = parseApptTimeSlotToMinutes(appt);
-      if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
-        return { isBooked: true, appt };
+        const apptRange = parseApptTimeSlotToMinutes(appt);
+        if (apptRange && isTimeOverlapping(slotRange, apptRange)) {
+          return { isBooked: true, isClientBooked: true, appt };
+        }
       }
-    }
-    return { isBooked: false };
-  }, [activeAppointments, selectedDate]);
+
+      // 2. Multi-technician capacity from authoritative backend availability
+      if (dateAvailability?.allPossibleSlots && dateAvailability.allPossibleSlots.length > 0) {
+        const matching = dateAvailability.allPossibleSlots.find(
+          (s: any) => s.slot === ts || s.startTime === ts.split(" – ")[0]
+        );
+        if (matching) {
+          if (!matching.isAvailable || (matching.remainingCapacity ?? 0) <= 0) {
+            return {
+              isBooked: true,
+              isFull: true,
+              remainingCapacity: matching.remainingCapacity,
+              totalCapacity: matching.totalCapacity,
+            };
+          }
+          return {
+            isBooked: false,
+            remainingCapacity: matching.remainingCapacity,
+            totalCapacity: matching.totalCapacity,
+          };
+        }
+
+        // Custom time slot capacity calculation
+        if (dateAvailability.bookedSlots) {
+          const overlapping = dateAvailability.bookedSlots.filter((b: any) =>
+            Math.max(slotRange.startMin, b.startMinutes) < Math.min(slotRange.endMin, b.endMinutes)
+          );
+          const occupiedTechs = new Set(overlapping.map((b: any) => b.technicianId).filter(Boolean));
+          const totalCap = dateAvailability.totalCapacity || 1;
+          const remaining = Math.max(0, totalCap - occupiedTechs.size);
+          if (remaining <= 0) {
+            return { isBooked: true, isFull: true, remainingCapacity: 0, totalCapacity: totalCap };
+          }
+          return { isBooked: false, remainingCapacity: remaining, totalCapacity: totalCap };
+        }
+      }
+
+      return { isBooked: false };
+    },
+    [activeAppointments, selectedDate, dateAvailability]
+  );
 
   // Standard and Custom time windows strictly constrained by the effective operational hours
   const standardTimeSlots = useMemo(() => {
@@ -474,8 +522,25 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
         `Your ${selectedServiceName} visit request has been received for ${selectedDate} (${selectedTimeSlot}). AgeWellRI administration will assign your specialist.`
       );
     } catch (err: any) {
-      const errMsg = err?.data?.message || err?.message || "Unable to submit visit request. Please try again.";
-      showErrorAlert("Submission Failed", errMsg);
+      const isConflict =
+        err?.status === 409 ||
+        err?.data?.statusCode === 409 ||
+        err?.data?.message?.includes("booked") ||
+        err?.data?.message?.includes("full") ||
+        err?.data?.message?.includes("busy") ||
+        err?.data?.message?.includes("available");
+      const errMsg =
+        err?.data?.message || err?.message || "Unable to submit visit request. Please try again.";
+
+      if (isConflict) {
+        showErrorAlert(
+          "Slot No Longer Available",
+          `${errMsg}\n\nPlease choose another time slot or date.`
+        );
+        refetchDateAvailability?.();
+      } else {
+        showErrorAlert("Submission Failed", errMsg);
+      }
     }
   };
 
@@ -1026,7 +1091,7 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 ) : (
                   <div className={`grid gap-2.5 ${planDurationHours === 1 ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
                     {standardTimeSlots.map((ts) => {
-                      const { isBooked, appt } = checkTimeSlotBooked(ts);
+                      const { isBooked, isClientBooked, isFull, remainingCapacity, totalCapacity, appt } = checkTimeSlotBooked(ts);
                       const isSelected = selectedTimeSlot === ts;
 
                       return (
@@ -1036,27 +1101,38 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                           disabled={isBooked}
                           onClick={() => setSelectedPresetSlotOverride(ts)}
                           title={
-                            isBooked
+                            isClientBooked
                               ? `Already Scheduled: ${appt?.serviceType || "Visit"} is scheduled at ${ts} on this date`
+                              : isFull
+                              ? `Slot Full: All ${totalCapacity || "available"} specialists are booked`
                               : `Select ${ts}`
                           }
                           className={`p-3.5 rounded-xl border text-center font-bold text-xs sm:text-sm transition-all flex flex-col items-center justify-center gap-1 ${
                             isBooked
-                              ? "bg-rose-100 border-rose-300 text-rose-900 cursor-not-allowed shadow-none"
+                              ? "bg-slate-100 border-slate-300 text-slate-500 cursor-not-allowed shadow-none"
                               : isSelected
                               ? "border-[#294B68] bg-[#294B68] text-white shadow-xs cursor-pointer"
                               : "border-[#D9E4EC] bg-white text-[#243746] hover:bg-[#EAF3F8] cursor-pointer"
                           }`}
                         >
                           <span>{ts}</span>
-                          {isBooked ? (
+                          {isClientBooked ? (
                             <span className="text-[10px] font-extrabold uppercase tracking-wider bg-rose-200 text-rose-900 px-2 py-0.5 rounded-md flex items-center gap-1 mt-0.5 border border-rose-300">
                               <AlertCircle className="w-3 h-3 text-rose-700" />
                               Already Scheduled
                             </span>
+                          ) : isFull ? (
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md flex items-center gap-1 mt-0.5">
+                              <AlertCircle className="w-3 h-3 text-slate-500" />
+                              Slot Full
+                            </span>
                           ) : isSelected ? (
                             <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 text-white px-2 py-0.5 rounded-md mt-0.5">
                               Selected Slot
+                            </span>
+                          ) : typeof remainingCapacity === "number" && typeof totalCapacity === "number" && totalCapacity > 1 ? (
+                            <span className="text-[10px] font-bold text-[#5E8FB2]">
+                              {remainingCapacity} of {totalCapacity} available
                             </span>
                           ) : null}
                         </button>
@@ -1086,10 +1162,20 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                       >
                         {availableStartTimes.map((t) => {
                           const customSlotStr = `${t} – ${calculateEndTime(t, planDurationHours)}`;
-                          const { isBooked } = checkTimeSlotBooked(customSlotStr);
+                          const { isBooked, isClientBooked, isFull } = checkTimeSlotBooked(customSlotStr);
+                          const label = isClientBooked
+                            ? "(Already Scheduled)"
+                            : isFull
+                            ? "(Slot Full)"
+                            : "";
                           return (
-                            <option key={t} value={t} disabled={isBooked} className={isBooked ? "text-rose-600 bg-rose-50 font-bold" : ""}>
-                              {t} {isBooked ? "(Already Booked)" : ""}
+                            <option
+                              key={t}
+                              value={t}
+                              disabled={isBooked}
+                              className={isBooked ? "text-slate-400 bg-slate-100 font-medium" : ""}
+                            >
+                              {t} {label}
                             </option>
                           );
                         })}

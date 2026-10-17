@@ -55,7 +55,15 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client", "Profile"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        "Profile",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     adminScheduleAppointment: builder.mutation<
@@ -67,7 +75,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     acceptVisitRequest: builder.mutation<
@@ -79,7 +94,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     declineVisitRequest: builder.mutation<
@@ -91,7 +113,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     rescheduleAppointment: builder.mutation<
@@ -103,7 +132,13 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     cancelAppointment: builder.mutation<
@@ -115,7 +150,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "PUT",
         body: { reason },
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     updateAppointmentStatus: builder.mutation<
@@ -127,7 +169,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
 
     deleteAppointment: builder.mutation<ApiResponse<{ id: string }>, string>({
@@ -135,7 +184,14 @@ export const appointmentApi = baseApi.injectEndpoints({
         url: `/appointments/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Appointment", "Subscription", "Billing", "Client"],
+      invalidatesTags: [
+        "Appointment",
+        "Subscription",
+        "Billing",
+        "Client",
+        { type: "Schedule", id: "CALENDAR" },
+        { type: "Schedule", id: "AVAILABILITY" },
+      ],
     }),
   }),
   overrideExisting: true,
