@@ -174,7 +174,11 @@ export function AcceptVisitRequestModal({
       if (appointment.technicianId) {
         setSelectedSpecialistId(appointment.technicianId);
       } else if (specialists.length > 0) {
+<<<<<<< HEAD
         const matched = specialists.find((s: any) =>
+=======
+        const matched = specialists.find((s) =>
+>>>>>>> 31d5bd30fdbc4754dcdce835db495ae2ebfc2909
           s.specialties?.some((sp: string) =>
             sp.toLowerCase().includes("safety") || sp.toLowerCase().includes("fall") || sp.toLowerCase().includes("audit")
           )
@@ -433,6 +437,7 @@ export function AcceptVisitRequestModal({
                   <option value="" disabled>
                     -- Select Specialist to Assign --
                   </option>
+<<<<<<< HEAD
                   {specialists.map((spec: any) => {
                     const isReserved = spec.id === appointment.technicianId;
                     const isWorking = isSpecialistWorkingForSlot(
@@ -443,6 +448,13 @@ export function AcceptVisitRequestModal({
                     return (
                       <option key={spec.id} value={spec.id}>
                         {spec.name} {isReserved ? "★ [Auto-Assigned Reservation]" : ""} {isWorking ? "• [On-Duty]" : "• ⚠️ [Off-Duty / Not Scheduled]"} • {spec.title}
+=======
+                  {specialists.map((spec) => {
+                    const isReserved = spec.id === appointment.technicianId;
+                    return (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.name} {isReserved ? "★ [Reserved for this Slot]" : ""} • {spec.title}
+>>>>>>> 31d5bd30fdbc4754dcdce835db495ae2ebfc2909
                       </option>
                     );
                   })}
