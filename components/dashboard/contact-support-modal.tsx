@@ -7,7 +7,6 @@ import {
   Send,
   Loader2,
   CheckCircle2,
-  ExternalLink,
 } from "lucide-react";
 import { useSendContactMessageMutation } from "@/redux/features/contact/contactApi";
 import { useAppSelector } from "@/redux/hooks";
@@ -17,49 +16,6 @@ interface ContactSupportModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultSubject?: string;
-}
-
-/**
- * Resolves the webmail inbox link and brand name based on the email domain
- */
-function resolveWebmailInfo(email: string): { url: string; providerName: string } {
-  if (!email || !email.includes("@")) {
-    return { url: "https://mail.google.com", providerName: "Email" };
-  }
-
-  const domain = email.split("@")[1]?.toLowerCase().trim() || "";
-
-  if (domain === "gmail.com" || domain === "googlemail.com") {
-    return { url: "https://mail.google.com", providerName: "Gmail" };
-  }
-  if (domain === "yahoo.com" || domain === "myyahoo.com" || domain === "ymail.com") {
-    return { url: "https://mail.yahoo.com", providerName: "Yahoo Mail" };
-  }
-  if (
-    domain === "outlook.com" ||
-    domain === "hotmail.com" ||
-    domain === "live.com" ||
-    domain === "msn.com"
-  ) {
-    return { url: "https://outlook.live.com/mail", providerName: "Outlook" };
-  }
-  if (domain === "icloud.com" || domain === "me.com" || domain === "mac.com") {
-    return { url: "https://www.icloud.com/mail", providerName: "iCloud Mail" };
-  }
-  if (domain === "aol.com") {
-    return { url: "https://mail.aol.com", providerName: "AOL Mail" };
-  }
-  if (domain === "proton.me" || domain === "protonmail.com") {
-    return { url: "https://mail.proton.me", providerName: "Proton Mail" };
-  }
-  if (domain === "zoho.com") {
-    return { url: "https://mail.zoho.com", providerName: "Zoho Mail" };
-  }
-  if (domain === "comcast.net") {
-    return { url: "https://connect.xfinity.com", providerName: "Xfinity Mail" };
-  }
-
-  return { url: `https://${domain}`, providerName: `${domain}` };
 }
 
 export function ContactSupportModal({
@@ -80,8 +36,6 @@ export function ContactSupportModal({
   const clientName = authUser
     ? `${authUser.firstName || ""} ${authUser.lastName || ""}`.trim()
     : "Valued Client";
-
-  const webmail = resolveWebmailInfo(clientEmail);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,23 +129,12 @@ export function ContactSupportModal({
               </p>
             </div>
 
-            {/* Actions: Open Webmail and Done */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              {webmail.url && (
-                <a
-                  href={webmail.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  <span>Open {webmail.providerName} Inbox</span>
-                </a>
-              )}
+            {/* Actions: Done */}
+            <div className="pt-2 flex justify-center">
               <button
                 type="button"
                 onClick={handleResetAndClose}
-                className="w-full sm:w-auto px-6 py-3 bg-[#F0F5F9] hover:bg-[#E2EDF4] text-[#294B68] font-bold text-sm rounded-xl transition-all border border-[#D9E4EC] cursor-pointer"
+                className="w-full sm:w-auto min-w-[140px] px-8 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
               >
                 Done
               </button>

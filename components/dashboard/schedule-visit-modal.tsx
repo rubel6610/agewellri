@@ -228,6 +228,11 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
   const selectedDate = selectedDateOverride || defaultAvailableDate;
   const setSelectedDate = (d: string) => setSelectedDateOverride(d);
 
+  const clientConflictOnSelectedDate = useMemo(() => {
+    if (!selectedDate) return null;
+    return activeAppointments.find((a: any) => getApptDateFormatted(a) === selectedDate) || null;
+  }, [selectedDate, activeAppointments]);
+
   // Active Entitlement & Service Type
   const defaultEntitlement = useMemo(() => {
     return entitlements.find((e) => e.remaining > 0) || entitlements[0] || null;
@@ -456,6 +461,14 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
       showErrorAlert(
         "No Remaining Visits",
         `You have 0 remaining visits available for ${selectedServiceName} in your current monthly plan.`
+      );
+      return;
+    }
+
+    if (clientConflictOnSelectedDate) {
+      showErrorAlert(
+        "Client Unavailable on Date",
+        `You already have an active visit scheduled on ${selectedDate} (${clientConflictOnSelectedDate.timeSlot || "Scheduled"}). AgeWellRI policy limits members to at most one visit per calendar day. Please choose another date.`
       );
       return;
     }
@@ -971,6 +984,32 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               </div>
             )}
 
+            {/* Client Unavailable Conflict Banner */}
+            {clientConflictOnSelectedDate && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-rose-950">You Are Unavailable on This Date</strong>
+                  <p className="text-rose-800 leading-relaxed">
+                    You already have a visit scheduled on <strong>{selectedDate}</strong> ({clientConflictOnSelectedDate.timeSlot || "Scheduled"}). AgeWellRI policy strictly limits members to at most one visit per calendar day. Please select a different available date on the calendar.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Closed Date Banner */}
+            {isDateClosed && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-950 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-amber-950">Office Closed on This Date</strong>
+                  <p className="text-amber-800 leading-relaxed">
+                    {dateAvailability?.overrideTitle || "This date is non-operational or closed for scheduling."} Please select an available operational date.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
@@ -1045,6 +1084,19 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
                 {planDurationHours} {planDurationHours === 1 ? "Hour" : "Hours"} Visit • 8 AM – 6 PM
               </span> */}
             </div>
+
+            {/* Client Unavailable Conflict Banner */}
+            {clientConflictOnSelectedDate && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-rose-950">Conflict: Existing Scheduled Visit</strong>
+                  <p className="text-rose-800 leading-relaxed">
+                    You already have a visit booked on <strong>{selectedDate}</strong> ({clientConflictOnSelectedDate.timeSlot || "Scheduled"}). AgeWellRI policy limits members to at most one visit per calendar day. Please return to Step 2 to select another date.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Mode Switcher Tabs */}
             <div className="flex p-1 bg-[#F1F5F9] rounded-xl border border-[#D9E4EC]">
@@ -1288,6 +1340,19 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
           <div className="space-y-4 py-2">
             <h4 className="font-bold text-[#243746] text-base">Review &amp; Access Details</h4>
 
+            {/* Client Unavailable Conflict Banner */}
+            {clientConflictOnSelectedDate && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-rose-950">Client Unavailable on Selected Date</strong>
+                  <p className="text-rose-800 leading-relaxed">
+                    You already have another active visit on <strong>{selectedDate}</strong> ({clientConflictOnSelectedDate.timeSlot || "Scheduled"}). Please go back and select a date with no existing visit.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Visit Summary Card */}
             <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-2 text-xs sm:text-sm">
               <div className="flex justify-between border-b border-[#D9E4EC]/60 pb-2">
@@ -1418,14 +1483,20 @@ export function ScheduleVisitModal({ isOpen, onClose, plan }: ScheduleVisitModal
               </button>
               <button
                 onClick={handleConfirm}
-                disabled={isSubmitting}
-                className="w-2/3 py-3 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-70 text-sm"
+                disabled={isSubmitting || Boolean(clientConflictOnSelectedDate)}
+                className={`w-2/3 py-3 font-bold rounded-xl flex items-center justify-center gap-2 shadow-xs text-sm transition-all ${
+                  isSubmitting || Boolean(clientConflictOnSelectedDate)
+                    ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                    : "bg-[#294B68] hover:bg-[#1E374D] text-white cursor-pointer"
+                }`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Submitting...</span>
                   </>
+                ) : clientConflictOnSelectedDate ? (
+                  <span>Unavailable on Selected Date</span>
                 ) : (
                   <span>Submit Visit Request</span>
                 )}

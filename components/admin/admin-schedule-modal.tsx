@@ -590,6 +590,36 @@ export function AdminScheduleModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             {/* Warning / Informational Banners */}
+            {hasDateConflict ? (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">Client Unavailable on This Date ({date})</strong>
+                  <span>{resolvedDisplayName} already has a visit scheduled on <strong>{date}</strong> ({clientApptOnSelectedDate?.timeSlot || "Scheduled"}). Clients cannot have multiple visits on the same calendar day. Please select another date.</span>
+                </div>
+              </div>
+            ) : null}
+
+            {selectedClient && (selectedClient.status === "paused" || selectedClient.status === "cancelled" || (selectedClient.status as string) === "INACTIVE" || (selectedClient.status as string) === "SUSPENDED") ? (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-rose-950">Client Account Unavailable ({selectedClient.status})</strong>
+                  <span>This client account is currently {selectedClient.status.toLowerCase()}. Visits cannot be scheduled for inactive, paused, or cancelled client accounts.</span>
+                </div>
+              </div>
+            ) : null}
+
+            {!isTargetClientAgreementPaid ? (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-950">Agreement &amp; Payment Incomplete</strong>
+                  <span>This client must execute their Service Agreement and complete subscription payment before scheduling visits.</span>
+                </div>
+              </div>
+            ) : null}
+
             {isPaymentPending ? (
               <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-blue-900 text-xs flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
@@ -713,6 +743,18 @@ export function AdminScheduleModal({
                         filteredClients.map((c) => {
                           const isSelected =
                             c.id === selectedClientId || c.clientNumber === selectedClientId;
+                          const clientConflict = date ? adminAppointments.find((appt) => {
+                            const isC =
+                              appt.clientId === c.id ||
+                              appt.clientNumber === c.clientNumber ||
+                              appt.clientId === c.userId ||
+                              appt.clientId === (c as any).internalId;
+                            const isCancelled = ["cancelled", "no_show", "declined"].includes((appt.status || "").toLowerCase());
+                            return isC && !isCancelled && getApptDateFormatted(appt) === date;
+                          }) : null;
+                          const remVisits = getRemainingVisitsForClient(c);
+                          const isInactive = c.status === "paused" || c.status === "cancelled" || (c.status as string) === "INACTIVE" || (c.status as string) === "SUSPENDED";
+
                           return (
                             <button
                               key={c.id}
@@ -729,13 +771,26 @@ export function AdminScheduleModal({
                               }`}
                             >
                               <div className="min-w-0 pr-2">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-xs truncate">
                                     {c.firstName} {c.lastName}
                                   </span>
                                   <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white text-[#294B68] border border-[#D9E4EC]">
                                     {c.clientNumber || c.id}
                                   </span>
+                                  {clientConflict ? (
+                                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                                      Booked on {date}
+                                    </span>
+                                  ) : remVisits <= 0 ? (
+                                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                      0 Visits Left
+                                    </span>
+                                  ) : isInactive ? (
+                                    <span className="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                                      {c.status}
+                                    </span>
+                                  ) : null}
                                 </div>
                                 <div className="text-[11px] text-[#64748B] truncate mt-0.5">
                                   {c.planName || "Active Plan"} · {c.email}

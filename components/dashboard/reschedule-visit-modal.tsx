@@ -327,6 +327,11 @@ export function RescheduleVisitModal({
     return otherActiveAppointments.some((a) => getApptDateFormatted(a) === selectedDate);
   }, [selectedDate, otherActiveAppointments]);
 
+  const conflictingAppointment = useMemo(() => {
+    if (!selectedDate) return null;
+    return otherActiveAppointments.find((a) => getApptDateFormatted(a) === selectedDate) || null;
+  }, [selectedDate, otherActiveAppointments]);
+
   useEffect(() => {
     if (timeMode === "PRESET") {
       const isBooked = checkTimeSlotBooked(selectedTimeSlot).isBooked;
@@ -369,8 +374,8 @@ export function RescheduleVisitModal({
 
     if (isDateConflicted) {
       showErrorAlert(
-        "Date Already Scheduled",
-        "You already have another visit scheduled on this date. Please choose an open date."
+        "Client Unavailable on Date",
+        `You already have another active visit scheduled on ${selectedDate} (${conflictingAppointment?.timeSlot || "Scheduled"}). AgeWellRI policy limits members to at most one visit per calendar day. Please choose another date.`
       );
       return;
     }
@@ -628,6 +633,33 @@ export function RescheduleVisitModal({
                 })()}
               </div>
             </div>
+
+            {/* Selected Date Conflict & Availability Banners */}
+            {isDateConflicted && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-rose-950">
+                    You Are Unavailable on This Date ({selectedDate})
+                  </strong>
+                  <p className="text-rose-800 leading-relaxed text-[11px]">
+                    You already have another active visit scheduled on <strong>{selectedDate}</strong> ({conflictingAppointment?.timeSlot || "Scheduled"}). AgeWellRI policy strictly limits members to at most one visit per calendar day. Please select a different available date on the calendar.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isDateClosed && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl text-amber-950 text-xs flex items-start gap-2.5 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <strong className="block font-bold text-amber-950">Office Closed on This Date</strong>
+                  <p className="text-amber-800 leading-relaxed text-[11px]">
+                    {dateAvailability?.overrideTitle || "This date is non-operational or closed for scheduling."} Please select an open date.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Time Slot Selection */}
@@ -823,7 +855,7 @@ export function RescheduleVisitModal({
               ) : isDateClosed ? (
                 <span>Date Closed</span>
               ) : isDateConflicted ? (
-                <span>Date Already Booked</span>
+                <span>Unavailable on Selected Date</span>
               ) : !selectedTimeSlot || !isSlotWithinTimeWindows(selectedTimeSlot, effectiveTimeWindows) ? (
                 <span>Outside Operational Hours</span>
               ) : currentSlotStatus.isBooked ? (

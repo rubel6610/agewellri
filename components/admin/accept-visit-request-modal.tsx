@@ -18,8 +18,11 @@ import {
   Key,
 } from "lucide-react";
 import { AppointmentItem } from "@/redux/features/appointment/appointmentTypes";
+import {
+  useAcceptVisitRequestMutation,
+  useGetAdminAppointmentsQuery,
+} from "@/redux/features/appointment/appointmentApi";
 import { useGetAllSpecialistsQuery } from "@/redux/features/specialist/specialistApi";
-import { useAcceptVisitRequestMutation } from "@/redux/features/appointment/appointmentApi";
 import { showSuccessAlert, showErrorAlert } from "@/lib/alerts/sweetalert";
 
 interface AcceptVisitRequestModalProps {
@@ -47,7 +50,66 @@ const STANDARD_TIME_SLOTS = [
   "04:00 PM – 06:00 PM",
 ];
 
-// Helper to normalize time strings for comparison (e.g. "03:30 PM" vs "3:30 PM" or en-dash vs hyphen)
+function parseTimeToMinutes(str: string): number {
+  if (!str) return 0;
+  const match12 = str.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const min = parseInt(match12[2], 10);
+    const isPM = match12[3].toUpperCase() === "PM";
+    if (isPM && hour < 12) hour += 12;
+    if (!isPM && hour === 12) hour = 0;
+    return hour * 60 + min;
+  }
+  const parts = str.split(":");
+  if (parts.length >= 2) {
+    return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+  }
+  return 0;
+}
+
+function isSpecialistWorkingForSlot(
+  spec: any,
+  dateStr: string,
+  timeSlotStr: string
+): boolean {
+  if (!spec || spec.status !== "ACTIVE") return false;
+  if (!dateStr || !timeSlotStr) return true;
+
+  const parts = dateStr.split("T")[0].split("-");
+  if (parts.length < 3) return true;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  const dateObj = new Date(y, m, d);
+  const dayOfWeek = dateObj.getDay();
+
+  const matches = timeSlotStr.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)?)/gi);
+  if (!matches || matches.length < 2) return true;
+  const slotStart = parseTimeToMinutes(matches[0]);
+  const slotEnd = parseTimeToMinutes(matches[1]);
+
+  const schedule = spec.weeklySchedule;
+  if (!Array.isArray(schedule) || schedule.length === 0) {
+    if (dayOfWeek === 0 || dayOfWeek === 3) return false;
+    return slotStart >= 480 && slotEnd <= 1080;
+  }
+
+  const dayEntry = schedule.find((de: any) => Number(de.dayOfWeek) === dayOfWeek);
+  if (!dayEntry) return false;
+  const isOpen = Boolean(dayEntry.isOpen !== undefined ? dayEntry.isOpen : dayEntry.isAvailable);
+  if (!isOpen) return false;
+
+  const windows = Array.isArray(dayEntry.timeWindows) ? dayEntry.timeWindows : [];
+  if (windows.length === 0) return false;
+
+  return windows.some((win: any) => {
+    const wStart = parseTimeToMinutes(win.start);
+    const wEnd = parseTimeToMinutes(win.end);
+    return wStart <= slotStart && wEnd >= slotEnd;
+  });
+}
+
 function normalizeTimeString(str: string): string {
   return str
     .replace(/[–—]/g, "-")
@@ -68,12 +130,31 @@ export function AcceptVisitRequestModal({
     { skip: !isOpen }
   );
   const [acceptVisitRequestMutation, { isLoading: isSubmitting }] = useAcceptVisitRequestMutation();
+  const { data: adminAppointmentsRes } = useGetAdminAppointmentsQuery(undefined, {
+    skip: !isOpen,
+  });
+  const adminAppointments = useMemo(() => {
+    return Array.isArray(adminAppointmentsRes?.data) ? adminAppointmentsRes.data : [];
+  }, [adminAppointmentsRes]);
 
   const [selectedSpecialistId, setSelectedSpecialistId] = useState<string>("");
   const [adjustedDate, setAdjustedDate] = useState<string>("");
   const [adjustedTimeSlot, setAdjustedTimeSlot] = useState<string>("");
   const [isCustomTime, setIsCustomTime] = useState<boolean>(false);
   const [adminNotes, setAdminNotes] = useState<string>("");
+
+  const clientConflictOnDate = useMemo(() => {
+    if (!adjustedDate || !appointment) return null;
+    const targetClientId = appointment.clientId;
+    return adminAppointments.find((a: any) => {
+      if (a.id === appointment.id) return false;
+      const isClient = a.clientId === targetClientId;
+      if (!isClient) return false;
+      const aDate = a.date || (a.startAt ? new Date(a.startAt).toISOString().split("T")[0] : "");
+      const isCancelled = ["cancelled", "no_show", "declined"].includes((a.status || "").toLowerCase());
+      return !isCancelled && aDate === adjustedDate;
+    });
+  }, [adjustedDate, appointment, adminAppointments]);
 
   useEffect(() => {
     if (appointment) {
@@ -93,7 +174,7 @@ export function AcceptVisitRequestModal({
       if (appointment.technicianId) {
         setSelectedSpecialistId(appointment.technicianId);
       } else if (specialists.length > 0) {
-        const matched = specialists.find((s) =>
+        const matched = specialists.find((s: any) =>
           s.specialties?.some((sp: string) =>
             sp.toLowerCase().includes("safety") || sp.toLowerCase().includes("fall") || sp.toLowerCase().includes("audit")
           )
@@ -140,7 +221,7 @@ export function AcceptVisitRequestModal({
 
   if (!isOpen || !appointment) return null;
 
-  const selectedSpecialist = specialists.find((s) => s.id === selectedSpecialistId);
+  const selectedSpecialist = specialists.find((s: any) => s.id === selectedSpecialistId);
   const clientRequestedTime = appointment.timeSlot || "";
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,9 +231,30 @@ export function AcceptVisitRequestModal({
       return;
     }
 
+    if (clientConflictOnDate) {
+      showErrorAlert(
+        "Client Unavailable",
+        `${appointment.clientName} already has another active visit scheduled on ${adjustedDate || appointment.date}. AgeWellRI policy limits clients to at most one visit per calendar day. Please select a different date before confirming.`
+      );
+      return;
+    }
+
     const finalTimeSlot = (adjustedTimeSlot || clientRequestedTime).trim();
     if (!finalTimeSlot) {
       showErrorAlert("Time Slot Required", "Please specify a confirmed time slot for the visit.");
+      return;
+    }
+
+    const isWorking = isSpecialistWorkingForSlot(
+      selectedSpecialist,
+      adjustedDate,
+      finalTimeSlot
+    );
+    if (!isWorking) {
+      showErrorAlert(
+        "Specialist Off-Duty",
+        `${selectedSpecialist?.name || "The selected specialist"} is not scheduled to work on ${adjustedDate || appointment.date} (${finalTimeSlot}) based on their configured availability schedule. Please select an on-duty specialist or update their availability.`
+      );
       return;
     }
 
@@ -290,6 +392,23 @@ export function AcceptVisitRequestModal({
           )}
         </div>
 
+        {/* Client Unavailable Conflict Banner */}
+        {clientConflictOnDate && (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 text-xs flex items-start gap-3 animate-in fade-in shadow-xs">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <strong className="block font-bold text-rose-950 text-sm">
+                Client Unavailable on This Date
+              </strong>
+              <p className="text-rose-800 leading-relaxed">
+                <strong>{appointment.clientName}</strong> already has an active visit scheduled on{" "}
+                <strong>{adjustedDate || appointment.date}</strong>{" "}
+                ({(clientConflictOnDate as any).timeSlot || "Scheduled"}). AgeWellRI policy limits clients to at most one visit per calendar day. Please select a different date before confirming.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Acceptance Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Specialist Selection */}
@@ -314,40 +433,69 @@ export function AcceptVisitRequestModal({
                   <option value="" disabled>
                     -- Select Specialist to Assign --
                   </option>
-                  {specialists.map((spec) => {
+                  {specialists.map((spec: any) => {
                     const isReserved = spec.id === appointment.technicianId;
+                    const isWorking = isSpecialistWorkingForSlot(
+                      spec,
+                      adjustedDate,
+                      adjustedTimeSlot || clientRequestedTime
+                    );
                     return (
                       <option key={spec.id} value={spec.id}>
-                        {spec.name} {isReserved ? "★ [Reserved for this Slot]" : ""} • {spec.title}
+                        {spec.name} {isReserved ? "★ [Auto-Assigned Reservation]" : ""} {isWorking ? "• [On-Duty]" : "• ⚠️ [Off-Duty / Not Scheduled]"} • {spec.title}
                       </option>
                     );
                   })}
                 </select>
 
                 {/* Selected Specialist Preview Card */}
-                {selectedSpecialist && (
-                  <div className="p-3 bg-[#EAF3F8]/50 rounded-xl border border-[#5E8FB2]/20 flex items-center justify-between gap-3 text-xs">
-                    <div>
-                      <div className="font-extrabold text-[#294B68]">{selectedSpecialist.name}</div>
-                      <div className="text-[#64748B] text-[11px]">{selectedSpecialist.title}</div>
-                      {selectedSpecialist.specialties && selectedSpecialist.specialties.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {selectedSpecialist.specialties.map((sp: string) => (
-                            <span
-                              key={sp}
-                              className="px-1.5 py-0.5 rounded bg-white text-[10px] font-semibold text-[#294B68] border border-[#D9E4EC]"
-                            >
-                              {sp}
-                            </span>
-                          ))}
+                {selectedSpecialist && (() => {
+                  const isWorking = isSpecialistWorkingForSlot(
+                    selectedSpecialist,
+                    adjustedDate,
+                    adjustedTimeSlot || clientRequestedTime
+                  );
+                  return (
+                    <div className="space-y-1.5">
+                      <div className="p-3 bg-[#EAF3F8]/50 rounded-xl border border-[#5E8FB2]/20 flex items-center justify-between gap-3 text-xs">
+                        <div>
+                          <div className="font-extrabold text-[#294B68]">{selectedSpecialist.name}</div>
+                          <div className="text-[#64748B] text-[11px]">{selectedSpecialist.title}</div>
+                          {selectedSpecialist.specialties && selectedSpecialist.specialties.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {selectedSpecialist.specialties.map((sp: string) => (
+                                <span
+                                  key={sp}
+                                  className="px-1.5 py-0.5 rounded bg-white text-[10px] font-semibold text-[#294B68] border border-[#D9E4EC]"
+                                >
+                                  {sp}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {isWorking ? (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                            On-Duty / Available
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 shrink-0 flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3 text-amber-600" />
+                            Off-Duty
+                          </span>
+                        )}
+                      </div>
+                      {!isWorking && (
+                        <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-1.5 text-[11px] text-amber-800 font-semibold">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>
+                            {selectedSpecialist.name} is not scheduled to work during this day/time slot based on their configured availability.
+                          </span>
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
-                      Available
-                    </span>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -463,13 +611,18 @@ export function AcceptVisitRequestModal({
 
             <button
               type="submit"
-              disabled={isSubmitting || !selectedSpecialistId}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+              disabled={isSubmitting || !selectedSpecialistId || Boolean(clientConflictOnDate)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md hover:shadow-emerald-600/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Assigning Specialist...</span>
+                </>
+              ) : clientConflictOnDate ? (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Client Unavailable on this Date</span>
                 </>
               ) : (
                 <>

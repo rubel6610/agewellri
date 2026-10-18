@@ -1,3 +1,16 @@
+export interface SpecialistTimeWindow {
+  start: string;
+  end: string;
+}
+
+export interface SpecialistDaySchedule {
+  dayOfWeek: number;
+  dayName?: string;
+  isOpen?: boolean;
+  isAvailable?: boolean;
+  timeWindows: SpecialistTimeWindow[];
+}
+
 export interface SpecialistItem {
   id: string;
   name: string;
@@ -17,6 +30,7 @@ export interface SpecialistItem {
   status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
   notes?: string | null;
   displayOrder: number;
+  weeklySchedule?: SpecialistDaySchedule[] | null;
   activeAssignmentsCount: number;
   createdAt: string;
   updatedAt: string;
@@ -40,6 +54,7 @@ export interface CreateSpecialistPayload {
   notes?: string | null;
   displayOrder?: number;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  weeklySchedule?: SpecialistDaySchedule[] | null;
 }
 
 export interface UpdateSpecialistPayload {
@@ -61,6 +76,7 @@ export interface UpdateSpecialistPayload {
   displayOrder?: number;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
   isArchived?: boolean;
+  weeklySchedule?: SpecialistDaySchedule[] | null;
 }
 
 export interface AssignSpecialistPayload {

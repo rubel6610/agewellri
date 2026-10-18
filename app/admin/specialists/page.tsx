@@ -30,6 +30,7 @@ import {
   Calendar,
   Sparkles,
   Eye,
+  Clock,
 } from "lucide-react";
 import {
   confirmDelete,
@@ -39,6 +40,7 @@ import {
   showToast,
 } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SpecialistAvailabilityModal } from "@/components/admin/specialists/specialist-availability-modal";
 
 // Standard Core Competencies automatically held by all specialists (no check off needed)
 const CORE_AUTOMATIC_COMPETENCIES = [
@@ -140,6 +142,8 @@ export default function SpecialistsPage() {
   const [editingSpecialist, setEditingSpecialist] =
     useState<SpecialistItem | null>(null);
   const [viewingSpecialist, setViewingSpecialist] =
+    useState<SpecialistItem | null>(null);
+  const [availabilitySpecialist, setAvailabilitySpecialist] =
     useState<SpecialistItem | null>(null);
 
   // Form State
@@ -696,14 +700,37 @@ export default function SpecialistsPage() {
                           </div>
                         </td>
 
-                        {/* Assigned Visits Count */}
+                        {/* Assigned Visits Count & Availability */}
                         <td className="py-4 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
-                            <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
-                            <span>
-                              {specialist.activeAssignmentsCount} visits
+                          <div className="space-y-1">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-[#EAF3F8] text-[#294B68] border border-[#5E8FB2]/20">
+                              <CalendarCheck className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                              <span>
+                                {specialist.activeAssignmentsCount} visits
+                              </span>
                             </span>
-                          </span>
+                            {Array.isArray(specialist.weeklySchedule) && specialist.weeklySchedule.length > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => setAvailabilitySpecialist(specialist)}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors cursor-pointer block"
+                                title="Custom availability schedule active. Click to edit."
+                              >
+                                <Clock className="w-2.5 h-2.5 text-blue-600" />
+                                <span>{specialist.weeklySchedule.filter((d: any) => d.isOpen).length} Days/Wk</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setAvailabilitySpecialist(specialist)}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-50 text-[#64748B] border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer block"
+                                title="Standard default hours. Click to customize."
+                              >
+                                <Clock className="w-2.5 h-2.5 text-slate-400" />
+                                <span>Default Hours</span>
+                              </button>
+                            )}
+                          </div>
                         </td>
 
                         {/* Status Badge */}
@@ -729,6 +756,15 @@ export default function SpecialistsPage() {
                             >
                               <Eye className="w-3.5 h-3.5 text-[#5E8FB2]" />
                               <span>View</span>
+                            </button>
+
+                            <button
+                              onClick={() => setAvailabilitySpecialist(specialist)}
+                              className="px-2.5 py-1.5 rounded-lg border border-[#D9E4EC] bg-white text-[#294B68] hover:bg-[#EAF3F8] text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                              title="Set Custom Availability & Shifts"
+                            >
+                              <Clock className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                              <span>Availability</span>
                             </button>
 
                             <button
@@ -1714,6 +1750,88 @@ export default function SpecialistsPage() {
                   </div>
                 </div>
 
+                {/* Section: Working Availability & Shifts */}
+                <div className="p-4 bg-[#F8FAFC] border border-[#D9E4EC] rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#243746] uppercase tracking-wider">
+                      <Clock className="w-4 h-4 text-[#5E8FB2]" />
+                      <span>Weekly Working Schedule &amp; Shifts</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = viewingSpecialist;
+                        setViewingSpecialist(null);
+                        setAvailabilitySpecialist(target);
+                      }}
+                      className="px-2.5 py-1 text-xs font-bold text-[#294B68] bg-white border border-[#D9E4EC] hover:bg-[#EAF3F8] rounded-lg transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                    >
+                      <Clock className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                      <span>Configure Shifts</span>
+                    </button>
+                  </div>
+
+                  {Array.isArray(viewingSpecialist.weeklySchedule) &&
+                  viewingSpecialist.weeklySchedule.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                      {viewingSpecialist.weeklySchedule.map((d: any, didx: number) => {
+                        const isOpen = Boolean(d.isOpen);
+                        const windows = d.timeWindows || [];
+                        return (
+                          <div
+                            key={didx}
+                            className={`p-2.5 rounded-xl border text-center ${
+                              isOpen
+                                ? "bg-white border-[#5E8FB2]/30 shadow-2xs"
+                                : "bg-slate-100/60 border-slate-200 opacity-60"
+                            }`}
+                          >
+                            <span className="text-[11px] font-black text-[#243746] block">
+                              {d.dayName?.slice(0, 3) || `Day ${d.dayOfWeek}`}
+                            </span>
+                            {isOpen ? (
+                              <div className="mt-1 space-y-0.5">
+                                {windows.length > 0 ? (
+                                  windows.map((w: any, widx: number) => (
+                                    <span
+                                      key={widx}
+                                      className="text-[10px] font-bold text-[#5E8FB2] block leading-tight"
+                                    >
+                                      {w.start}–{w.end}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="text-[10px] text-emerald-700 font-semibold block">
+                                    Open
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-medium block mt-1">
+                                Off-Duty
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-white border border-[#D9E4EC] rounded-xl flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-bold text-[#243746] block">
+                          Standard Company Operational Hours
+                        </span>
+                        <span className="text-[11px] text-[#64748B]">
+                          Mon, Tue, Thu, Fri, Sat (08:00 AM – 06:00 PM). Closed Wed &amp; Sun.
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-[#64748B]">
+                        Default
+                      </span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Section 3: Notes & Metadata */}
                 {viewingSpecialist.notes && (
                   <div className="p-3.5 bg-amber-50/50 border border-amber-200/60 rounded-2xl space-y-1">
@@ -1755,6 +1873,18 @@ export default function SpecialistsPage() {
                       onClick={() => {
                         const target = viewingSpecialist;
                         setViewingSpecialist(null);
+                        setAvailabilitySpecialist(target);
+                      }}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#294B68] bg-[#EAF3F8] hover:bg-[#D4E6F1] border border-[#5E8FB2]/30 cursor-pointer flex items-center gap-1.5 transition-colors"
+                    >
+                      <Clock className="w-3.5 h-3.5 text-[#5E8FB2]" />
+                      <span>Availability</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const target = viewingSpecialist;
+                        setViewingSpecialist(null);
                         openEditModal(target);
                       }}
                       className="px-5 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white text-xs font-black rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
@@ -1768,6 +1898,13 @@ export default function SpecialistsPage() {
             </div>
           );
         })()}
+
+      {/* Specialist Availability Modal */}
+      <SpecialistAvailabilityModal
+        isOpen={Boolean(availabilitySpecialist)}
+        onClose={() => setAvailabilitySpecialist(null)}
+        specialist={availabilitySpecialist}
+      />
     </div>
   );
 }
