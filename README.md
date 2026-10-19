@@ -32,8 +32,8 @@ Before starting, ensure you have the following installed on your machine:
 ### 1. Clone & Navigate to Repository
 
 ```bash
-git clone https://github.com/rubel6610/agewellri.git
-cd agewellri
+git clone <repository-url>
+cd age-well-ri
 ```
 
 ### 2. Install Dependencies
