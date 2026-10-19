@@ -6,6 +6,7 @@ import { AdminHeader } from "./admin-header";
 import { AdminMobileNav } from "./admin-mobile-nav";
 import { AddClientModal } from "./add-client-modal";
 import { AdminScheduleModal } from "./admin-schedule-modal";
+import { StripeUnconfiguredBanner } from "./stripe-unconfigured-banner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -48,7 +49,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Fixed Header Height Spacer */}
         <div className="h-16 sm:h-20 shrink-0" aria-hidden="true" />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] 2xl:max-w-[1750px] w-full mx-auto space-y-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] 2xl:max-w-[1750px] w-full mx-auto space-y-6">
+          <StripeUnconfiguredBanner />
           {children}
         </main>
       </div>

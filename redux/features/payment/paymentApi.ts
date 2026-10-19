@@ -23,6 +23,10 @@ import {
   AdminTriggerRemindersResponse,
   AdminRetryChargeRequest,
   AdminRetryChargeData,
+  AdminStripeSettings,
+  UpdateAdminStripeSettingsRequest,
+  TestStripeConnectionRequest,
+  TestStripeConnectionResponse,
 } from "./paymentTypes";
 
 
@@ -33,6 +37,7 @@ export const paymentApi = baseApi.injectEndpoints({
         url: "/payments/config",
         method: "GET",
       }),
+      providesTags: ["StripeSettings"],
     }),
 
     createSetupIntent: builder.mutation<
@@ -249,6 +254,37 @@ export const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Billing"],
     }),
+
+    getAdminStripeSettings: builder.query<ApiResponse<AdminStripeSettings>, void>({
+      query: () => ({
+        url: "/payments/admin/stripe-settings",
+        method: "GET",
+      }),
+      providesTags: ["StripeSettings"],
+    }),
+
+    updateAdminStripeSettings: builder.mutation<
+      ApiResponse<AdminStripeSettings>,
+      UpdateAdminStripeSettingsRequest
+    >({
+      query: (body) => ({
+        url: "/payments/admin/stripe-settings",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["StripeSettings", "Billing"],
+    }),
+
+    testStripeConnection: builder.mutation<
+      ApiResponse<TestStripeConnectionResponse>,
+      TestStripeConnectionRequest | void
+    >({
+      query: (body) => ({
+        url: "/payments/admin/test-connection",
+        method: "POST",
+        body: body || {},
+      }),
+    }),
   }),
   overrideExisting: true,
 });
@@ -275,5 +311,8 @@ export const {
   useAdminReactivateSubscriptionMutation,
   useAdminUpdateSubscriptionStatusMutation,
   useAdminDeleteInvoiceMutation,
+  useGetAdminStripeSettingsQuery,
+  useUpdateAdminStripeSettingsMutation,
+  useTestStripeConnectionMutation,
 } = paymentApi;
 

@@ -8,6 +8,8 @@ export interface ApiResponse<T> {
 
 export interface StripeConfigData {
   publishableKey: string;
+  isConfigured?: boolean;
+  isLiveMode?: boolean;
 }
 
 export interface CreateSetupIntentRequest {
@@ -318,4 +320,40 @@ export interface AdminTriggerRemindersResponse {
   duplicateSkipped: number;
   checkedAt: string;
 }
+
+export interface AdminStripeSettings {
+  isConfigured: boolean;
+  hasPublishableKey: boolean;
+  hasSecretKey: boolean;
+  hasWebhookSecret: boolean;
+  publishableKey: string;
+  maskedSecretKey: string;
+  maskedWebhookSecret: string;
+  isLiveMode: boolean;
+  source: "db" | "env" | "none";
+  webhookEndpointUrl: string;
+  lastTestedAt: string | null;
+  updatedAt: string | null;
+  requiredEvents: string[];
+}
+
+export interface UpdateAdminStripeSettingsRequest {
+  publishableKey?: string;
+  secretKey?: string;
+  webhookSecret?: string;
+  isLiveMode?: boolean;
+}
+
+export interface TestStripeConnectionRequest {
+  publishableKey?: string;
+  secretKey?: string;
+}
+
+export interface TestStripeConnectionResponse {
+  success: boolean;
+  message: string;
+  livemode: boolean;
+  testedAt: string;
+}
+
 

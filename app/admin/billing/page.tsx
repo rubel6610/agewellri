@@ -35,6 +35,7 @@ import {
   DollarSign,
   ArrowUpRight,
   Users,
+  KeyRound,
 } from "lucide-react";
 import {
   confirmCriticalAction,
@@ -43,6 +44,7 @@ import {
 } from "@/lib/alerts/sweetalert";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { generateInvoicePdf } from "@/lib/pdf/invoice-pdf-generator";
+import { StripeSettingsModal } from "@/components/admin/stripe-settings-modal";
 
 function BillingAdminContent() {
   const searchParams = useSearchParams();
@@ -58,6 +60,7 @@ function BillingAdminContent() {
   });
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState(() => statusParam || "ALL");
+  const [stripeModalOpen, setStripeModalOpen] = useState(false);
   const [billingMethodFilter, setBillingMethodFilter] = useState("ALL");
   const [intervalFilter, setIntervalFilter] = useState("ALL");
 
@@ -308,19 +311,14 @@ function BillingAdminContent() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* <button
-            onClick={handleManualTriggerReminders}
-            disabled={isTriggeringReminders}
-            className="px-4 py-2.5 bg-[#EAF3F8] hover:bg-[#D9E4EC] text-[#294B68] font-bold text-xs rounded-xl transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            title="Scan upcoming renewals and send email notices"
+          <button
+            type="button"
+            onClick={() => setStripeModalOpen(true)}
+            className="px-4 py-2.5 bg-[#294B68] hover:bg-[#1E374D] text-white font-bold text-xs rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
           >
-            {isTriggeringReminders ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Bell className="w-4 h-4 text-[#5E8FB2]" />
-            )}
-            <span>Scan &amp; Send Renewal Notices</span>
-          </button> */}
+            <KeyRound className="w-4 h-4" />
+            <span>Stripe Gateway Settings</span>
+          </button>
 
           <button
             onClick={() => {
@@ -957,6 +955,11 @@ function BillingAdminContent() {
           </div>
         )}
       </div>
+
+      <StripeSettingsModal
+        isOpen={stripeModalOpen}
+        onClose={() => setStripeModalOpen(false)}
+      />
     </div>
   );
 }

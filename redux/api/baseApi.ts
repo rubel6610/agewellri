@@ -135,6 +135,7 @@ export const baseApi = createApi({
     "FamilyMember",
     "OffDay",
     "Schedule",
+    "StripeSettings",
   ],
   endpoints: () => ({}),
 });

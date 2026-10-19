@@ -14,12 +14,8 @@ import {
   ShieldCheck,
   MapPin,
   Sparkles,
-  DollarSign,
-  TrendingUp,
-  FileText,
   Calendar,
   Layers,
-  Activity,
 } from "lucide-react";
 import { useGetAdminDashboardStatsQuery } from "@/redux/features/client/clientApi";
 import { useAppSelector } from "@/redux/hooks";
@@ -31,7 +27,6 @@ export default function AdminOverviewPage() {
   const {
     data: statsResponse,
     isLoading,
-    refetch,
   } = useGetAdminDashboardStatsQuery();
 
   const stats = statsResponse?.data;
@@ -45,7 +40,7 @@ export default function AdminOverviewPage() {
     year: "numeric",
   });
 
-  const greetingName = authUser?.firstName || "Sarah";
+  const greetingName = authUser?.firstName;
 
   if (isLoading || !stats) {
     return (
@@ -279,7 +274,7 @@ export default function AdminOverviewPage() {
             <div>
               <h3 className="text-lg font-bold text-[#243746] flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-[#294B68]" />
-                <span>Upcoming Field Visits (Next 7 Days)</span>
+                <span>Upcoming Visits </span>
               </h3>
               {/* <p className="text-xs text-[#64748B]">
                 Scheduled safety oversight and hazard-mitigation visits
@@ -509,7 +504,7 @@ export default function AdminOverviewPage() {
           <div>
             <h3 className="text-lg font-bold text-[#243746] flex items-center gap-2">
               <Users className="w-5 h-5 text-[#294B68]" />
-              <span>Recent Clients Directory</span>
+              <span>Recent Clients</span>
             </h3>
             <p className="text-xs text-[#64748B]">
               Newly registered and enrolled AgeWellRI members
