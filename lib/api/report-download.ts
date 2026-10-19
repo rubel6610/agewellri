@@ -1,7 +1,7 @@
 import { getAuthToken } from "@/lib/auth/token";
 import { showErrorAlert } from "@/lib/alerts/sweetalert";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5173/api/v1").replace(/\/$/, "");
 
 /**
  * Get authenticated download URL for a report PDF
